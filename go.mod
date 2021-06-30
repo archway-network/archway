@@ -1,0 +1,1 @@
+module "github.com/cosmos-zone/zone"
