@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  node:
+    image: zoned:latest
+    command: ["sh", "/opt/localnet.sh"]
+    ports:
+      - 9090:9090
+      - 26657:26657
+    volumes:
+      - ./contrib/localnet:/opt:z
+    working_dir: /opt

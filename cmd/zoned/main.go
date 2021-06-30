@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/CosmWasm/wasmd/app"
+	"github.com/cosmos-zone/zone/app"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
