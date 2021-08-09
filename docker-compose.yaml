@@ -9,4 +9,5 @@ services:
       - 26657:26657
     volumes:
       - ./contrib/localnet:/opt:z
+      - ./contracts:/contracts:z
     working_dir: /opt
