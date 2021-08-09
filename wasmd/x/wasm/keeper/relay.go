@@ -32,7 +32,7 @@ func (k Keeper) OnOpenChannel(
 
 	gas := gasForContract(ctx)
 	gasUsed, execErr := k.wasmVM.IBCChannelOpen(codeInfo.CodeHash, env, channel, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas)
-	k.consumeGas(ctx, gasUsed)
+	k.consumeGas(ctx, gasUsed, GasConsumptionContextOpenChannel, nil, contractAddr)
 	if execErr != nil {
 		return sdkerrors.Wrap(types.ErrExecuteFailed, execErr.Error())
 	}
@@ -63,7 +63,7 @@ func (k Keeper) OnConnectChannel(
 
 	gas := gasForContract(ctx)
 	res, gasUsed, execErr := k.wasmVM.IBCChannelConnect(codeInfo.CodeHash, env, channel, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas)
-	k.consumeGas(ctx, gasUsed)
+	k.consumeGas(ctx, gasUsed, GasConsumptionContextConnectChannel, nil, contractAddr)
 	if execErr != nil {
 		return sdkerrors.Wrap(types.ErrExecuteFailed, execErr.Error())
 	}
@@ -101,7 +101,7 @@ func (k Keeper) OnCloseChannel(
 
 	gas := gasForContract(ctx)
 	res, gasUsed, execErr := k.wasmVM.IBCChannelClose(codeInfo.CodeHash, params, channel, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas)
-	k.consumeGas(ctx, gasUsed)
+	k.consumeGas(ctx, gasUsed, GasConsumptionContextCloseChannel, nil, contractAddr)
 	if execErr != nil {
 		return sdkerrors.Wrap(types.ErrExecuteFailed, execErr.Error())
 	}
@@ -138,7 +138,7 @@ func (k Keeper) OnRecvPacket(
 
 	gas := gasForContract(ctx)
 	res, gasUsed, execErr := k.wasmVM.IBCPacketReceive(codeInfo.CodeHash, env, packet, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas)
-	k.consumeGas(ctx, gasUsed)
+	k.consumeGas(ctx, gasUsed, GasConsumptionContextIBCRecvPacket, nil, contractAddr)
 	if execErr != nil {
 		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, execErr.Error())
 	}
@@ -172,7 +172,7 @@ func (k Keeper) OnAckPacket(
 
 	gas := gasForContract(ctx)
 	res, gasUsed, execErr := k.wasmVM.IBCPacketAck(codeInfo.CodeHash, env, acknowledgement, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas)
-	k.consumeGas(ctx, gasUsed)
+	k.consumeGas(ctx, gasUsed, GasConsumptionContextAckPacket, nil, contractAddr)
 	if execErr != nil {
 		return sdkerrors.Wrap(types.ErrExecuteFailed, execErr.Error())
 	}
@@ -207,7 +207,7 @@ func (k Keeper) OnTimeoutPacket(
 
 	gas := gasForContract(ctx)
 	res, gasUsed, execErr := k.wasmVM.IBCPacketTimeout(codeInfo.CodeHash, env, packet, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas)
-	k.consumeGas(ctx, gasUsed)
+	k.consumeGas(ctx, gasUsed, GasConsumptionContextTimeoutPacket, nil, contractAddr)
 	if execErr != nil {
 		return sdkerrors.Wrap(types.ErrExecuteFailed, execErr.Error())
 	}

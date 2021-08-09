@@ -93,6 +93,12 @@ const (
 	GasConsumptionContextQuerySmart
 	GasConsumptionContextReply
 	GasConsumptionContextSudo
+	GasConsumptionContextIBCRecvPacket
+	GasConsumptionContextAckPacket
+	GasConsumptionContextTimeoutPacket
+	GasConsumptionContextCloseChannel
+	GasConsumptionContextConnectChannel
+	GasConsumptionContextOpenChannel
 )
 
 // GasConsumptionHook defines a hook called after x/wasm consumes gas from a contract
