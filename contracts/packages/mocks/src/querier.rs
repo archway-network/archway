@@ -18,6 +18,16 @@ pub fn mock_dependencies(
         querier: MockQuerier::new(&[(MOCK_CONTRACT_ADDR, contract_balance)]),
     }
 }
+  /// A drop-in replacement for cosmwasm_std::testing::mock_dependencies
+  /// this uses our CustomQuerier.
+  //pub fn mock_dependencies_with_wasm_quer<'a>(
+  //  contract_balance: &[Coin],
+  //  custom_contract: &'a fn(& WasmQuery) -> ContractResult<Binary> 
+  //) -> OwnedDeps<MockStorage, MockApi, MockQuerier> {
+  //  let mut deps = mock_dependencies(contract_balance);
+  //  deps.querier = deps.querier.with_custom_wasm_contract(|query| SystemResult::Ok(custom_contract(query)));
+  //  deps
+  //}
 
 /// https://docs.rs/cosmwasm-std/0.16.1/src/cosmwasm_std/mock.rs.html#384-395
 /// adds a custom wasm handler to be injected to the querier
@@ -112,6 +122,9 @@ impl<C: CustomQuery + DeserializeOwned> MockQuerier<C> {
             QueryRequest::Ibc(_) => SystemResult::Err(SystemError::UnsupportedRequest {
                 kind: "Ibc".to_string(),
             }),
+             _ => SystemResult::Err(SystemError::UnsupportedRequest {
+                 kind: "invalid request".to_string(),
+             })
         }
     }
 }
@@ -136,13 +149,71 @@ impl WasmQuerier {
         }
     }
     fn query(&self, request: &WasmQuery) -> QuerierResult {
+        let default = "".to_string();
         let addr = match request {
             WasmQuery::Smart { contract_addr, .. } => contract_addr,
             WasmQuery::Raw { contract_addr, .. } => contract_addr,
+            _ => &default
         }
         .clone();
-          //SystemResult::Err(SystemError::NoSuchContract { addr })
 
-          (*self.custom_wasm_handler)(request)
+        match self.contracts.contains_key(&addr) { 
+          true => (*self.custom_wasm_handler)(request),
+          _ => SystemResult::Err(SystemError::NoSuchContract { addr })
+        }
     }
+}
+
+// TODO: Write test for WasmQuerier
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use schemars::JsonSchema;
+  use serde::{Deserialize, Serialize};
+
+  use serde::de::{DeserializeOwned};
+  use cosmwasm_std::{coin, to_binary ,Binary, from_binary, AllBalanceResponse, BalanceResponse, Empty, QuerierWrapper, OwnedDeps, QueryRequest, ContractResult};
+
+  #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+  #[serde(rename_all = "snake_case")]
+  struct SpecialResponse {
+    pub msg: String,
+  }
+
+  // This is final execution of the contract, it has already been verified
+  pub fn custom_wasm_execute(query: &WasmQuery) -> ContractResult<Binary> {
+      let msg = match query {
+          WasmQuery::Smart { contract_addr, .. } => contract_addr,
+          WasmQuery::Raw { contract_addr, .. } => contract_addr,
+          _ => "",
+      }.to_string();
+      to_binary(&SpecialResponse { msg }).into()
+  }
+  // TODO move this to package to be used for export
+  pub fn mock_dependencies_with_wasm_query(
+    contract_balance: &[Coin],
+  ) -> OwnedDeps<MockStorage, MockApi, MockQuerier> {
+    let custom_querier: MockQuerier =
+        MockQuerier::new(&[(MOCK_CONTRACT_ADDR, contract_balance)])
+            .with_custom_wasm_contract(|query| SystemResult::Ok(custom_wasm_execute(query)));
+    OwnedDeps {
+        storage: MockStorage::default(),
+        api: MockApi::default(),
+        querier: custom_querier,
+    }
+  }
+
+  #[test]
+  fn mock_wasm_querier() {
+    let deps = mock_dependencies_with_wasm_query(&[]);
+    let req: QueryRequest<_> = WasmQuery::Smart {
+      contract_addr: MOCK_CONTRACT_ADDR.to_string(),
+      msg: Binary::from(&[0xfb, 0x1f, 0x37]), // bytes don't matter
+    }.into();
+    let wrapper = QuerierWrapper::new(&deps.querier);
+    let response: SpecialResponse = wrapper.query(&req).unwrap();
+    println!("{:?}", response.msg);
+    println!("{:?}", MOCK_CONTRACT_ADDR.to_string());
+    assert_eq!(response.msg, MOCK_CONTRACT_ADDR.to_string());
+  }
 }

@@ -2,4 +2,4 @@
 mod querier;
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use querier::{mock_dependencies, MockQuerier};
+pub use querier::{MockQuerier};
