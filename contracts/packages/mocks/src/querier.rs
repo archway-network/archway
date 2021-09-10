@@ -4,10 +4,7 @@ use std::collections::HashMap;
 use cosmwasm_std::testing::{BankQuerier, MockApi, MockStorage ,MockQuerierCustomHandlerResult, MOCK_CONTRACT_ADDR };
 #[cfg(feature = "staking")]
 use cosmwasm_std::testing::StakingQuerier;
-use cosmwasm_std::{
-  from_slice, Coin, CustomQuery, Empty, Querier, QuerierResult, QueryRequest,
-  SystemError, SystemResult, WasmQuery, OwnedDeps 
-};
+use cosmwasm_std::{from_slice, Coin, CustomQuery, Empty, Querier, QuerierResult, QueryRequest, SystemError, SystemResult, WasmQuery, OwnedDeps, ContractResult, Binary};
 
 pub fn mock_dependencies(
     contract_balance: &[Coin],
@@ -18,16 +15,17 @@ pub fn mock_dependencies(
         querier: MockQuerier::new(&[(MOCK_CONTRACT_ADDR, contract_balance)]),
     }
 }
-  /// A drop-in replacement for cosmwasm_std::testing::mock_dependencies
-  /// this uses our CustomQuerier.
-  //pub fn mock_dependencies_with_wasm_quer<'a>(
-  //  contract_balance: &[Coin],
-  //  custom_contract: &'a fn(& WasmQuery) -> ContractResult<Binary> 
-  //) -> OwnedDeps<MockStorage, MockApi, MockQuerier> {
-  //  let mut deps = mock_dependencies(contract_balance);
-  //  deps.querier = deps.querier.with_custom_wasm_contract(|query| SystemResult::Ok(custom_contract(query)));
-  //  deps
-  //}
+
+/// A drop-in replacement for cosmwasm_std::testing::mock_dependencies
+ /// this uses our CustomQuerier.
+pub fn mock_dependencies_with_wasm_query(
+   contract_balance: &[Coin],
+   custom_contract: &'static fn(& WasmQuery) -> ContractResult<Binary>
+) -> OwnedDeps<MockStorage, MockApi, MockQuerier> {
+      let mut deps = mock_dependencies(contract_balance);
+      deps.querier = deps.querier.with_custom_wasm_contract(move |query| SystemResult::Ok(custom_contract(query)));
+      deps
+}
 
 /// https://docs.rs/cosmwasm-std/0.16.1/src/cosmwasm_std/mock.rs.html#384-395
 /// adds a custom wasm handler to be injected to the querier
