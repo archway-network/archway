@@ -17,7 +17,7 @@ pub fn mock_dependencies(
 }
 
 /// A drop-in replacement for cosmwasm_std::testing::mock_dependencies
- /// this uses our CustomQuerier.
+/// this uses our CustomQuerier.
 pub fn mock_dependencies_with_wasm_query(
    contract_balance: &[Coin],
    custom_contract: &'static fn(& WasmQuery) -> ContractResult<Binary>
