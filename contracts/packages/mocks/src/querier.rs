@@ -169,8 +169,7 @@ mod tests {
   use schemars::JsonSchema;
   use serde::{Deserialize, Serialize};
 
-  use serde::de::{DeserializeOwned};
-  use cosmwasm_std::{coin, to_binary ,Binary, from_binary, AllBalanceResponse, BalanceResponse, Empty, QuerierWrapper, OwnedDeps, QueryRequest, ContractResult};
+  use cosmwasm_std::{to_binary ,Binary, QuerierWrapper, QueryRequest, ContractResult};
 
   #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
   #[serde(rename_all = "snake_case")]
@@ -187,23 +186,11 @@ mod tests {
       }.to_string();
       to_binary(&SpecialResponse { msg }).into()
   }
-  // TODO move this to package to be used for export
-  pub fn mock_dependencies_with_wasm_query(
-    contract_balance: &[Coin],
-  ) -> OwnedDeps<MockStorage, MockApi, MockQuerier> {
-    let custom_querier: MockQuerier =
-        MockQuerier::new(&[(MOCK_CONTRACT_ADDR, contract_balance)])
-            .with_custom_wasm_contract(|query| SystemResult::Ok(custom_wasm_execute(query)));
-    OwnedDeps {
-        storage: MockStorage::default(),
-        api: MockApi::default(),
-        querier: custom_querier,
-    }
-  }
+  static CONTRACT: fn(&WasmQuery) -> ContractResult<Binary> = custom_wasm_execute;
 
   #[test]
   fn mock_wasm_querier() {
-    let deps = mock_dependencies_with_wasm_query(&[]);
+    let deps = mock_dependencies_with_wasm_query(&[], &CONTRACT);
     let req: QueryRequest<_> = WasmQuery::Smart {
       contract_addr: MOCK_CONTRACT_ADDR.to_string(),
       msg: Binary::from(&[0xfb, 0x1f, 0x37]), // bytes don't matter

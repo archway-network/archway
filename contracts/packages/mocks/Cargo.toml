@@ -1,6 +1,6 @@
 [package]
-name = "mocks"
-version = "0.1.0"
+name = "arch-mocks"
+version = "0.1.0-dev"
 edition = "2018"
 
 
