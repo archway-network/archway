@@ -22,9 +22,17 @@ pub fn mock_dependencies_with_wasm_query(
    contract_balance: &[Coin],
    custom_contract: &'static fn(& WasmQuery) -> ContractResult<Binary>
 ) -> OwnedDeps<MockStorage, MockApi, MockQuerier> {
-      let mut deps = mock_dependencies(contract_balance);
-      deps.querier = deps.querier.with_custom_wasm_contract(move |query| SystemResult::Ok(custom_contract(query)));
-      deps
+    let querier =  MockQuerier::new(&[(MOCK_CONTRACT_ADDR, contract_balance)]).with_custom_wasm_contract(move |query| {
+        let res = custom_contract(query);
+        println!("{:?}", res);
+        SystemResult::Ok(res)
+    });
+
+    OwnedDeps {
+        storage: MockStorage::default(),
+        api: MockApi::default(),
+        querier: querier,
+    }
 }
 
 /// https://docs.rs/cosmwasm-std/0.16.1/src/cosmwasm_std/mock.rs.html#384-395

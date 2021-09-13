@@ -60,7 +60,8 @@ pub fn query_counter(deps: &DepsMut) -> Result<i32, ContractError> {
         msg: to_binary(&msg)?,
     });
 
-    let counter: StdResult<i32> = deps.querier.query(&req);
+    let counter = deps.querier.query(&req);
+    println!("{:?}",counter);
     match counter {
         Ok(c) => Ok(c),
         Err(e) => Err(ContractError::from(e)),
@@ -92,9 +93,9 @@ fn query_count(deps: Deps) -> StdResult<CountResponse> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmwasm_std::testing::{MockApi, MockStorage, mock_dependencies, mock_env, mock_info,MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{Addr, Coin, coins,ContractResult, from_binary, SystemResult, OwnedDeps};
-    use arch_mocks::querier::{MockQuerier, mock_dependencies_with_wasm_query};
+    use cosmwasm_std::testing::{mock_env, mock_info,MOCK_CONTRACT_ADDR};
+    use cosmwasm_std::{Addr, coins,ContractResult, from_binary};
+    use arch_mocks::querier::mock_dependencies_with_wasm_query;
 
     fn custom_wasm_execute(query: &WasmQuery) -> ContractResult<Binary> {
       let count: i32 = match query {
@@ -112,10 +113,10 @@ mod tests {
     //    to_binary(&CountResponse { count }).into()
     //}
 
-    static contract: fn(&WasmQuery) -> ContractResult<Binary> = custom_wasm_execute;
+    static CONTRACT: fn(&WasmQuery) -> ContractResult<Binary> = custom_wasm_execute;
     #[test]
     fn proper_initialization() {
-        let mut deps = mock_dependencies_with_wasm_query(&[], &contract);
+        let mut deps = mock_dependencies_with_wasm_query(&[], &CONTRACT);
 
         let msg = InstantiateMsg { count: 17, counter_contract: Addr::unchecked(MOCK_CONTRACT_ADDR) };
         let info = mock_info("creator", &coins(1000, "earth"));
@@ -132,7 +133,7 @@ mod tests {
 
     #[test]
     fn increment() {
-        let mut deps = mock_dependencies_with_wasm_query(&coins(2, "token"), &contract);
+        let mut deps = mock_dependencies_with_wasm_query(&coins(2, "token"), &CONTRACT);
 
         let msg = InstantiateMsg { count: 17, counter_contract: Addr::unchecked(MOCK_CONTRACT_ADDR) };
         let info = mock_info("creator", &coins(2, "token"));
@@ -151,7 +152,7 @@ mod tests {
 
     #[test]
     fn reset() {
-        let mut deps = mock_dependencies_with_wasm_query(&coins(2, "token"), &contract);
+        let mut deps = mock_dependencies_with_wasm_query(&coins(2, "token"), &CONTRACT);
 
         let msg = InstantiateMsg { count: 17, counter_contract: Addr::unchecked(MOCK_CONTRACT_ADDR) };
         let info = mock_info("creator", &coins(2, "token"));
