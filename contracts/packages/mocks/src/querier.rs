@@ -22,11 +22,7 @@ pub fn mock_dependencies_with_wasm_query(
    contract_balance: &[Coin],
    custom_contract: &'static fn(& WasmQuery) -> ContractResult<Binary>
 ) -> OwnedDeps<MockStorage, MockApi, MockQuerier> {
-    let querier =  MockQuerier::new(&[(MOCK_CONTRACT_ADDR, contract_balance)]).with_custom_wasm_contract(move |query| {
-        let res = custom_contract(query);
-        println!("{:?}", res);
-        SystemResult::Ok(res)
-    });
+    let querier =  MockQuerier::new(&[(MOCK_CONTRACT_ADDR, contract_balance)]).with_custom_wasm_contract(move |query| { SystemResult::Ok(custom_contract(query)) });
 
     OwnedDeps {
         storage: MockStorage::default(),
@@ -205,8 +201,6 @@ mod tests {
     }.into();
     let wrapper = QuerierWrapper::new(&deps.querier);
     let response: SpecialResponse = wrapper.query(&req).unwrap();
-    println!("{:?}", response.msg);
-    println!("{:?}", MOCK_CONTRACT_ADDR.to_string());
     assert_eq!(response.msg, MOCK_CONTRACT_ADDR.to_string());
   }
 }

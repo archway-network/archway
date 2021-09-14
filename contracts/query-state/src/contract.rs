@@ -42,16 +42,14 @@ pub fn execute(
 pub fn try_increment(deps: DepsMut) -> Result<Response, ContractError> {
     if let Ok(contract_counter) = query_counter(&deps) {
         STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
-            println!("{:?}",contract_counter);
-            println!("{:?}",state.count);
-            state.count += contract_counter; // state.count will add n comming from noop contract
+            state.count += contract_counter.count; // state.count will add n comming from noop contract
             Ok(state)
         })?;
     }
     Ok(Response::new().add_attribute("method", "try_increment"))
 }
 
-pub fn query_counter(deps: &DepsMut) -> Result<i32, ContractError> {
+pub fn query_counter(deps: &DepsMut) -> Result<CountResponse, ContractError> {
     let state = STATE.load(deps.storage)?;
 
     let msg = QueryMsg::GetCount {};
@@ -60,12 +58,10 @@ pub fn query_counter(deps: &DepsMut) -> Result<i32, ContractError> {
         msg: to_binary(&msg)?,
     });
 
-    let counter = deps.querier.query(&req);
-    println!("{:?}",counter);
-    match counter {
-        Ok(c) => Ok(c),
-        Err(e) => Err(ContractError::from(e)),
-    }
+     match deps.querier.query(&req) {
+         Ok(c) => Ok(c),
+         Err(e) => Err(ContractError::from(e)),
+     }
 }
 pub fn try_reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
     STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
@@ -103,7 +99,7 @@ mod tests {
         WasmQuery::Raw { .. } => 0,
         _ => 0
       };
-      to_binary(&CountResponse { count }).into()
+      to_binary(&CountResponse{ count }).into()
     }
 
     //fn custom_query_execute(query: &QueryMsg) -> ContractResult<Binary> {
