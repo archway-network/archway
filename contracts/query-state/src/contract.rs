@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery};
+use cosmwasm_std::{Addr, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery};
 
 use crate::error::ContractError;
 use crate::msg::{CountResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -16,7 +16,7 @@ pub fn instantiate(
     let state = State {
         count: msg.count,
         owner: info.sender.clone(),
-        counter_contract:  msg.counter_contract.clone()
+        counter_contract:  Addr::unchecked(msg.counter_contract.clone()),
     };
     STATE.save(deps.storage, &state)?;
 
@@ -90,7 +90,7 @@ fn query_count(deps: Deps) -> StdResult<CountResponse> {
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_env, mock_info,MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{Addr, coins,ContractResult, from_binary};
+    use cosmwasm_std::{coins,ContractResult, from_binary};
     use arch_mocks::querier::mock_dependencies_with_wasm_query;
 
     fn custom_wasm_execute(query: &WasmQuery) -> ContractResult<Binary> {
@@ -114,7 +114,7 @@ mod tests {
     fn proper_initialization() {
         let mut deps = mock_dependencies_with_wasm_query(&[], &CONTRACT);
 
-        let msg = InstantiateMsg { count: 17, counter_contract: Addr::unchecked(MOCK_CONTRACT_ADDR) };
+        let msg = InstantiateMsg { count: 17, counter_contract: String::from(MOCK_CONTRACT_ADDR) };
         let info = mock_info("creator", &coins(1000, "earth"));
 
         // we can just call .unwrap() to assert this was a success
@@ -131,7 +131,7 @@ mod tests {
     fn increment() {
         let mut deps = mock_dependencies_with_wasm_query(&coins(2, "token"), &CONTRACT);
 
-        let msg = InstantiateMsg { count: 17, counter_contract: Addr::unchecked(MOCK_CONTRACT_ADDR) };
+        let msg = InstantiateMsg { count: 17, counter_contract: String::from(MOCK_CONTRACT_ADDR) };
         let info = mock_info("creator", &coins(2, "token"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
@@ -150,7 +150,7 @@ mod tests {
     fn reset() {
         let mut deps = mock_dependencies_with_wasm_query(&coins(2, "token"), &CONTRACT);
 
-        let msg = InstantiateMsg { count: 17, counter_contract: Addr::unchecked(MOCK_CONTRACT_ADDR) };
+        let msg = InstantiateMsg { count: 17, counter_contract: String::from(MOCK_CONTRACT_ADDR) };
         let info = mock_info("creator", &coins(2, "token"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
