@@ -92,7 +92,9 @@ fn query_count(deps: Deps) -> StdResult<CountResponse> {
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_env, mock_info,MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{coins,ContractResult, from_binary};
+    use cosmwasm_std::{coins,ContractResult, from_binary, to_binary, Addr, Empty};
+    use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
+    use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
     use arch_mocks::querier::mock_dependencies_with_wasm_query;
 
     fn custom_wasm_execute(query: &WasmQuery) -> ContractResult<Binary> {
@@ -103,13 +105,29 @@ mod tests {
       };
       to_binary(&NoopCountResponse{ count }).into()
     }
+    fn mock_app () -> App {
+        AppBuilder::new().build()
+    }
 
-    //fn custom_query_execute(query: &QueryMsg) -> ContractResult<Binary> {
-    //    let count = match query {
-    //        QueryMsg::GetCount {} => 1,
-    //    };
-    //    to_binary(&CountResponse { count }).into()
-    //}
+    fn query_state_contract() -> Box<dyn Contract<Empty>>{
+        let contract = ContractWrapper::new(
+            crate::contract::execute,
+            crate::contract::instantiate,
+            crate::contract::query,
+        );
+        Box::new(contract)
+    }
+
+    fn noop_contract() -> Box<dyn Contract<Empty>>{
+        let contract = ContractWrapper::new(
+            noop_counter::contract::execute,
+            noop_counter::contract::instantiate,
+            noop_counter::contract::query,
+        );
+        Box::new(contract)
+    }
+
+
 
     static CONTRACT: fn(&WasmQuery) -> ContractResult<Binary> = custom_wasm_execute;
     #[test]
@@ -174,5 +192,44 @@ mod tests {
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
         let value: CountResponse = from_binary(&res).unwrap();
         assert_eq!(5, value.count);
+    }
+
+    #[test]
+    fn query_external_contract_integration() {
+        let mut router = mock_app();
+
+        let owner = Addr::unchecked("owner");
+        let init_funds = coins(2000, "arch");
+        router.init_bank_balance(&owner, init_funds).unwrap();
+
+        let noop_contract_id = router.store_code(noop_contract());
+        let noop_msg = noop_counter::msg::InstantiateMsg {
+            count: 2,
+        };
+
+        let noop_addr = router.instantiate_contract(
+                noop_contract_id, owner.clone(), &noop_msg,
+                &[], "Noop", None
+            ).unwrap();
+
+        let query_state_id = router.store_code(query_state_contract());
+        let query_state_msg = InstantiateMsg {
+            count: 0,
+            counter_contract: noop_addr.clone().into_string(),
+        };
+        let query_state_addr = router.instantiate_contract(
+                query_state_id, owner.clone(), &query_state_msg,
+                &[], "query_state", None,
+            ).unwrap();
+
+        assert_ne!(noop_addr.clone(), query_state_addr.clone());
+        let query_state_execute_msg = ExecuteMsg::Increment {};
+        let res = router.execute_contract(owner.clone(), query_state_addr.clone(), &query_state_execute_msg,&[]).unwrap();
+        println!("{:?}", res.events);
+        assert_eq!(2, res.events.len());
+
+        let count_res: CountResponse = router.wrap().query_wasm_smart(&query_state_addr, &QueryMsg::GetCount{}).unwrap();
+        println!("{:?}", count_res);
+        assert_eq!(2, count_res.count);
     }
 }
