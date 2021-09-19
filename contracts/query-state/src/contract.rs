@@ -1,6 +1,8 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{Addr, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, QueryRequest, WasmQuery};
+use noop_counter::msg::{ QueryMsg as NoopQueryMsg, CountResponse as NoopCountResponse };
+
 
 use crate::error::ContractError;
 use crate::msg::{CountResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -49,10 +51,10 @@ pub fn try_increment(deps: DepsMut) -> Result<Response, ContractError> {
     Ok(Response::new().add_attribute("method", "try_increment"))
 }
 
-pub fn query_counter(deps: &DepsMut) -> Result<CountResponse, ContractError> {
+pub fn query_counter(deps: &DepsMut) -> Result<NoopCountResponse, ContractError> {
     let state = STATE.load(deps.storage)?;
 
-    let msg = QueryMsg::GetCount {};
+    let msg = NoopQueryMsg::GetCount {};
     let req = QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: state.counter_contract.into(),
         msg: to_binary(&msg)?,
@@ -99,7 +101,7 @@ mod tests {
         WasmQuery::Raw { .. } => 0,
         _ => 0
       };
-      to_binary(&CountResponse{ count }).into()
+      to_binary(&NoopCountResponse{ count }).into()
     }
 
     //fn custom_query_execute(query: &QueryMsg) -> ContractResult<Binary> {

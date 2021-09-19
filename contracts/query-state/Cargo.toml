@@ -36,6 +36,7 @@ library = []
 cosmwasm-std = { version = "0.16.0" }
 cosmwasm-storage = { version = "0.16.0" }
 cw-storage-plus = "0.8.0"
+noop-counter = { version = "0.1.0", path = "../noop-counter" }
 schemars = "0.8.3"
 serde = { version = "1.0.127", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.26" }
@@ -43,3 +44,4 @@ thiserror = { version = "1.0.26" }
 [dev-dependencies]
 cosmwasm-schema = { version = "0.16.0" }
 arch-mocks = { version = "0.1.0-dev", path = "../packages/mocks"}
+cw-multi-test = "0.9.0"

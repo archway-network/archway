@@ -1,5 +1,5 @@
 [package]
-name = "no_op_counter"
+name = "noop-counter"
 version = "0.1.0"
 authors = ["Eduardo Diaz <eduardo.j.diaz.rodriguez@gmail.com>"]
 edition = "2018"
