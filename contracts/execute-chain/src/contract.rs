@@ -67,19 +67,19 @@ fn create_msgs(deps: DepsMut) -> StdResult<Vec<CosmosMsg>>{
 }
 fn create_increment_msg_extern(deps: &DepsMut) -> StdResult<CosmosMsg> {
     let state = STATE.load(deps.storage)?;
-    Ok(CosmosMsg::Wasm(WasmMsg::Execute{
+    Ok(WasmMsg::Execute{
         contract_addr: state.owner.into_string(),
         msg: to_binary(&ExternalExecuteMsg::Increment {})?,
         funds: vec!(),
-    }))
+    })
 }
 fn create_increment_msg_intern(deps: &DepsMut) -> StdResult<CosmosMsg> {
     let state = STATE.load(deps.storage)?;
-    Ok(CosmosMsg::Wasm(WasmMsg::Execute{
+    Ok(WasmMsg::Execute{
         contract_addr: state.owner.into_string(),
         msg: to_binary(&ExecuteMsg::Increment {})?,
         funds: vec!(),
-    }))
+    })
 }
 // TODO: need a helper function that creates an executeMsg from contrat B
 pub fn try_increment(deps: DepsMut) -> Result<Response, ContractError> {
@@ -116,14 +116,14 @@ fn query_count(deps: Deps) -> StdResult<CountResponse> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
     use cosmwasm_std::{coins, from_binary};
 
     #[test]
     fn proper_initialization() {
         let mut deps = mock_dependencies(&[]);
 
-        let msg = InstantiateMsg { count: 17 };
+        let msg = InstantiateMsg { count: 17, counter_contract: String::from(MOCK_CONTRACT_ADDR) };
         let info = mock_info("creator", &coins(1000, "earth"));
 
         // we can just call .unwrap() to assert this was a success
@@ -140,7 +140,7 @@ mod tests {
     fn increment() {
         let mut deps = mock_dependencies(&coins(2, "token"));
 
-        let msg = InstantiateMsg { count: 17 };
+        let msg = InstantiateMsg { count: 17, counter_contract: String::from(MOCK_CONTRACT_ADDR) };
         let info = mock_info("creator", &coins(2, "token"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
@@ -159,7 +159,7 @@ mod tests {
     fn reset() {
         let mut deps = mock_dependencies(&coins(2, "token"));
 
-        let msg = InstantiateMsg { count: 17 };
+        let msg = InstantiateMsg { count: 17, counter_contract: String::from(MOCK_CONTRACT_ADDR) };
         let info = mock_info("creator", &coins(2, "token"));
         let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
@@ -181,5 +181,20 @@ mod tests {
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
         let value: CountResponse = from_binary(&res).unwrap();
         assert_eq!(5, value.count);
+    }
+
+    #[test]
+    fn chain() {
+        let mut deps = mock_dependencies(&coins(2, "token"));
+
+        let msg = InstantiateMsg { count: 17, counter_contract: String::from(MOCK_CONTRACT_ADDR) };
+        let info = mock_info("creator", &coins(2, "token"));
+        let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // benef_iciary can release it
+        let info = mock_info("anyone", &coins(2, "token"));
+        let msg = ExecuteMsg::Chain {};
+        let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        assert_eq!(2, res.messages.len());
     }
 }
