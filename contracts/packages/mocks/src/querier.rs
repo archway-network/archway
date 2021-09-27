@@ -40,7 +40,6 @@ pub struct MockQuerier<C: DeserializeOwned = Empty> {
     bank: BankQuerier,
     #[cfg(feature = "staking")]
     staking: StakingQuerier,
-    // placeholder to add support later
     wasm: WasmQuerier,
 
     /// A handler to handle custom queries. This is set to a dummy handler that
