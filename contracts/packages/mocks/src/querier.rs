@@ -182,7 +182,7 @@ mod tests {
   }
 
   // This is final execution of the contract, it has already been verified
-  pub fn custom_wasm_execute(query: &WasmQuery) -> ContractResult<Binary> {
+  pub fn custom_wasm_query(query: &WasmQuery) -> ContractResult<Binary> {
       let msg = match query {
           WasmQuery::Smart { contract_addr, .. } => contract_addr,
           WasmQuery::Raw { contract_addr, .. } => contract_addr,
@@ -190,7 +190,7 @@ mod tests {
       }.to_string();
       to_binary(&SpecialResponse { msg }).into()
   }
-  static CONTRACT: fn(&WasmQuery) -> ContractResult<Binary> = custom_wasm_execute;
+  static CONTRACT: fn(&WasmQuery) -> ContractResult<Binary> = custom_wasm_query;
 
   #[test]
   fn mock_wasm_querier() {

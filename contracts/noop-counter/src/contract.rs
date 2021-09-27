@@ -89,7 +89,7 @@ mod tests {
         let msg = ExecuteMsg::Noop {};
         let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        // should keep counter state the same 
+        // should keep counter state the same
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetCount {}).unwrap();
         let value: CountResponse = from_binary(&res).unwrap();
         assert_eq!(17, value.count);
