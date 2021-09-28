@@ -1,2 +1,4 @@
 .idea/
 contracts/*.wasm
+target/
+.vscode/

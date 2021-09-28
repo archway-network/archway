@@ -1,0 +1,47 @@
+[package]
+name = "query-state"
+version = "0.1.0"
+authors = ["Eduardo Diaz <eduardo.j.diaz.rodriguez@gmail.com>"]
+edition = "2018"
+
+exclude = [
+  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
+  "contract.wasm",
+  "hash.txt",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
+
+[features]
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces"]
+# use library feature to disable all instantiate/execute/query exports
+library = []
+
+[dependencies]
+cosmwasm-std = { version = "0.16.0" }
+cosmwasm-storage = { version = "0.16.0" }
+cw-storage-plus = "0.8.0"
+noop-counter = { version = "0.1.0", path = "../noop-counter" }
+schemars = "0.8.3"
+serde = { version = "1.0.127", default-features = false, features = ["derive"] }
+thiserror = { version = "1.0.26" }
+
+[dev-dependencies]
+cosmwasm-schema = { version = "0.16.0" }
+arch-mocks = { version = "0.1.0-dev", path = "../packages/mocks"}
+cw-multi-test = "0.9.0"
