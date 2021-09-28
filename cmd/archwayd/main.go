@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/cosmos-archway/archway/app"
+	"github.com/archway-network/archway/app"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 

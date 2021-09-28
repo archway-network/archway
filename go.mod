@@ -1,4 +1,4 @@
-module github.com/cosmos-archway/archway
+module github.com/archway-network/archway
 
 go 1.16
 
