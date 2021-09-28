@@ -1,4 +1,4 @@
-# Wasm Zone
+# Wasm Archway
 
 [![CircleCI](https://circleci.com/gh/CosmWasm/wasmd/tree/master.svg?style=shield)](https://circleci.com/gh/CosmWasm/wasmd/tree/master)
 [![codecov](https://codecov.io/gh/cosmwasm/wasmd/branch/master/graph/badge.svg)](https://codecov.io/gh/cosmwasm/wasmd)
@@ -7,7 +7,7 @@
 [![LoC](https://tokei.rs/b1/github/CosmWasm/wasmd)](https://github.com/CosmWasm/wasmd)
 <!-- [![GolangCI](https://golangci.com/badges/github.com/CosmWasm/wasmd.svg)](https://golangci.com/r/github.com/CosmWasm/wasmd) -->
 
-This repository hosts `Wasmd`, the first implementation of a cosmos zone with wasm smart contracts enabled.
+This repository hosts `Wasmd`, the first implementation of a cosmos archway with wasm smart contracts enabled.
 
 This code was forked from the `cosmos/gaia` repository as a basis and then we added `x/wasm` and cleaned up 
 many gaia-specific files. However, the `wasmd` binary should function just like `gaiad` except for the

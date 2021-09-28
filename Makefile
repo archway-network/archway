@@ -12,7 +12,7 @@ SIMAPP = ./app
 # for dockerized protobuf tools
 BUF_IMAGE=bufbuild/buf@sha256:9dc5d6645f8f8a2d5aaafc8957fbbb5ea64eada98a84cb09654e8f49d6f73b3e
 DOCKER_BUF := docker run --rm -v $(CURDIR):/workspace --workdir /workspace $(BUF_IMAGE)
-HTTPS_GIT := https://github.com/cosmos-zone/zone.git
+HTTPS_GIT := https://github.com/cosmos-archway/archway.git
 
 export GO111MODULE = on
 
@@ -55,11 +55,11 @@ build_tags_comma_sep := $(subst $(empty),$(comma),$(build_tags))
 
 # process linker flags
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zoned \
-		  -X github.com/cosmos/cosmos-sdk/version.AppName=zoned \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=archwayd \
+		  -X github.com/cosmos/cosmos-sdk/version.AppName=archwayd \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-		  -X github.com/cosmos-zone/zoned/app.Bech32Prefix=free \
+		  -X github.com/cosmos-archway/archwayd/app.Bech32Prefix=archway \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
 ifeq ($(WITH_CLEVELDB),yes)
@@ -80,7 +80,7 @@ ifeq ($(OS),Windows_NT)
 	echo unable to build on windows systems
 	exit 1
 else
-	go build -mod=readonly $(BUILD_FLAGS) -o build/zoned ./cmd/zoned
+	go build -mod=readonly $(BUILD_FLAGS) -o build/archwayd ./cmd/archwayd
 endif
 
 build-contract-tests-hooks:
@@ -91,7 +91,7 @@ else
 endif
 
 install: go.sum
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/zoned
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/archwayd
 
 ########################################
 ### Tools & dependencies
@@ -107,7 +107,7 @@ go.sum: go.mod
 draw-deps:
 	@# requires brew install graphviz or apt-get install graphviz
 	go get github.com/RobotsAndPencils/goviz
-	@goviz -i ./cmd/zoned -d 2 | dot -Tpng -o dependency-graph.png
+	@goviz -i ./cmd/archwayd -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
 	rm -rf snapcraft-local.yaml build/
@@ -153,7 +153,7 @@ lint:
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos-zone/zoned
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos-archway/archwayd
 
 
 ###############################################################################
@@ -184,7 +184,7 @@ proto-check-breaking:
 	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
 
 build-docker:
-	docker build . -t zoned:latest
+	docker build . -t archwayd:latest
 
 localnet:
 	docker-compose up

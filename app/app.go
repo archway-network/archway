@@ -92,12 +92,12 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
-const appName = "App"
+const appName = "archwayd"
 
 // We pull these out so we can set them with LDFLAGS in the Makefile
 var (
-	NodeDir      = ".app"
-	Bech32Prefix = "free"
+	NodeDir      = ".archway"
+	Bech32Prefix = "archway"
 
 	// ProposalsEnabled If EnabledSpecificProposals is "", and this is "true", then enable all x/wasm proposals.
 	// If EnabledSpecificProposals is "", and this is not "true", then disable all x/wasm proposals.

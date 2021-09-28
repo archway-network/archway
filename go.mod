@@ -1,4 +1,4 @@
-module github.com/cosmos-zone/zone
+module github.com/cosmos-archway/archway
 
 go 1.16
 
