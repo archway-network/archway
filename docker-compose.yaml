@@ -2,7 +2,7 @@ version: "3"
 
 services:
   node:
-    image: zoned:latest
+    image: archwayd:latest
     command: ["sh", "/opt/localnet.sh"]
     ports:
       - 9090:9090

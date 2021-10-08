@@ -1,5 +1,5 @@
-# docker build . -t cosmwasm/zoned:latest
-# docker run --rm -it cosmwasm/zoned:latest /bin/sh
+# docker build . -t cosmwasm/archwayd:latest
+# docker run --rm -it cosmwasm/archwayd:latest /bin/sh
 FROM golang:1.16-alpine3.12 AS go-builder
 
 # this comes from standard alpine nightly file
@@ -24,7 +24,7 @@ RUN LEDGER_ENABLED=false BUILD_TAGS=muslc make build
 # --------------------------------------------------------
 FROM alpine:3.12
 
-COPY --from=go-builder /code/build/zoned /usr/bin/zoned
+COPY --from=go-builder /code/build/archwayd /usr/bin/archwayd
 
 WORKDIR /root/.app
 
@@ -35,4 +35,4 @@ EXPOSE 26656
 # tendermint rpc
 EXPOSE 26657
 
-CMD ["/usr/bin/zoned", "version"]
+CMD ["/usr/bin/archwayd", "version"]
