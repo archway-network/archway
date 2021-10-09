@@ -1,6 +1,9 @@
 package app
 
 import (
+	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/CosmWasm/wasmvm"
+	"github.com/archway-network/archway/x/gastracker"
 	"io"
 	"net/http"
 	"os"
@@ -174,6 +177,7 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
+		gastracker.ContractRewardCollector: nil,
 		authtypes.FeeCollectorName:     nil,
 		distrtypes.ModuleName:          nil,
 		minttypes.ModuleName:           {authtypes.Minter},
@@ -236,6 +240,8 @@ type App struct {
 
 	// simulation manager
 	sm *module.SimulationManager
+
+	gastrackingKeeper gastracker.GasTrackingKeeper
 }
 
 // New returns a reference to an initialized App.
@@ -257,7 +263,7 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		wasm.StoreKey,
+		wasm.StoreKey, gastracker.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -283,6 +289,8 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	scopedIBCKeeper := app.capabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := app.capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.capabilityKeeper.ScopeToModule(wasm.ModuleName)
+
+	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey])
 
 	// add keepers
 	app.accountKeeper = authkeeper.NewAccountKeeper(
@@ -353,9 +361,26 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 		panic("error while reading wasm config: " + err.Error())
 	}
 
+	// Declare custom vm and messenger which allow us to track gas
+	supportedFeatures := "staking,stargate,iterator"
+	defaultGasRegister := keeper.NewDefaultWasmGasRegister()
+	wasmer, err := cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
+	if err != nil {
+		panic(err)
+	}
+	gasTrackingVm := gastracker.NewGasTrackingWasmEngine(wasmer, defaultGasRegister)
+	messenger := gastracker.NewGasTrackingMessageHandler(app.Router(), app.ibcKeeper.ChannelKeeper, scopedWasmKeeper, app.bankKeeper, appCodec, app.transferKeeper, app.gastrackingKeeper)
+
+	wasmOpts = append(
+		wasmOpts,
+		keeper.WithGasRegister(defaultGasRegister),
+		keeper.WithWasmEngine(gasTrackingVm),
+		keeper.WithMessageHandler(messenger),
+		keeper.WithQueryPlugins(&keeper.QueryPlugins{Wasm: gastracker.NewGasTrackingWASMQueryPlugin(app.gastrackingKeeper, &app.wasmKeeper)}),
+	)
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "staking,stargate"
 	app.wasmKeeper = wasm.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
@@ -420,6 +445,7 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 		evidence.NewAppModule(app.evidenceKeeper),
 		ibc.NewAppModule(app.ibcKeeper),
 		params.NewAppModule(app.paramsKeeper),
+		gastracker.NewAppModule(app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
 		transferModule,
 	)
 
@@ -428,7 +454,7 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
+		upgradetypes.ModuleName, minttypes.ModuleName, gastracker.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
@@ -486,9 +512,10 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(
-		ante.NewAnteHandler(
+		NewAnteHandler(
 			app.accountKeeper, app.bankKeeper, ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
+			app.gastrackingKeeper,
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)
