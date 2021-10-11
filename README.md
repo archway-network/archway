@@ -8,7 +8,7 @@ Go 1.16 is required for Archway.
 
 if you haven't already, install Golang following the [offical documentation](https://golang.org/doc/install). Make sure your `GOBIN` and `GOPATH` are setup.
 
-Step 2: Get the source code
+### Get the source code
 Retrieve the source code from the [official repository](https://github.com/archway/archway)
 
 ```
