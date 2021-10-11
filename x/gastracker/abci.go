@@ -59,13 +59,23 @@ func BeginBlock(context sdk.Context, block abci.RequestBeginBlock, keeper GasTra
 			context.Logger().Info("Got the metadata", "Metadata", metadata)
 
 			decGasLimit := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(txTrackingInfo.MaxGasAllowed))
-			decGasUsage := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(contractTrackingInfo.GasConsumed))
+			gasUsageForInflationRewards := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(contractTrackingInfo.GasConsumed))
+
+			var gasUsageForUsageRewards sdk.Dec
+			if metadata.CollectPremium {
+				premiumGas := gasUsageForInflationRewards.Mul(sdk.NewDecFromBigInt(ConvertUint64ToBigInt(metadata.PremiumPercentageCharged))).QuoInt64(100)
+				gasUsageForUsageRewards = gasUsageForInflationRewards.Add(premiumGas)
+			} else {
+				gasUsageForUsageRewards = gasUsageForInflationRewards
+			}
+
+			context.Logger().Info("Rewards:", "gasUsageForUsageRewards", gasUsageForUsageRewards, "gasUsageForInflationRewards", gasUsageForInflationRewards)
 
 			contractRewards := make(sdk.DecCoins, len(txTrackingInfo.MaxContractRewards))
 			for i, rewardCoin := range txTrackingInfo.MaxContractRewards {
-				contractRewards[i] = sdk.NewDecCoinFromDec(rewardCoin.Denom, rewardCoin.Amount.Mul(decGasUsage).Quo(decGasLimit))
+				contractRewards[i] = sdk.NewDecCoinFromDec(rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(decGasLimit))
 			}
-			contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(decGasUsage).Quo(decGasLimit))
+			contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasUsageForInflationRewards).Quo(decGasLimit))
 			context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractTrackingInfo.Address, "contractInflationReward", contractInflationReward)
 			contractRewards = contractRewards.Add(contractInflationReward)
 

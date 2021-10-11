@@ -52,7 +52,6 @@ func (g GasConsumptionMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.
 	if contractInstanceMetadata.CollectPremium {
 		ctx.Logger().Info("Charging premium to user", "premiumPercentage", contractInstanceMetadata.PremiumPercentageCharged)
 		premiumGas := (contractOperationInfo.GasConsumed * contractInstanceMetadata.PremiumPercentageCharged) / 100
-		contractOperationInfo.GasConsumed += premiumGas
 		ctx.GasMeter().ConsumeGas(premiumGas, "Smart contract premium")
 	}
 

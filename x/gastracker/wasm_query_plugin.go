@@ -50,7 +50,6 @@ func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmKeep
 			if contractInstanceMetadata.CollectPremium {
 				ctx.Logger().Info("Charging premium to user", "premiumPercentage", contractInstanceMetadata.PremiumPercentageCharged)
 				premiumGas := (gasTrackingQueryResultWrapper.GasConsumed * contractInstanceMetadata.PremiumPercentageCharged) / 100
-				gasTrackingQueryResultWrapper.GasConsumed += premiumGas
 				ctx.GasMeter().ConsumeGas(premiumGas, "Smart contract premium")
 			}
 
