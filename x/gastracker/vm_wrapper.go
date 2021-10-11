@@ -45,6 +45,16 @@ func (g GasTrackingWasmEngine) Instantiate(checksum wasmvm.Checksum, env wasmvmt
 		return nil, 0, err
 	}
 
+	if contractInstantiationWrapper.CollectPremium {
+		if contractInstantiationWrapper.GasRebateToUser {
+			return nil, 0, gstTypes.ErrInvalidInitRequest1
+		}
+
+		if contractInstantiationWrapper.PremiumPercentageCharged > 200 {
+			return nil, 0, gstTypes.ErrInvalidInitRequest2
+		}
+	}
+
 	base64Req := []byte(contractInstantiationWrapper.InstantiationRequest)
 	data := make([]byte, base64.StdEncoding.DecodedLen(len(base64Req)))
 	bytesDecoded, err := base64.StdEncoding.Decode(data, base64Req)
@@ -63,6 +73,8 @@ func (g GasTrackingWasmEngine) Instantiate(checksum wasmvm.Checksum, env wasmvmt
 		Operation:          gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 		RewardAddress:      contractInstantiationWrapper.RewardAddress,
 		GasRebateToEndUser: contractInstantiationWrapper.GasRebateToUser,
+		CollectPremium: contractInstantiationWrapper.CollectPremium,
+		PremiumPercentageCharged: contractInstantiationWrapper.PremiumPercentageCharged,
 	})
 	if err != nil {
 		return response, gasUsed, err
