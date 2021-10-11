@@ -26,7 +26,7 @@ FROM alpine:3.12
 
 COPY --from=go-builder /code/build/archwayd /usr/bin/archwayd
 
-WORKDIR /root/.app
+WORKDIR /root/.archway
 
 # rest server
 EXPOSE 1317
