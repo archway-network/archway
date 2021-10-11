@@ -59,11 +59,11 @@ func (a AppModule) RegisterGRPCGatewayRoutes(context client.Context, mux *runtim
 }
 
 func (a AppModule) GetTxCmd() *cobra.Command {
-	panic("implement me")
+	return nil
 }
 
 func (a AppModule) GetQueryCmd() *cobra.Command {
-	panic("implement me")
+	return nil
 }
 
 func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONMarshaler, message json.RawMessage) []abci.ValidatorUpdate {
