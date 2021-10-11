@@ -1,7 +1,7 @@
 # Archway
 This is the core implementation of the Archway protocol leveraging the [Cosmos SDK](https://cosmos.network) & [CosmWasm](https://cosmwasm.com), this allows the protocol to reward not only validators but creators for their contributions to the network.
 
-# Instalation
+# Installation
 ## From source
 Step 1: Install golang
 Go 1.16 is required for Archway.
