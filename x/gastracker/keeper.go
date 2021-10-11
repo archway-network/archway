@@ -2,6 +2,7 @@ package gastracker
 
 import (
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,6 +22,7 @@ type GasTrackingKeeper interface {
 
 type Keeper struct {
 	key sdk.StoreKey
+	appCodec codec.Marshaler
 }
 
 func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64)  (sdk.Coins, error) {
@@ -33,7 +35,7 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 
 	bz := gstKvStore.Get(gstTypes.GetRewardEntryKey(rewardAddress))
 	if bz != nil {
-		err := rewardEntry.Unmarshal(bz)
+		err := k.appCodec.UnmarshalBinaryBare(bz, &rewardEntry)
 		if err != nil {
 			return rewardsToBeDistributed, err
 		}
@@ -73,7 +75,7 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 	// Resize rewards slice to only elements that are initialized above
 	rewardsToBeDistributed = rewardsToBeDistributed[:rewardIndex]
 
-	bz, err := rewardEntry.Marshal()
+	bz, err := k.appCodec.MarshalBinaryBare(&rewardEntry)
 	if err != nil {
 		return rewardsToBeDistributed, err
 	}
@@ -92,7 +94,7 @@ func (k *Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress string) (
 		return rewardEntry, gstTypes.ErrRewardEntryNotFound
 	}
 
-	err := rewardEntry.Unmarshal(bz)
+	err := k.appCodec.UnmarshalBinaryBare(bz, &rewardEntry)
 	if err != nil {
 		return rewardEntry, err
 	}
@@ -110,14 +112,14 @@ func (k *Keeper) GetNewContractMetadata(ctx sdk.Context, address string) (gstTyp
 		return contractInstanceMetadata, gstTypes.ErrContractInstanceMetadataNotFound
 	}
 
-	err := contractInstanceMetadata.Unmarshal(bz)
+	err := k.appCodec.UnmarshalBinaryBare(bz, &contractInstanceMetadata)
 	return contractInstanceMetadata, err
 }
 
 func (k *Keeper) AddNewContractMetadata(ctx sdk.Context, address string, metadata gstTypes.ContractInstanceMetadata) error {
 	gstKvStore := ctx.KVStore(k.key)
 
-	bz, err := metadata.Marshal()
+	bz, err := k.appCodec.MarshalBinaryBare(&metadata)
 	if err != nil {
 		return err
 	}
@@ -125,14 +127,14 @@ func (k *Keeper) AddNewContractMetadata(ctx sdk.Context, address string, metadat
 	return nil
 }
 
-func NewGasTrackingKeeper(key sdk.StoreKey) *Keeper {
-	return &Keeper{key: key}
+func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler) *Keeper {
+	return &Keeper{key: key, appCodec: appCodec}
 }
 
 func (k *Keeper) TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockGasTracking) error {
 	gstKvStore := ctx.KVStore(k.key)
 
-	bz, err := blockGasTracking.Marshal()
+	bz, err := k.appCodec.MarshalBinaryBare(&blockGasTracking)
 	if err != nil {
 		return err
 	}
@@ -148,7 +150,7 @@ func (k *Keeper) GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGas
 	if bz == nil {
 		return currentBlockTracking, gstTypes.ErrBlockTrackingDataNotFound
 	}
-	err := currentBlockTracking.Unmarshal(bz)
+	err := k.appCodec.UnmarshalBinaryBare(bz, &currentBlockTracking)
 	return currentBlockTracking, err
 }
 
@@ -158,7 +160,7 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 	var currentTxGasTracking gstTypes.TransactionTracking
 	currentTxGasTracking.MaxContractRewards = fee
 	currentTxGasTracking.MaxGasAllowed = gasLimit
-	bz, err := currentTxGasTracking.Marshal()
+	bz, err := k.appCodec.MarshalBinaryBare(&currentTxGasTracking)
 	if err != nil {
 		return err
 	}
@@ -168,12 +170,12 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 		return gstTypes.ErrBlockTrackingDataNotFound
 	}
 	var currentBlockTracking gstTypes.BlockGasTracking
-	err = currentBlockTracking.Unmarshal(bz)
+	err = k.appCodec.UnmarshalBinaryBare(bz, &currentBlockTracking)
 	if err != nil {
 		return err
 	}
 	currentBlockTracking.TxTrackingInfos = append(currentBlockTracking.TxTrackingInfos, &currentTxGasTracking)
-	bz, err = currentBlockTracking.Marshal()
+	bz, err = k.appCodec.MarshalBinaryBare(&currentBlockTracking)
 	if err != nil {
 		return err
 	}
@@ -188,7 +190,7 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress string, 
 		return gstTypes.ErrBlockTrackingDataNotFound
 	}
 	var currentBlockGasTracking gstTypes.BlockGasTracking
-	err := currentBlockGasTracking.Unmarshal(bz)
+	err := k.appCodec.UnmarshalBinaryBare(bz, &currentBlockGasTracking)
 	if err != nil {
 		return err
 	}
@@ -204,7 +206,7 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress string, 
 		Operation: operation,
 		IsEligibleForReward: isEligibleForReward,
 	})
-	bz, err = currentBlockGasTracking.Marshal()
+	bz, err = k.appCodec.MarshalBinaryBare(&currentBlockGasTracking)
 	if err != nil {
 		return err
 	}

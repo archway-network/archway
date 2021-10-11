@@ -290,7 +290,7 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	scopedTransferKeeper := app.capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.capabilityKeeper.ScopeToModule(wasm.ModuleName)
 
-	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey])
+	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey], app.appCodec)
 
 	// add keepers
 	app.accountKeeper = authkeeper.NewAccountKeeper(
