@@ -69,7 +69,7 @@ func BeginBlock(context sdk.Context, block abci.RequestBeginBlock, keeper GasTra
 				gasUsageForUsageRewards = gasUsageForInflationRewards
 			}
 
-			context.Logger().Info("Rewards:", "gasUsageForUsageRewards", gasUsageForUsageRewards, "gasUsageForInflationRewards", gasUsageForInflationRewards)
+			context.Logger().Info("Gas usage for reward calculation:", "gasUsageForUsageRewards", gasUsageForUsageRewards, "gasUsageForInflationRewards", gasUsageForInflationRewards)
 
 			contractRewards := make(sdk.DecCoins, len(txTrackingInfo.MaxContractRewards))
 			for i, rewardCoin := range txTrackingInfo.MaxContractRewards {
