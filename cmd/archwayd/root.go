@@ -23,6 +23,7 @@ import (
 	"github.com/archway-network/archway/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -92,6 +93,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig app.EncodingConfig) {
 		tmcli.NewCompletionCmd(rootCmd, true),
 		// testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
+		config.Cmd(),
 	)
 
 	server.AddCommands(rootCmd, app.DefaultNodeHome, newApp, createWasmAppAndExport, addModuleInitFlags)
