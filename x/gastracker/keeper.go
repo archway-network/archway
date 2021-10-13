@@ -31,7 +31,8 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 	gstKvStore := ctx.KVStore(k.key)
 
 	var rewardEntry gstTypes.LeftOverRewardEntry
-	rewardsToBeDistributed := make(sdk.Coins, 0)
+	var updatedRewards sdk.DecCoins
+	var rewardsToBeDistributed sdk.Coins
 
 	bz := gstKvStore.Get(gstTypes.GetRewardEntryKey(rewardAddress))
 	if bz != nil {
@@ -39,41 +40,46 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 		if err != nil {
 			return rewardsToBeDistributed, err
 		}
-
 		previousRewards := make(sdk.DecCoins, len(rewardEntry.ContractRewards))
-		for i := range rewardEntry.ContractRewards {
+		for i := range previousRewards {
 			previousRewards[i] = *rewardEntry.ContractRewards[i]
 		}
-
-		updatedRewards := previousRewards.Add(contractRewards...)
-
-		rewardEntry.ContractRewards = make([]*sdk.DecCoin, len(updatedRewards))
-		for i := range rewardEntry.ContractRewards {
-			rewardEntry.ContractRewards[i] = &updatedRewards[i]
-		}
-
+		updatedRewards = previousRewards.Add(contractRewards...)
 	} else {
-		rewardEntry.ContractRewards = make([]*sdk.DecCoin, len(contractRewards))
-		for i := range contractRewards {
-			rewardEntry.ContractRewards[i] = &contractRewards[i]
-		}
+		updatedRewards = contractRewards
 	}
 
-	// Reallocate to length of rewardEntry.ContractRewards
-	rewardsToBeDistributed = make(sdk.Coins, len(rewardEntry.ContractRewards))
+	rewardsToBeDistributed = make(sdk.Coins, len(updatedRewards))
+	distributionRewardIndex := 0
+
+	leftOverContractRewards := make(sdk.DecCoins, len(updatedRewards))
+	leftOverRewardIndex := 0
 
 	leftOverDec := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(leftOverThreshold))
-	rewardIndex := 0
-	for i := range rewardEntry.ContractRewards {
-		truncatedDec := rewardEntry.ContractRewards[i].Amount.TruncateDec()
-		if truncatedDec.GTE(leftOverDec) {
-			rewardsToBeDistributed[rewardIndex] = sdk.NewCoin(rewardEntry.ContractRewards[i].Denom, truncatedDec.TruncateInt())
-			rewardIndex += 1
-			rewardEntry.ContractRewards[i].Amount = rewardEntry.ContractRewards[i].Amount.Sub(truncatedDec)
+
+	for i := range updatedRewards {
+		if updatedRewards[i].Amount.GTE(leftOverDec) {
+			distributionAmount := updatedRewards[i].Amount.TruncateInt()
+			leftOverAmount := updatedRewards[i].Amount.Sub(distributionAmount.ToDec())
+			if !leftOverAmount.IsZero() {
+				leftOverContractRewards[leftOverRewardIndex] = sdk.NewDecCoinFromDec(updatedRewards[i].Denom, leftOverAmount)
+				leftOverRewardIndex += 1
+			}
+			rewardsToBeDistributed[distributionRewardIndex] = sdk.NewCoin(updatedRewards[i].Denom, distributionAmount)
+			distributionRewardIndex += 1
+		} else {
+			leftOverContractRewards[leftOverRewardIndex] = updatedRewards[i]
+			leftOverRewardIndex += 1
 		}
 	}
-	// Resize rewards slice to only elements that are initialized above
-	rewardsToBeDistributed = rewardsToBeDistributed[:rewardIndex]
+
+	rewardsToBeDistributed = rewardsToBeDistributed[:distributionRewardIndex]
+	leftOverContractRewards = leftOverContractRewards[:leftOverRewardIndex]
+
+	rewardEntry.ContractRewards = make([]*sdk.DecCoin, len(leftOverContractRewards))
+	for i := range leftOverContractRewards {
+		rewardEntry.ContractRewards[i] = &leftOverContractRewards[i]
+	}
 
 	bz, err := k.appCodec.MarshalBinaryBare(&rewardEntry)
 	if err != nil {
