@@ -4,10 +4,19 @@ import (
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
+
+type RewardTransferKeeper interface {
+	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+}
+
+type MintParamsKeeper interface {
+	GetParams(ctx sdk.Context) (params mintTypes.Params)
+	GetMinter(ctx sdk.Context) (minter mintTypes.Minter)
+}
 
 func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPayed sdk.Coins, leftOverRewards []*sdk.DecCoin) error {
 	rewards := make([]*sdk.Coin, len(rewardsPayed))
@@ -22,9 +31,13 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 	})
 }
 
-func BeginBlock(context sdk.Context, block abci.RequestBeginBlock, keeper GasTrackingKeeper, bankKeeper bankkeeper.Keeper, mintKeeper mintkeeper.Keeper) {
+func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
 	blockTxDetails, err := keeper.GetCurrentBlockTrackingInfo(context)
 	if err != nil {
+		panic(err)
+	}
+
+	if err := keeper.TrackNewBlock(context, gstTypes.BlockGasTracking{}); err != nil {
 		panic(err)
 	}
 
@@ -34,8 +47,8 @@ func BeginBlock(context sdk.Context, block abci.RequestBeginBlock, keeper GasTra
 
 	totalContractRewardsPerBlock := make(sdk.DecCoins, 0)
 
-	minter := mintKeeper.GetMinter(context)
-	params := mintKeeper.GetParams(context)
+	minter := mintParamsKeeper.GetMinter(context)
+	params := mintParamsKeeper.GetParams(context)
 	totalInflationFee := sdk.NewDecCoinFromCoin(minter.BlockProvision(params))
 	// TODO: Take the percentage value from governance
 	contractTotalInflationRewards := sdk.NewDecCoinFromDec(totalInflationFee.Denom, totalInflationFee.Amount.MulInt64(20).QuoInt64(100))
@@ -82,12 +95,18 @@ func BeginBlock(context sdk.Context, block abci.RequestBeginBlock, keeper GasTra
 		totalContractRewardsPerBlock = totalContractRewardsPerBlock.Add(totalContractRewardsInTx...)
 	}
 
+	// Either the tx did not collect any fee or no contracts were executed
+	// So, no need to continue execution
+	if totalContractRewardsPerBlock == nil || totalContractRewardsPerBlock.IsZero() {
+		return
+	}
+
 	totalFeeToBeCollected := make(sdk.Coins, len(totalContractRewardsPerBlock))
 	for i := range totalFeeToBeCollected {
 		totalFeeToBeCollected[i] = sdk.NewCoin(totalContractRewardsPerBlock[i].Denom, totalContractRewardsPerBlock[i].Amount.Ceil().RoundInt())
 	}
 
-	err = bankKeeper.SendCoinsFromModuleToModule(context, authTypes.FeeCollectorName, ContractRewardCollector, totalFeeToBeCollected)
+	err = rewardTransferKeeper.SendCoinsFromModuleToModule(context, authTypes.FeeCollectorName, ContractRewardCollector, totalFeeToBeCollected)
 	if err != nil {
 		panic(err)
 	}
@@ -104,7 +123,7 @@ func BeginBlock(context sdk.Context, block abci.RequestBeginBlock, keeper GasTra
 			panic(err)
 		}
 
-		err = bankKeeper.SendCoinsFromModuleToAccount(context, ContractRewardCollector, transferAddr, rewardsToBePayed)
+		err = rewardTransferKeeper.SendCoinsFromModuleToAccount(context, ContractRewardCollector, transferAddr, rewardsToBePayed)
 		if err != nil {
 			panic(err)
 		}
@@ -121,10 +140,5 @@ func BeginBlock(context sdk.Context, block abci.RequestBeginBlock, keeper GasTra
 		}
 
 		context.Logger().Info("Reward allocation details:", "rewardPayed", rewardsToBePayed, "leftOverEntry", leftOverEntry.ContractRewards)
-	}
-
-	var newBlockTxDetails gstTypes.BlockGasTracking
-	if err := keeper.TrackNewBlock(context, newBlockTxDetails); err != nil {
-		panic(err)
 	}
 }
