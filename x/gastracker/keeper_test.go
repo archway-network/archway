@@ -176,3 +176,72 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	require.Equal(t, expectedLeftOverRewards[0], *leftOverEntry.ContractRewards[0])
 	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
 }
+
+
+func TestAddContractGasUsage(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+
+	err := keeper.TrackContractGasUsage(ctx, "1", 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION, false)
+	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(),"We cannot track contract gas since block tracking does not exists")
+
+	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{})
+	require.NoError(t, err, "We should be able to track new block")
+
+	err = keeper.TrackContractGasUsage(ctx, "1", 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION, false)
+	require.EqualError(t, err, types.ErrTxTrackingDataNotFound.Error(),"We cannot track contract gas since tx tracking does not exists")
+
+	// Let's track one tx with one contract gas usage
+	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
+	require.NoError(t, err, "We should be able to track new transaction")
+	err = keeper.TrackContractGasUsage(ctx, "1", 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION, false)
+	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
+
+	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 6)
+	require.NoError(t, err, "We should be able to track new transaction")
+	err = keeper.TrackContractGasUsage(ctx, "2", 2, types.ContractOperation_CONTRACT_OPERATION_REPLY, true)
+	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
+	err = keeper.TrackContractGasUsage(ctx, "3", 3, types.ContractOperation_CONTRACT_OPERATION_SUDO, true)
+	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
+
+	blockTrackingObj, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	require.NoError(t, err, "We should be able to get block tracking object")
+	require.Equal(t, 2, len(blockTrackingObj.TxTrackingInfos))
+	require.Equal(t, types.TransactionTracking{
+		MaxGasAllowed:         5,
+		MaxContractRewards:    nil,
+		ContractTrackingInfos: []*types.ContractGasTracking{
+			{
+				Address:             "1",
+				GasConsumed:         1,
+				IsEligibleForReward: false,
+				Operation:           types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+			},
+		},
+	}, *blockTrackingObj.TxTrackingInfos[0])
+	require.Equal(t, types.TransactionTracking{
+		MaxGasAllowed:         6,
+		MaxContractRewards:    nil,
+		ContractTrackingInfos: []*types.ContractGasTracking{
+			{
+				Address:             "2",
+				GasConsumed:         2,
+				IsEligibleForReward: true,
+				Operation:           types.ContractOperation_CONTRACT_OPERATION_REPLY,
+			},
+			{
+				Address:             "3",
+				GasConsumed:         3,
+				IsEligibleForReward: true,
+				Operation:           types.ContractOperation_CONTRACT_OPERATION_SUDO,
+			},
+		},
+	}, *blockTrackingObj.TxTrackingInfos[1])
+
+	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{})
+	require.NoError(t, err, "We should be able to track new block")
+
+	blockTrackingObj, err = keeper.GetCurrentBlockTrackingInfo(ctx)
+	require.NoError(t,err, "We should be able to get the block tracking obj")
+	// It should be empty
+	require.Equal(t, types.BlockGasTracking{}, blockTrackingObj)
+}
