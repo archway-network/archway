@@ -124,12 +124,55 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 
 
 	// Left over rewards are: 0.16666test, 0.5test1, 0.5test2
-	expectedLeftOverRewards = sdk.NewDecCoins(
-		sdk.NewDecCoinFromDec("test", expectedLeftOverRewards[0].Amount.Add(rewardCoins[0].Amount.MulInt64(2))),
+	expectedLeftOverRewards = []sdk.DecCoin{
+		sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.166666666666666666")),
 		sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)),
 		sdk.NewDecCoinFromDec("test2", sdk.NewDec(1).QuoInt64(2)),
-	)
+	}
 	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, "1")
 	require.NoError(t, err, "We should be able to get left over entry without an error")
-	require.Equal(t, expectedLeftOverRewards, leftOverEntry.ContractRewards)
+	require.Equal(t, len(expectedLeftOverRewards), len(leftOverEntry.ContractRewards))
+	require.Equal(t, expectedLeftOverRewards[0], *leftOverEntry.ContractRewards[0])
+	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
+	require.Equal(t, expectedLeftOverRewards[2], *leftOverEntry.ContractRewards[2])
+
+	// Now, let's change the leftOverThreshold to 2
+	// The wholecoin we would get is 3test2 (2.5 + 0.5 = 3 > 2)
+	// test1 and test2 denomination won't be part of wholecoins (1 + 0.1666 = 1.16666test1 and 1 + 0.5 = 1.5test2)
+	rewardCoins = sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test2", sdk.NewDec(5).QuoInt64(2)))
+	rewardCoins.Sort()
+	wholeCoins, err = keeper.CreateOrMergeLeftOverRewardEntry(ctx, "1", rewardCoins, 2)
+	require.NoError(t, err, "We should be able to merge left over reward entry")
+	require.Equal(t, wholeCoins, sdk.NewCoins(sdk.NewCoin("test2", sdk.NewInt(3))))
+
+	// Left over coins would be: 1.166666test1 and 1.5test2
+	expectedLeftOverRewards = sdk.NewDecCoins(
+		sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("1.166666666666666666")),
+		sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("1.5")),
+	)
+	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, "1")
+	require.NoError(t, err, "We should be able to get left over reward entry")
+	require.Equal(t, len(expectedLeftOverRewards), len(leftOverEntry.ContractRewards))
+	require.Equal(t, expectedLeftOverRewards[0], *leftOverEntry.ContractRewards[0])
+	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
+
+	// Now, changing back leftOverThreshold to 1 both test and test1 denomination will be released
+	expectedWholeCoins = sdk.NewCoins(
+		sdk.NewCoin("test", sdk.NewInt(1)),
+		sdk.NewCoin("test1", sdk.NewInt(1)),
+	)
+	wholeCoins, err = keeper.CreateOrMergeLeftOverRewardEntry(ctx, "1", sdk.NewDecCoins(), 1)
+	require.NoError(t, err, "We should be able to merge empty rewards without an error")
+	require.Equal(t, expectedWholeCoins, wholeCoins)
+
+	// Left over entry for test would be (1.166666666666666666 - 1 = 0.166666666666666666test, 1.5 - 1 = 0.5test1)
+	expectedLeftOverRewards = sdk.NewDecCoins(
+		sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.166666666666666666")),
+		sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)),
+	)
+	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, "1")
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expectedLeftOverRewards), len(leftOverEntry.ContractRewards))
+	require.Equal(t, expectedLeftOverRewards[0], *leftOverEntry.ContractRewards[0])
+	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
 }
