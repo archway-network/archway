@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	db "github.com/tendermint/tm-db"
+	"os"
 	"testing"
 	"time"
 )
@@ -30,7 +31,7 @@ func CreateTestKeeperAndContext(t *testing.T) (sdk.Context, GasTrackingKeeper) {
 	ctx := sdk.NewContext(ms, tmproto.Header{
 		Height: 1234567,
 		Time:   time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
-	}, false, log.NewNopLogger())
+	}, false, log.NewTMLogger(os.Stdout))
 
 	return ctx, &keeper
 }

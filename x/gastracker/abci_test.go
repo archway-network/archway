@@ -180,5 +180,5 @@ func TestBlockTracking(t *testing.T) {
 	}})
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
-	// TODO: Verify the results
+	// TODO: Verify the calls made to reward keeper
 }
