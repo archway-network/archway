@@ -27,19 +27,19 @@ spec:
     version: NODE_VERSION
   init:
     assets:
-      - 10000000000000000000const
-    bondDenom: const
+      - 10000000000000000000uconst
+    bondDenom: uconst
     chainID: constantine-1
     faucet:
       creditAmount: 10000000
       denoms:
-        - const
+        - uconst
       domain: faucet.constantine-1.archway.tech
-      funds: 100000000000000000const
+      funds: 100000000000000000uconst
       legacySend: false
       maxCredit: 100000000
       replicas: 1
-    stakeAmount: 1000000const
+    stakeAmount: 1000000uconst
   moniker: archway
   persistence:
     autoResize:

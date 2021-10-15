@@ -1,4 +1,4 @@
-name: Deploy Titus Test Network
+name: Deploy Constantine Test Network
 
 on:
   workflow_dispatch:
@@ -20,7 +20,7 @@ jobs:
         with:
           registry: gcr.io
           username: _json_key
-          password: ${{ secrets.GCR_JSON_KEY }}
+          password: ${{ secrets.ARCHWAY_GCR_SERVICEACCOUNT_JSON_KEY }}
 
       - name: Get version
         id: get_version
@@ -34,7 +34,7 @@ jobs:
           file: Dockerfile
           tags: gcr.io/tendermint-dev/archway:${{ steps.get_version.outputs.version-without-v }}
 
-      - name: Find and Replace
+      - name: Update NODE_VERSION
         uses: nguyenvanuyn96/str-find-and-replace-action@0.0.5
         with:
           find: NODE_VERSION
@@ -46,4 +46,3 @@ jobs:
         with:
           config: ${{ secrets.GKE_TENDERMINT_DEV_US_EAST1_STARPORT_CLOUD_DEV_KUBECONFIG_B64 }}
           command: apply -n archway -f ci/constantine-1.yaml
-
