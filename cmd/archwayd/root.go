@@ -170,7 +170,7 @@ func txCommand() *cobra.Command {
 		}
 	}
 
-	cmd.RemoveCommand(cmdsToRemove...)
+	// cmd.RemoveCommand(cmdsToRemove...)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
