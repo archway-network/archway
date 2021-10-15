@@ -153,13 +153,13 @@ func TestBlockTracking(t *testing.T) {
 				},
 				{
 					Address: "2",
-					GasConsumed: 2,
+					GasConsumed: 4,
 					IsEligibleForReward: true,
 					Operation: gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
 					Address: "3",
-					GasConsumed: 2,
+					GasConsumed: 1,
 					IsEligibleForReward: true,
 					Operation: gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
@@ -180,5 +180,38 @@ func TestBlockTracking(t *testing.T) {
 	}})
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
-	// TODO: Verify the calls made to reward keeper
+
+	// Inflation reward cap for a block is hardcoded at 20% of total inflation reward
+	// So, for per block inflation of 765 (76500/100), we need to take 20% of it which is
+	// 153.
+	// Total gas across transaction is 9 (2+4+1+2)
+	// So, inflation reward for
+	// Contract "1" is: 34 (153 * 2 / 9)
+	// Contract "2" is: 68 (153 * 4 / 9)
+	// Contract "3" is: 17 (153 * 1 / 9)
+	// Contract "2" is: 34 (153 * 2 / 9)
+	// All above is in "test" denomination, since that is the denomination minter is minting
+	// Now, coming to gas reward calculations:
+	// For First tx entry:
+	//    Gas Used = 10
+	//    "1" Contract's reward is: 1 * (2 / 10) = 0.2test and 0.33333 * (2 / 10) = 0.0666666test1
+	//    "2" Contract's reward is: 1 * (4 / 10) = 0.4test and 0.33333 * (4 / 10) = 0.1333333test1
+	//    "3" Contract's reward is: 1 * (1 / 10) = 0.1test and 0.33333 * (1 / 10) = 0.0333333test1
+	// For Second tx entry:
+	//   Gas Used = 2
+	//   "2" Contract's reward is: 2 * (2 / 2) = 2test and 0.5 * (2 / 2) = 0.5test1
+	// Total rewards:
+	// For Contract "1": 34.2test (34 + 0.2) and 0.0666666test1
+	// For Contract "2": 104.4test (68 + 34 + 0.4 + 2) and 0.6333333test1 (0.1333333 + 0.5)
+	// For Contract "3": 17.1test (17 + 0.1) and 0.0333333test1
+	// Reward distribution per address:
+	// (for contract "1") "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt": 34.2test and 0.0666666test1
+	// (for contract "2" and "3") "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk": 121.5test and 0.6666666test1
+	// So, we should be fetching 156test (34.2 + 121.5 = 155.7 rounded to 156) and 1test1 (0.0666666 + 0.6666666 =  0.7333332 rounded to 1)
+	// from the fee collector
+	// Since, left over threshold is hard coded to 1, we should be transferring 34test to "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt" and
+	// 121test to "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk" and left over rewards should be 0.2test,0.0666666test1 and 0.5test and 0.666666test1
+	// respectively.
+
+
 }
