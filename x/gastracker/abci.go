@@ -41,6 +41,14 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 		panic(err)
 	}
 
+	var calculatedGasConsumedInLastBlock uint64 = 0
+	for _, txTrackingInfo := range blockTxDetails.TxTrackingInfos {
+		for _, contractTrackingInfo := range txTrackingInfo.ContractTrackingInfos {
+			calculatedGasConsumedInLastBlock += contractTrackingInfo.GasConsumed
+		}
+	}
+	var totalGasConsumedInLastBlock = sdk.NewDecFromBigInt(ConvertUint64ToBigInt(calculatedGasConsumedInLastBlock))
+
 	context.Logger().Info("Got the tracking for block", "BlockTxDetails", blockTxDetails)
 
 	rewardsByAddress := make(map[string]sdk.DecCoins)
@@ -78,14 +86,14 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 			for i, rewardCoin := range txTrackingInfo.MaxContractRewards {
 				contractRewards[i] = sdk.NewDecCoinFromDec(rewardCoin.Denom, rewardCoin.Amount.Mul(decGasUsage).Quo(decGasLimit))
 			}
-			contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(decGasUsage).Quo(decGasLimit))
+			contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(decGasUsage).Quo(totalGasConsumedInLastBlock))
 			context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractTrackingInfo.Address, "contractInflationReward", contractInflationReward)
 			contractRewards = contractRewards.Add(contractInflationReward)
 
-			if currentRewardData, ok := rewardsByAddress[metadata.RewardAddress]; !ok {
+			if _, ok := rewardsByAddress[metadata.RewardAddress]; !ok {
 				rewardsByAddress[metadata.RewardAddress] = contractRewards
 			} else {
-				rewardsByAddress[metadata.RewardAddress] = rewardsByAddress[metadata.RewardAddress].Add(currentRewardData...)
+				rewardsByAddress[metadata.RewardAddress] = rewardsByAddress[metadata.RewardAddress].Add(contractRewards...)
 			}
 			totalContractRewardsInTx = totalContractRewardsInTx.Add(contractRewards...)
 
