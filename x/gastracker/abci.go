@@ -52,6 +52,9 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 	context.Logger().Info("Got the tracking for block", "BlockTxDetails", blockTxDetails)
 
 	rewardsByAddress := make(map[string]sdk.DecCoins)
+	// To enforce a map iteration order. This isn't strictly necessary but is only
+	// done to make this code more deterministic.
+	rewardAddresses := make([]string, 0)
 
 	totalContractRewardsPerBlock := make(sdk.DecCoins, 0)
 
@@ -91,6 +94,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 			contractRewards = contractRewards.Add(contractInflationReward)
 
 			if _, ok := rewardsByAddress[metadata.RewardAddress]; !ok {
+				rewardAddresses = append(rewardAddresses, metadata.RewardAddress)
 				rewardsByAddress[metadata.RewardAddress] = contractRewards
 			} else {
 				rewardsByAddress[metadata.RewardAddress] = rewardsByAddress[metadata.RewardAddress].Add(contractRewards...)
@@ -119,7 +123,8 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 		panic(err)
 	}
 
-	for rewardAddress, rewards := range rewardsByAddress {
+	for _, rewardAddress := range rewardAddresses {
+		rewards := rewardsByAddress[rewardAddress]
 		// TODO: We should take leftOverThreshold from governance
 		rewardsToBePayed, err := keeper.CreateOrMergeLeftOverRewardEntry(context, rewardAddress, rewards, 1)
 		if err != nil {
