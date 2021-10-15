@@ -3,7 +3,7 @@ This is the core implementation of the Archway protocol leveraging the [Cosmos S
 
 # Instalation
 ## From source
-Step 1: Install golang
+### Install golang
 Go 1.16 is required for Archway.
 
 if you haven't already, install Golang following the [offical documentation](https://golang.org/doc/install). Make sure your `GOBIN` and `GOPATH` are setup.
