@@ -17,7 +17,7 @@ cd archway
 git checkout main
 ```
 
-Step 3 build:
+### Build
 You can build with
 
 ```
