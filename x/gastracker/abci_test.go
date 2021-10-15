@@ -4,6 +4,7 @@ import (
 	"fmt"
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/abci/types"
@@ -22,7 +23,7 @@ type RewardTransferKeeperCallLogs struct {
 	Method string
 	senderModule string
 	recipientModule string
-	recipientAddr sdk.AccAddress
+	recipientAddr string
 	amt sdk.Coins
 }
 
@@ -37,7 +38,7 @@ func (t *TestRewardTransferKeeper) SendCoinsFromModuleToAccount(ctx sdk.Context,
 		t.Logs = append(t.Logs, &RewardTransferKeeperCallLogs{
 			Method: "SendCoinsFromModuleToAccount",
 			senderModule:  senderModule,
-			recipientAddr: recipientAddr,
+			recipientAddr: recipientAddr.String(),
 			amt:           amt,
 		})
 	case Error:
@@ -213,5 +214,37 @@ func TestBlockTracking(t *testing.T) {
 	// 121test to "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk" and left over rewards should be 0.2test,0.0666666test1 and 0.5test and 0.666666test1
 	// respectively.
 
+	// Let's check reward keeper call logs first
+	require.Equal(t, 3, len(testRewardKeeper.Logs))
+	require.Equal(t, &RewardTransferKeeperCallLogs{
+		Method:       "SendCoinsFromModuleToModule",
+		senderModule: authTypes.FeeCollectorName,
+		recipientModule: gstTypes.ContractRewardCollector,
+		amt: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(156)), sdk.NewCoin("test1", sdk.NewInt(1))),
+	}, testRewardKeeper.Logs[0])
+	require.Equal(t, &RewardTransferKeeperCallLogs{
+		Method: "SendCoinsFromModuleToAccount",
+		senderModule: gstTypes.ContractRewardCollector,
+		recipientAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		amt: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(34))),
+	}, testRewardKeeper.Logs[1])
+	require.Equal(t, &RewardTransferKeeperCallLogs{
+		Method: "SendCoinsFromModuleToAccount",
+		senderModule: gstTypes.ContractRewardCollector,
+		recipientAddr: "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
+		amt: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(121))),
+	}, testRewardKeeper.Logs[2])
 
+	// Let's check left-over balances
+	leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt")
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, 2, len(leftOverEntry.ContractRewards))
+	require.Equal(t, sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.2")), *leftOverEntry.ContractRewards[0])
+	require.Equal(t, sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.066666666666666667")), *leftOverEntry.ContractRewards[1])
+
+	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk")
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, 2, len(leftOverEntry.ContractRewards))
+	require.Equal(t, sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.5")), *leftOverEntry.ContractRewards[0])
+	require.Equal(t, sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.666666666666666666")), *leftOverEntry.ContractRewards[1])
 }
