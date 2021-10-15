@@ -26,6 +26,12 @@ make install
 
 this will install the `archwayd` to your `GOPATH`
 
+## Dockerized
+
+We also provide a docker image to help with test setups. There are two modes to use it
+
+Build: `docker build -t drewstaylor/archwayd:latest .`  or pull from dockerhub
+
 ## Documentation
 You can check out further information from Archway in our [official documentation](https://docs.archway.io)
 
