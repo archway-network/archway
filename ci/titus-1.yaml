@@ -1,0 +1,47 @@
+apiVersion: apps.starport.cloud/v1
+kind: NodeSet
+metadata:
+  name: titus-1
+  namespace: archway
+spec:
+  app:
+    cliName: archwayd
+    daemonName: archwayd
+    name: archway
+  expose:
+    domain: titus-1.archway.tech
+    api: true
+    grpc: true
+    rpc: true
+    p2p: true
+  image:
+    name: gcr.io/tendermint-dev/archway
+    version: NODE_VERSION
+  init:
+    assets:
+      - 10000000000000000000utitus
+    bondDenom: utitus
+    chainID: titus-1
+    faucet:
+      creditAmount: 10000000
+      denoms:
+        - utitus
+      domain: faucet.titus-1.archway.tech
+      funds: 100000000000000000utitus
+      legacySend: false
+      maxCredit: 100000000
+      replicas: 1
+    stakeAmount: 1000000utitus
+  moniker: archway
+  persistence:
+    autoResize:
+      enabled: true
+      increment: 5G
+      threshold: 80
+    size: 5G
+  replicas: 2
+  resources:
+    restServer: {}
+    sentry: {}
+    validator: {}
+  sdkVersion: stargate

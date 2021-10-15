@@ -1,0 +1,55 @@
+apiVersion: apps.starport.cloud/v1
+kind: NodeSet
+metadata:
+  name: constantine-1
+  namespace: archway
+spec:
+  app:
+    cliName: archwayd
+    daemonName: archwayd
+    name: archway
+  expose:
+    api: true
+    apiDomain: api.constantine-1.archway.tech
+    disableBaseDomainRPC: false
+    disableTLS: false
+    domain: constantine-1.archway.tech
+    grpc: true
+    grpcDomain: grpc.constantine-1.archway.tech
+    p2p: true
+    p2pType: NodePort
+    rpc: true
+    rpcDomain: rpc.constantine-1.archway.tech
+    tlsSecretName: constantine-1-cert
+    usePaths: false
+  image:
+    name: gcr.io/tendermint-dev/archway
+    version: NODE_VERSION
+  init:
+    assets:
+      - 10000000000000000000const
+    bondDenom: const
+    chainID: constantine-1
+    faucet:
+      creditAmount: 10000000
+      denoms:
+        - const
+      domain: faucet.constantine-1.archway.tech
+      funds: 100000000000000000const
+      legacySend: false
+      maxCredit: 100000000
+      replicas: 1
+    stakeAmount: 1000000const
+  moniker: archway
+  persistence:
+    autoResize:
+      enabled: true
+      increment: 5G
+      threshold: 80
+    size: 20G
+  replicas: 2
+  resources:
+    restServer: {}
+    sentry: {}
+    validator: {}
+  sdkVersion: stargate
