@@ -165,7 +165,8 @@ func txCommand() *cobra.Command {
 	var cmdsToRemove []*cobra.Command
 
 	for _, cmd := range cmd.Commands() {
-		if cmd.Use == authtypes.ModuleName || cmd.Use == banktypes.ModuleName {
+		// if cmd.Use == authtypes.ModuleName || cmd.Use == banktypes.ModuleName {
+		if cmd.Use == authtypes.ModuleName {
 			cmdsToRemove = append(cmdsToRemove, cmd)
 		}
 	}
