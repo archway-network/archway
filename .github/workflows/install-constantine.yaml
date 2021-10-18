@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     tags:
+      - '*'
 
 jobs:
   install-constantine:
