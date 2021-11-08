@@ -7,7 +7,7 @@ During BeginBlock using the information tracked rewards are distributed and the 
 
 ```json
 
-"type": "RewardDistribution",
+"type": "gastracker.RewardDistributionEvent",
 "attributes": [
   {
     "key": "rewardAddress",
