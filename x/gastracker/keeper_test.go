@@ -49,7 +49,9 @@ func TestContractMetadataHandling(t *testing.T) {
 
 	newMetadata := types.ContractInstanceMetadata{
 		RewardAddress:   "2",
-		GasRebateToUser: false,
+		GasRebateToUser: true,
+		CollectPremium: false,
+		PremiumPercentageCharged: 3,
 	}
 
 	// Should be successful
@@ -66,6 +68,8 @@ func TestContractMetadataHandling(t *testing.T) {
 	updatedMetadata := types.ContractInstanceMetadata{
 		RewardAddress:   "3",
 		GasRebateToUser: true,
+		CollectPremium: true,
+		PremiumPercentageCharged: 80,
 	}
 	err = keeper.AddNewContractMetadata(ctx, "1", updatedMetadata)
 	require.NoError(t, err, "We should be able to overwrite existing metadata")
