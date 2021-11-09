@@ -47,6 +47,12 @@ func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmKeep
 				ctx.GasMeter().RefundGas(gasTrackingQueryResultWrapper.GasConsumed, "Gas Refund for smart contract execution")
 			}
 
+			if contractInstanceMetadata.CollectPremium {
+				ctx.Logger().Info("Charging premium to user", "premiumPercentage", contractInstanceMetadata.PremiumPercentageCharged)
+				premiumGas := (gasTrackingQueryResultWrapper.GasConsumed * contractInstanceMetadata.PremiumPercentageCharged) / 100
+				ctx.GasMeter().ConsumeGas(premiumGas, "Smart contract premium")
+			}
+
 			ctx.Logger().Info("Got the tracking for Query", "gasConsumed", gasTrackingQueryResultWrapper.GasConsumed, "Contract address", request.Smart.ContractAddr)
 
 			err = gasTrackingKeeper.TrackContractGasUsage(ctx, request.Smart.ContractAddr, gasTrackingQueryResultWrapper.GasConsumed, gstTypes.ContractOperation_CONTRACT_OPERATION_QUERY, !contractInstanceMetadata.GasRebateToUser)
