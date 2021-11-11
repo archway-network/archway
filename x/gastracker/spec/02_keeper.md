@@ -1,8 +1,8 @@
 # Keeper
 The gastracker module provides an exproted keeper interface that can be passed on to other modules that want to:
 
-- Add contract metadata
-- Track Gas consumption for contract
+- Read/Write contract metadata
+- Track gas consumption of the block with granularity upto individual contracts
 
 
 ## Keeper
