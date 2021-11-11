@@ -4,12 +4,13 @@ import (
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var _ GasTrackingKeeper = &Keeper{}
 
 type GasTrackingKeeper interface {
-	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64)  error
+	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error
 	TrackContractGasUsage(ctx sdk.Context, contractAddress string, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error
 	GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
 	TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockGasTracking) error
@@ -21,11 +22,12 @@ type GasTrackingKeeper interface {
 }
 
 type Keeper struct {
-	key sdk.StoreKey
-	appCodec codec.Marshaler
+	key        sdk.StoreKey
+	appCodec   codec.Marshaler
+	ParamStore paramsTypes.Subspace
 }
 
-func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64)  (sdk.Coins, error) {
+func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {
 	contractRewards = contractRewards.Sort()
 
 	gstKvStore := ctx.KVStore(k.key)
@@ -160,7 +162,7 @@ func (k *Keeper) GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGas
 	return currentBlockTracking, err
 }
 
-func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64)  error {
+func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var currentTxGasTracking gstTypes.TransactionTracking
@@ -205,11 +207,11 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress string, 
 	if txsLen == 0 {
 		return gstTypes.ErrTxTrackingDataNotFound
 	}
-	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen - 1]
-	currentBlockGasTracking.TxTrackingInfos[txsLen - 1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gstTypes.ContractGasTracking{
-		Address:     contractAddress,
-		GasConsumed: gasUsed,
-		Operation: operation,
+	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
+	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gstTypes.ContractGasTracking{
+		Address:             contractAddress,
+		GasConsumed:         gasUsed,
+		Operation:           operation,
 		IsEligibleForReward: isEligibleForReward,
 	})
 	bz, err = k.appCodec.MarshalBinaryBare(&currentBlockGasTracking)
@@ -220,6 +222,3 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress string, 
 	gstKvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
 	return nil
 }
-
-
-
