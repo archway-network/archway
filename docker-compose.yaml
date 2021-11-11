@@ -2,7 +2,9 @@ version: "3"
 
 services:
   node:
-    image: archwayd:latest
+    image: archwaynetwork/archwayd:latest
+    build:
+      context: .
     command: ["sh", "/opt/localnet.sh"]
     ports:
       - 9090:9090
