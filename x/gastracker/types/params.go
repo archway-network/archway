@@ -12,11 +12,10 @@ const (
 )
 
 var (
-	KeyGasTrackingSwitch    = []byte("GasTrackingSwitch")
-	KeyDappInflationRewards = []byte("DappInflationRewards")
-	// TODO: add inflation reward switch
-	KeyGasRebateSwitch       = []byte("GasRebateSwitch")       // This isoff pass gas rebate
-	KeyGasRebateToUserSwitch = []byte("GasRebateToUserSwitch") // IF OFF then just do normal gas rebate
+	KeyGasTrackingSwitch     = []byte("GasTrackingSwitch")
+	KeyDappInflationRewards  = []byte("DappInflationRewards")
+	KeyGasRebateSwitch       = []byte("GasRebateSwitch")
+	KeyGasRebateToUserSwitch = []byte("GasRebateToUserSwitch")
 	KeyContractPremiumSwitch = []byte("ContractPremiumSwitch")
 )
 

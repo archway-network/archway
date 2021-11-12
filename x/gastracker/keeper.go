@@ -19,6 +19,8 @@ type GasTrackingKeeper interface {
 
 	CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error)
 	GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress string) (gstTypes.LeftOverRewardEntry, error)
+
+	GetContractPremiumSwitch(ctx)
 }
 
 type Keeper struct {

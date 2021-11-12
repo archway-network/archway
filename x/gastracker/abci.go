@@ -31,6 +31,7 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 	})
 }
 
+// TODO: Switches take effect here
 func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
 	blockTxDetails, err := keeper.GetCurrentBlockTrackingInfo(context)
 	if err != nil {
@@ -86,13 +87,12 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 			gasUsageForInflationRewards := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(contractTrackingInfo.GasConsumed))
 
 			var gasUsageForUsageRewards sdk.Dec
-			if metadata.CollectPremium {
+			if metadata.CollectPremium && keeper.GetContractPremiumSwitch(ctx) {
 				premiumGas := gasUsageForInflationRewards.Mul(sdk.NewDecFromBigInt(ConvertUint64ToBigInt(metadata.PremiumPercentageCharged))).QuoInt64(100)
 				gasUsageForUsageRewards = gasUsageForInflationRewards.Add(premiumGas)
 			} else {
 				gasUsageForUsageRewards = gasUsageForInflationRewards
 			}
-
 
 			contractRewards := make(sdk.DecCoins, len(txTrackingInfo.MaxContractRewards))
 			for i, rewardCoin := range txTrackingInfo.MaxContractRewards {
@@ -155,7 +155,6 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 		if err != nil {
 			panic(err)
 		}
-
 
 		err = EmitRewardPayingEvent(context, rewardAddress, rewardsToBePayed, leftOverEntry.ContractRewards)
 		if err != nil {
