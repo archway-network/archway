@@ -18,3 +18,4 @@ Welcome to the documentation of the **Archway Daemon CLI: `archwayd`**.
 - [Fee Distribution](./fee-distribution.md)
 - [Multisig Transactions](./multisig-tx.md)
 - [Shells Completion Scripts](./shells-completion-scripts.md)
+- [WASM Smart Contracts](./wasm-smart-contracts.md)
