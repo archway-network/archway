@@ -1,4 +1,4 @@
-# Cosmos Hub Documentation
+# Archway Daemon Documentation
 
 Welcome to the documentation of the **Archway Daemon CLI: `archwayd`**.
 
