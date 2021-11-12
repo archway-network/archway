@@ -2,6 +2,7 @@ package gastracker
 
 import (
 	"encoding/json"
+
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -28,9 +29,9 @@ func (g GasConsumptionMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.
 	var contractInstanceMetadata gstTypes.ContractInstanceMetadata
 	if contractOperationInfo.Operation == gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION {
 		contractInstanceMetadata = gstTypes.ContractInstanceMetadata{
-			RewardAddress: contractOperationInfo.RewardAddress,
-			GasRebateToUser: contractOperationInfo.GasRebateToEndUser,
-			CollectPremium: contractOperationInfo.CollectPremium,
+			RewardAddress:            contractOperationInfo.RewardAddress,
+			GasRebateToUser:          contractOperationInfo.GasRebateToEndUser,
+			CollectPremium:           contractOperationInfo.CollectPremium,
 			PremiumPercentageCharged: contractOperationInfo.PremiumPercentageCharged,
 		}
 		err = g.gastrackingKeeper.AddNewContractMetadata(ctx, contractAddr.String(), contractInstanceMetadata)
@@ -49,7 +50,7 @@ func (g GasConsumptionMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.
 		ctx.GasMeter().RefundGas(contractOperationInfo.GasConsumed, "Gas Refund for smart contract execution")
 	}
 
-	if contractInstanceMetadata.CollectPremium {
+	if contractInstanceMetadata.CollectPremium && g.gastrackingKeeper.GetContractPremiumSwitch(ctx) {
 		ctx.Logger().Info("Charging premium to user", "premiumPercentage", contractInstanceMetadata.PremiumPercentageCharged)
 		premiumGas := (contractOperationInfo.GasConsumed * contractInstanceMetadata.PremiumPercentageCharged) / 100
 		ctx.GasMeter().ConsumeGas(premiumGas, "Smart contract premium")
@@ -88,6 +89,3 @@ func NewGasTrackingMessageHandler(
 		wasmKeeper.NewBurnCoinMessageHandler(bankKeeper),
 	)
 }
-
-
-
