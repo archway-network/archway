@@ -12,34 +12,39 @@ const (
 )
 
 var (
-	KeyGasTrackingSwitch     = []byte("GasTrackingSwitch")
-	KeyGasRebateSwitch       = []byte("GasRebateSwitch")
-	KeyGasRebateToUserSwitch = []byte("GasRebateToUserSwitch")
+	KeyGasTrackingSwitch    = []byte("GasTrackingSwitch")
+	KeyDappInflationRewards = []byte("DappInflationRewards")
+	// TODO: add inflation reward switch
+	KeyGasRebateSwitch       = []byte("GasRebateSwitch")       // This isoff pass gas rebate
+	KeyGasRebateToUserSwitch = []byte("GasRebateToUserSwitch") // IF OFF then just do normal gas rebate
 	KeyContractPremiumSwitch = []byte("ContractPremiumSwitch")
 )
 
 type Params struct {
-	GasTrackingSwitch     bool
-	GasRebateSwitch       bool
-	GasRebateToUserSwitch bool
-	ContractPremiumSwitch bool
+	GasTrackingSwitch             bool
+	GasDappInflationRewardsSwitch bool
+	GasRebateSwitch               bool
+	GasRebateToUserSwitch         bool
+	ContractPremiumSwitch         bool
 }
 
 var (
-	DefaultGasTrackingSwitch     = true
-	DefaultGasRebateSwitch       = true
-	DefaultGasRebateToUserSwitch = true
-	DefaultContractPremiumSwitch = true
+	DefaultGasTrackingSwitch      = true
+	GasDappInflationRewardsSwitch = true
+	DefaultGasRebateSwitch        = true
+	DefaultGasRebateToUserSwitch  = true
+	DefaultContractPremiumSwitch  = true
 )
 
 var _ paramstypes.ParamSet = &Params{}
 
 func DefaultParams() Params {
 	return Params{
-		GasTrackingSwitch:     DefaultGasTrackingSwitch,
-		GasRebateSwitch:       DefaultGasRebateSwitch,
-		GasRebateToUserSwitch: DefaultGasRebateToUserSwitch,
-		ContractPremiumSwitch: DefaultContractPremiumSwitch,
+		GasTrackingSwitch:             DefaultGasTrackingSwitch,
+		GasDappInflationRewardsSwitch: GasDappInflationRewardsSwitch,
+		GasRebateSwitch:               DefaultGasRebateSwitch,
+		GasRebateToUserSwitch:         DefaultGasRebateToUserSwitch,
+		ContractPremiumSwitch:         DefaultContractPremiumSwitch,
 	}
 }
 
@@ -55,6 +60,7 @@ func (p Params) String() string {
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(KeyGasTrackingSwitch, &p.GasTrackingSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(KeyDappInflationRewards, &p.GasDappInflationRewardsSwitch, validateSwitch),
 		paramstypes.NewParamSetPair(KeyGasRebateSwitch, &p.GasRebateSwitch, validateSwitch),
 		paramstypes.NewParamSetPair(KeyGasRebateToUserSwitch, &p.GasRebateToUserSwitch, validateSwitch),
 		paramstypes.NewParamSetPair(KeyContractPremiumSwitch, &p.ContractPremiumSwitch, validateSwitch),
