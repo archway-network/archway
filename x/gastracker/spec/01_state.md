@@ -1,10 +1,42 @@
 # State 
-The `gastracker` module keeps state of: 
-1. **[Contract Instance Metadata](https://github.com/archway-network/archway/blob/c22d753a241672c6974a49063c2f95c5b68bef41/proto/gastracker/types.proto#L78-L81)**
-2. **[RewardEntry](https://github.com/archway-network/archway/blob/c22d753a241672c6974a49063c2f95c5b68bef41/proto/gastracker/types.proto#L84-L86)**
-3. **[BlockGasTracking](https://github.com/archway-network/archway/blob/500b1e9602714a74c7ba7a1399489605db226b91/proto/gastracker/types.proto#L45)**
 
-We use the following indexes to manage the state:
+## Current Block Tracking
+- CurrentBlockTrackingKey `currnt_blk |  BlockGasTracking -> Protobuffer(BlockGasTracking)`
+
+BlockGasTracking is represented by a custom protobuffer message 
+```proto3
+message BlockGasTracking { repeated TransactionTracking tx_tracking_infos = 1; }
+
+message TransactionTracking {
+  uint64 max_gas_allowed = 1;
+  repeated cosmos.base.v1beta1.DecCoin max_contract_rewards = 3;
+  repeated ContractGasTracking contract_tracking_infos = 4;
+}
+```
+
+When a new block starts the protocol retrieves previously stored Block iterates over all Transactions tracked on the block and disburse rewards to smart contracts.
+
+## Contract Instance Metadata
 - Contract Instance Metadata `c_inst_md |  Address -> Protobuffer(address)`
-- RewardEntry `reward_entry |  Address -> Protobuffer(address)`
+
+Whenever a smart contract is instantiated archway stores this address will be the target address for rewards coming for the smart contract
+
+```proto3
+message ContractInstanceMetadata {
+  string reward_address = 1;
+  bool gas_rebate_to_user = 2;
+}
+```
+
+## Reward Entry
+- Reward Entry `reward_entry |  Address -> Protobuffer(address)`
+
+Stores all reward transactions performed for X address, its also used to determine leftover rewards.
+
+
+```proto3
+message LeftOverRewardEntry {
+  repeated cosmos.base.v1beta1.DecCoin contract_rewards = 1;
+}
+```
 
