@@ -7,6 +7,7 @@ import (
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -155,12 +156,13 @@ func TestMessageHandler(t *testing.T) {
 	}
 
 	ctx, keeper := CreateTestKeeperAndContext(t)
+	loggingKeeper := loggingGasTrackerKeeper{underlyingKeeper: keeper}
 	ctx = ctx.WithGasMeter(&l)
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount("archway", "archway")
 
-	gasConsumptionMsgHandler := GasConsumptionMsgHandler{gastrackingKeeper: keeper}
+	gasConsumptionMsgHandler := GasConsumptionMsgHandler{gastrackingKeeper: &loggingKeeper}
 
 	firstContractAddress, err := sdk.AccAddressFromBech32("archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt")
 	assert.NoError(t, err, "Hardcoded bech32 address should be valid account address")
@@ -195,6 +197,9 @@ func TestMessageHandler(t *testing.T) {
 	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
+	require.Equal(t, 0, len(loggingKeeper.callLogs))
+	loggingKeeper.ResetLogs()
+
 	l.ClearLogs()
 
 	// Test 1: Non-instantiation operation without block gas tracking in place
@@ -224,6 +229,12 @@ func TestMessageHandler(t *testing.T) {
 	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
+	require.Equal(t, 1, len(loggingKeeper.callLogs))
+	filteredKeeperLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, gstTypes.ErrBlockTrackingDataNotFound, filteredKeeperLogs[0].Error)
+
+	loggingKeeper.ResetLogs()
 	l.ClearLogs()
 
 
@@ -256,6 +267,12 @@ func TestMessageHandler(t *testing.T) {
 	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
+	require.Equal(t, 1, len(loggingKeeper.callLogs))
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, gstTypes.ErrBlockTrackingDataNotFound, filteredKeeperLogs[0].Error)
+
+	loggingKeeper.ResetLogs()
 	l.ClearLogs()
 
 	// Test 3: Instantiation operation without tx tracking in place
@@ -291,6 +308,12 @@ func TestMessageHandler(t *testing.T) {
 	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
+	require.Equal(t, 1, len(loggingKeeper.callLogs))
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, gstTypes.ErrTxTrackingDataNotFound, filteredKeeperLogs[0].Error)
+
+	loggingKeeper.ResetLogs()
 	l.ClearLogs()
 
 	// Test 4: Non-instantiation operation without contract instance metadata in place
@@ -327,6 +350,21 @@ func TestMessageHandler(t *testing.T) {
 	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
+	require.Equal(t, 2, len(loggingKeeper.callLogs))
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, gstTypes.TransactionTracking{
+		MaxGasAllowed: 5,
+		MaxContractRewards: []*sdk.DecCoin{&testDecCoin},
+		ContractTrackingInfos: nil,
+	}, filteredKeeperLogs[0].TransactionTracking)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, gstTypes.ErrContractInstanceMetadataNotFound, filteredKeeperLogs[0].Error)
+
+	loggingKeeper.ResetLogs()
 	l.ClearLogs()
 
 
@@ -364,6 +402,34 @@ func TestMessageHandler(t *testing.T) {
 
 	filteredLogs = l.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
+
+	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, gstTypes.TransactionTracking{
+		MaxGasAllowed: 5,
+		MaxContractRewards: []*sdk.DecCoin{&testDecCoin},
+		ContractTrackingInfos: nil,
+	}, filteredKeeperLogs[0].TransactionTracking)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("AddNewContractMetadata")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, contractInstanceMetadata, filteredKeeperLogs[0].Metadata)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	require.Equal(t, 0, len(filteredKeeperLogs))
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, firstContractAddress.String(), filteredKeeperLogs[0].ContractAddress)
+	require.Equal(t, contractOperationInfo.GasConsumed, filteredKeeperLogs[0].GasUsed)
+	require.Equal(t, contractOperationInfo.Operation, filteredKeeperLogs[0].Operation)
+	require.Equal(t, !contractOperationInfo.GasRebateToEndUser, filteredKeeperLogs[0].IsEligibleForReward)
+
+	loggingKeeper.ResetLogs()
 
 	l.ClearLogs()
 
@@ -418,6 +484,31 @@ func TestMessageHandler(t *testing.T) {
 
 	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
+
+	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, uint64(5), filteredKeeperLogs[0].TransactionTracking.MaxGasAllowed)
+	require.Equal(t, []*sdk.DecCoin{&testDecCoin}, filteredKeeperLogs[0].TransactionTracking.MaxContractRewards)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("AddNewContractMetadata")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, contractInstanceMetadata, filteredKeeperLogs[0].Metadata)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	require.Equal(t, 0, len(filteredKeeperLogs))
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, firstContractAddress.String(), filteredKeeperLogs[0].ContractAddress)
+	require.Equal(t, contractOperationInfo.GasConsumed, filteredKeeperLogs[0].GasUsed)
+	require.Equal(t, contractOperationInfo.Operation, filteredKeeperLogs[0].Operation)
+	require.Equal(t, !contractOperationInfo.GasRebateToEndUser, filteredKeeperLogs[0].IsEligibleForReward)
+
+	loggingKeeper.ResetLogs()
 
 	l.ClearLogs()
 
@@ -474,6 +565,31 @@ func TestMessageHandler(t *testing.T) {
 
 	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
+
+	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, uint64(5), filteredKeeperLogs[0].TransactionTracking.MaxGasAllowed)
+	require.Equal(t, []*sdk.DecCoin{&testDecCoin}, filteredKeeperLogs[0].TransactionTracking.MaxContractRewards)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("AddNewContractMetadata")
+	require.Equal(t, 0, len(filteredKeeperLogs))
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, contractInstanceMetadata, filteredKeeperLogs[0].Metadata)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, firstContractAddress.String(), filteredKeeperLogs[0].ContractAddress)
+	require.Equal(t, executionContractOperationInfo.GasConsumed, filteredKeeperLogs[0].GasUsed)
+	require.Equal(t, executionContractOperationInfo.Operation, filteredKeeperLogs[0].Operation)
+	require.Equal(t, !contractInstanceMetadata.GasRebateToUser, filteredKeeperLogs[0].IsEligibleForReward)
+
+	loggingKeeper.ResetLogs()
 
 	l.ClearLogs()
 
