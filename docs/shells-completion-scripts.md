@@ -37,3 +37,5 @@ echo '. archwayd_completion' >> ~/.bashrc
 
 Refer to the user's manual of your interpreter provided by your
 operating system for information on how to enable shell autocompletion.
+
+For the updated version of this document, please refer to the [original version](https://github.com/cosmos/gaia/blob/main/docs/resources/gaiad.md#shells-completion-scripts).

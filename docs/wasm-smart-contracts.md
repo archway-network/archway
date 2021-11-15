@@ -39,11 +39,3 @@ Where `<wasmFilePath>` is the path to the wasm file,
 `<gasPrices>` indicates the gas prices, `<gas>` refers to the gas mode, and `<gasAdjustment>` is self explanatory.
 
 >**Warning:** make sure your wallet has enough tokens before deploying.
-
-
-
-
-
-
-
-
