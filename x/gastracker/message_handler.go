@@ -25,6 +25,12 @@ func (g GasConsumptionMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.
 		return events, data, err
 	}
 
+	// Checking if block tracking and tx tracking already in place
+	_, err = g.gastrackingKeeper.GetCurrentTxTrackingInfo(ctx)
+	if err != nil {
+		return events, data, err
+	}
+
 	var contractInstanceMetadata gstTypes.ContractInstanceMetadata
 	if contractOperationInfo.Operation == gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION {
 		contractInstanceMetadata = gstTypes.ContractInstanceMetadata{
@@ -46,13 +52,13 @@ func (g GasConsumptionMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.
 
 	if contractInstanceMetadata.GasRebateToUser {
 		ctx.Logger().Info("Refunding gas to the user", "contractAddress", contractAddr.String(), "gasConsumed", contractOperationInfo.GasConsumed)
-		ctx.GasMeter().RefundGas(contractOperationInfo.GasConsumed, "Gas Refund for smart contract execution")
+		ctx.GasMeter().RefundGas(contractOperationInfo.GasConsumed, gstTypes.GasRebateToUserDescriptor)
 	}
 
 	if contractInstanceMetadata.CollectPremium {
 		ctx.Logger().Info("Charging premium to user", "premiumPercentage", contractInstanceMetadata.PremiumPercentageCharged)
 		premiumGas := (contractOperationInfo.GasConsumed * contractInstanceMetadata.PremiumPercentageCharged) / 100
-		ctx.GasMeter().ConsumeGas(premiumGas, "Smart contract premium")
+		ctx.GasMeter().ConsumeGas(premiumGas, gstTypes.PremiumGasDescriptor)
 	}
 
 	err = g.gastrackingKeeper.TrackContractGasUsage(ctx, contractAddr.String(), contractOperationInfo.GasConsumed, contractOperationInfo.Operation, !contractInstanceMetadata.GasRebateToUser)

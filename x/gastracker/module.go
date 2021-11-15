@@ -2,7 +2,6 @@ package gastracker
 
 import (
 	"encoding/json"
-	"github.com/archway-network/archway/x/gastracker/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -67,10 +66,6 @@ func (a AppModule) GetQueryCmd() *cobra.Command {
 }
 
 func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONMarshaler, message json.RawMessage) []abci.ValidatorUpdate {
-	err := a.keeper.TrackNewBlock(context, types.BlockGasTracking{})
-	if err != nil {
-		panic(err)
-	}
 	return []abci.ValidatorUpdate{}
 }
 
@@ -107,7 +102,7 @@ func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock)
 }
 
 func (a AppModule) EndBlock(context sdk.Context, block abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+	return EndBlock(context, a.keeper, block)
 }
 
 
