@@ -23,4 +23,3 @@ Welcome to the documentation of the **Archway Daemon CLI: `archwayd`**.
 - [Multisig Transactions](https://github.com/cosmos/gaia/blob/main/docs/resources/gaiad.md#multisig-transactions)
 - [Shells Completion Scripts](./shells-completion-scripts.md)
 - [WASM Smart Contracts](./wasm-smart-contracts.md)
- 

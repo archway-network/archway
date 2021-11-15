@@ -52,6 +52,10 @@ message ContractOperationInfo {
   string reward_address = 3;
   // Only set in case of instantiate operation
   bool gas_rebate_to_end_user = 4;
+  // Only set in case of instantiate operation
+  bool collect_premium = 5;
+  // Only set in case of instantiate operation
+  uint64 premium_percentage_charged = 6;
 }
 
 // Custom wrapper around Query request
@@ -70,14 +74,20 @@ message GasTrackingQueryResultWrapper {
 message ContractInstantiationRequestWrapper {
   string reward_address = 1;
   bool gas_rebate_to_user = 2;
+  bool collect_premium = 3;
+  uint64 premium_percentage_charged = 4;
   // Base64 encoding of instantiation data
-  string instantiation_request = 3;
+  string instantiation_request = 5;
 }
 
 // Contract instance metadata
 message ContractInstanceMetadata {
   string reward_address = 1;
   bool gas_rebate_to_user = 2;
+  // Flag to indicate whether to charge premium or not
+  bool collect_premium = 3;
+  // Percentage of gas consumed to be charged.
+  uint64 premium_percentage_charged = 4;
 }
 
 // Reward entry per beneficiary address
