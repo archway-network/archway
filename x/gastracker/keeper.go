@@ -20,13 +20,16 @@ type GasTrackingKeeper interface {
 	CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error)
 	GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress string) (gstTypes.LeftOverRewardEntry, error)
 
-	GetContractPremiumSwitch(ctx)
+	IsGasTrackingEnabled(ctx sdk.Context) bool
+	IsGasRebateEnabled(ctx sdk.Context) bool
+	IsGasRebateToUserEnabled(ctx sdk.Context) bool
+	IsContractPremiumEnabled(ctx sdk.Context) bool
 }
 
 type Keeper struct {
 	key        sdk.StoreKey
 	appCodec   codec.Marshaler
-	ParamStore paramsTypes.Subspace
+	paramSpace paramsTypes.Subspace
 }
 
 func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {
@@ -137,8 +140,8 @@ func (k *Keeper) AddNewContractMetadata(ctx sdk.Context, address string, metadat
 	return nil
 }
 
-func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler) *Keeper {
-	return &Keeper{key: key, appCodec: appCodec}
+func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler, paramSpace paramsTypes.Subspace) *Keeper {
+	return &Keeper{key: key, appCodec: appCodec, paramSpace: paramSpace}
 }
 
 func (k *Keeper) TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockGasTracking) error {

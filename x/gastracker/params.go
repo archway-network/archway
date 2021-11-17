@@ -9,15 +9,19 @@ func (k Keeper) SetParams(ctx sdk.Context, params gstTypes.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-func (k Keeper) GetGasTrackingSwitch(ctx sdk.Context) (res bool) {
-	return k.paramSpace.Get(ctx, gstTypes.KeyGasTrackingSwitch)
+func (k Keeper) IsGasTrackingEnabled(ctx sdk.Context) (res bool) {
+	k.paramSpace.Get(ctx, gstTypes.KeyGasTrackingSwitch, &res)
+	return
 }
-func (k Keeper) GetGasRebateSwitch(ctx sdk.Context) (res bool) {
-	return k.paramSpace.Get(ctx, gstTypes.KeyGasGasRebateSwitch)
+func (k Keeper) IsGasRebateEnabled(ctx sdk.Context) (res bool) {
+	k.paramSpace.Get(ctx, gstTypes.KeyGasRebateSwitch, &res)
+	return
 }
-func (k Keeper) GetGasRebateToUserSwitch(ctx sdk.Context) (res bool) {
-	return k.paramSpace.Get(ctx, gstTypes.KeyGasGasRebateToUserSwitch)
+func (k Keeper) IsGasRebateToUserEnabled(ctx sdk.Context) (res bool) {
+	k.paramSpace.Get(ctx, gstTypes.KeyGasRebateToUserSwitch, &res)
+	return
 }
-func (k Keeper) GetContractPremiumSwitch(ctx sdk.Context) (res bool) {
-	return k.paramSpace.Get(ctx, gstTypes.KeyGasontractPremiumSwitch)
+func (k Keeper) IsContractPremiumEnabled(ctx sdk.Context) (res bool) {
+	k.paramSpace.Get(ctx, gstTypes.KeyContractPremiumSwitch, &res)
+	return
 }

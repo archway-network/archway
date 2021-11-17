@@ -2,13 +2,14 @@ package gastracker
 
 import (
 	"fmt"
+	"testing"
+
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/abci/types"
-	"testing"
 )
 
 type Behaviour int
@@ -20,23 +21,23 @@ const (
 )
 
 type RewardTransferKeeperCallLogs struct {
-	Method string
-	senderModule string
+	Method          string
+	senderModule    string
 	recipientModule string
-	recipientAddr string
-	amt sdk.Coins
+	recipientAddr   string
+	amt             sdk.Coins
 }
 
 type TestRewardTransferKeeper struct {
 	Logs []*RewardTransferKeeperCallLogs
-	B Behaviour
+	B    Behaviour
 }
 
 func (t *TestRewardTransferKeeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error {
 	switch t.B {
 	case Log:
 		t.Logs = append(t.Logs, &RewardTransferKeeperCallLogs{
-			Method: "SendCoinsFromModuleToAccount",
+			Method:        "SendCoinsFromModuleToAccount",
 			senderModule:  senderModule,
 			recipientAddr: recipientAddr.String(),
 			amt:           amt,
@@ -49,15 +50,14 @@ func (t *TestRewardTransferKeeper) SendCoinsFromModuleToAccount(ctx sdk.Context,
 	return nil
 }
 
-
-func (t * TestRewardTransferKeeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
+func (t *TestRewardTransferKeeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
 	switch t.B {
 	case Log:
 		t.Logs = append(t.Logs, &RewardTransferKeeperCallLogs{
-			Method: "SendCoinsFromModuleToModule",
-			senderModule:  senderModule,
+			Method:          "SendCoinsFromModuleToModule",
+			senderModule:    senderModule,
 			recipientModule: recipientModule,
-			amt:           amt,
+			amt:             amt,
 		})
 	case Error:
 		return fmt.Errorf("TestError")
@@ -69,7 +69,6 @@ func (t * TestRewardTransferKeeper) SendCoinsFromModuleToModule(ctx sdk.Context,
 
 type TestMintParamsKeeper struct {
 	B Behaviour
-
 }
 
 func (t *TestMintParamsKeeper) GetParams(_ sdk.Context) (params mintTypes.Params) {
@@ -77,11 +76,10 @@ func (t *TestMintParamsKeeper) GetParams(_ sdk.Context) (params mintTypes.Params
 		panic("TestPanic")
 	}
 	return mintTypes.Params{
-		MintDenom: "test",
+		MintDenom:     "test",
 		BlocksPerYear: 100,
 	}
 }
-
 
 func (t *TestMintParamsKeeper) GetMinter(_ sdk.Context) (minter mintTypes.Minter) {
 	if t.B == Panic {
@@ -103,8 +101,8 @@ func TestBlockTracking(t *testing.T) {
 	// Empty new block tracking object
 	err := keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
-			MaxGasAllowed: 1,
-			MaxContractRewards: []*sdk.DecCoin{&zeroDecCoin},
+			MaxGasAllowed:         1,
+			MaxContractRewards:    []*sdk.DecCoin{&zeroDecCoin},
 			ContractTrackingInfos: nil,
 		},
 	}})
@@ -133,17 +131,17 @@ func TestBlockTracking(t *testing.T) {
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
 	err = keeper.AddNewContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
-		GasRebateToUser: false,
-		CollectPremium: true,
+		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
+		GasRebateToUser:          false,
+		CollectPremium:           true,
 		PremiumPercentageCharged: 50,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
 	err = keeper.AddNewContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		GasRebateToUser: false,
-		CollectPremium: true,
+		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		GasRebateToUser:          false,
+		CollectPremium:           true,
 		PremiumPercentageCharged: 150,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
@@ -153,44 +151,44 @@ func TestBlockTracking(t *testing.T) {
 	// Tracking new block with multiple tx tracking obj
 	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
-			MaxGasAllowed: 10,
+			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address: "1",
-					GasConsumed: 2,
+					Address:             "1",
+					GasConsumed:         2,
 					IsEligibleForReward: true,
-					Operation: gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address: "2",
-					GasConsumed: 4,
+					Address:             "2",
+					GasConsumed:         4,
 					IsEligibleForReward: true,
-					Operation: gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address: "3",
-					GasConsumed: 1,
+					Address:             "3",
+					GasConsumed:         1,
 					IsEligibleForReward: true,
-					Operation: gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address: "4",
-					GasConsumed: 1,
+					Address:             "4",
+					GasConsumed:         1,
 					IsEligibleForReward: false,
-					Operation: gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 			},
 		},
 		{
-			MaxGasAllowed: 2,
+			MaxGasAllowed:      2,
 			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address: "2",
-					GasConsumed: 2,
+					Address:             "2",
+					GasConsumed:         2,
 					IsEligibleForReward: true,
-					Operation: gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
+					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
 				},
 			},
 		},
@@ -234,22 +232,22 @@ func TestBlockTracking(t *testing.T) {
 	// Let's check reward keeper call logs first
 	require.Equal(t, 3, len(testRewardKeeper.Logs))
 	require.Equal(t, &RewardTransferKeeperCallLogs{
-		Method:       "SendCoinsFromModuleToModule",
-		senderModule: authTypes.FeeCollectorName,
+		Method:          "SendCoinsFromModuleToModule",
+		senderModule:    authTypes.FeeCollectorName,
 		recipientModule: gstTypes.ContractRewardCollector,
-		amt: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(141)), sdk.NewCoin("test1", sdk.NewInt(1))),
+		amt:             sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(141)), sdk.NewCoin("test1", sdk.NewInt(1))),
 	}, testRewardKeeper.Logs[0])
 	require.Equal(t, &RewardTransferKeeperCallLogs{
-		Method: "SendCoinsFromModuleToAccount",
-		senderModule: gstTypes.ContractRewardCollector,
+		Method:        "SendCoinsFromModuleToAccount",
+		senderModule:  gstTypes.ContractRewardCollector,
 		recipientAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		amt: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30))),
+		amt:           sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30))),
 	}, testRewardKeeper.Logs[1])
 	require.Equal(t, &RewardTransferKeeperCallLogs{
-		Method: "SendCoinsFromModuleToAccount",
-		senderModule: gstTypes.ContractRewardCollector,
+		Method:        "SendCoinsFromModuleToAccount",
+		senderModule:  gstTypes.ContractRewardCollector,
 		recipientAddr: "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
-		amt: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(109))),
+		amt:           sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(109))),
 	}, testRewardKeeper.Logs[2])
 
 	// Let's check left-over balances

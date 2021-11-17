@@ -1,6 +1,10 @@
 package gastracker
 
 import (
+	"os"
+	"testing"
+	"time"
+
 	"github.com/archway-network/archway/x/gastracker/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -9,23 +13,36 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	db "github.com/tendermint/tm-db"
-	"os"
-	"testing"
-	"time"
+
+	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-func CreateTestKeeperAndContext(t *testing.T) (sdk.Context, GasTrackingKeeper) {
+func createTestBaseKeeperAndContext(t *testing.T) (sdk.Context, *Keeper) {
+
+	keyParams := sdk.NewKVStoreKey(paramsTypes.StoreKey)
+	tKeyParams := sdk.NewTransientStoreKey(paramsTypes.TStoreKey)
+
 	memDB := db.NewMemDB()
 	ms := store.NewCommitMultiStore(memDB)
 	storeKey := sdk.NewKVStoreKey("TestStore")
 	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(tKeyParams, sdk.StoreTypeIAVL, memDB)
 	err := ms.LoadLatestVersion()
 	require.NoError(t, err, "Loading latest version should not fail")
 	encodingConfig := simapp.MakeTestEncodingConfig()
+	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
+	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
+
+	subspace, _ := paramsKeeper.GetSubspace(gstTypes.DefaultParamSpace)
+	subspace = subspace.WithKeyTable(gstTypes.ParamKeyTable())
 
 	keeper := Keeper{
-		key:      storeKey,
-		appCodec: encodingConfig.Marshaler,
+		key:        storeKey,
+		appCodec:   appCodec,
+		paramSpace: subspace,
 	}
 
 	ctx := sdk.NewContext(ms, tmproto.Header{
@@ -34,6 +51,9 @@ func CreateTestKeeperAndContext(t *testing.T) (sdk.Context, GasTrackingKeeper) {
 	}, false, log.NewTMLogger(os.Stdout))
 
 	return ctx, &keeper
+}
+func CreateTestKeeperAndContext(t *testing.T) (sdk.Context, GasTrackingKeeper) {
+	return createTestBaseKeeperAndContext(t)
 }
 
 func TestContractMetadataHandling(t *testing.T) {
@@ -48,9 +68,9 @@ func TestContractMetadataHandling(t *testing.T) {
 	)
 
 	newMetadata := types.ContractInstanceMetadata{
-		RewardAddress:   "2",
-		GasRebateToUser: true,
-		CollectPremium: false,
+		RewardAddress:            "2",
+		GasRebateToUser:          true,
+		CollectPremium:           false,
 		PremiumPercentageCharged: 3,
 	}
 
@@ -66,9 +86,9 @@ func TestContractMetadataHandling(t *testing.T) {
 
 	// Should be successful (we should be able to overwrite the existing metadata
 	updatedMetadata := types.ContractInstanceMetadata{
-		RewardAddress:   "3",
-		GasRebateToUser: true,
-		CollectPremium: true,
+		RewardAddress:            "3",
+		GasRebateToUser:          true,
+		CollectPremium:           true,
 		PremiumPercentageCharged: 80,
 	}
 	err = keeper.AddNewContractMetadata(ctx, "1", updatedMetadata)
@@ -127,7 +147,6 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	require.NoError(t, err, "Merging left over reward entry should not result in error")
 	require.Equal(t, expectedWholeCoins, wholeCoins, "Wholecoins should be same")
 
-
 	// Left over rewards are: 0.16666test, 0.5test1, 0.5test2
 	expectedLeftOverRewards = []sdk.DecCoin{
 		sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.166666666666666666")),
@@ -182,18 +201,17 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
 }
 
-
 func TestAddContractGasUsage(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 
 	err := keeper.TrackContractGasUsage(ctx, "1", 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION, false)
-	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(),"We cannot track contract gas since block tracking does not exists")
+	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(), "We cannot track contract gas since block tracking does not exists")
 
 	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{})
 	require.NoError(t, err, "We should be able to track new block")
 
 	err = keeper.TrackContractGasUsage(ctx, "1", 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION, false)
-	require.EqualError(t, err, types.ErrTxTrackingDataNotFound.Error(),"We cannot track contract gas since tx tracking does not exists")
+	require.EqualError(t, err, types.ErrTxTrackingDataNotFound.Error(), "We cannot track contract gas since tx tracking does not exists")
 
 	// Let's track one tx with one contract gas usage
 	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
@@ -212,8 +230,8 @@ func TestAddContractGasUsage(t *testing.T) {
 	require.NoError(t, err, "We should be able to get block tracking object")
 	require.Equal(t, 2, len(blockTrackingObj.TxTrackingInfos))
 	require.Equal(t, types.TransactionTracking{
-		MaxGasAllowed:         5,
-		MaxContractRewards:    nil,
+		MaxGasAllowed:      5,
+		MaxContractRewards: nil,
 		ContractTrackingInfos: []*types.ContractGasTracking{
 			{
 				Address:             "1",
@@ -224,8 +242,8 @@ func TestAddContractGasUsage(t *testing.T) {
 		},
 	}, *blockTrackingObj.TxTrackingInfos[0])
 	require.Equal(t, types.TransactionTracking{
-		MaxGasAllowed:         6,
-		MaxContractRewards:    nil,
+		MaxGasAllowed:      6,
+		MaxContractRewards: nil,
 		ContractTrackingInfos: []*types.ContractGasTracking{
 			{
 				Address:             "2",
@@ -246,7 +264,7 @@ func TestAddContractGasUsage(t *testing.T) {
 	require.NoError(t, err, "We should be able to track new block")
 
 	blockTrackingObj, err = keeper.GetCurrentBlockTrackingInfo(ctx)
-	require.NoError(t,err, "We should be able to get the block tracking obj")
+	require.NoError(t, err, "We should be able to get the block tracking obj")
 	// It should be empty
 	require.Equal(t, types.BlockGasTracking{}, blockTrackingObj)
 }

@@ -87,7 +87,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 			gasUsageForInflationRewards := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(contractTrackingInfo.GasConsumed))
 
 			var gasUsageForUsageRewards sdk.Dec
-			if metadata.CollectPremium && keeper.GetContractPremiumSwitch(ctx) {
+			if metadata.CollectPremium /*&& keeper.IsContractPremiumEnabled(context)*/ {
 				premiumGas := gasUsageForInflationRewards.Mul(sdk.NewDecFromBigInt(ConvertUint64ToBigInt(metadata.PremiumPercentageCharged))).QuoInt64(100)
 				gasUsageForUsageRewards = gasUsageForInflationRewards.Add(premiumGas)
 			} else {
