@@ -110,6 +110,9 @@ func TestBlockTracking(t *testing.T) {
 	}})
 	require.NoError(t, err, "We should be able to track new block")
 
+	err = keeper.MarkEndOfTheBlock(ctx)
+	require.NoError(t, err, "We should be able to end the block")
+
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
 	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
@@ -150,6 +153,10 @@ func TestBlockTracking(t *testing.T) {
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
+
+	err = keeper.MarkEndOfTheBlock(ctx)
+	require.NoError(t, err, "We should be able to end the block")
+
 	// Tracking new block with multiple tx tracking obj
 	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
@@ -195,6 +202,10 @@ func TestBlockTracking(t *testing.T) {
 			},
 		},
 	}})
+	require.NoError(t, err, "We should be able to track new block")
+
+	err = keeper.MarkEndOfTheBlock(ctx)
+	require.NoError(t, err, "We should be able to end the block")
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 

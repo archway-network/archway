@@ -20,6 +20,8 @@ const (
 
 	CurrentBlockTrackingKey = "current_blk"
 
+	PreviousBlockTrackingKey = "previous_blk"
+
 	ContractInstanceMetadataKeyPrefix = "c_inst_md"
 
 	RewardEntryKeyPrefix = "reward_entry"
@@ -27,6 +29,10 @@ const (
 	MagicString = "TjWnZr4u7x!A%D*G-KaPdSgUkXp2s5v8y/B?E(H+MbQeThWmYq3t6w9z$C&F)J@N"
 
 	GasTrackingQueryRequestMagicString = MagicString
+
+	GasRebateToUserDescriptor = "SmartContractGasRebateToUser"
+
+	PremiumGasDescriptor = "SmartContractPremiumGas"
 )
 
 func GetContractInstanceMetadataKey(address string) []byte {

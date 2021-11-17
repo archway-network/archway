@@ -13,9 +13,11 @@ var (
 
 	ErrContractInstanceMetadataNotFound = sdkErrors.Register(DefaultCodespace, 3, "Contract instance metadata not found")
 
-	ErrRewardEntryNotFound = sdkErrors.Register(DefaultCodespace, 4, "Reward entry not found")
+	ErrCurrentBlockTrackingDataAlreadyExists = sdkErrors.Register(DefaultCodespace, 4, "Current block tracking data already exists")
 
-	ErrInvalidInitRequest1 = sdkErrors.Register(DefaultCodespace, 5, "Invalid instantiation request, you cannot have both gas rebate and premium charge true")
+	ErrRewardEntryNotFound = sdkErrors.Register(DefaultCodespace, 5, "Reward entry not found")
 
-	ErrInvalidInitRequest2 = sdkErrors.Register(DefaultCodespace, 6, "Invalid instantiation request, premium percentage is out of range")
+	ErrInvalidInitRequest1 = sdkErrors.Register(DefaultCodespace, 6, "Invalid instantiation request, you cannot have both gas rebate and premium charge true")
+
+	ErrInvalidInitRequest2 = sdkErrors.Register(DefaultCodespace, 7, "Invalid instantiation request, premium percentage is out of range")
 )
