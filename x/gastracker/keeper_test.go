@@ -242,6 +242,9 @@ func TestAddContractGasUsage(t *testing.T) {
 		},
 	}, *blockTrackingObj.TxTrackingInfos[1])
 
+	err = keeper.MarkEndOfTheBlock(ctx)
+	require.NoError(t, err, "We should be able to mark previous block as ended")
+
 	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{})
 	require.NoError(t, err, "We should be able to track new block")
 

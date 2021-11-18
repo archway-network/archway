@@ -98,23 +98,26 @@ func TestBlockTracking(t *testing.T) {
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount("archway", "archway")
 
-	zeroDecCoin := sdk.NewDecCoinFromDec("test", sdk.NewDec(0))
+	ctx = ctx.WithBlockHeight(0)
+	require.NotPanics(t, func () {
+		EndBlock(ctx, keeper, types.RequestEndBlock{})
+	}, "EndBlock should not panic")
 
-	// Empty new block tracking object
-	err := keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
-		{
-			MaxGasAllowed: 1,
-			MaxContractRewards: []*sdk.DecCoin{&zeroDecCoin},
-			ContractTrackingInfos: nil,
-		},
-	}})
-	require.NoError(t, err, "We should be able to track new block")
-
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.NoError(t, err, "We should be able to end the block")
+	ctx = ctx.WithBlockHeight(1)
+	require.Panics(t, func () {
+		EndBlock(ctx, keeper, types.RequestEndBlock{})
+	}, "Endblock should panic")
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
 	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
+
+	ctx = ctx.WithBlockHeight(2)
+	require.Panics(t, func () {
+		BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	}, "Endblock should panic")
+
+	ctx = ctx.WithBlockHeight(1)
+
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// We should not have made any call to reward keeper
 	require.Zero(t, testRewardKeeper.Logs, "No logs should be there as no need to make new calls")
@@ -154,8 +157,11 @@ func TestBlockTracking(t *testing.T) {
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 
+	_ = EndBlock(ctx, keeper, types.RequestEndBlock{})
 	err = keeper.MarkEndOfTheBlock(ctx)
-	require.NoError(t, err, "We should be able to end the block")
+	require.EqualError(t, err, gstTypes.ErrBlockTrackingDataNotFound.Error(), "Block tracking data should not be found")
+
+	ctx = ctx.WithBlockHeight(2)
 
 	// Tracking new block with multiple tx tracking obj
 	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
