@@ -38,11 +38,25 @@ type loggingVM struct {
 }
 
 func (l *loggingVM) Create(code cosmwasm.WasmCode) (cosmwasm.Checksum, error) {
-	panic("Not implemented")
+	if l.Fail {
+		return cosmwasm.Checksum{}, errTestFail
+	}
+	l.logs = append(l.logs, loggingVMLog{
+		MethodName: "Create",
+		Message:    nil,
+	})
+	return cosmwasm.Checksum{}, nil
 }
 
 func (l *loggingVM) AnalyzeCode(checksum cosmwasm.Checksum) (*wasmvmtypes.AnalysisReport, error) {
-	panic("Not implemented")
+	if l.Fail {
+		return nil, errTestFail
+	}
+	l.logs = append(l.logs, loggingVMLog{
+		MethodName: "AnalyzeCode",
+		Message:    nil,
+	})
+	return nil, nil
 }
 
 func (l *loggingVM) Instantiate(checksum cosmwasm.Checksum, env wasmvmtypes.Env, info wasmvmtypes.MessageInfo, initMsg []byte, store cosmwasm.KVStore, goapi cosmwasm.GoAPI, querier cosmwasm.Querier, gasMeter cosmwasm.GasMeter, gasLimit uint64, deserCost wasmvmtypes.UFraction) (*wasmvmtypes.Response, uint64, error) {
@@ -197,15 +211,36 @@ func (l *loggingVM) IBCPacketTimeout(checksum cosmwasm.Checksum, env wasmvmtypes
 }
 
 func (l *loggingVM) Pin(checksum cosmwasm.Checksum) error {
-	panic("not implemented in test")
+	if l.Fail {
+		return errTestFail
+	}
+	l.logs = append(l.logs, loggingVMLog{
+		MethodName: "Pin",
+		Message: nil,
+	})
+	return nil
 }
 
 func (l *loggingVM) Unpin(checksum cosmwasm.Checksum) error {
-	panic("not implemented in test")
+	if l.Fail {
+		return errTestFail
+	}
+	l.logs = append(l.logs, loggingVMLog{
+		MethodName: "Unpin",
+		Message: nil,
+	})
+	return nil
 }
 
 func (l *loggingVM) GetMetrics() (*wasmvmtypes.Metrics, error) {
-	panic("not implemented in test")
+	if l.Fail {
+		return nil, errTestFail
+	}
+	l.logs = append(l.logs, loggingVMLog{
+		MethodName: "GetMetrics",
+		Message: nil,
+	})
+	return nil, nil
 }
 
 func (l *loggingVM) Reset() {
@@ -431,6 +466,82 @@ func TestVMWrapperQuery(t *testing.T) {
 	require.Equal(t, "Query", loggingVm.logs[0].MethodName)
 
 	require.Equal(t, []byte{1}, queryResponse)
+}
+
+func TestVMWrapperPassthrough(t *testing.T) {
+	testParams := setupVMWrapperTest(t)
+	vmWrapper := testParams.vmWrapper
+	loggingVm := testParams.loggingVM
+
+	_, err := vmWrapper.GetMetrics()
+	require.NoError(t, err, "GetMetric should succeed")
+
+	require.Equal(t, 1, len(loggingVm.logs))
+	require.Equal(t, "GetMetrics", loggingVm.logs[0].MethodName)
+
+	loggingVm.Reset()
+
+	loggingVm.Fail = true
+	_, err = vmWrapper.GetMetrics()
+	require.EqualError(t, err, errTestFail.Error(),"GetMetric should fail")
+
+	loggingVm.Reset()
+
+	err = vmWrapper.Pin(cosmwasm.Checksum{})
+	require.NoError(t, err, "Pin should succeed")
+
+	require.Equal(t, 1, len(loggingVm.logs))
+	require.Equal(t, "Pin", loggingVm.logs[0].MethodName)
+
+	loggingVm.Reset()
+
+	loggingVm.Fail = true
+	err = vmWrapper.Pin(cosmwasm.Checksum{})
+	require.EqualError(t, err, errTestFail.Error(),"Pin should fail")
+
+	loggingVm.Reset()
+
+	err = vmWrapper.Unpin(cosmwasm.Checksum{})
+	require.NoError(t, err, "Unpin should succeed")
+
+	require.Equal(t, 1, len(loggingVm.logs))
+	require.Equal(t, "Unpin", loggingVm.logs[0].MethodName)
+
+	loggingVm.Reset()
+
+	loggingVm.Fail = true
+	err = vmWrapper.Unpin(cosmwasm.Checksum{})
+	require.EqualError(t, err, errTestFail.Error(),"Unpin should fail")
+
+	loggingVm.Reset()
+
+	_, err = vmWrapper.Create(cosmwasm.WasmCode{})
+	require.NoError(t, err, "Create should succeed")
+
+	require.Equal(t, 1, len(loggingVm.logs))
+	require.Equal(t, "Create", loggingVm.logs[0].MethodName)
+
+	loggingVm.Reset()
+
+	loggingVm.Fail = true
+	_, err = vmWrapper.Create(cosmwasm.WasmCode{})
+	require.EqualError(t, err, errTestFail.Error(),"Create should fail")
+
+	loggingVm.Reset()
+
+	_, err = vmWrapper.AnalyzeCode(cosmwasm.Checksum{})
+	require.NoError(t, err, "AnalyzeCode should succeed")
+
+	require.Equal(t, 1, len(loggingVm.logs))
+	require.Equal(t, "AnalyzeCode", loggingVm.logs[0].MethodName)
+
+	loggingVm.Reset()
+
+	loggingVm.Fail = true
+	_, err = vmWrapper.AnalyzeCode(cosmwasm.Checksum{})
+	require.EqualError(t, err, errTestFail.Error(),"AnalyzeCode should fail")
+
+	loggingVm.Reset()
 }
 
 func TestVMWrapperExecutionAndIBC(t *testing.T) {
