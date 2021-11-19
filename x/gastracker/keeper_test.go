@@ -85,6 +85,9 @@ func TestContractMetadataHandling(t *testing.T) {
 func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 
+	_, err := keeper.GetLeftOverRewardEntry(ctx, "1")
+	require.EqualError(t, err, types.ErrRewardEntryNotFound.Error(), "Getting left over reward entry should fail")
+
 	rewardCoins := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1).QuoInt64(3)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 	rewardCoins.Sort()
 
