@@ -268,6 +268,9 @@ func TestBlockTrackingReadWrite(t *testing.T) {
 	err := keeper.MarkEndOfTheBlock(ctx)
 	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(), "We cannot mark end of the block when there is no current block")
 
+	_, err = keeper.GetPreviousBlockTrackingInfo(ctx)
+	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(), "No previous block tracking data should exists")
+
 	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{TxTrackingInfos: []*types.TransactionTracking{&dummyTxTracking1}})
 	require.NoError(t, err, "We should be able to track new block")
 
