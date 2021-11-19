@@ -15,6 +15,14 @@ type WasmQuerier interface {
 
 func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmQuerier WasmQuerier) func(ctx sdk.Context, request *wasmvmtypes.WasmQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.WasmQuery) ([]byte, error) {
+		if request.Smart != nil && request.Raw != nil {
+			return nil, wasmvmtypes.UnsupportedRequest{Kind: "only one WasmQuery variant can be replied to"}
+		}
+
+		if request.Smart == nil && request.Raw == nil {
+			return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown WasmQuery variant"}
+		}
+
 		if request.Smart != nil {
 			addr, err := sdk.AccAddressFromBech32(request.Smart.ContractAddr)
 			if err != nil {
@@ -76,14 +84,12 @@ func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmQuer
 			}
 
 			return gasTrackingQueryResultWrapper.QueryResponse, nil
-		}
-		if request.Raw != nil {
+		} else {
 			addr, err := sdk.AccAddressFromBech32(request.Raw.ContractAddr)
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Raw.ContractAddr)
 			}
 			return wasmQuerier.QueryRaw(ctx, addr, request.Raw.Key), nil
 		}
-		return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown WasmQuery variant"}
 	}
 }
