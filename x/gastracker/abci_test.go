@@ -92,7 +92,7 @@ func (t *TestMintParamsKeeper) GetMinter(_ sdk.Context) (minter mintTypes.Minter
 	}
 }
 
-func TestBlockTracking(t *testing.T) {
+func TestABCIPanicBehaviour(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 
 	config := sdk.GetConfig()
@@ -104,7 +104,7 @@ func TestBlockTracking(t *testing.T) {
 	}, "EndBlock should not panic")
 
 	ctx = ctx.WithBlockHeight(1)
-	require.Panics(t, func () {
+	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func () {
 		EndBlock(ctx, keeper, types.RequestEndBlock{})
 	}, "Endblock should panic")
 
@@ -112,7 +112,7 @@ func TestBlockTracking(t *testing.T) {
 	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
 	ctx = ctx.WithBlockHeight(2)
-	require.Panics(t, func () {
+	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func () {
 		BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	}, "Endblock should panic")
 
@@ -126,7 +126,26 @@ func TestBlockTracking(t *testing.T) {
 	require.NoError(t, err, "We should be able to get new block gas tracking")
 	require.Equal(t, gstTypes.BlockGasTracking{}, blockGasTracking, "We should have overwritten block gas tracking obj")
 
-	err = keeper.AddNewContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
+	_ = EndBlock(ctx, keeper, types.RequestEndBlock{})
+	err = keeper.MarkEndOfTheBlock(ctx)
+	require.EqualError(t, err, gstTypes.ErrBlockTrackingDataNotFound.Error(), "Block tracking data should not be found")
+}
+
+func TestBlockTracking(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
+	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
+
+	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
+	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
+
+	ctx = ctx.WithBlockHeight(2)
+
+	err := keeper.AddNewContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser: false,
 	})
@@ -153,15 +172,6 @@ func TestBlockTracking(t *testing.T) {
 		PremiumPercentageCharged: 150,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
-
-	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
-	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
-
-	_ = EndBlock(ctx, keeper, types.RequestEndBlock{})
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.EqualError(t, err, gstTypes.ErrBlockTrackingDataNotFound.Error(), "Block tracking data should not be found")
-
-	ctx = ctx.WithBlockHeight(2)
 
 	// Tracking new block with multiple tx tracking obj
 	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	cosmwasm "github.com/CosmWasm/wasmvm"
+	"github.com/CosmWasm/wasmvm/api"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -212,10 +213,14 @@ func (l *loggingVM) Reset() {
 	l.Fail = false
 }
 
+type vmWrapperTestParams struct {
+	loggingVM *loggingVM
+	gasRegister keeper.WasmGasRegister
+	kvStore api.KVStore
+	vmWrapper *GasTrackingWasmEngine
+}
 
-
-func TestVMWrapper(t *testing.T) {
-
+func setupVMWrapperTest(t *testing.T) vmWrapperTestParams {
 	defaultGasRegister := keeper.NewDefaultWasmGasRegister()
 	var loggingVm = &loggingVM{
 		GasUsed: defaultGasRegister.ToWasmVMGas(234),
@@ -230,6 +235,21 @@ func TestVMWrapper(t *testing.T) {
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount("archway", "archway")
+
+	return vmWrapperTestParams{
+		loggingVM: loggingVm,
+		gasRegister: defaultGasRegister,
+		kvStore: kvStore,
+		vmWrapper: &vmWrapper,
+	}
+}
+
+func TestVMWrapperSuccessfulInitialization(t *testing.T) {
+	testParams := setupVMWrapperTest(t)
+	vmWrapper := testParams.vmWrapper
+	loggingVm := testParams.loggingVM
+	defaultGasRegister := testParams.gasRegister
+	kvStore := testParams.kvStore
 
 	// Test 1: Everything is passed correctly
 	request := gstTypes.ContractInstantiationRequestWrapper{
@@ -291,13 +311,30 @@ func TestVMWrapper(t *testing.T) {
 	require.Equal(t, request.PremiumPercentageCharged, contractOperationInfo.PremiumPercentageCharged)
 
 	loggingVm.Reset()
+}
+
+func TestVMWrapperFailedInitialization(t *testing.T) {
+	testParams := setupVMWrapperTest(t)
+	vmWrapper := testParams.vmWrapper
+	kvStore := testParams.kvStore
+	loggingVm := testParams.loggingVM
+
+	// Test 2: VM Failing
+	request := gstTypes.ContractInstantiationRequestWrapper{
+		RewardAddress:            "archway14hj2tavq8fpesdwxxcu44rty3hh90vhudldltd",
+		GasRebateToUser:          true,
+		CollectPremium:           false,
+		PremiumPercentageCharged: 224,
+		InstantiationRequest:     "e30=",
+	}
+	msg, err := json.Marshal(request)
+	require.NoError(t, err)
 
 	loggingVm.Fail = true
 	_, _, err = vmWrapper.Instantiate(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, msg, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
 	require.EqualError(t, err, errTestFail.Error(), "Should Fail")
 	loggingVm.Reset()
 
-	// Test 3: Invalid base64 string
 	request = gstTypes.ContractInstantiationRequestWrapper{
 		RewardAddress:            "archway14hj2tavq8fpesdwxxcu44rty3hh90vhudldltd",
 		GasRebateToUser:          true,
@@ -308,7 +345,8 @@ func TestVMWrapper(t *testing.T) {
 	msg, err = json.Marshal(request)
 	require.NoError(t, err)
 
-	response, gasUsed, err = vmWrapper.Instantiate(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, msg, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
+	// Test 3: Invalid base64 string
+	_, _, err = vmWrapper.Instantiate(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, msg, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
 	require.EqualError(t, err, "illegal base64 data at input byte 0","Should give an error about invalid base64")
 
 	// Test 4: Both GasRebateToUser and CollectPremium is turned on
@@ -322,7 +360,7 @@ func TestVMWrapper(t *testing.T) {
 	msg, err = json.Marshal(request)
 	require.NoError(t, err)
 
-	response, gasUsed, err = vmWrapper.Instantiate(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, msg, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
+	_, _, err = vmWrapper.Instantiate(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, msg, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
 	require.EqualError(t, err, gstTypes.ErrInvalidInitRequest1.Error(),"Should give an error about invalid base64")
 
 	//Test 5: Premium percentage is greater than 200
@@ -336,7 +374,7 @@ func TestVMWrapper(t *testing.T) {
 	msg, err = json.Marshal(request)
 	require.NoError(t, err)
 
-	response, gasUsed, err = vmWrapper.Instantiate(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, msg, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
+	_, _, err = vmWrapper.Instantiate(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, msg, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
 	require.EqualError(t, err, gstTypes.ErrInvalidInitRequest2.Error(),"Should give an error about invalid base64")
 
 	//Test 6: Invalid bech32 string
@@ -350,18 +388,66 @@ func TestVMWrapper(t *testing.T) {
 	msg, err = json.Marshal(request)
 	require.NoError(t, err)
 
-	response, gasUsed, err = vmWrapper.Instantiate(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, msg, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
+	_, _, err = vmWrapper.Instantiate(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, msg, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
 	require.EqualError(t, err, "decoding bech32 failed: invalid bech32 string length 1","Should give an error about invalid base64")
+}
+
+func TestVMWrapperQuery(t *testing.T) {
+	testParams := setupVMWrapperTest(t)
+	vmWrapper := testParams.vmWrapper
+	loggingVm := testParams.loggingVM
+	defaultGasRegister := testParams.gasRegister
+	kvStore := testParams.kvStore
+
+	queryRequestWrapper := gstTypes.GasTrackingQueryRequestWrapper{
+		MagicString:  gstTypes.MagicString,
+		QueryRequest: []byte{1},
+	}
+	bz, err := json.Marshal(queryRequestWrapper)
+	require.NoError(t, err, "Marshalling should not fail")
+
+	queryResponse, gasUsed, err := vmWrapper.Query(cosmwasm.Checksum{}, wasmvmtypes.Env{}, bz, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
+	require.NoError(t, err, "Contract should be executed successfully")
+	require.Equal(t, loggingVm.GasUsed, gasUsed)
+	require.Equal(t, 1, len(loggingVm.logs))
+	require.Equal(t, "Query", loggingVm.logs[0].MethodName)
+
+	queryResultWrapper := gstTypes.GasTrackingQueryResultWrapper{}
+	err = json.Unmarshal(queryResponse, &queryResultWrapper)
+	require.NoError(t, err, "JSON unmarshalling should succeed")
+	require.Equal(t,defaultGasRegister.FromWasmVMGas(loggingVm.GasUsed), queryResultWrapper.GasConsumed)
+	require.Equal(t, []byte{1}, queryResultWrapper.QueryResponse)
+
+	loggingVm.Fail = true
+	_, _, err = vmWrapper.Query(cosmwasm.Checksum{}, wasmvmtypes.Env{}, []byte{1}, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
+	require.EqualError(t, err, errTestFail.Error(), "Should Fail")
+	loggingVm.Reset()
 
 
-	response, gasUsed, err = vmWrapper.Execute(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, []byte{1}, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
+	queryResponse, gasUsed, err = vmWrapper.Query(cosmwasm.Checksum{}, wasmvmtypes.Env{}, []byte{2}, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
+	require.NoError(t, err, "Contract should be executed successfully")
+	require.Equal(t, loggingVm.GasUsed, gasUsed)
+	require.Equal(t, 1, len(loggingVm.logs))
+	require.Equal(t, "Query", loggingVm.logs[0].MethodName)
+
+	require.Equal(t, []byte{1}, queryResponse)
+}
+
+func TestVMWrapperExecutionAndIBC(t *testing.T) {
+	testParams := setupVMWrapperTest(t)
+	vmWrapper := testParams.vmWrapper
+	loggingVm := testParams.loggingVM
+	defaultGasRegister := testParams.gasRegister
+	kvStore := testParams.kvStore
+
+	response, gasUsed, err := vmWrapper.Execute(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.MessageInfo{}, []byte{1}, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
 	require.NoError(t, err, "Contract should be executed successfully")
 	require.Equal(t, loggingVm.GasUsed, gasUsed)
 	require.Equal(t, 1, len(loggingVm.logs))
 	require.Equal(t, "Execute", loggingVm.logs[0].MethodName)
 
-	contractOperationInfo = gstTypes.ContractOperationInfo{}
-	msg = response.Messages[0].Msg.Custom
+	contractOperationInfo := gstTypes.ContractOperationInfo{}
+	msg := response.Messages[0].Msg.Custom
 	err = json.Unmarshal(msg, &contractOperationInfo)
 	require.NoError(t, err, "JSON unmarshalling should succeed")
 
@@ -557,39 +643,4 @@ func TestVMWrapper(t *testing.T) {
 	_, err = vmWrapper.IBCChannelOpen(cosmwasm.Checksum{}, wasmvmtypes.Env{}, wasmvmtypes.IBCChannelOpenMsg{}, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
 	require.EqualError(t, err, errTestFail.Error(), "Should Fail")
 	loggingVm.Reset()
-
-
-
-	queryRequestWrapper := gstTypes.GasTrackingQueryRequestWrapper{
-		MagicString:  gstTypes.MagicString,
-		QueryRequest: []byte{1},
-	}
-	bz, err := json.Marshal(queryRequestWrapper)
-	require.NoError(t, err, "Marshalling should not fail")
-
-	queryResponse, gasUsed, err := vmWrapper.Query(cosmwasm.Checksum{}, wasmvmtypes.Env{}, bz, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
-	require.NoError(t, err, "Contract should be executed successfully")
-	require.Equal(t, loggingVm.GasUsed, gasUsed)
-	require.Equal(t, 1, len(loggingVm.logs))
-	require.Equal(t, "Query", loggingVm.logs[0].MethodName)
-
-	queryResultWrapper := gstTypes.GasTrackingQueryResultWrapper{}
-	err = json.Unmarshal(queryResponse, &queryResultWrapper)
-	require.NoError(t, err, "JSON unmarshalling should succeed")
-	require.Equal(t,defaultGasRegister.FromWasmVMGas(loggingVm.GasUsed), queryResultWrapper.GasConsumed)
-	require.Equal(t, []byte{1}, queryResultWrapper.QueryResponse)
-
-	loggingVm.Fail = true
-	_, _, err = vmWrapper.Query(cosmwasm.Checksum{}, wasmvmtypes.Env{}, []byte{1}, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
-	require.EqualError(t, err, errTestFail.Error(), "Should Fail")
-	loggingVm.Reset()
-
-
-	queryResponse, gasUsed, err = vmWrapper.Query(cosmwasm.Checksum{}, wasmvmtypes.Env{}, []byte{2}, kvStore, cosmwasm.GoAPI{}, nil, sdk.NewInfiniteGasMeter(), 50000, wasmvmtypes.UFraction{})
-	require.NoError(t, err, "Contract should be executed successfully")
-	require.Equal(t, loggingVm.GasUsed, gasUsed)
-	require.Equal(t, 1, len(loggingVm.logs))
-	require.Equal(t, "Query", loggingVm.logs[0].MethodName)
-
-	require.Equal(t, []byte{1}, queryResponse)
 }
