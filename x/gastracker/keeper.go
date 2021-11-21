@@ -29,7 +29,7 @@ type GasTrackingKeeper interface {
 type Keeper struct {
 	key        sdk.StoreKey
 	appCodec   codec.Marshaler
-	paramSpace paramsTypes.Subspace // INTERFACE
+	paramSpace gstTypes.Subspace // INTERFACE
 }
 
 func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {

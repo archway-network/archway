@@ -27,8 +27,8 @@ func TestSetParams(t *testing.T) {
 	params.ContractPremiumSwitch = false
 	keeper.SetParams(ctx, params)
 
-	require.Equal(t, true, keeper.IsGasTrackingEnabled(ctx), "gas tracking was not updated ")
-	require.Equal(t, true, keeper.IsGasRebateEnabled(ctx), "gas rebate was not updated")
-	require.Equal(t, true, keeper.IsGasRebateToUserEnabled(ctx), "gas rebebate to user was not updated")
-	require.Equal(t, true, keeper.IsContractPremiumEnabled(ctx), "contract premium was not updated")
+	require.Equal(t, false, keeper.IsGasTrackingEnabled(ctx), "gas tracking was not updated ")
+	require.Equal(t, false, keeper.IsGasRebateEnabled(ctx), "gas rebate was not updated")
+	require.Equal(t, false, keeper.IsGasRebateToUserEnabled(ctx), "gas rebebate to user was not updated")
+	require.Equal(t, false, keeper.IsContractPremiumEnabled(ctx), "contract premium was not updated")
 }

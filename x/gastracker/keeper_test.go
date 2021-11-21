@@ -1,6 +1,7 @@
 package gastracker
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -15,34 +16,50 @@ import (
 	db "github.com/tendermint/tm-db"
 
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+type subspace struct {
+	space map[string]bool
+}
+
+func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
+	params, ok := paramset.(*gstTypes.Params)
+	if !ok {
+		panic("[mock subspace]: invalid params type")
+	}
+	fmt.Printf("%+v\n", params)
+	s.space[string(gstTypes.KeyGasTrackingSwitch)] = params.GasTrackingSwitch
+	s.space[string(gstTypes.KeyDappInflationRewards)] = params.GasDappInflationRewardsSwitch
+	s.space[string(gstTypes.KeyGasRebateSwitch)] = params.GasRebateSwitch
+	s.space[string(gstTypes.KeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
+	s.space[string(gstTypes.KeyContractPremiumSwitch)] = params.ContractPremiumSwitch
+
+}
+func (s *subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+	x, ok := ptr.(*bool)
+	if !ok {
+		panic("[mock subspace]: ptr is invalid type")
+	}
+	*x = s.space[string(key)]
+}
+
 func createTestBaseKeeperAndContext(t *testing.T) (sdk.Context, *Keeper) {
-
-	keyParams := sdk.NewKVStoreKey(paramsTypes.StoreKey)
-	tKeyParams := sdk.NewTransientStoreKey(paramsTypes.TStoreKey)
-
 	memDB := db.NewMemDB()
 	ms := store.NewCommitMultiStore(memDB)
 	storeKey := sdk.NewKVStoreKey("TestStore")
 	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, memDB)
-	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, memDB)
-	ms.MountStoreWithDB(tKeyParams, sdk.StoreTypeIAVL, memDB)
 	err := ms.LoadLatestVersion()
 	require.NoError(t, err, "Loading latest version should not fail")
 	encodingConfig := simapp.MakeTestEncodingConfig()
-	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
-	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, keyParams, tKeyParams)
+	appCodec := encodingConfig.Marshaler
 
-	subspace, _ := paramsKeeper.GetSubspace(gstTypes.DefaultParamSpace)
-	subspace = subspace.WithKeyTable(gstTypes.ParamKeyTable())
+	subspace := subspace{space: make(map[string]bool)}
 
 	keeper := Keeper{
 		key:        storeKey,
 		appCodec:   appCodec,
-		paramSpace: subspace,
+		paramSpace: &subspace,
 	}
 
 	ctx := sdk.NewContext(ms, tmproto.Header{
@@ -50,6 +67,8 @@ func createTestBaseKeeperAndContext(t *testing.T) (sdk.Context, *Keeper) {
 		Time:   time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
 	}, false, log.NewTMLogger(os.Stdout))
 
+	params := gstTypes.DefaultParams()
+	subspace.SetParamSet(ctx, &params)
 	return ctx, &keeper
 }
 func CreateTestKeeperAndContext(t *testing.T) (sdk.Context, GasTrackingKeeper) {

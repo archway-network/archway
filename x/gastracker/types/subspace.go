@@ -2,9 +2,10 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type Subspace interface {
-	Get(ctx sdk.Context, key []byte, ptr interface{}) bool
-	SetParamSet(ctx sdk.Context, params Params)
+	Get(ctx sdk.Context, key []byte, ptr interface{})
+	SetParamSet(ctx sdk.Context, params paramsTypes.ParamSet)
 }
