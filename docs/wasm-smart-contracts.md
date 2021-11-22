@@ -22,6 +22,9 @@ cargo wasm
 ```
 >**Tip:** use dry run before deploying to gauge whether the deployment will succeed. This is useful because of speed, as dry running is a lot faster.
 
+>**Note:** The produced wasm file is not optimized in size.
+In order to have an optimized wasm file, we can use [rust-optimizer](https://github.com/CosmWasm/rust-optimizer).
+
 ## Deploying 
 
 ```bash
@@ -39,3 +42,8 @@ Where `<wasmFilePath>` is the path to the wasm file,
 `<gasPrices>` indicates the gas prices, `<gas>` refers to the gas mode, and `<gasAdjustment>` is self explanatory.
 
 >**Warning:** make sure your wallet has enough tokens before deploying.
+**Note:** We have made some changes in execute command where we are passing extra parameters.
+
+## More Info
+
+- Other commands related to wasm can be found at [wasmd](https://docs.cosmwasm.com/) documentation.
