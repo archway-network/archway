@@ -2,7 +2,7 @@
 
 ## Get Tokens
 
-**Note:** Querying account balance, send and receive tokens work only if you are running a full node on your machine or you are joined a network.
+**Note:** Querying account balance, send and receive tokens work only if you are running a full node on your machine or you have joined a network.
 
 On a testnet, getting tokens is usually done via a faucet.
 
