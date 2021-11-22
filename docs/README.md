@@ -2,7 +2,7 @@
 
 Welcome to the documentation of the **Archway Daemon: `archwayd`**.
 
-`archwayd` is the tool that enables you to interact with the node that runs on the Archway, whether you run it yourself or not. Let us set it up properly. In order to install it, follow the [installation procedure](../README.md).
+`archwayd` is the binary to run archway node which can participate in the archway network. In order to install it, follow the [installation procedure](../README.md).
 
 ## The covered topics
 
