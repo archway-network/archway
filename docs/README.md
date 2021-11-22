@@ -1,6 +1,6 @@
 # Archway Daemon Documentation
 
-Welcome to the documentation of the **Archway Daemon CLI: `archwayd`**.
+Welcome to the documentation of the **Archway Daemon: `archwayd`**.
 
 `archwayd` is the tool that enables you to interact with the node that runs on the Archway, whether you run it yourself or not. Let us set it up properly. In order to install it, follow the [installation procedure](../README.md).
 
