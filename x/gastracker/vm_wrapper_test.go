@@ -430,6 +430,7 @@ func TestVMWrapperFailedInitialization(t *testing.T) {
 }
 
 // Test how VM wrapper handles query messages (both incoming message and response)
+// Scenarios when it sends response wrapper and when it does not.
 func TestVMWrapperQuery(t *testing.T) {
 	testParams := setupVMWrapperTest(t)
 	vmWrapper := testParams.vmWrapper
@@ -472,6 +473,7 @@ func TestVMWrapperQuery(t *testing.T) {
 }
 
 // Testing methods of vm wrapper that does not do any processing and are just proxy to original methods.
+// We are checking that correct method was invoked
 func TestVMWrapperPassthrough(t *testing.T) {
 	testParams := setupVMWrapperTest(t)
 	vmWrapper := testParams.vmWrapper
@@ -549,6 +551,8 @@ func TestVMWrapperPassthrough(t *testing.T) {
 }
 
 // Testing execution methods (execute, ibc methods)
+// We verify that the underlying vm was invoked with correct method and the return value of it
+// was taken into account.
 func TestVMWrapperExecutionAndIBC(t *testing.T) {
 	testParams := setupVMWrapperTest(t)
 	vmWrapper := testParams.vmWrapper
