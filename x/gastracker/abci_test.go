@@ -92,6 +92,7 @@ func (t *TestMintParamsKeeper) GetMinter(_ sdk.Context) (minter mintTypes.Minter
 	}
 }
 
+// Test the conditions under which BeginBlocker and EndBlocker should panic or not panic
 func TestABCIPanicBehaviour(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 
@@ -129,9 +130,15 @@ func TestABCIPanicBehaviour(t *testing.T) {
 	_ = EndBlock(ctx, keeper, types.RequestEndBlock{})
 	err = keeper.MarkEndOfTheBlock(ctx)
 	require.EqualError(t, err, gstTypes.ErrBlockTrackingDataNotFound.Error(), "Block tracking data should not be found")
+
+	// Calling EndBlock again should result in an error
+	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func () {
+		EndBlock(ctx, keeper, types.RequestEndBlock{})
+	})
 }
 
-func TestBlockTracking(t *testing.T) {
+// Test reward calculation
+func TestRewardCalculation(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 
 	config := sdk.GetConfig()

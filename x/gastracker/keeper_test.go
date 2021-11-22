@@ -36,9 +36,10 @@ func CreateTestKeeperAndContext(t *testing.T) (sdk.Context, GasTrackingKeeper) {
 	return ctx, &keeper
 }
 
+// Test various conditions in handling contract metadata
 func TestContractMetadataHandling(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
-	// Should return appropriate error
+	// Should return appropriate error when contract metadata is not found
 	_, err := keeper.GetNewContractMetadata(ctx, "1")
 	require.EqualError(
 		t,
@@ -64,7 +65,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	// Metadata must match the one we stored
 	require.Equal(t, newMetadata, metadata)
 
-	// Should be successful (we should be able to overwrite the existing metadata
+	// Should be successful (we should be able to overwrite the existing metadata)
 	updatedMetadata := types.ContractInstanceMetadata{
 		RewardAddress:   "3",
 		GasRebateToUser: true,
@@ -82,6 +83,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	require.Equal(t, updatedMetadata, metadata)
 }
 
+// Extensive testing of keeper function that merges incoming rewards and stores left over reward
 func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 
@@ -185,7 +187,7 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
 }
 
-
+// Test storing and retrieving contract gas usage
 func TestAddContractGasUsage(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 
@@ -257,6 +259,8 @@ func TestAddContractGasUsage(t *testing.T) {
 	require.Equal(t, types.BlockGasTracking{}, blockTrackingObj)
 }
 
+// Test initialization of block tracking data for new block as well as marking end of the block for current block tracking
+// data
 func TestBlockTrackingReadWrite(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 

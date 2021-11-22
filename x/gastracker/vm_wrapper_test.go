@@ -279,6 +279,7 @@ func setupVMWrapperTest(t *testing.T) vmWrapperTestParams {
 	}
 }
 
+// Testing cases where vm wrapper should successfully initialize
 func TestVMWrapperSuccessfulInitialization(t *testing.T) {
 	testParams := setupVMWrapperTest(t)
 	vmWrapper := testParams.vmWrapper
@@ -348,6 +349,7 @@ func TestVMWrapperSuccessfulInitialization(t *testing.T) {
 	loggingVm.Reset()
 }
 
+// Testing cases where wrapper should fail to process init message
 func TestVMWrapperFailedInitialization(t *testing.T) {
 	testParams := setupVMWrapperTest(t)
 	vmWrapper := testParams.vmWrapper
@@ -427,6 +429,7 @@ func TestVMWrapperFailedInitialization(t *testing.T) {
 	require.EqualError(t, err, "decoding bech32 failed: invalid bech32 string length 1","Should give an error about invalid base64")
 }
 
+// Test how VM wrapper handles query messages (both incoming message and response)
 func TestVMWrapperQuery(t *testing.T) {
 	testParams := setupVMWrapperTest(t)
 	vmWrapper := testParams.vmWrapper
@@ -468,6 +471,7 @@ func TestVMWrapperQuery(t *testing.T) {
 	require.Equal(t, []byte{1}, queryResponse)
 }
 
+// Testing methods of vm wrapper that does not do any processing and are just proxy to original methods.
 func TestVMWrapperPassthrough(t *testing.T) {
 	testParams := setupVMWrapperTest(t)
 	vmWrapper := testParams.vmWrapper
@@ -544,6 +548,7 @@ func TestVMWrapperPassthrough(t *testing.T) {
 	loggingVm.Reset()
 }
 
+// Testing execution methods (execute, ibc methods)
 func TestVMWrapperExecutionAndIBC(t *testing.T) {
 	testParams := setupVMWrapperTest(t)
 	vmWrapper := testParams.vmWrapper

@@ -307,6 +307,7 @@ func setupQueryHandlerTest(t *testing.T, ctx sdk.Context, keeper GasTrackingKeep
 	}
 }
 
+// Test raw query handling
 func TestWASMQueryPluginRaw(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 	params := setupQueryHandlerTest(t, ctx, keeper)
@@ -340,6 +341,7 @@ func TestWASMQueryPluginRaw(t *testing.T) {
 	require.Equal(t, loggingQuerier.ContractAddress, wasmQuery.Raw.ContractAddr)
 }
 
+// Test smart query handling
 func TestWASMQueryPluginSmart(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 	params := setupQueryHandlerTest(t, ctx, keeper)
