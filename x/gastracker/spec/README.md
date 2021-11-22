@@ -22,9 +22,10 @@ A subset of data that allows categorization and functionality, for archway pupos
 -   `gas_rebate_to_user`
 -   `collect_premium`
 -   `premium_percentage_charged`
+-   `instantiation_request`
 
 ### Gas Rebates
-A small amount distributed to both validators and dApps from each transaction executed on the chain.
+A small amount distributed to dApps from each transaction executed on the chain.
 
 ### Contract Premium
 Contract premiums allow to charge a higher amounts of gas that will be distribured to the contract `reward_address`.
