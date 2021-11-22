@@ -578,6 +578,7 @@ func TestWASMQueryPluginSmart(t *testing.T) {
 	require.Equal(t, fmt.Sprint((234 * contractMetadata.PremiumPercentageCharged) / 100), gasMeterLogs[0].InputArg[0])
 }
 
+// Test of outermost conditions of wasm query plugin
 func TestWASMQueryPlugin(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 	params := setupQueryHandlerTest(t, ctx, keeper)
