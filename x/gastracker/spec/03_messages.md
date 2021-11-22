@@ -24,5 +24,9 @@ message ContractOperationInfo {
   string reward_address = 3;
   // Only set in case of instantiate operation
   bool gas_rebate_to_end_user = 4;
+  // Only set in case of instantiate operation
+  bool collect_premium = 5;
+  // Only set in case of instantiate operation
+  uint64 premium_percentage_charged = 6;
 }
 ```

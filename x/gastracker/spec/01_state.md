@@ -25,13 +25,16 @@ Whenever a smart contract is instantiated archway stores this address will be th
 message ContractInstanceMetadata {
   string reward_address = 1;
   bool gas_rebate_to_user = 2;
+  // Flag to indicate whether to charge premium or not
+  bool collect_premium = 3;
+  // Percentage of gas consumed to be charged.
+  uint64 premium_percentage_charged = 4;
 }
-```
 
 ## Reward Entry
 - Reward Entry `reward_entry |  Address -> Protobuffer(address)`
 
-Stores all reward transactions performed for X address, its also used to determine leftover rewards.
+Stores left over reward for particular address.
 
 
 ```proto3
