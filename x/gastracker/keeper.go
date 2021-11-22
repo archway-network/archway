@@ -9,7 +9,7 @@ import (
 var _ GasTrackingKeeper = &Keeper{}
 
 type GasTrackingKeeper interface {
-	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64)  error
+	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error
 	TrackContractGasUsage(ctx sdk.Context, contractAddress string, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error
 	GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
 	GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error)
@@ -25,7 +25,7 @@ type GasTrackingKeeper interface {
 }
 
 type Keeper struct {
-	key sdk.StoreKey
+	key      sdk.StoreKey
 	appCodec codec.Marshaler
 }
 
@@ -40,6 +40,8 @@ func (k *Keeper) GetPreviousBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGa
 	err := k.appCodec.UnmarshalBinaryBare(bz, &previousBlockTracking)
 	return previousBlockTracking, err
 }
+
+// We need to mark the end of each block because ... TODO:
 
 func (k *Keeper) MarkEndOfTheBlock(ctx sdk.Context) error {
 	gstKvStore := ctx.KVStore(k.key)
@@ -80,11 +82,11 @@ func (k *Keeper) GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.Transaction
 		return txTrackingInfo, gstTypes.ErrTxTrackingDataNotFound
 	}
 
-	txTrackingInfo = *currentBlockGasTracking.TxTrackingInfos[len(currentBlockGasTracking.TxTrackingInfos) - 1]
+	txTrackingInfo = *currentBlockGasTracking.TxTrackingInfos[len(currentBlockGasTracking.TxTrackingInfos)-1]
 	return txTrackingInfo, nil
 }
 
-func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64)  (sdk.Coins, error) {
+func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {
 	contractRewards = contractRewards.Sort()
 
 	gstKvStore := ctx.KVStore(k.key)
@@ -149,6 +151,11 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 	return rewardsToBeDistributed, nil
 }
 
+// Since we can only transfer integer numbers
+// and rewards can be floating point numbers,
+// we accumulate all the rewards and once it reaches to
+// an integer number, we pay the integer part and
+// keep the 0.x amount as left over to be paid later
 func (k *Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress string) (gstTypes.LeftOverRewardEntry, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
@@ -224,7 +231,7 @@ func (k *Keeper) GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGas
 	return currentBlockTracking, err
 }
 
-func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64)  error {
+func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var currentTxGasTracking gstTypes.TransactionTracking
@@ -269,11 +276,11 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress string, 
 	if txsLen == 0 {
 		return gstTypes.ErrTxTrackingDataNotFound
 	}
-	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen - 1]
-	currentBlockGasTracking.TxTrackingInfos[txsLen - 1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gstTypes.ContractGasTracking{
-		Address:     contractAddress,
-		GasConsumed: gasUsed,
-		Operation: operation,
+	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
+	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gstTypes.ContractGasTracking{
+		Address:             contractAddress,
+		GasConsumed:         gasUsed,
+		Operation:           operation,
 		IsEligibleForReward: isEligibleForReward,
 	})
 	bz, err = k.appCodec.MarshalBinaryBare(&currentBlockGasTracking)
@@ -284,6 +291,3 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress string, 
 	gstKvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
 	return nil
 }
-
-
-
