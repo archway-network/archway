@@ -149,13 +149,21 @@ func createCosmosMsg(contractOperationInfo gstTypes.ContractOperationInfo) (type
 	return cosmosMsg, nil
 }
 
-func TestMessageHandler(t *testing.T) {
+type messageHandlerTestParams struct {
+	ctx sdk.Context
+	loggingGasMeter *LoggingGasMeter
+	gasConsumptionHandler GasConsumptionMsgHandler
+	loggingKeeper *loggingGasTrackerKeeper
+	testAccAddress1 sdk.AccAddress
+	testAccAddress2 sdk.AccAddress
+	cosmosMsg types.CosmosMsg
+}
+
+func setupMessageHandlerTest(t *testing.T, ctx sdk.Context, keeper GasTrackingKeeper) messageHandlerTestParams {
 	l := LoggingGasMeter{
 		underlyingGasMeter: sdk.NewInfiniteGasMeter(),
 		log:                nil,
 	}
-
-	ctx, keeper := CreateTestKeeperAndContext(t)
 	loggingKeeper := loggingGasTrackerKeeper{underlyingKeeper: keeper}
 	ctx = ctx.WithGasMeter(&l)
 
@@ -170,39 +178,32 @@ func TestMessageHandler(t *testing.T) {
 	secondContractAddress, err := sdk.AccAddressFromBech32("archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk")
 	assert.NoError(t, err, "Hardcoded bech32 address should be valid account address")
 
-	_, err = sdk.AccAddressFromBech32("archway14hj2tavq8fpesdwxxcu44rty3hh90vhudldltd")
-	assert.NoError(t, err, "Hardcoded bech32 address should be valid account address")
-
-	_, err = sdk.AccAddressFromBech32("archway1aakfpghcanxtc45gpqlx8j3rq0zcpyf4jtf0e4")
-	assert.NoError(t, err, "Hardcoded bech32 address should be valid account address")
-
-
-	// Test 0: Invalid JSON passed
 	cosmosMsg := types.CosmosMsg{
 		Custom:       []byte{1,2,3},
 	}
 
-	_, _, err = gasConsumptionMsgHandler.DispatchMsg(ctx, firstContractAddress, "", cosmosMsg)
-	assert.EqualError(
-		t,
-		err,
-		fmt.Sprintf("invalid character '\\x0%d' looking for beginning of value", 1),
-		"If custom message is invalid " +
-			"handler should return unmarshalling error",
-	)
+	return messageHandlerTestParams{
+		ctx:                   ctx,
+		loggingGasMeter:       &l,
+		gasConsumptionHandler: gasConsumptionMsgHandler,
+		loggingKeeper:         &loggingKeeper,
+		testAccAddress1:       firstContractAddress,
+		testAccAddress2:       secondContractAddress,
+		cosmosMsg: cosmosMsg,
+	}
+}
 
-	filteredLogs := l.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
-	assert.Equal(t, len(filteredLogs), 0)
+// Test 1: Non-instantiation operation without block gas tracking in place
+func TestMessageHandlerInvalidEnv1(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	testParams := setupMessageHandlerTest(t, ctx, keeper)
+	gasConsumptionMsgHandler := testParams.gasConsumptionHandler
+	firstContractAddress := testParams.testAccAddress1
+	loggingGasMeter := testParams.loggingGasMeter
+	loggingKeeper := testParams.loggingKeeper
+	cosmosMsg := testParams.cosmosMsg
+	ctx = testParams.ctx
 
-	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
-	assert.Equal(t, len(filteredLogs), 0)
-
-	require.Equal(t, 0, len(loggingKeeper.callLogs))
-	loggingKeeper.ResetLogs()
-
-	l.ClearLogs()
-
-	// Test 1: Non-instantiation operation without block gas tracking in place
 	contractOperationInfo := gstTypes.ContractOperationInfo{
 		GasConsumed:              0,
 		Operation:                gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
@@ -211,7 +212,7 @@ func TestMessageHandler(t *testing.T) {
 		CollectPremium:           false,
 		PremiumPercentageCharged: 0,
 	}
-	cosmosMsg, err = createCosmosMsg(contractOperationInfo)
+	cosmosMsg, err := createCosmosMsg(contractOperationInfo)
 	assert.NoError(t, err, "Json unmarshalling should not fail")
 
 	_, _, err = gasConsumptionMsgHandler.DispatchMsg(ctx, firstContractAddress, "", cosmosMsg)
@@ -223,10 +224,10 @@ func TestMessageHandler(t *testing.T) {
 			"handler should throw an error",
 	)
 
-	filteredLogs = l.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	filteredLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
-	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	filteredLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
 	require.Equal(t, 1, len(loggingKeeper.callLogs))
@@ -235,11 +236,22 @@ func TestMessageHandler(t *testing.T) {
 	require.Equal(t, gstTypes.ErrBlockTrackingDataNotFound, filteredKeeperLogs[0].Error)
 
 	loggingKeeper.ResetLogs()
-	l.ClearLogs()
+	loggingGasMeter.ClearLogs()
+}
 
+// Test 2: Instantiation operation without blockgastracking in place
+func TestMessageHandlerInvalidEnv2(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	testParams := setupMessageHandlerTest(t, ctx, keeper)
+	gasConsumptionMsgHandler := testParams.gasConsumptionHandler
+	firstContractAddress := testParams.testAccAddress1
+	secondContractAddress := testParams.testAccAddress2
+	loggingGasMeter := testParams.loggingGasMeter
+	loggingKeeper := testParams.loggingKeeper
+	cosmosMsg := testParams.cosmosMsg
+	ctx = testParams.ctx
 
-	// Test 2: Instantiation operation without blockgastracking in place
-	contractOperationInfo = gstTypes.ContractOperationInfo{
+	contractOperationInfo := gstTypes.ContractOperationInfo{
 		GasConsumed:              100,
 		Operation:                gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 		RewardAddress:            secondContractAddress.String(),
@@ -247,7 +259,7 @@ func TestMessageHandler(t *testing.T) {
 		CollectPremium:           true,
 		PremiumPercentageCharged: 50,
 	}
-	cosmosMsg, err = createCosmosMsg(contractOperationInfo)
+	cosmosMsg, err := createCosmosMsg(contractOperationInfo)
 	assert.NoError(t, err, "Json unmarshalling should not fail")
 
 	_, _, err = gasConsumptionMsgHandler.DispatchMsg(ctx, firstContractAddress, "", cosmosMsg)
@@ -261,25 +273,37 @@ func TestMessageHandler(t *testing.T) {
 	_, err = keeper.GetNewContractMetadata(ctx, firstContractAddress.String())
 	assert.EqualError(t, err, gstTypes.ErrContractInstanceMetadataNotFound.Error(),"Contract instance metadata should not be stored by the Message handler")
 
-	filteredLogs = l.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	filteredLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
-	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	filteredLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
 	require.Equal(t, 1, len(loggingKeeper.callLogs))
-	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	filteredKeeperLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
 	require.Equal(t, 1, len(filteredKeeperLogs))
 	require.Equal(t, gstTypes.ErrBlockTrackingDataNotFound, filteredKeeperLogs[0].Error)
 
 	loggingKeeper.ResetLogs()
-	l.ClearLogs()
+	loggingGasMeter.ClearLogs()
+}
 
-	// Test 3: Instantiation operation without tx tracking in place
-	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
+// Test 3: Instantiation operation without tx tracking in place
+func TestMessageHandlerInvalidEnv3(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	testParams := setupMessageHandlerTest(t, ctx, keeper)
+	gasConsumptionMsgHandler := testParams.gasConsumptionHandler
+	firstContractAddress := testParams.testAccAddress1
+	secondContractAddress := testParams.testAccAddress2
+	loggingGasMeter := testParams.loggingGasMeter
+	loggingKeeper := testParams.loggingKeeper
+	cosmosMsg := testParams.cosmosMsg
+	ctx = testParams.ctx
+
+	err := keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
 	assert.NoError(t, err)
 
-	contractOperationInfo = gstTypes.ContractOperationInfo{
+	contractOperationInfo := gstTypes.ContractOperationInfo{
 		GasConsumed:              100,
 		Operation:                gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 		RewardAddress:            secondContractAddress.String(),
@@ -302,26 +326,42 @@ func TestMessageHandler(t *testing.T) {
 	_, err = keeper.GetNewContractMetadata(ctx, firstContractAddress.String())
 	assert.EqualError(t, err, gstTypes.ErrContractInstanceMetadataNotFound.Error(),"Contract instance metadata should not be stored by the Message handler")
 
-	filteredLogs = l.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	filteredLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
-	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	filteredLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
 	require.Equal(t, 1, len(loggingKeeper.callLogs))
-	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	filteredKeeperLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
 	require.Equal(t, 1, len(filteredKeeperLogs))
 	require.Equal(t, gstTypes.ErrTxTrackingDataNotFound, filteredKeeperLogs[0].Error)
 
 	loggingKeeper.ResetLogs()
-	l.ClearLogs()
+	loggingGasMeter.ClearLogs()
+}
 
-	// Test 4: Non-instantiation operation without contract instance metadata in place
+// Test 4: Non-instantiation operation without contract instance metadata in place
+func TestMessageHandlerInvalidEnv4(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	testParams := setupMessageHandlerTest(t, ctx, keeper)
+	gasConsumptionMsgHandler := testParams.gasConsumptionHandler
+	firstContractAddress := testParams.testAccAddress1
+	secondContractAddress := testParams.testAccAddress2
+	loggingGasMeter := testParams.loggingGasMeter
+	loggingKeeper := testParams.loggingKeeper
+	cosmosMsg := testParams.cosmosMsg
+	ctx = testParams.ctx
+
 	testDecCoin := sdk.NewDecCoin("test", sdk.NewInt(1))
+
+	err := keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
+	assert.NoError(t, err)
+
 	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{&testDecCoin}, 5)
 	assert.NoError(t, err)
 
-	contractOperationInfo = gstTypes.ContractOperationInfo{
+	contractOperationInfo := gstTypes.ContractOperationInfo{
 		GasConsumed:              100,
 		Operation:                gstTypes.ContractOperation_CONTRACT_OPERATION_EXECUTION,
 		RewardAddress:            secondContractAddress.String(),
@@ -344,14 +384,14 @@ func TestMessageHandler(t *testing.T) {
 	_, err = keeper.GetNewContractMetadata(ctx, firstContractAddress.String())
 	assert.EqualError(t, err, gstTypes.ErrContractInstanceMetadataNotFound.Error(),"Contract instance metadata should not be stored by the Message handler")
 
-	filteredLogs = l.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	filteredLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
-	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	filteredLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
 	require.Equal(t, 2, len(loggingKeeper.callLogs))
-	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	filteredKeeperLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
 	require.Equal(t, 1, len(filteredKeeperLogs))
 	require.Equal(t, nil, filteredKeeperLogs[0].Error)
 	require.Equal(t, gstTypes.TransactionTracking{
@@ -365,11 +405,30 @@ func TestMessageHandler(t *testing.T) {
 	require.Equal(t, gstTypes.ErrContractInstanceMetadataNotFound, filteredKeeperLogs[0].Error)
 
 	loggingKeeper.ResetLogs()
-	l.ClearLogs()
+	loggingGasMeter.ClearLogs()
+}
 
+// Test 5: Instantiation operation with premium collection on
+func TestMessageHandlerSuccessfulInstantiation1(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	testParams := setupMessageHandlerTest(t, ctx, keeper)
+	gasConsumptionMsgHandler := testParams.gasConsumptionHandler
+	firstContractAddress := testParams.testAccAddress1
+	secondContractAddress := testParams.testAccAddress2
+	loggingGasMeter := testParams.loggingGasMeter
+	loggingKeeper := testParams.loggingKeeper
+	cosmosMsg := testParams.cosmosMsg
+	ctx = testParams.ctx
 
-	// Test 5: Instantiation operation with premium collection on
-	contractOperationInfo = gstTypes.ContractOperationInfo{
+	testDecCoin := sdk.NewDecCoin("test", sdk.NewInt(1))
+
+	err := keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
+	assert.NoError(t, err)
+
+	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{&testDecCoin}, 5)
+	assert.NoError(t, err)
+
+	contractOperationInfo := gstTypes.ContractOperationInfo{
 		GasConsumed:              100,
 		Operation:                gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 		RewardAddress:            secondContractAddress.String(),
@@ -395,16 +454,16 @@ func TestMessageHandler(t *testing.T) {
 	assert.Equal(t, contractInstanceMetadata.RewardAddress, contractOperationInfo.RewardAddress)
 	assert.Equal(t, contractInstanceMetadata.GasRebateToUser, contractOperationInfo.GasRebateToEndUser)
 
-	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	filteredLogs := loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 1)
 	filteredLog := filteredLogs[0]
 	assert.Equal(t, filteredLog.InputArg[0], fmt.Sprint((contractOperationInfo.PremiumPercentageCharged * contractOperationInfo.GasConsumed) / 100))
 
-	filteredLogs = l.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	filteredLogs = loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
 	require.Equal(t, 3, len(loggingKeeper.callLogs))
-	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	filteredKeeperLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
 	require.Equal(t, 1, len(filteredKeeperLogs))
 	require.Equal(t, nil, filteredKeeperLogs[0].Error)
 	require.Equal(t, gstTypes.TransactionTracking{
@@ -431,7 +490,7 @@ func TestMessageHandler(t *testing.T) {
 
 	loggingKeeper.ResetLogs()
 
-	l.ClearLogs()
+	loggingGasMeter.ClearLogs()
 
 	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
 	assert.NoError(t, err)
@@ -448,10 +507,29 @@ func TestMessageHandler(t *testing.T) {
 	assert.Equal(t, lastContractTrackingInfo.Address, firstContractAddress.String())
 	assert.Equal(t, lastContractTrackingInfo.Operation, contractOperationInfo.Operation)
 	assert.Equal(t, lastContractTrackingInfo.IsEligibleForReward, !contractOperationInfo.GasRebateToEndUser)
+}
 
+// Test 6: Instantiation operation with gas rebate on
+func TestMessageHandlerSuccessfulInstantiation2(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	testParams := setupMessageHandlerTest(t, ctx, keeper)
+	gasConsumptionMsgHandler := testParams.gasConsumptionHandler
+	firstContractAddress := testParams.testAccAddress1
+	secondContractAddress := testParams.testAccAddress2
+	loggingGasMeter := testParams.loggingGasMeter
+	loggingKeeper := testParams.loggingKeeper
+	cosmosMsg := testParams.cosmosMsg
+	ctx = testParams.ctx
 
-	// Test 6: Instantiation operation with gas rebate on
-	contractOperationInfo = gstTypes.ContractOperationInfo{
+	testDecCoin := sdk.NewDecCoin("test", sdk.NewInt(1))
+
+	err := keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
+	assert.NoError(t, err)
+
+	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{&testDecCoin}, 5)
+	assert.NoError(t, err)
+
+	contractOperationInfo := gstTypes.ContractOperationInfo{
 		GasConsumed:              200,
 		Operation:                gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 		RewardAddress:            secondContractAddress.String(),
@@ -469,7 +547,7 @@ func TestMessageHandler(t *testing.T) {
 		"Handler should succeed when block tracking and tx tracking both are available",
 	)
 
-	contractInstanceMetadata, err = keeper.GetNewContractMetadata(ctx, firstContractAddress.String())
+	contractInstanceMetadata, err := keeper.GetNewContractMetadata(ctx, firstContractAddress.String())
 	assert.NoError(t, err, "Contract instance metadata should be stored by the Message handler")
 
 	assert.Equal(t, contractInstanceMetadata.PremiumPercentageCharged, contractOperationInfo.PremiumPercentageCharged)
@@ -477,16 +555,16 @@ func TestMessageHandler(t *testing.T) {
 	assert.Equal(t, contractInstanceMetadata.RewardAddress, contractOperationInfo.RewardAddress)
 	assert.Equal(t, contractInstanceMetadata.GasRebateToUser, contractOperationInfo.GasRebateToEndUser)
 
-	filteredLogs = l.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	filteredLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	assert.Equal(t, len(filteredLogs), 1)
-	filteredLog = filteredLogs[0]
+	filteredLog := filteredLogs[0]
 	assert.Equal(t, filteredLog.InputArg[0], fmt.Sprint(contractOperationInfo.GasConsumed))
 
-	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	filteredLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	assert.Equal(t, len(filteredLogs), 0)
 
 	require.Equal(t, 3, len(loggingKeeper.callLogs))
-	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	filteredKeeperLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
 	require.Equal(t, 1, len(filteredKeeperLogs))
 	require.Equal(t, nil, filteredKeeperLogs[0].Error)
 	require.Equal(t, uint64(5), filteredKeeperLogs[0].TransactionTracking.MaxGasAllowed)
@@ -510,25 +588,54 @@ func TestMessageHandler(t *testing.T) {
 
 	loggingKeeper.ResetLogs()
 
-	l.ClearLogs()
+	loggingGasMeter.ClearLogs()
 
-	blockGasTracking, err = keeper.GetCurrentBlockTrackingInfo(ctx)
+	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, len(blockGasTracking.TxTrackingInfos), 1, "We should have at least one tx tracking info")
 
-	lastTxTrackingInfo = blockGasTracking.TxTrackingInfos[len(blockGasTracking.TxTrackingInfos) - 1]
+	lastTxTrackingInfo := blockGasTracking.TxTrackingInfos[len(blockGasTracking.TxTrackingInfos) - 1]
 	assert.Equal(t, uint64(5), lastTxTrackingInfo.MaxGasAllowed)
 	assert.Equal(t, *lastTxTrackingInfo.MaxContractRewards[0], sdk.NewDecCoin("test", sdk.NewInt(1)))
 	assert.Condition(t, func() bool {
-		return len(lastTxTrackingInfo.ContractTrackingInfos) == 2
+		return len(lastTxTrackingInfo.ContractTrackingInfos) == 1
 	})
-	lastContractTrackingInfo = lastTxTrackingInfo.ContractTrackingInfos[len(lastTxTrackingInfo.ContractTrackingInfos) - 1]
+	lastContractTrackingInfo := lastTxTrackingInfo.ContractTrackingInfos[len(lastTxTrackingInfo.ContractTrackingInfos) - 1]
 	assert.Equal(t, lastContractTrackingInfo.GasConsumed, contractOperationInfo.GasConsumed)
 	assert.Equal(t, lastContractTrackingInfo.Address, firstContractAddress.String())
 	assert.Equal(t, lastContractTrackingInfo.Operation, contractOperationInfo.Operation)
 	assert.Equal(t, lastContractTrackingInfo.IsEligibleForReward, !contractOperationInfo.GasRebateToEndUser)
+}
 
-	// Test 7: Execution operation with contract instance metadata, block and gas tracking in place
+// Test 7: Execution operation with contract instance metadata, block and gas tracking in place
+func TestMessageHandlerSuccessfulExecution(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	testParams := setupMessageHandlerTest(t, ctx, keeper)
+	gasConsumptionMsgHandler := testParams.gasConsumptionHandler
+	firstContractAddress := testParams.testAccAddress1
+	secondContractAddress := testParams.testAccAddress2
+	loggingGasMeter := testParams.loggingGasMeter
+	loggingKeeper := testParams.loggingKeeper
+	cosmosMsg := testParams.cosmosMsg
+	ctx = testParams.ctx
+
+	testDecCoin := sdk.NewDecCoin("test", sdk.NewInt(1))
+
+	err := keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
+	require.NoError(t, err)
+
+	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{&testDecCoin}, 5)
+	require.NoError(t, err)
+
+	originalContractInstanceMetadata := gstTypes.ContractInstanceMetadata{
+		RewardAddress:            secondContractAddress.String(),
+		GasRebateToUser:          true,
+		CollectPremium:           false,
+		PremiumPercentageCharged: 80,
+	}
+	err = keeper.AddNewContractMetadata(ctx, firstContractAddress.String(), originalContractInstanceMetadata)
+	require.NoError(t, err)
+
 	executionContractOperationInfo := gstTypes.ContractOperationInfo{
 		GasConsumed:              300,
 		Operation:                gstTypes.ContractOperation_CONTRACT_OPERATION_EXECUTION,
@@ -538,36 +645,32 @@ func TestMessageHandler(t *testing.T) {
 		PremiumPercentageCharged: 60,
 	}
 	cosmosMsg, err = createCosmosMsg(executionContractOperationInfo)
-	assert.NoError(t, err, "Json unmarshalling should not fail")
+	require.NoError(t, err, "Json unmarshalling should not fail")
 
 	_, _, err = gasConsumptionMsgHandler.DispatchMsg(ctx, firstContractAddress, "", cosmosMsg)
-	assert.NoError(
+	require.NoError(
 		t,
 		err,
 		"Handler should succeed when block tracking and tx tracking both are available",
 	)
 
 	// Since this is non instantiation call, we will not taking into account other parameters of ContractOperationInfo
-	contractInstanceMetadata, err = keeper.GetNewContractMetadata(ctx, firstContractAddress.String())
-	assert.NoError(t, err, "Contract instance metadata should be stored by the Message handler")
+	contractInstanceMetadata, err := keeper.GetNewContractMetadata(ctx, firstContractAddress.String())
+	require.NoError(t, err, "Contract instance metadata should be stored by the Message handler")
 
 	// ContractInstanceMetadata should not be modified
-	assert.Equal(t, contractInstanceMetadata.PremiumPercentageCharged, contractOperationInfo.PremiumPercentageCharged)
-	assert.Equal(t, contractInstanceMetadata.CollectPremium, contractOperationInfo.CollectPremium)
-	assert.Equal(t, contractInstanceMetadata.RewardAddress, contractOperationInfo.RewardAddress)
-	assert.Equal(t, contractInstanceMetadata.GasRebateToUser, contractOperationInfo.GasRebateToEndUser)
+	require.Equal(t, originalContractInstanceMetadata, contractInstanceMetadata)
 
+	filteredLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	require.Equal(t, 1, len(filteredLogs))
+	filteredLog := filteredLogs[0]
+	require.Equal(t, fmt.Sprint(executionContractOperationInfo.GasConsumed), filteredLog.InputArg[0])
 
-	filteredLogs = l.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
-	assert.Equal(t, len(filteredLogs), 1)
-	filteredLog = filteredLogs[0]
-	assert.Equal(t, filteredLog.InputArg[0], fmt.Sprint(executionContractOperationInfo.GasConsumed))
-
-	filteredLogs = l.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
-	assert.Equal(t, len(filteredLogs), 0)
+	filteredLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	require.Equal(t, 0, len(filteredLogs))
 
 	require.Equal(t, 3, len(loggingKeeper.callLogs))
-	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	filteredKeeperLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
 	require.Equal(t, 1, len(filteredKeeperLogs))
 	require.Equal(t, nil, filteredKeeperLogs[0].Error)
 	require.Equal(t, uint64(5), filteredKeeperLogs[0].TransactionTracking.MaxGasAllowed)
@@ -591,23 +694,55 @@ func TestMessageHandler(t *testing.T) {
 
 	loggingKeeper.ResetLogs()
 
-	l.ClearLogs()
+	loggingGasMeter.ClearLogs()
 
-	blockGasTracking, err = keeper.GetCurrentBlockTrackingInfo(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, len(blockGasTracking.TxTrackingInfos), 1, "We should have at least one tx tracking info")
+	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	require.NoError(t, err)
+	require.Equal(t, len(blockGasTracking.TxTrackingInfos), 1, "We should have at least one tx tracking info")
 
-	lastTxTrackingInfo = blockGasTracking.TxTrackingInfos[len(blockGasTracking.TxTrackingInfos) - 1]
-	assert.Equal(t, uint64(5), lastTxTrackingInfo.MaxGasAllowed)
-	assert.Equal(t, *lastTxTrackingInfo.MaxContractRewards[0], sdk.NewDecCoin("test", sdk.NewInt(1)))
-	assert.Condition(t, func() bool {
-		return len(lastTxTrackingInfo.ContractTrackingInfos) == 3
+	lastTxTrackingInfo := blockGasTracking.TxTrackingInfos[len(blockGasTracking.TxTrackingInfos) - 1]
+	require.Equal(t, uint64(5), lastTxTrackingInfo.MaxGasAllowed)
+	require.Equal(t, *lastTxTrackingInfo.MaxContractRewards[0], sdk.NewDecCoin("test", sdk.NewInt(1)))
+	require.Condition(t, func() bool {
+		return len(lastTxTrackingInfo.ContractTrackingInfos) == 1
 	})
-	lastContractTrackingInfo = lastTxTrackingInfo.ContractTrackingInfos[len(lastTxTrackingInfo.ContractTrackingInfos) - 1]
-	assert.Equal(t, lastContractTrackingInfo.GasConsumed, executionContractOperationInfo.GasConsumed)
-	assert.Equal(t, lastContractTrackingInfo.Address, firstContractAddress.String())
-	assert.Equal(t, lastContractTrackingInfo.Operation, executionContractOperationInfo.Operation)
-	assert.Equal(t, lastContractTrackingInfo.IsEligibleForReward, !contractOperationInfo.GasRebateToEndUser)
+	lastContractTrackingInfo := lastTxTrackingInfo.ContractTrackingInfos[len(lastTxTrackingInfo.ContractTrackingInfos) - 1]
+	require.Equal(t, executionContractOperationInfo.GasConsumed, lastContractTrackingInfo.GasConsumed)
+	require.Equal(t,firstContractAddress.String(), lastContractTrackingInfo.Address)
+	require.Equal(t, executionContractOperationInfo.Operation, lastContractTrackingInfo.Operation)
+	require.Equal(t, !originalContractInstanceMetadata.GasRebateToUser, lastContractTrackingInfo.IsEligibleForReward)
+}
+
+// Test 0: Invalid JSON passed
+func TestMessageHandlerInvalidJSON(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	testParams := setupMessageHandlerTest(t, ctx, keeper)
+	gasConsumptionMsgHandler := testParams.gasConsumptionHandler
+	firstContractAddress := testParams.testAccAddress1
+	loggingGasMeter := testParams.loggingGasMeter
+	loggingKeeper := testParams.loggingKeeper
+	cosmosMsg := testParams.cosmosMsg
+	ctx = testParams.ctx
+
+	_, _, err := gasConsumptionMsgHandler.DispatchMsg(ctx, firstContractAddress, "", cosmosMsg)
+	assert.EqualError(
+		t,
+		err,
+		fmt.Sprintf("invalid character '\\x0%d' looking for beginning of value", 1),
+		"If custom message is invalid " +
+			"handler should return unmarshalling error",
+	)
+
+	filteredLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	assert.Equal(t, len(filteredLogs), 0)
+
+	filteredLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	assert.Equal(t, len(filteredLogs), 0)
+
+	require.Equal(t, 0, len(loggingKeeper.callLogs))
+	loggingKeeper.ResetLogs()
+
+	loggingGasMeter.ClearLogs()
 }
 
 

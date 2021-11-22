@@ -224,6 +224,7 @@ func (l *loggingGasTrackerKeeper) MarkEndOfTheBlock(ctx sdk.Context) error {
 type loggingWASMQuerier struct {
 	LastCallWithSmart bool
 	RawRequest        []byte
+	GiveInvalidSmartResp bool
 	Key               []byte
 	TimesInvoked      uint64
 	ContractAddress   string
@@ -237,6 +238,7 @@ func (l *loggingWASMQuerier) Reset() {
 	l.ContractAddress = ""
 	l.WrapperRequest = nil
 	l.TimesInvoked = 0
+	l.GiveInvalidSmartResp = false
 }
 
 func (l *loggingWASMQuerier) QuerySmart(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte) ([]byte, error) {
@@ -253,6 +255,10 @@ func (l *loggingWASMQuerier) QuerySmart(ctx sdk.Context, contractAddr sdk.AccAdd
 	}
 
 	l.WrapperRequest = &requestWrapper
+
+	if l.GiveInvalidSmartResp {
+		return []byte{1}, nil
+	}
 
 	resultWrapper := gstTypes.GasTrackingQueryResultWrapper{
 		GasConsumed:   234,
@@ -275,18 +281,76 @@ func (l *loggingWASMQuerier) QueryRaw(ctx sdk.Context, contractAddr sdk.AccAddre
 	return []byte{7}
 }
 
-func TestWASMQueryPlugin(t *testing.T) {
-	ctx, keeper := CreateTestKeeperAndContext(t)
-	loggingKeeper := loggingGasTrackerKeeper{underlyingKeeper: keeper}
-	loggingQuerier := loggingWASMQuerier{}
+type queryHandlerTestParams struct {
+	ctx sdk.Context
+	loggingGasMeter *LoggingGasMeter
+	loggingQuerier *loggingWASMQuerier
+	loggingKeeper *loggingGasTrackerKeeper
+}
 
-	loggingGasMeter := LoggingGasMeter{underlyingGasMeter: sdk.NewInfiniteGasMeter()}
-	ctx = ctx.WithGasMeter(&loggingGasMeter)
+func setupQueryHandlerTest(t *testing.T, ctx sdk.Context, keeper GasTrackingKeeper) queryHandlerTestParams {
+	l := LoggingGasMeter{
+		underlyingGasMeter: sdk.NewInfiniteGasMeter(),
+		log:                nil,
+	}
+	loggingKeeper := loggingGasTrackerKeeper{underlyingKeeper: keeper}
+	ctx = ctx.WithGasMeter(&l)
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount("archway", "archway")
 
-	plugin := NewGasTrackingWASMQueryPlugin(&loggingKeeper, &loggingQuerier)
+	return queryHandlerTestParams{
+		ctx:                   ctx,
+		loggingGasMeter:       &l,
+		loggingKeeper:         &loggingKeeper,
+		loggingQuerier: &loggingWASMQuerier{},
+	}
+}
+
+// Test raw query handling
+func TestWASMQueryPluginRaw(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	params := setupQueryHandlerTest(t, ctx, keeper)
+	ctx = params.ctx
+	loggingKeeper := params.loggingKeeper
+	loggingQuerier := params.loggingQuerier
+
+	plugin := NewGasTrackingWASMQueryPlugin(loggingKeeper, loggingQuerier)
+
+	wasmQuery := types.WasmQuery{
+		Raw:   &types.RawQuery{
+			ContractAddr: "",
+			Key: []byte{1},
+		},
+	}
+	_, err := plugin(ctx, &wasmQuery)
+	require.EqualError(t, err, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, wasmQuery.Raw.ContractAddr).Error(),"Raw query should return an error")
+
+	wasmQuery = types.WasmQuery{
+		Raw:   &types.RawQuery{
+			ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+			Key: []byte{1},
+		},
+	}
+	_, err = plugin(ctx, &wasmQuery)
+	require.NoError(t, err, "Raw query should succeed")
+
+	require.Equal(t, loggingQuerier.TimesInvoked, uint64(1))
+	require.Equal(t, loggingQuerier.LastCallWithSmart, false)
+	require.Equal(t, loggingQuerier.Key, wasmQuery.Raw.Key)
+	require.Equal(t, loggingQuerier.ContractAddress, wasmQuery.Raw.ContractAddr)
+}
+
+// Test smart query handling
+func TestWASMQueryPluginSmart(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	params := setupQueryHandlerTest(t, ctx, keeper)
+	ctx = params.ctx
+	loggingKeeper := params.loggingKeeper
+	loggingQuerier := params.loggingQuerier
+	loggingGasMeter := params.loggingGasMeter
+
+	plugin := NewGasTrackingWASMQueryPlugin(loggingKeeper, loggingQuerier)
 
 	wasmQuery := types.WasmQuery{
 		Smart: &types.SmartQuery{
@@ -302,7 +366,7 @@ func TestWASMQueryPlugin(t *testing.T) {
 		sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, wasmQuery.Smart.ContractAddr).Error(),
 		"Query should error due to invalid address",
 	)
-	require.Equal(t, loggingQuerier.TimesInvoked, uint64(0))
+	require.Equal(t, uint64(0), loggingQuerier.TimesInvoked)
 	loggingQuerier.Reset()
 
 	// We are not in a tx, so there should not be any tracking call happening.
@@ -345,13 +409,24 @@ func TestWASMQueryPlugin(t *testing.T) {
 	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
 	require.NoError(t, err, "Tracking new block should succeed")
 
-
 	testDecCoin := sdk.NewDecCoin("test", sdk.NewInt(1))
 	currentFee := []*sdk.DecCoin{&testDecCoin}
 	currentGasLimit := uint64(5)
 	err = keeper.TrackNewTx(ctx, currentFee, currentGasLimit)
 	require.NoError(t, err, "Tracking new tx should succeed")
 
+	// Without contract metadata there should be an error
+	_, err = plugin(ctx, &wasmQuery)
+	require.EqualError(
+		t,
+		err,
+		gstTypes.ErrContractInstanceMetadataNotFound.Error(),
+		"Query should error due to invalid address",
+	)
+
+	loggingKeeper.ResetLogs()
+	loggingQuerier.Reset()
+	loggingGasMeter.log = nil
 
 	contractMetadata := gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
@@ -361,6 +436,27 @@ func TestWASMQueryPlugin(t *testing.T) {
 	}
 	err = keeper.AddNewContractMetadata(ctx, "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt", contractMetadata)
 	require.NoError(t, err, "Adding new contract metadata should succeed")
+
+	loggingQuerier.GiveInvalidSmartResp = true
+	query = types.SmartQuery{
+		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		Msg:          []byte{1},
+	}
+	wasmQuery = types.WasmQuery{
+		Smart: &query,
+		Raw:   nil,
+	}
+	_, err = plugin(ctx, &wasmQuery)
+	require.EqualError(
+		t,
+		err,
+		"invalid character '\\x01' looking for beginning of value",
+		"Query should fail",
+	)
+
+	loggingKeeper.ResetLogs()
+	loggingQuerier.Reset()
+	loggingGasMeter.log = nil
 
 	query = types.SmartQuery{
 		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
@@ -480,4 +576,33 @@ func TestWASMQueryPlugin(t *testing.T) {
 	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	require.Equal(t, 1, len(gasMeterLogs))
 	require.Equal(t, fmt.Sprint((234 * contractMetadata.PremiumPercentageCharged) / 100), gasMeterLogs[0].InputArg[0])
+}
+
+// Test of outermost conditions of wasm query plugin
+func TestWASMQueryPlugin(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	params := setupQueryHandlerTest(t, ctx, keeper)
+	ctx = params.ctx
+	loggingKeeper := params.loggingKeeper
+	loggingQuerier := params.loggingQuerier
+
+	plugin := NewGasTrackingWASMQueryPlugin(loggingKeeper, loggingQuerier)
+
+	wasmQuery := types.WasmQuery{}
+	_, err := plugin(ctx, &wasmQuery)
+	require.EqualError(t, err, types.UnsupportedRequest{Kind: "unknown WasmQuery variant"}.Error(), "Plugin should return an error")
+
+	wasmQuery = types.WasmQuery{
+		Smart: &types.SmartQuery{
+			ContractAddr: "",
+			Msg:          []byte{1},
+		},
+		Raw:   &types.RawQuery{
+			ContractAddr: "",
+			Key: []byte{1},
+		},
+	}
+	_, err = plugin(ctx, &wasmQuery)
+	require.EqualError(t, err, types.UnsupportedRequest{Kind: "only one WasmQuery variant can be replied to"}.Error(), "Plugin should return an error")
+
 }
