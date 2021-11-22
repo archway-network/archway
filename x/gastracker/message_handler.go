@@ -45,12 +45,12 @@ func (g GasConsumptionMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.
 		}
 	}
 
-	if contractInstanceMetadata.GasRebateToUser {
+	if contractInstanceMetadata.GasRebateToUser && g.gastrackingKeeper.IsGasRebateToUserEnabled(ctx) {
 		ctx.Logger().Info("Refunding gas to the user", "contractAddress", contractAddr.String(), "gasConsumed", contractOperationInfo.GasConsumed)
 		ctx.GasMeter().RefundGas(contractOperationInfo.GasConsumed, "Gas Refund for smart contract execution")
 	}
 
-	if contractInstanceMetadata.CollectPremium /* && g.gastrackingKeeper.IsContractPremiumEnabled(ctx) */ {
+	if contractInstanceMetadata.CollectPremium && g.gastrackingKeeper.IsContractPremiumEnabled(ctx) {
 		ctx.Logger().Info("Charging premium to user", "premiumPercentage", contractInstanceMetadata.PremiumPercentageCharged)
 		premiumGas := (contractOperationInfo.GasConsumed * contractInstanceMetadata.PremiumPercentageCharged) / 100
 		ctx.GasMeter().ConsumeGas(premiumGas, "Smart contract premium")

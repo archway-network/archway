@@ -21,6 +21,7 @@ type GasTrackingKeeper interface {
 	GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress string) (gstTypes.LeftOverRewardEntry, error)
 
 	IsGasTrackingEnabled(ctx sdk.Context) bool
+	IsDappInflationRewardsEnabled(ctx sdk.Context) bool
 	IsGasRebateEnabled(ctx sdk.Context) bool
 	IsGasRebateToUserEnabled(ctx sdk.Context) bool
 	IsContractPremiumEnabled(ctx sdk.Context) bool

@@ -13,6 +13,11 @@ func (k Keeper) IsGasTrackingEnabled(ctx sdk.Context) (res bool) {
 	k.paramSpace.Get(ctx, gstTypes.KeyGasTrackingSwitch, &res)
 	return
 }
+
+func (k Keeper) IsDappInflationRewardsEnabled(ctx sdk.Context) (res bool) {
+	k.paramSpace.Get(ctx, gstTypes.KeyDappInflationRewards, &res)
+	return
+}
 func (k Keeper) IsGasRebateEnabled(ctx sdk.Context) (res bool) {
 	k.paramSpace.Get(ctx, gstTypes.KeyGasRebateSwitch, &res)
 	return

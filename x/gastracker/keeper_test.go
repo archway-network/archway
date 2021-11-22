@@ -1,7 +1,6 @@
 package gastracker
 
 import (
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -28,7 +27,6 @@ func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
 	if !ok {
 		panic("[mock subspace]: invalid params type")
 	}
-	fmt.Printf("%+v\n", params)
 	s.space[string(gstTypes.KeyGasTrackingSwitch)] = params.GasTrackingSwitch
 	s.space[string(gstTypes.KeyDappInflationRewards)] = params.GasDappInflationRewardsSwitch
 	s.space[string(gstTypes.KeyGasRebateSwitch)] = params.GasRebateSwitch
