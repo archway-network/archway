@@ -33,9 +33,17 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 
 // TODO: Switches take effect here
 func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
-	blockTxDetails, err := keeper.GetCurrentBlockTrackingInfo(context)
+	blockTxDetails, err := keeper.GetPreviousBlockTrackingInfo(context)
 	if err != nil {
-		panic(err)
+		switch err {
+		case gstTypes.ErrBlockTrackingDataNotFound:
+			// Only panic when there was a previous block
+			if context.BlockHeight() > 1 {
+				panic(err)
+			}
+		default:
+			panic(err)
+		}
 	}
 
 	if err := keeper.TrackNewBlock(context, gstTypes.BlockGasTracking{}); err != nil {
@@ -175,4 +183,14 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 
 		context.Logger().Info("Reward allocation details:", "rewardPayed", rewardsToBePayed, "leftOverEntry", leftOverEntry.ContractRewards)
 	}
+}
+
+func EndBlock(context sdk.Context, keeper GasTrackingKeeper, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	if context.BlockHeight() >= 1 {
+		err := keeper.MarkEndOfTheBlock(context)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return []abci.ValidatorUpdate{}
 }

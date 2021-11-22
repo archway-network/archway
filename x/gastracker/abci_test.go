@@ -289,6 +289,9 @@ func TestBlockTracking(t *testing.T) {
 			}})
 			require.NoError(t, err, "We should be able to track new block")
 
+			err = keeper.MarkEndOfTheBlock(ctx)
+			require.NoError(t, err, "We should be able to end the block")
+
 			testRewardKeeper := &TestRewardTransferKeeper{B: Log}
 			testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 			BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)

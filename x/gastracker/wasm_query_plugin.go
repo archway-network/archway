@@ -2,16 +2,36 @@ package gastracker
 
 import (
 	"encoding/json"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmKeeper *wasmkeeper.Keeper) func(ctx sdk.Context, request *wasmvmtypes.WasmQuery) ([]byte, error) {
+type WasmQuerier interface {
+	QuerySmart(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte) ([]byte, error)
+	QueryRaw(ctx sdk.Context, contractAddr sdk.AccAddress, key []byte) []byte
+}
+
+func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmQuerier WasmQuerier) func(ctx sdk.Context, request *wasmvmtypes.WasmQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.WasmQuery) ([]byte, error) {
 		if request.Smart != nil {
+			addr, err := sdk.AccAddressFromBech32(request.Smart.ContractAddr)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Smart.ContractAddr)
+			}
+
+			// Check if we are inside a tx or not
+			_, err = gasTrackingKeeper.GetCurrentTxTrackingInfo(ctx)
+			if err != nil {
+				switch err {
+				case gstTypes.ErrBlockTrackingDataNotFound:
+					return wasmQuerier.QuerySmart(ctx, addr, request.Smart.Msg)
+				default:
+					return nil, err
+				}
+			}
+
 			gasTrackingQueryRequestWrapper := gstTypes.GasTrackingQueryRequestWrapper{
 				MagicString: GasTrackingQueryRequestMagicString,
 				QueryRequest: request.Smart.Msg,
@@ -21,12 +41,7 @@ func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmKeep
 				return nil, err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(request.Smart.ContractAddr)
-			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Smart.ContractAddr)
-			}
-
-			resp, err := wasmKeeper.QuerySmart(ctx, addr, wrappedMsg)
+			resp, err := wasmQuerier.QuerySmart(ctx, addr, wrappedMsg)
 			if err != nil {
 				return nil, err
 			}
@@ -43,14 +58,14 @@ func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmKeep
 			}
 
 			if contractInstanceMetadata.GasRebateToUser {
-				ctx.Logger().Info("Refunding gas to the user", "contractAddress", request.Smart.ContractAddr, "gasConsumed", gasTrackingQueryResultWrapper.GasConsumed)
-				ctx.GasMeter().RefundGas(gasTrackingQueryResultWrapper.GasConsumed, "Gas Refund for smart contract execution")
+				ctx.Logger().Info("Rebating gas to the user", "contractAddress", request.Smart.ContractAddr, "gasConsumed", gasTrackingQueryResultWrapper.GasConsumed)
+				ctx.GasMeter().RefundGas(gasTrackingQueryResultWrapper.GasConsumed, gstTypes.GasRebateToUserDescriptor)
 			}
 
 			if contractInstanceMetadata.CollectPremium {
 				ctx.Logger().Info("Charging premium to user", "premiumPercentage", contractInstanceMetadata.PremiumPercentageCharged)
 				premiumGas := (gasTrackingQueryResultWrapper.GasConsumed * contractInstanceMetadata.PremiumPercentageCharged) / 100
-				ctx.GasMeter().ConsumeGas(premiumGas, "Smart contract premium")
+				ctx.GasMeter().ConsumeGas(premiumGas, gstTypes.PremiumGasDescriptor)
 			}
 
 			ctx.Logger().Info("Got the tracking for Query", "gasConsumed", gasTrackingQueryResultWrapper.GasConsumed, "Contract address", request.Smart.ContractAddr)
@@ -67,7 +82,7 @@ func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmKeep
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Raw.ContractAddr)
 			}
-			return wasmKeeper.QueryRaw(ctx, addr, request.Raw.Key), nil
+			return wasmQuerier.QueryRaw(ctx, addr, request.Raw.Key), nil
 		}
 		return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown WasmQuery variant"}
 	}

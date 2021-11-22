@@ -22,7 +22,7 @@ RUN sha256sum /lib/libwasmvm_muslc.a | grep 0e62296b9f24cf3a05f8513f99cee536c708
 RUN LEDGER_ENABLED=false BUILD_TAGS=muslc make build
 
 # --------------------------------------------------------
-FROM alpine:3.12
+FROM alpine:3.13
 
 COPY --from=go-builder /code/build/archwayd /usr/bin/archwayd
 
@@ -35,4 +35,6 @@ EXPOSE 26656
 # tendermint rpc
 EXPOSE 26657
 
-CMD ["/usr/bin/archwayd", "version"]
+ENTRYPOINT [ "/usr/bin/archwayd" ]
+
+CMD [ "version" ]

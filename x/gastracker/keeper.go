@@ -13,6 +13,7 @@ type GasTrackingKeeper interface {
 	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error
 	TrackContractGasUsage(ctx sdk.Context, contractAddress string, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error
 	GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
+	GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error)
 	TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockGasTracking) error
 	AddNewContractMetadata(ctx sdk.Context, address string, metadata gstTypes.ContractInstanceMetadata) error
 	GetNewContractMetadata(ctx sdk.Context, address string) (gstTypes.ContractInstanceMetadata, error)
@@ -25,12 +26,69 @@ type GasTrackingKeeper interface {
 	IsGasRebateEnabled(ctx sdk.Context) bool
 	IsGasRebateToUserEnabled(ctx sdk.Context) bool
 	IsContractPremiumEnabled(ctx sdk.Context) bool
+	GetPreviousBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
+	MarkEndOfTheBlock(ctx sdk.Context) error
 }
 
 type Keeper struct {
 	key        sdk.StoreKey
 	appCodec   codec.Marshaler
 	paramSpace gstTypes.Subspace // INTERFACE
+}
+
+func (k *Keeper) GetPreviousBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
+	gstKvStore := ctx.KVStore(k.key)
+
+	var previousBlockTracking gstTypes.BlockGasTracking
+	bz := gstKvStore.Get([]byte(gstTypes.PreviousBlockTrackingKey))
+	if bz == nil {
+		return previousBlockTracking, gstTypes.ErrBlockTrackingDataNotFound
+	}
+	err := k.appCodec.UnmarshalBinaryBare(bz, &previousBlockTracking)
+	return previousBlockTracking, err
+}
+
+func (k *Keeper) MarkEndOfTheBlock(ctx sdk.Context) error {
+	gstKvStore := ctx.KVStore(k.key)
+
+	var currentBlockTracking gstTypes.BlockGasTracking
+	bz := gstKvStore.Get([]byte(gstTypes.CurrentBlockTrackingKey))
+	if bz == nil {
+		return gstTypes.ErrBlockTrackingDataNotFound
+	}
+	err := k.appCodec.UnmarshalBinaryBare(bz, &currentBlockTracking)
+	if err != nil {
+		return err
+	}
+
+	gstKvStore.Delete([]byte(gstTypes.CurrentBlockTrackingKey))
+
+	gstKvStore.Set([]byte(gstTypes.PreviousBlockTrackingKey), bz)
+
+	return nil
+}
+
+func (k *Keeper) GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error) {
+	var txTrackingInfo gstTypes.TransactionTracking
+
+	gstKvStore := ctx.KVStore(k.key)
+	bz := gstKvStore.Get([]byte(gstTypes.CurrentBlockTrackingKey))
+	if bz == nil {
+		return txTrackingInfo, gstTypes.ErrBlockTrackingDataNotFound
+	}
+	var currentBlockGasTracking gstTypes.BlockGasTracking
+	err := k.appCodec.UnmarshalBinaryBare(bz, &currentBlockGasTracking)
+	if err != nil {
+		return txTrackingInfo, err
+	}
+
+	txsLen := len(currentBlockGasTracking.TxTrackingInfos)
+	if txsLen == 0 {
+		return txTrackingInfo, gstTypes.ErrTxTrackingDataNotFound
+	}
+
+	txTrackingInfo = *currentBlockGasTracking.TxTrackingInfos[len(currentBlockGasTracking.TxTrackingInfos)-1]
+	return txTrackingInfo, nil
 }
 
 func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {
@@ -148,6 +206,11 @@ func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler, paramSpace
 func (k *Keeper) TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockGasTracking) error {
 	gstKvStore := ctx.KVStore(k.key)
 
+	bz := gstKvStore.Get([]byte(gstTypes.CurrentBlockTrackingKey))
+	if bz != nil {
+		return gstTypes.ErrCurrentBlockTrackingDataAlreadyExists
+	}
+
 	bz, err := k.appCodec.MarshalBinaryBare(&blockGasTracking)
 	if err != nil {
 		return err
@@ -180,7 +243,7 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 	}
 
 	bz = gstKvStore.Get([]byte(gstTypes.CurrentBlockTrackingKey))
-	if bz == nil && ctx.BlockHeight() > 1 {
+	if bz == nil {
 		return gstTypes.ErrBlockTrackingDataNotFound
 	}
 	var currentBlockTracking gstTypes.BlockGasTracking
