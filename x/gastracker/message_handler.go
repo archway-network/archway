@@ -53,7 +53,6 @@ func (g GasConsumptionMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.
 
 	if contractInstanceMetadata.GasRebateToUser && g.gastrackingKeeper.IsGasRebateToUserEnabled(ctx) {
 		ctx.Logger().Info("Refunding gas to the user", "contractAddress", contractAddr.String(), "gasConsumed", contractOperationInfo.GasConsumed)
-		panic("fuck this!!!")
 		ctx.GasMeter().RefundGas(contractOperationInfo.GasConsumed, gstTypes.GasRebateToUserDescriptor)
 	}
 

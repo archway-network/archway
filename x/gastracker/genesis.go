@@ -5,6 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func InitParams(context sdk.Context, k Keeper) {
+func InitParams(context sdk.Context, k GasTrackingKeeper) {
 	k.SetParams(context, gstTypes.DefaultParams())
 }

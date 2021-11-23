@@ -22,11 +22,11 @@ var (
 
 type AppModule struct {
 	bankKeeper bankkeeper.Keeper
-	keeper     Keeper
+	keeper     GasTrackingKeeper
 	mintKeeper mintkeeper.Keeper
 }
 
-func NewAppModule(keeper Keeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
+func NewAppModule(keeper GasTrackingKeeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
 	return AppModule{keeper: keeper, bankKeeper: bk, mintKeeper: mk}
 }
 
@@ -101,9 +101,9 @@ func (a AppModule) RegisterServices(configurator module.Configurator) {
 }
 
 func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock) {
-	BeginBlock(context, block, &a.keeper, a.bankKeeper, a.mintKeeper)
+	BeginBlock(context, block, a.keeper, a.bankKeeper, a.mintKeeper)
 }
 
 func (a AppModule) EndBlock(context sdk.Context, block abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlock(context, &a.keeper, block)
+	return EndBlock(context, a.keeper, block)
 }
