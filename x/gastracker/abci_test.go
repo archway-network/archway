@@ -123,6 +123,53 @@ func disableGasRebate(params gstTypes.Params) gstTypes.Params {
 	return params
 }
 
+// Test the conditions under which BeginBlocker and EndBlocker should panic or not panic
+func TestABCIPanicBehaviour(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	ctx = ctx.WithBlockHeight(0)
+	require.NotPanics(t, func() {
+		EndBlock(ctx, keeper, types.RequestEndBlock{})
+	}, "EndBlock should not panic")
+
+	ctx = ctx.WithBlockHeight(1)
+	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func() {
+		EndBlock(ctx, keeper, types.RequestEndBlock{})
+	}, "Endblock should panic")
+
+	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
+	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
+
+	ctx = ctx.WithBlockHeight(2)
+	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func() {
+		BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	}, "Endblock should panic")
+
+	ctx = ctx.WithBlockHeight(1)
+
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	// We should not have made any call to reward keeper
+	require.Zero(t, testRewardKeeper.Logs, "No logs should be there as no need to make new calls")
+	// We would have overwritten the TrackNewBlock obj
+	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	require.NoError(t, err, "We should be able to get new block gas tracking")
+	require.Equal(t, gstTypes.BlockGasTracking{}, blockGasTracking, "We should have overwritten block gas tracking obj")
+
+	_ = EndBlock(ctx, keeper, types.RequestEndBlock{})
+	err = keeper.MarkEndOfTheBlock(ctx)
+	require.EqualError(t, err, gstTypes.ErrBlockTrackingDataNotFound.Error(), "Block tracking data should not be found")
+
+	// Calling EndBlock again should result in an error
+	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func() {
+		EndBlock(ctx, keeper, types.RequestEndBlock{})
+	})
+}
+
+// Test reward calculation
+
 // Inflation reward cap for a block is hardcoded at 20% of total inflation reward
 // So, for per block inflation of 765 (76500/100), we need to take 20% of it which is
 // 153.
@@ -155,7 +202,7 @@ func disableGasRebate(params gstTypes.Params) gstTypes.Params {
 // Since, left over threshold is hard coded to 1, we should be transferring 30test to "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt" and
 // 109test to "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk" and left over rewards should be 0.8test,0.0666666test1 and 0.65test and 0.68333325test1
 // respectively.
-func TestBlockTracking(t *testing.T) {
+func TestRewardCalculation(t *testing.T) {
 	addrA := "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt"
 	addrB := "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk"
 	type expected struct {
@@ -187,6 +234,7 @@ func TestBlockTracking(t *testing.T) {
 				},
 			},
 		},
+
 		{
 			name:   "disable contract premium",
 			params: disableContractPremium(gstTypes.DefaultParams()),
@@ -277,32 +325,15 @@ func TestBlockTracking(t *testing.T) {
 			config := sdk.GetConfig()
 			config.SetBech32PrefixForAccount("archway", "archway")
 
-			zeroDecCoin := sdk.NewDecCoinFromDec("test", sdk.NewDec(0))
-
-			// Empty new block tracking object
-			err := keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
-				{
-					MaxGasAllowed:         1,
-					MaxContractRewards:    []*sdk.DecCoin{&zeroDecCoin},
-					ContractTrackingInfos: nil,
-				},
-			}})
-			require.NoError(t, err, "We should be able to track new block")
-
-			err = keeper.MarkEndOfTheBlock(ctx)
-			require.NoError(t, err, "We should be able to end the block")
+			firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
+			secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 
 			testRewardKeeper := &TestRewardTransferKeeper{B: Log}
 			testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
-			BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
-			// We should not have made any call to reward keeper
-			require.Zero(t, testRewardKeeper.Logs, "No logs should be there as no need to make new calls")
-			// We would have overwritten the TrackNewBlock obj
-			blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
-			require.NoError(t, err, "We should be able to get new block gas tracking")
-			require.Equal(t, gstTypes.BlockGasTracking{}, blockGasTracking, "We should have overwritten block gas tracking obj")
 
-			err = keeper.AddNewContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
+			ctx = ctx.WithBlockHeight(2)
+
+			err := keeper.AddNewContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
 				RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 				GasRebateToUser: false,
 			})
@@ -330,8 +361,6 @@ func TestBlockTracking(t *testing.T) {
 			})
 			require.NoError(t, err, "We should be able to add new contract metadata")
 
-			firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
-			secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 			// Tracking new block with multiple tx tracking obj
 			err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 				{
@@ -378,8 +407,12 @@ func TestBlockTracking(t *testing.T) {
 				},
 			}})
 
-			BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+			require.NoError(t, err, "We should be able to track new block")
 
+			err = keeper.MarkEndOfTheBlock(ctx)
+			require.NoError(t, err, "We should be able to end the block")
+
+			BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 			// Let's check reward keeper call logs first
 			require.Equal(t, len(tc.expected.logs), len(testRewardKeeper.Logs))
 			for i := 0; i < len(tc.expected.logs); i++ {
