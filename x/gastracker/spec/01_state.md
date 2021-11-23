@@ -19,7 +19,7 @@ When a new block starts the protocol retrieves previously stored Block iterates 
 ## Contract Instance Metadata
 - Contract Instance Metadata `c_inst_md |  Address -> Protobuffer(address)`
 
-Whenever a smart contract is instantiated archway stores this address will be the target address for rewards coming for the smart contract
+Whenever a smart contract is instantiated archway stores this address, which will be the deposit address for rewards accumulated by that smart contract.
 
 ```proto3
 message ContractInstanceMetadata {
