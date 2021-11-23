@@ -122,6 +122,10 @@ func disableGasRebate(params gstTypes.Params) gstTypes.Params {
 	params.GasRebateSwitch = false
 	return params
 }
+func disableGasRebateToUser(params gstTypes.Params) gstTypes.Params {
+	params.GasRebateToUserSwitch = false
+	return params
+}
 
 // Test the conditions under which BeginBlocker and EndBlocker should panic or not panic
 func TestABCIPanicBehaviour(t *testing.T) {

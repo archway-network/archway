@@ -713,6 +713,203 @@ func TestMessageHandlerSuccessfulExecution(t *testing.T) {
 	require.Equal(t, !originalContractInstanceMetadata.GasRebateToUser, lastContractTrackingInfo.IsEligibleForReward)
 }
 
+// Test 8: Instantiation operation with premium collection off
+func TestMessageHandlerSuccessfulInstantiation3(t *testing.T) {
+	ctx, keeper := createTestBaseKeeperAndContext(t)
+	keeper.SetParams(ctx, disableContractPremium(gstTypes.DefaultParams()))
+	testParams := setupMessageHandlerTest(t, ctx, keeper)
+	gasConsumptionMsgHandler := testParams.gasConsumptionHandler
+	firstContractAddress := testParams.testAccAddress1
+	secondContractAddress := testParams.testAccAddress2
+	loggingGasMeter := testParams.loggingGasMeter
+	loggingKeeper := testParams.loggingKeeper
+	cosmosMsg := testParams.cosmosMsg
+	ctx = testParams.ctx
+
+	testDecCoin := sdk.NewDecCoin("test", sdk.NewInt(1))
+
+	err := keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
+	assert.NoError(t, err)
+
+	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{&testDecCoin}, 5)
+	assert.NoError(t, err)
+
+	contractOperationInfo := gstTypes.ContractOperationInfo{
+		GasConsumed:              100,
+		Operation:                gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+		RewardAddress:            secondContractAddress.String(),
+		GasRebateToEndUser:       false,
+		CollectPremium:           true,
+		PremiumPercentageCharged: 50,
+	}
+	cosmosMsg, err = createCosmosMsg(contractOperationInfo)
+	assert.NoError(t, err, "Json unmarshalling should not fail")
+
+	_, _, err = gasConsumptionMsgHandler.DispatchMsg(ctx, firstContractAddress, "", cosmosMsg)
+	assert.NoError(
+		t,
+		err,
+		"Handler should succeed when block tracking and tx tracking both are available",
+	)
+
+	contractInstanceMetadata, err := keeper.GetNewContractMetadata(ctx, firstContractAddress.String())
+	assert.NoError(t, err, "Contract instance metadata should be stored by the Message handler")
+
+	assert.Equal(t, contractInstanceMetadata.PremiumPercentageCharged, contractOperationInfo.PremiumPercentageCharged)
+	assert.Equal(t, contractInstanceMetadata.CollectPremium, contractOperationInfo.CollectPremium)
+	assert.Equal(t, contractInstanceMetadata.RewardAddress, contractOperationInfo.RewardAddress)
+	assert.Equal(t, contractInstanceMetadata.GasRebateToUser, contractOperationInfo.GasRebateToEndUser)
+
+	filteredLogs := loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	assert.Equal(t, len(filteredLogs), 0)
+
+	filteredLogs = loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	assert.Equal(t, len(filteredLogs), 0)
+
+	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	filteredKeeperLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, gstTypes.TransactionTracking{
+		MaxGasAllowed:         5,
+		MaxContractRewards:    []*sdk.DecCoin{&testDecCoin},
+		ContractTrackingInfos: nil,
+	}, filteredKeeperLogs[0].TransactionTracking)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("AddNewContractMetadata")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, contractInstanceMetadata, filteredKeeperLogs[0].Metadata)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	require.Equal(t, 0, len(filteredKeeperLogs))
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, firstContractAddress.String(), filteredKeeperLogs[0].ContractAddress)
+	require.Equal(t, contractOperationInfo.GasConsumed, filteredKeeperLogs[0].GasUsed)
+	require.Equal(t, contractOperationInfo.Operation, filteredKeeperLogs[0].Operation)
+	require.Equal(t, !contractOperationInfo.GasRebateToEndUser, filteredKeeperLogs[0].IsEligibleForReward)
+
+	loggingKeeper.ResetLogs()
+
+	loggingGasMeter.ClearLogs()
+
+	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, len(blockGasTracking.TxTrackingInfos), 1, "We should have at least one tx tracking info")
+
+	lastTxTrackingInfo := blockGasTracking.TxTrackingInfos[len(blockGasTracking.TxTrackingInfos)-1]
+	assert.Equal(t, uint64(5), lastTxTrackingInfo.MaxGasAllowed)
+	assert.Equal(t, *lastTxTrackingInfo.MaxContractRewards[0], sdk.NewDecCoin("test", sdk.NewInt(1)))
+	assert.Condition(t, func() bool {
+		return len(lastTxTrackingInfo.ContractTrackingInfos) == 1
+	})
+	lastContractTrackingInfo := lastTxTrackingInfo.ContractTrackingInfos[len(lastTxTrackingInfo.ContractTrackingInfos)-1]
+	assert.Equal(t, lastContractTrackingInfo.GasConsumed, contractOperationInfo.GasConsumed)
+	assert.Equal(t, lastContractTrackingInfo.Address, firstContractAddress.String())
+	assert.Equal(t, lastContractTrackingInfo.Operation, contractOperationInfo.Operation)
+	assert.Equal(t, lastContractTrackingInfo.IsEligibleForReward, !contractOperationInfo.GasRebateToEndUser)
+}
+
+// Test 9: Instantiation operation with gas rebates off
+func TestMessageHandlerSuccessfulInstantiation4(t *testing.T) {
+	ctx, keeper := createTestBaseKeeperAndContext(t)
+	keeper.SetParams(ctx, disableGasRebateToUser(gstTypes.DefaultParams()))
+	testParams := setupMessageHandlerTest(t, ctx, keeper)
+	gasConsumptionMsgHandler := testParams.gasConsumptionHandler
+	firstContractAddress := testParams.testAccAddress1
+	secondContractAddress := testParams.testAccAddress2
+	loggingGasMeter := testParams.loggingGasMeter
+	loggingKeeper := testParams.loggingKeeper
+	cosmosMsg := testParams.cosmosMsg
+	ctx = testParams.ctx
+
+	testDecCoin := sdk.NewDecCoin("test", sdk.NewInt(1))
+
+	err := keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
+	assert.NoError(t, err)
+
+	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{&testDecCoin}, 5)
+	assert.NoError(t, err)
+
+	contractOperationInfo := gstTypes.ContractOperationInfo{
+		GasConsumed:              200,
+		Operation:                gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+		RewardAddress:            secondContractAddress.String(),
+		GasRebateToEndUser:       true,
+		CollectPremium:           false,
+		PremiumPercentageCharged: 50,
+	}
+	cosmosMsg, err = createCosmosMsg(contractOperationInfo)
+	assert.NoError(t, err, "Json unmarshalling should not fail")
+
+	_, _, err = gasConsumptionMsgHandler.DispatchMsg(ctx, firstContractAddress, "", cosmosMsg)
+	assert.NoError(
+		t,
+		err,
+		"Handler should succeed when block tracking and tx tracking both are available",
+	)
+
+	contractInstanceMetadata, err := keeper.GetNewContractMetadata(ctx, firstContractAddress.String())
+	assert.NoError(t, err, "Contract instance metadata should be stored by the Message handler")
+
+	assert.Equal(t, contractInstanceMetadata.PremiumPercentageCharged, contractOperationInfo.PremiumPercentageCharged)
+	assert.Equal(t, contractInstanceMetadata.CollectPremium, contractOperationInfo.CollectPremium)
+	assert.Equal(t, contractInstanceMetadata.RewardAddress, contractOperationInfo.RewardAddress)
+	assert.Equal(t, contractInstanceMetadata.GasRebateToUser, contractOperationInfo.GasRebateToEndUser)
+
+	filteredLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	assert.Equal(t, len(filteredLogs), 0)
+
+	filteredLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	assert.Equal(t, len(filteredLogs), 0)
+
+	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	filteredKeeperLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, uint64(5), filteredKeeperLogs[0].TransactionTracking.MaxGasAllowed)
+	require.Equal(t, []*sdk.DecCoin{&testDecCoin}, filteredKeeperLogs[0].TransactionTracking.MaxContractRewards)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("AddNewContractMetadata")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, contractInstanceMetadata, filteredKeeperLogs[0].Metadata)
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	require.Equal(t, 0, len(filteredKeeperLogs))
+
+	filteredKeeperLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
+	require.Equal(t, 1, len(filteredKeeperLogs))
+	require.Equal(t, nil, filteredKeeperLogs[0].Error)
+	require.Equal(t, firstContractAddress.String(), filteredKeeperLogs[0].ContractAddress)
+	require.Equal(t, contractOperationInfo.GasConsumed, filteredKeeperLogs[0].GasUsed)
+	require.Equal(t, contractOperationInfo.Operation, filteredKeeperLogs[0].Operation)
+	require.Equal(t, !contractOperationInfo.GasRebateToEndUser, filteredKeeperLogs[0].IsEligibleForReward)
+
+	loggingKeeper.ResetLogs()
+
+	loggingGasMeter.ClearLogs()
+
+	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, len(blockGasTracking.TxTrackingInfos), 1, "We should have at least one tx tracking info")
+
+	lastTxTrackingInfo := blockGasTracking.TxTrackingInfos[len(blockGasTracking.TxTrackingInfos)-1]
+	assert.Equal(t, uint64(5), lastTxTrackingInfo.MaxGasAllowed)
+	assert.Equal(t, *lastTxTrackingInfo.MaxContractRewards[0], sdk.NewDecCoin("test", sdk.NewInt(1)))
+	assert.Condition(t, func() bool {
+		return len(lastTxTrackingInfo.ContractTrackingInfos) == 1
+	})
+	lastContractTrackingInfo := lastTxTrackingInfo.ContractTrackingInfos[len(lastTxTrackingInfo.ContractTrackingInfos)-1]
+	assert.Equal(t, lastContractTrackingInfo.GasConsumed, contractOperationInfo.GasConsumed)
+	assert.Equal(t, lastContractTrackingInfo.Address, firstContractAddress.String())
+	assert.Equal(t, lastContractTrackingInfo.Operation, contractOperationInfo.Operation)
+	assert.Equal(t, lastContractTrackingInfo.IsEligibleForReward, !contractOperationInfo.GasRebateToEndUser)
+}
+
 // Test 0: Invalid JSON passed
 func TestMessageHandlerInvalidJSON(t *testing.T) {
 	ctx, keeper := createTestBaseKeeperAndContext(t)
