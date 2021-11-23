@@ -34,7 +34,7 @@ message ContractInstanceMetadata {
 ## Reward Entry
 - Reward Entry `reward_entry |  Address -> Protobuffer(address)`
 
-Stores left over reward for particular address.
+Stores record of the left over rewards for particular reward address.
 
 
 ```proto3
