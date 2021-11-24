@@ -31,7 +31,6 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 	})
 }
 
-// TODO: Switches take effect here
 func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
 	blockTxDetails, err := keeper.GetPreviousBlockTrackingInfo(context)
 	if err != nil {
