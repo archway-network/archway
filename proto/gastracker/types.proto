@@ -73,11 +73,14 @@ message GasTrackingQueryResultWrapper {
 // Custom wrapper around contract instantiation request
 message ContractInstantiationRequestWrapper {
   string reward_address = 1;
-  bool gas_rebate_to_user = 2; // If true developer does not get paid, instead the user gets refunded. Note: due to a limitation in the Cosmos SDK, this feature doe not work; with the new release of the SDK, it will work.
-  bool collect_premium = 3; // If true, developer can get an extra amount (in percentage). Note: this and `gas_rebate_to_user` cannot be true at the same time
-  uint64 premium_percentage_charged = 4; // The extra charge in percentage, currently max: 200%
-  // Base64 encoding of instantiation data
-  string instantiation_request = 5; // params for the contract constructor
+  // If set to true, user will get the gas rebate for the contract execution, otherwise developer will get some portion of fee relative to the amount of gas consumed by contract.
+  bool gas_rebate_to_user = 2;
+  // If set to true, developer will receive premium on top of the gas reward. It is a logical error to have both this and `gas_rebate_to_user` set to true.
+  bool collect_premium = 3;
+  // Percentage of premium received by developer on top of their original gas reward
+  uint64 premium_percentage_charged = 4;
+  // The `InitMsg` which will be passed to the contract during initialization call and has to be encoded with Base64.
+  string instantiation_request = 5;
 }
 
 // Contract instance metadata
