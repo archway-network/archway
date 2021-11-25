@@ -6,7 +6,7 @@ Welcome to the documentation of the **Archway Daemon: `archwayd`**.
 
 ## The covered topics
 
->**Note:** Since `archwayd` is built on top of [`cosmos-sdk`](https://github.com/cosmos/cosmos-sdk) and [`wasmd`](https://github.com/CosmWasm/wasmd), Please refer to the original docs for the CLI commands and Flags part of those projects.
+>**Note:** Since `archwayd` is an expansion to the [`cosmos-sdk`](https://github.com/cosmos/cosmos-sdk) and [`wasmd`](https://github.com/CosmWasm/wasmd), Please refer to the original docs for the CLI commands and Flags part of those projects.
 
 >**Tip:** You need to use `archwayd` instead of `gaiad` and `wasmd` in the docs.
 
