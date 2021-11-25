@@ -52,11 +52,11 @@ To do so we need to run the following command.
 
 ```bash
 archwayd tx wasm instantiate <code_id>\
-{"reward_address": <address which will receive reward>,\
-"instantiation_request": <base64 encoded json body>,\
-"gas_rebate_to_user": <bool>,\
-"collect_premium": <bool>,\
-"premium_percentage_charged": <int in range of 1 to 200>}\
+"{\"reward_address\": <address which will receive reward>,\
+\"instantiation_request\": <base64 encoded json body>,\
+\"gas_rebate_to_user\": <bool>,\
+\"collect_premium\": <bool>,\
+\"premium_percentage_charged\": <int in range of 1 to 200>}"\
 --label test\
 --from $MY_VALIDATOR_ADDRESS\
 --keyring-backend test\
@@ -81,7 +81,7 @@ The premium charge is set in percentage with setting the `premium_percentage_cha
 
 Here is an example of this command:
 ```bash
-archwayd tx wasm instantiate 64 "{\"reward_address\": \"archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt\", \"instantiation_request\": \"e30=\", \"gas_rebate_to_user\": false, \"collect_premium\": false, \"premium_percentage_charged\": 0}"  --label test --from $MY_VALIDATOR_ADDRESS --keyring-backend test --chain-id testnet --fees 1stake
+archwayd tx wasm instantiate 64 "{\"reward_address\": \"archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt\", \"instantiation_request\": \"e30=\", \"gas_rebate_to_user\": false, \"collect_premium\": false, \"premium_percentage_charged\": 0}" --label test --from $MY_VALIDATOR_ADDRESS --keyring-backend test --chain-id testnet --fees 1stake
 ```
 
 ## More Info
