@@ -35,7 +35,7 @@ type GasTrackingKeeper interface {
 type Keeper struct {
 	key        sdk.StoreKey
 	appCodec   codec.Marshaler
-	paramSpace gstTypes.Subspace // INTERFACE
+	paramSpace gstTypes.Subspace 
 }
 
 func (k *Keeper) GetPreviousBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
@@ -49,6 +49,8 @@ func (k *Keeper) GetPreviousBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGa
 	err := k.appCodec.UnmarshalBinaryBare(bz, &previousBlockTracking)
 	return previousBlockTracking, err
 }
+
+// We need to mark the end of each block because ... TODO:
 
 func (k *Keeper) MarkEndOfTheBlock(ctx sdk.Context) error {
 	gstKvStore := ctx.KVStore(k.key)
@@ -158,6 +160,11 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 	return rewardsToBeDistributed, nil
 }
 
+// Since we can only transfer integer numbers
+// and rewards can be floating point numbers,
+// we accumulate all the rewards and once it reaches to
+// an integer number, we pay the integer part and
+// keep the 0.x amount as left over to be paid later
 func (k *Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress string) (gstTypes.LeftOverRewardEntry, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
