@@ -66,7 +66,7 @@ archwayd tx wasm instantiate <code_id>\
 
 where `code_id` is a number that you will see in the output of deploying procedure which is `archwayd tx wasm store` command.
 
-`instantiation_request` contains the parameters for the constructor of the smart contract in `JSON` format. It has to be encoded with `base64`.
+`instantiation_request` contains `InitMsg` of the smart contract in `JSON` format. It has to be encoded with `base64`.
 
 If `gas_rebate_to_user` set to true, the developer does not get any reward, instead the user gets refunded. 
 >**Note 1:** Due to a limitation in the Cosmos SDK, currently this feature doe not work; it will work with the new release of the SDK.
