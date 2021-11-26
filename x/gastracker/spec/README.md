@@ -10,7 +10,8 @@ This module is responsible for intercepting CosmWasm VM messages, measuring gas 
 2. **[Keeper](./02_keepers.md)** 
   - **[BaseKeeper](./02_keeper.md#Keeper)** 
 3. **[Messages](03_messages.md)**
-4. **[Events](04_events.md)**
+3. **[Queries](04_queries.md)**
+4. **[Events](05_events.md)**
 
 ## Concepts
 ### Gas Tracking
