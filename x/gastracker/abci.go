@@ -115,7 +115,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 			if keeper.IsDappInflationRewardsEnabled(context) {
 				contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasUsageForInflationRewards).Quo(totalGasConsumedInLastBlock))
 				context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractTrackingInfo.Address, "contractInflationReward", contractInflationReward)
-				if len(contractRewards) >= 1 {
+				if !contractRewards.IsZero() {
 					contractRewards = contractRewards.Add(contractInflationReward)
 				} else {
 					contractRewards = append(contractRewards, contractInflationReward)

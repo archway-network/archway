@@ -217,7 +217,7 @@ func TestRewardCalculation(t *testing.T) {
 		rewardsB []sdk.DecCoin
 		logs     []*RewardTransferKeeperCallLogs
 	}
-	params := disableGasTracking(gstTypes.DefaultParams())
+	params := gstTypes.DefaultParams()
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
 			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.8")),
