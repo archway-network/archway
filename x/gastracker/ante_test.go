@@ -3,6 +3,7 @@ package gastracker
 import (
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -36,6 +37,18 @@ func (d dummyTx) FeeGranter() sdk.AccAddress {
 	panic("should not be invoked by AnteHandler")
 }
 
+type InvalidTx struct {
+
+}
+
+func (i InvalidTx) GetMsgs() []sdk.Msg {
+	panic("not implemented")
+}
+
+func (i InvalidTx) ValidateBasic() error {
+	panic("not implemented")
+}
+
 func dummyNextAnteHandler(_ sdk.Context, _ sdk.Tx, _ bool) (newCtx sdk.Context, err error) {
 	return sdk.Context{}, nil
 }
@@ -44,6 +57,17 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 
 	testTxGasTrackingDecorator := NewTxGasTrackingDecorator(keeper)
+
+	_, err := testTxGasTrackingDecorator.AnteHandle(ctx, &InvalidTx{}, false, dummyNextAnteHandler)
+	assert.EqualError(
+		t,
+		err,
+		sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx").Error(),
+		"Gastracking ante handler should return expected error",
+	)
+
+	_, err = testTxGasTrackingDecorator.AnteHandle(ctx.WithBlockHeight(1), &InvalidTx{}, false, dummyNextAnteHandler)
+	assert.NoError(t, err, "Ante handler should not do anything for blockheight less then or equal to 1")
 
 	testTx := dummyTx{
 		Gas: 500,
@@ -56,7 +80,7 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 		*expectedDecCoins[i] = sdk.NewDecCoinFromCoin(sdk.NewCoin(coin.Denom, coin.Amount.QuoRaw(2)))
 	}
 
-	_, err := testTxGasTrackingDecorator.AnteHandle(ctx, testTx, false, dummyNextAnteHandler)
+	_, err = testTxGasTrackingDecorator.AnteHandle(ctx, testTx, false, dummyNextAnteHandler)
 	assert.EqualError(
 		t,
 		err,
