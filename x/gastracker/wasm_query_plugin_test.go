@@ -869,6 +869,7 @@ func TestWASMQueryPluginSmartWithoutContractPremium(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 	keeperParams := disableContractPremium(gstTypes.DefaultParams())
 	keeper.SetParams(ctx, keeperParams)
+
 	params := setupQueryHandlerTest(t, ctx, keeper)
 	ctx = params.ctx
 	loggingKeeper := params.loggingKeeper
@@ -1030,7 +1031,242 @@ func TestWASMQueryPluginSmartWithoutContractPremium(t *testing.T) {
 
 	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	require.Equal(t, 1, len(gasMeterLogs))
-	require.Equal(t, fmt.Sprint(234), gasMeterLogs[0].InputArg[0])
+
+	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	require.Equal(t, 0, len(gasMeterLogs))
+
+	loggingKeeper.ResetLogs()
+	loggingQuerier.Reset()
+	loggingGasMeter.log = nil
+
+	contractMetadata = gstTypes.ContractInstanceMetadata{
+		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		GasRebateToUser:          false,
+		CollectPremium:           true,
+		PremiumPercentageCharged: 50,
+	}
+	err = keeper.AddNewContractMetadata(ctx, "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk", contractMetadata)
+	require.NoError(t, err, "Adding new contract metadata should succeed")
+
+	query = types.SmartQuery{
+		ContractAddr: "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
+		Msg:          []byte{5},
+	}
+	wasmQuery = types.WasmQuery{
+		Smart: &query,
+		Raw:   nil,
+	}
+	_, err = plugin(ctx, &wasmQuery)
+	require.NoError(
+		t,
+		err,
+		"Query should succeed",
+	)
+
+	require.Equal(t, loggingQuerier.TimesInvoked, uint64(1))
+	require.Equal(t, loggingQuerier.LastCallWithSmart, true)
+	require.Equal(t, loggingQuerier.ContractAddress, query.ContractAddr)
+	require.Nil(t, loggingQuerier.Key)
+	require.Equal(t, loggingQuerier.WrapperRequest, &gstTypes.GasTrackingQueryRequestWrapper{
+		MagicString:  gstTypes.MagicString,
+		QueryRequest: []byte{5},
+	})
+
+	require.Equal(t, 3, len(loggingKeeper.callLogs))
+
+	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	require.Equal(t, 1, len(filteredLogs))
+	require.Equal(t, nil, filteredLogs[0].Error)
+	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
+	require.Equal(t, contractMetadata, filteredLogs[0].Metadata)
+
+	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredLogs))
+	require.Equal(t, nil, filteredLogs[0].Error)
+	require.Equal(t, currentGasLimit, filteredLogs[0].TransactionTracking.MaxGasAllowed)
+	require.Equal(t, currentFee, filteredLogs[0].TransactionTracking.MaxContractRewards)
+
+	filteredLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
+	require.Equal(t, 1, len(filteredLogs))
+	require.Equal(t, nil, filteredLogs[0].Error)
+	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
+	require.Equal(t, uint64(234), filteredLogs[0].GasUsed)
+	require.Equal(t, gstTypes.ContractOperation_CONTRACT_OPERATION_QUERY, filteredLogs[0].Operation)
+	require.Equal(t, true, filteredLogs[0].IsEligibleForReward)
+
+	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("RefundGas")
+	require.Equal(t, 0, len(gasMeterLogs))
+
+	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	require.Equal(t, 0, len(gasMeterLogs))
+}
+
+func TestWASMQueryPluginSmartWithoutContractPremiumOrGasRebateToUser(t *testing.T) {
+	ctx, keeper := CreateTestKeeperAndContext(t)
+	keeperParams := disableGasRebateToUser(disableContractPremium(gstTypes.DefaultParams()))
+	keeper.SetParams(ctx, keeperParams)
+
+	params := setupQueryHandlerTest(t, ctx, keeper)
+	ctx = params.ctx
+	loggingKeeper := params.loggingKeeper
+	loggingQuerier := params.loggingQuerier
+	loggingGasMeter := params.loggingGasMeter
+
+	plugin := NewGasTrackingWASMQueryPlugin(loggingKeeper, loggingQuerier)
+
+	wasmQuery := types.WasmQuery{
+		Smart: &types.SmartQuery{
+			ContractAddr: "",
+			Msg:          []byte{1},
+		},
+		Raw: nil,
+	}
+	_, err := plugin(ctx, &wasmQuery)
+	require.EqualError(
+		t,
+		err,
+		sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, wasmQuery.Smart.ContractAddr).Error(),
+		"Query should error due to invalid address",
+	)
+	require.Equal(t, uint64(0), loggingQuerier.TimesInvoked)
+	loggingQuerier.Reset()
+
+	// We are not in a tx, so there should not be any tracking call happening.
+	query := types.SmartQuery{
+		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		Msg:          []byte{1},
+	}
+	wasmQuery = types.WasmQuery{
+		Smart: &query,
+		Raw:   nil,
+	}
+	_, err = plugin(ctx, &wasmQuery)
+	require.NoError(
+		t,
+		err,
+		"Query should succeed",
+	)
+
+	require.Equal(t, len(loggingKeeper.callLogs), 1)
+	filteredLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, len(filteredLogs), 1)
+	require.Equal(t, gstTypes.ErrBlockTrackingDataNotFound, filteredLogs[0].Error)
+
+	require.Equal(t, loggingQuerier.TimesInvoked, uint64(1))
+	require.Equal(t, loggingQuerier.LastCallWithSmart, true)
+	require.Equal(t, loggingQuerier.RawRequest, query.Msg)
+	require.Equal(t, loggingQuerier.ContractAddress, query.ContractAddr)
+
+	gasMeterLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas")
+	require.Equal(t, 0, len(gasMeterLogs))
+
+	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
+	require.Equal(t, 0, len(gasMeterLogs))
+
+	loggingQuerier.Reset()
+	loggingKeeper.ResetLogs()
+	loggingGasMeter.log = nil
+
+	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
+	require.NoError(t, err, "Tracking new block should succeed")
+
+	testDecCoin := sdk.NewDecCoin("test", sdk.NewInt(1))
+	currentFee := []*sdk.DecCoin{&testDecCoin}
+	currentGasLimit := uint64(5)
+	err = keeper.TrackNewTx(ctx, currentFee, currentGasLimit)
+	require.NoError(t, err, "Tracking new tx should succeed")
+
+	// Without contract metadata there should be an error
+	_, err = plugin(ctx, &wasmQuery)
+	require.EqualError(
+		t,
+		err,
+		gstTypes.ErrContractInstanceMetadataNotFound.Error(),
+		"Query should error due to invalid address",
+	)
+
+	loggingKeeper.ResetLogs()
+	loggingQuerier.Reset()
+	loggingGasMeter.log = nil
+
+	contractMetadata := gstTypes.ContractInstanceMetadata{
+		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
+		GasRebateToUser:          true,
+		CollectPremium:           false,
+		PremiumPercentageCharged: 50,
+	}
+	err = keeper.AddNewContractMetadata(ctx, "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt", contractMetadata)
+	require.NoError(t, err, "Adding new contract metadata should succeed")
+
+	loggingQuerier.GiveInvalidSmartResp = true
+	query = types.SmartQuery{
+		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		Msg:          []byte{1},
+	}
+	wasmQuery = types.WasmQuery{
+		Smart: &query,
+		Raw:   nil,
+	}
+	_, err = plugin(ctx, &wasmQuery)
+	require.EqualError(
+		t,
+		err,
+		"invalid character '\\x01' looking for beginning of value",
+		"Query should fail",
+	)
+
+	loggingKeeper.ResetLogs()
+	loggingQuerier.Reset()
+	loggingGasMeter.log = nil
+
+	query = types.SmartQuery{
+		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		Msg:          []byte{1},
+	}
+	wasmQuery = types.WasmQuery{
+		Smart: &query,
+		Raw:   nil,
+	}
+	_, err = plugin(ctx, &wasmQuery)
+	require.NoError(
+		t,
+		err,
+		"Query should succeed",
+	)
+
+	require.Equal(t, loggingQuerier.TimesInvoked, uint64(1))
+	require.Equal(t, loggingQuerier.LastCallWithSmart, true)
+	require.Equal(t, loggingQuerier.ContractAddress, query.ContractAddr)
+	require.Nil(t, loggingQuerier.Key)
+	require.Equal(t, loggingQuerier.WrapperRequest, &gstTypes.GasTrackingQueryRequestWrapper{
+		MagicString:  gstTypes.MagicString,
+		QueryRequest: []byte{1},
+	})
+
+	require.Equal(t, 3, len(loggingKeeper.callLogs))
+
+	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	require.Equal(t, 1, len(filteredLogs))
+	require.Equal(t, nil, filteredLogs[0].Error)
+	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
+	require.Equal(t, contractMetadata, filteredLogs[0].Metadata)
+
+	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
+	require.Equal(t, 1, len(filteredLogs))
+	require.Equal(t, nil, filteredLogs[0].Error)
+	require.Equal(t, currentGasLimit, filteredLogs[0].TransactionTracking.MaxGasAllowed)
+	require.Equal(t, currentFee, filteredLogs[0].TransactionTracking.MaxContractRewards)
+
+	filteredLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
+	require.Equal(t, 1, len(filteredLogs))
+	require.Equal(t, nil, filteredLogs[0].Error)
+	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
+	require.Equal(t, uint64(234), filteredLogs[0].GasUsed)
+	require.Equal(t, gstTypes.ContractOperation_CONTRACT_OPERATION_QUERY, filteredLogs[0].Operation)
+	require.Equal(t, false, filteredLogs[0].IsEligibleForReward)
+
+	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	require.Equal(t, 0, len(gasMeterLogs))
 
 	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
 	require.Equal(t, 0, len(gasMeterLogs))
