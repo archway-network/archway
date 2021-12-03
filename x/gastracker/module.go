@@ -2,7 +2,7 @@ package gastracker
 
 import (
 	"encoding/json"
-
+	"github.com/archway-network/archway/x/gastracker/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -17,10 +17,53 @@ import (
 )
 
 var (
+	_ module.AppModuleBasic = AppModuleBasic{}
 	_ module.AppModule = AppModule{}
 )
 
+type AppModuleBasic struct {
+
+}
+
+func (a AppModuleBasic) Name() string {
+	return ModuleName
+}
+
+func (a AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
+
+}
+
+func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+
+}
+
+func (a AppModuleBasic) DefaultGenesis(marshaler codec.JSONMarshaler) json.RawMessage {
+	return marshaler.MustMarshalJSON(&types.GenesisState{})
+}
+
+func (a AppModuleBasic) ValidateGenesis(marshaler codec.JSONMarshaler, config client.TxEncodingConfig, message json.RawMessage) error {
+	return nil
+}
+
+func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.Router) {
+
+}
+
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(context client.Context, serveMux *runtime.ServeMux) {
+
+}
+
+func (a AppModuleBasic) GetTxCmd() *cobra.Command {
+	return nil
+}
+
+func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return nil
+}
+
 type AppModule struct {
+	AppModuleBasic
+
 	bankKeeper bankkeeper.Keeper
 	keeper     GasTrackingKeeper
 	mintKeeper mintkeeper.Keeper
@@ -30,42 +73,6 @@ func NewAppModule(keeper GasTrackingKeeper, bk bankkeeper.Keeper, mk mintkeeper.
 	return AppModule{keeper: keeper, bankKeeper: bk, mintKeeper: mk}
 }
 
-func (a AppModule) Name() string {
-	return ModuleName
-}
-
-func (a AppModule) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
-
-}
-
-func (a AppModule) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-
-}
-
-func (a AppModule) DefaultGenesis(marshaler codec.JSONMarshaler) json.RawMessage {
-	return json.RawMessage{}
-}
-
-func (a AppModule) ValidateGenesis(marshaler codec.JSONMarshaler, config client.TxEncodingConfig, message json.RawMessage) error {
-	return nil
-}
-
-func (a AppModule) RegisterRESTRoutes(context client.Context, router *mux.Router) {
-
-}
-
-func (a AppModule) RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux) {
-
-}
-
-func (a AppModule) GetTxCmd() *cobra.Command {
-	return nil
-}
-
-func (a AppModule) GetQueryCmd() *cobra.Command {
-	return nil
-}
-
 func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONMarshaler, message json.RawMessage) []abci.ValidatorUpdate {
 	InitParams(context, a.keeper)
 
@@ -73,7 +80,7 @@ func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONMarshale
 }
 
 func (a AppModule) ExportGenesis(context sdk.Context, marshaler codec.JSONMarshaler) json.RawMessage {
-	return json.RawMessage{}
+	return marshaler.MustMarshalJSON(&types.GenesisState{})
 }
 
 func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {

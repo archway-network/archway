@@ -72,7 +72,7 @@ func (x ContractOperation) String() string {
 }
 
 func (ContractOperation) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{0}
+	return fileDescriptor_7c6370b5ab4bd042, []int{0}
 }
 
 // Tracking contract gas usage and total gas consumption per transaction
@@ -86,7 +86,7 @@ func (m *TransactionTracking) Reset()         { *m = TransactionTracking{} }
 func (m *TransactionTracking) String() string { return proto.CompactTextString(m) }
 func (*TransactionTracking) ProtoMessage()    {}
 func (*TransactionTracking) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{0}
+	return fileDescriptor_7c6370b5ab4bd042, []int{0}
 }
 func (m *TransactionTracking) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -148,7 +148,7 @@ func (m *ContractGasTracking) Reset()         { *m = ContractGasTracking{} }
 func (m *ContractGasTracking) String() string { return proto.CompactTextString(m) }
 func (*ContractGasTracking) ProtoMessage()    {}
 func (*ContractGasTracking) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{1}
+	return fileDescriptor_7c6370b5ab4bd042, []int{1}
 }
 func (m *ContractGasTracking) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -214,7 +214,7 @@ func (m *BlockGasTracking) Reset()         { *m = BlockGasTracking{} }
 func (m *BlockGasTracking) String() string { return proto.CompactTextString(m) }
 func (*BlockGasTracking) ProtoMessage()    {}
 func (*BlockGasTracking) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{2}
+	return fileDescriptor_7c6370b5ab4bd042, []int{2}
 }
 func (m *BlockGasTracking) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -268,7 +268,7 @@ func (m *ContractOperationInfo) Reset()         { *m = ContractOperationInfo{} }
 func (m *ContractOperationInfo) String() string { return proto.CompactTextString(m) }
 func (*ContractOperationInfo) ProtoMessage()    {}
 func (*ContractOperationInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{3}
+	return fileDescriptor_7c6370b5ab4bd042, []int{3}
 }
 func (m *ContractOperationInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -349,7 +349,7 @@ func (m *GasTrackingQueryRequestWrapper) Reset()         { *m = GasTrackingQuery
 func (m *GasTrackingQueryRequestWrapper) String() string { return proto.CompactTextString(m) }
 func (*GasTrackingQueryRequestWrapper) ProtoMessage()    {}
 func (*GasTrackingQueryRequestWrapper) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{4}
+	return fileDescriptor_7c6370b5ab4bd042, []int{4}
 }
 func (m *GasTrackingQueryRequestWrapper) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -402,7 +402,7 @@ func (m *GasTrackingQueryResultWrapper) Reset()         { *m = GasTrackingQueryR
 func (m *GasTrackingQueryResultWrapper) String() string { return proto.CompactTextString(m) }
 func (*GasTrackingQueryResultWrapper) ProtoMessage()    {}
 func (*GasTrackingQueryResultWrapper) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{5}
+	return fileDescriptor_7c6370b5ab4bd042, []int{5}
 }
 func (m *GasTrackingQueryResultWrapper) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -447,11 +447,14 @@ func (m *GasTrackingQueryResultWrapper) GetQueryResponse() []byte {
 
 // Custom wrapper around contract instantiation request
 type ContractInstantiationRequestWrapper struct {
-	RewardAddress            string `protobuf:"bytes,1,opt,name=reward_address,json=rewardAddress,proto3" json:"reward_address,omitempty"`
-	GasRebateToUser          bool   `protobuf:"varint,2,opt,name=gas_rebate_to_user,json=gasRebateToUser,proto3" json:"gas_rebate_to_user,omitempty"`
-	CollectPremium           bool   `protobuf:"varint,3,opt,name=collect_premium,json=collectPremium,proto3" json:"collect_premium,omitempty"`
+	RewardAddress string `protobuf:"bytes,1,opt,name=reward_address,json=rewardAddress,proto3" json:"reward_address,omitempty"`
+	// If set to true, user will get the gas rebate for the contract execution, otherwise developer will get some portion of fee relative to the amount of gas consumed by contract.
+	GasRebateToUser bool `protobuf:"varint,2,opt,name=gas_rebate_to_user,json=gasRebateToUser,proto3" json:"gas_rebate_to_user,omitempty"`
+	// If set to true, developer will receive premium on top of the gas reward. It is a logical error to have both this and `gas_rebate_to_user` set to true.
+	CollectPremium bool `protobuf:"varint,3,opt,name=collect_premium,json=collectPremium,proto3" json:"collect_premium,omitempty"`
+	// Percentage of premium received by developer on top of their original gas reward
 	PremiumPercentageCharged uint64 `protobuf:"varint,4,opt,name=premium_percentage_charged,json=premiumPercentageCharged,proto3" json:"premium_percentage_charged,omitempty"`
-	// Base64 encoding of instantiation data
+	// The `InitMsg` which will be passed to the contract during initialization call and has to be encoded with Base64.
 	InstantiationRequest string `protobuf:"bytes,5,opt,name=instantiation_request,json=instantiationRequest,proto3" json:"instantiation_request,omitempty"`
 }
 
@@ -459,7 +462,7 @@ func (m *ContractInstantiationRequestWrapper) Reset()         { *m = ContractIns
 func (m *ContractInstantiationRequestWrapper) String() string { return proto.CompactTextString(m) }
 func (*ContractInstantiationRequestWrapper) ProtoMessage()    {}
 func (*ContractInstantiationRequestWrapper) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{6}
+	return fileDescriptor_7c6370b5ab4bd042, []int{6}
 }
 func (m *ContractInstantiationRequestWrapper) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -537,7 +540,7 @@ func (m *ContractInstanceMetadata) Reset()         { *m = ContractInstanceMetada
 func (m *ContractInstanceMetadata) String() string { return proto.CompactTextString(m) }
 func (*ContractInstanceMetadata) ProtoMessage()    {}
 func (*ContractInstanceMetadata) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{7}
+	return fileDescriptor_7c6370b5ab4bd042, []int{7}
 }
 func (m *ContractInstanceMetadata) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -603,7 +606,7 @@ func (m *LeftOverRewardEntry) Reset()         { *m = LeftOverRewardEntry{} }
 func (m *LeftOverRewardEntry) String() string { return proto.CompactTextString(m) }
 func (*LeftOverRewardEntry) ProtoMessage()    {}
 func (*LeftOverRewardEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{8}
+	return fileDescriptor_7c6370b5ab4bd042, []int{8}
 }
 func (m *LeftOverRewardEntry) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -650,7 +653,7 @@ func (m *RewardDistributionEvent) Reset()         { *m = RewardDistributionEvent
 func (m *RewardDistributionEvent) String() string { return proto.CompactTextString(m) }
 func (*RewardDistributionEvent) ProtoMessage()    {}
 func (*RewardDistributionEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cdd1f8edffbcb0ca, []int{9}
+	return fileDescriptor_7c6370b5ab4bd042, []int{9}
 }
 func (m *RewardDistributionEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -700,6 +703,43 @@ func (m *RewardDistributionEvent) GetLeftoverRewards() []*types.DecCoin {
 	return nil
 }
 
+// Genesis state
+type GenesisState struct {
+}
+
+func (m *GenesisState) Reset()         { *m = GenesisState{} }
+func (m *GenesisState) String() string { return proto.CompactTextString(m) }
+func (*GenesisState) ProtoMessage()    {}
+func (*GenesisState) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7c6370b5ab4bd042, []int{10}
+}
+func (m *GenesisState) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GenesisState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GenesisState.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GenesisState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GenesisState.Merge(m, src)
+}
+func (m *GenesisState) XXX_Size() int {
+	return m.Size()
+}
+func (m *GenesisState) XXX_DiscardUnknown() {
+	xxx_messageInfo_GenesisState.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GenesisState proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterEnum("gastracker.ContractOperation", ContractOperation_name, ContractOperation_value)
 	proto.RegisterType((*TransactionTracking)(nil), "gastracker.TransactionTracking")
@@ -712,71 +752,72 @@ func init() {
 	proto.RegisterType((*ContractInstanceMetadata)(nil), "gastracker.ContractInstanceMetadata")
 	proto.RegisterType((*LeftOverRewardEntry)(nil), "gastracker.LeftOverRewardEntry")
 	proto.RegisterType((*RewardDistributionEvent)(nil), "gastracker.RewardDistributionEvent")
+	proto.RegisterType((*GenesisState)(nil), "gastracker.GenesisState")
 }
 
-func init() { proto.RegisterFile("gastracker/types.proto", fileDescriptor_cdd1f8edffbcb0ca) }
+func init() { proto.RegisterFile("gastracker/types.proto", fileDescriptor_7c6370b5ab4bd042) }
 
-var fileDescriptor_cdd1f8edffbcb0ca = []byte{
-	// 930 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0x4f, 0x6f, 0xdb, 0xc6,
-	0x13, 0x35, 0x25, 0xd9, 0x49, 0xd6, 0x7f, 0xa4, 0xac, 0x63, 0x9b, 0x3f, 0xff, 0x1c, 0x56, 0x65,
-	0x9a, 0xd6, 0x68, 0x51, 0x09, 0xb1, 0xd1, 0x53, 0x7b, 0x91, 0x25, 0xc6, 0x10, 0x9a, 0x48, 0x0a,
-	0x2d, 0x21, 0x4d, 0x0f, 0x5d, 0xac, 0xa8, 0x31, 0x4d, 0x58, 0xdc, 0x95, 0x77, 0x57, 0xb6, 0xfc,
-	0x2d, 0x7a, 0x68, 0x3f, 0x4c, 0xef, 0x3d, 0xf4, 0xd6, 0x5c, 0x0a, 0xf4, 0x58, 0xd8, 0x40, 0x3f,
-	0x47, 0xc1, 0x25, 0x69, 0x4b, 0x11, 0xd3, 0x26, 0xbd, 0xf5, 0xa6, 0x9d, 0x79, 0xb3, 0x33, 0xef,
-	0x3d, 0x6a, 0x48, 0xb4, 0xe9, 0x53, 0xa9, 0x04, 0xf5, 0x4e, 0x41, 0x54, 0xd5, 0xe5, 0x08, 0x64,
-	0x65, 0x24, 0xb8, 0xe2, 0x18, 0xdd, 0xc6, 0xb7, 0x2d, 0x8f, 0xcb, 0x90, 0xcb, 0x6a, 0x9f, 0x4a,
-	0xa8, 0x9e, 0x3f, 0xe9, 0x83, 0xa2, 0x4f, 0xaa, 0x1e, 0x0f, 0x58, 0x8c, 0xb5, 0xff, 0x34, 0xd0,
-	0x7a, 0x57, 0x50, 0x26, 0xa9, 0xa7, 0x02, 0xce, 0xba, 0x51, 0x59, 0xc0, 0x7c, 0xfc, 0x31, 0x2a,
-	0x86, 0x74, 0x42, 0x7c, 0x2a, 0x09, 0x1d, 0x0e, 0xf9, 0x05, 0x0c, 0x4c, 0xa3, 0x6c, 0xec, 0x16,
-	0xdc, 0xd5, 0x90, 0x4e, 0x0e, 0xa9, 0xac, 0xc5, 0x41, 0xdc, 0x42, 0x0f, 0x22, 0x9c, 0xc7, 0x59,
-	0xd4, 0x51, 0x11, 0x01, 0x17, 0x54, 0x0c, 0xa4, 0x99, 0x2f, 0xe7, 0x77, 0x97, 0xf7, 0x76, 0x2a,
-	0x71, 0xfb, 0x4a, 0xd4, 0xbe, 0x92, 0xb4, 0xaf, 0x34, 0xc0, 0xab, 0xf3, 0x80, 0xb9, 0x38, 0xa4,
-	0x93, 0x7a, 0x52, 0xe8, 0xc6, 0x75, 0xf8, 0x25, 0xda, 0xba, 0xb9, 0x4b, 0x25, 0xc3, 0x90, 0x80,
-	0x1d, 0x73, 0x69, 0x16, 0xf4, 0x95, 0x1f, 0x54, 0x6e, 0xd9, 0x55, 0xd2, 0xea, 0x43, 0x2a, 0xd3,
-	0xc9, 0xdd, 0x8d, 0xb4, 0x3e, 0x8d, 0x34, 0xa3, 0x6a, 0xfb, 0x67, 0x03, 0xad, 0x67, 0xc0, 0xb1,
-	0x89, 0xee, 0xd0, 0xc1, 0x40, 0x80, 0x94, 0x9a, 0xe0, 0x3d, 0x37, 0x3d, 0xe2, 0x0f, 0xd1, 0x4a,
-	0x44, 0xdf, 0xe3, 0x4c, 0x8e, 0x43, 0x18, 0x98, 0x39, 0xcd, 0x7f, 0xd9, 0xa7, 0xb2, 0x9e, 0x84,
-	0xf0, 0x3e, 0xda, 0x0c, 0x24, 0x81, 0x61, 0xe0, 0x07, 0xfd, 0x21, 0x90, 0x63, 0x2e, 0x12, 0x01,
-	0xcc, 0x7c, 0xd9, 0xd8, 0xbd, 0xeb, 0xae, 0x07, 0xd2, 0x49, 0x92, 0x4f, 0xb9, 0x88, 0x39, 0xe2,
-	0x2f, 0xd1, 0x3d, 0x3e, 0x02, 0x41, 0x23, 0xbd, 0xcd, 0x42, 0xd9, 0xd8, 0x5d, 0xdb, 0x7b, 0x98,
-	0x45, 0xaa, 0x9d, 0x82, 0xdc, 0x5b, 0xbc, 0x4d, 0x50, 0xe9, 0x60, 0xc8, 0xbd, 0xd3, 0x69, 0x0a,
-	0x5f, 0xa3, 0xfb, 0x6a, 0xf2, 0xa6, 0x5a, 0xc6, 0xbc, 0x5a, 0x19, 0x3e, 0xbb, 0x45, 0x35, 0x99,
-	0xd5, 0xe9, 0xa7, 0x1c, 0xda, 0x98, 0x9b, 0x20, 0x4a, 0xcd, 0xe9, 0x61, 0xcc, 0xeb, 0x31, 0x43,
-	0x2d, 0xf7, 0x7e, 0xd4, 0xf0, 0x63, 0xb4, 0x16, 0x8b, 0x47, 0x52, 0x43, 0xf2, 0xda, 0x90, 0xd5,
-	0x38, 0x5a, 0x4b, 0x6c, 0xd9, 0xd3, 0xcf, 0x3d, 0x11, 0xd0, 0xa7, 0x0a, 0x88, 0xe2, 0x04, 0xd8,
-	0x80, 0x8c, 0x25, 0x08, 0xad, 0xe5, 0x5d, 0x17, 0xfb, 0x54, 0xba, 0x3a, 0xd9, 0xe5, 0x0e, 0x1b,
-	0xf4, 0x24, 0x08, 0xfc, 0x09, 0x2a, 0x7a, 0x7c, 0x38, 0x04, 0x4f, 0x91, 0x91, 0x80, 0x30, 0x18,
-	0x87, 0xe6, 0xa2, 0x06, 0xaf, 0x25, 0xe1, 0x4e, 0x1c, 0xc5, 0x5f, 0xa1, 0xed, 0x04, 0x40, 0x46,
-	0x20, 0x3c, 0x60, 0x8a, 0xfa, 0x40, 0xbc, 0x13, 0x2a, 0x7c, 0x18, 0x98, 0x4b, 0x9a, 0xb1, 0x99,
-	0x20, 0x3a, 0x37, 0x80, 0x7a, 0x9c, 0xb7, 0x4f, 0x90, 0x35, 0xe5, 0xcb, 0x8b, 0x31, 0x88, 0x4b,
-	0x17, 0xce, 0xc6, 0x20, 0xd5, 0x4b, 0x41, 0x47, 0x23, 0x10, 0x91, 0x86, 0x21, 0xf5, 0x03, 0x8f,
-	0x48, 0x25, 0x02, 0xe6, 0x27, 0x8f, 0xdc, 0xb2, 0x8e, 0x1d, 0xe9, 0x10, 0x7e, 0x84, 0x56, 0xcf,
-	0xa2, 0x4a, 0x22, 0xe2, 0x52, 0xad, 0xe3, 0x8a, 0xbb, 0x72, 0x36, 0x75, 0x9d, 0x1d, 0xa0, 0x87,
-	0xf3, 0x9d, 0xe4, 0x78, 0x38, 0xdd, 0xe8, 0x9f, 0xcc, 0x7a, 0x8c, 0xd6, 0xd2, 0x46, 0x72, 0xc4,
-	0x99, 0x84, 0xa4, 0xd3, 0x6a, 0xd2, 0x29, 0x0e, 0xda, 0x3f, 0xe6, 0xd0, 0xa3, 0xd4, 0xb7, 0x26,
-	0x93, 0x8a, 0x32, 0x15, 0xc4, 0xde, 0xcd, 0x52, 0x9b, 0xb7, 0xcf, 0xc8, 0xb2, 0xef, 0x33, 0x84,
-	0x67, 0xed, 0xd3, 0xd6, 0xe5, 0xb4, 0x1b, 0xc5, 0x29, 0xeb, 0xde, 0xe6, 0x5b, 0xfe, 0x5f, 0xf8,
-	0x56, 0xf8, 0x7b, 0xdf, 0xf0, 0x3e, 0xda, 0x08, 0xa6, 0x99, 0xdd, 0x48, 0xbf, 0xa8, 0x19, 0x3c,
-	0x08, 0x32, 0x68, 0xdb, 0xbf, 0x19, 0xc8, 0x9c, 0xd5, 0xc5, 0x83, 0xe7, 0xa0, 0xe8, 0x80, 0x2a,
-	0xfa, 0x1f, 0x16, 0xc3, 0xfe, 0x0e, 0xad, 0x3f, 0x83, 0x63, 0xd5, 0x3e, 0x87, 0x64, 0x61, 0x39,
-	0x4c, 0x89, 0x4b, 0x7c, 0x88, 0x4a, 0x73, 0x4b, 0xde, 0x78, 0x87, 0x25, 0x5f, 0xf4, 0x66, 0x37,
-	0xbc, 0xfd, 0xab, 0x81, 0xb6, 0xe2, 0xdf, 0x8d, 0x20, 0xfa, 0x17, 0xf4, 0xc7, 0x91, 0xaa, 0xce,
-	0x39, 0x30, 0xf5, 0xae, 0xb2, 0x35, 0x32, 0x66, 0xc9, 0xe9, 0x59, 0xfe, 0x97, 0x39, 0x4b, 0xe6,
-	0x20, 0x11, 0xa3, 0x21, 0x1c, 0x2b, 0x7e, 0x0e, 0xe2, 0xbd, 0x5e, 0x5b, 0xc5, 0xb4, 0x2a, 0xb9,
-	0xe8, 0xd3, 0x1f, 0x72, 0xe8, 0xfe, 0xdc, 0x66, 0xc3, 0x36, 0xb2, 0xea, 0xed, 0x56, 0xd7, 0xad,
-	0xd5, 0xbb, 0xa4, 0xdd, 0x71, 0xdc, 0x5a, 0xb7, 0xd9, 0x6e, 0x91, 0x5e, 0xeb, 0xa8, 0xe3, 0xd4,
-	0x9b, 0x4f, 0x9b, 0x4e, 0xa3, 0xb4, 0x80, 0x3f, 0x42, 0xe5, 0x0c, 0x4c, 0xb3, 0x75, 0xd4, 0xad,
-	0xb5, 0xba, 0x4d, 0x7d, 0x2a, 0x19, 0xb8, 0x8c, 0x76, 0x32, 0x50, 0xce, 0x37, 0x4e, 0xbd, 0xa7,
-	0x11, 0x39, 0xbc, 0x83, 0xcc, 0x0c, 0xc4, 0x8b, 0x9e, 0xe3, 0xbe, 0x2a, 0xe5, 0xb1, 0x85, 0xb6,
-	0x33, 0xb2, 0xcf, 0x9b, 0x87, 0x6e, 0xad, 0xeb, 0x94, 0x0a, 0x78, 0x1b, 0x6d, 0x66, 0x4d, 0x71,
-	0x50, 0x2f, 0x2d, 0xe2, 0xff, 0xa3, 0xad, 0x8c, 0xdc, 0x51, 0xaf, 0xd1, 0x2e, 0x2d, 0xbd, 0xa5,
-	0xad, 0xeb, 0x74, 0x9e, 0xbd, 0x2a, 0xdd, 0x39, 0x68, 0xff, 0x72, 0x65, 0x19, 0xaf, 0xaf, 0x2c,
-	0xe3, 0x8f, 0x2b, 0xcb, 0xf8, 0xfe, 0xda, 0x5a, 0x78, 0x7d, 0x6d, 0x2d, 0xfc, 0x7e, 0x6d, 0x2d,
-	0x7c, 0xfb, 0x85, 0x1f, 0xa8, 0x93, 0x71, 0xbf, 0xe2, 0xf1, 0xb0, 0x4a, 0x85, 0x77, 0x72, 0x41,
-	0x2f, 0x3f, 0x67, 0xa0, 0x2e, 0xb8, 0x38, 0x4d, 0xcf, 0xd5, 0x49, 0xf5, 0xcd, 0xaf, 0x9b, 0xfe,
-	0x92, 0xfe, 0x64, 0xd9, 0xff, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x8b, 0x40, 0x71, 0x6f, 0xf8, 0x08,
-	0x00, 0x00,
+var fileDescriptor_7c6370b5ab4bd042 = []byte{
+	// 944 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0x4d, 0x6f, 0xe3, 0x44,
+	0x18, 0xae, 0x93, 0xb6, 0xbb, 0x3b, 0xfd, 0x88, 0x77, 0xba, 0x6d, 0x4d, 0x29, 0x56, 0x70, 0xe9,
+	0x52, 0x81, 0x94, 0xa8, 0xed, 0x95, 0x03, 0xa9, 0xeb, 0x8d, 0x22, 0xed, 0x26, 0xa9, 0x93, 0x68,
+	0x59, 0x24, 0xb0, 0x26, 0xf6, 0x5b, 0xd7, 0xda, 0xd8, 0x93, 0xce, 0x4c, 0xd2, 0xf4, 0x5f, 0x70,
+	0x80, 0xdf, 0xc3, 0x15, 0x71, 0x61, 0x2f, 0x48, 0x1c, 0x51, 0x7b, 0xe5, 0x47, 0x20, 0x8f, 0xed,
+	0x92, 0x6c, 0x5c, 0x58, 0xf6, 0xb6, 0x17, 0x2b, 0x7e, 0xdf, 0xe7, 0xfd, 0x78, 0x9e, 0x27, 0x99,
+	0x0c, 0xd2, 0x5d, 0xca, 0xc3, 0x2b, 0xc2, 0xc3, 0xaa, 0x7c, 0x8c, 0x0f, 0xab, 0xe2, 0x7a, 0x08,
+	0xdc, 0x39, 0xaa, 0x0c, 0x19, 0x15, 0x14, 0xab, 0x59, 0xbe, 0x22, 0x1f, 0xe3, 0xc3, 0x1d, 0x59,
+	0x41, 0x79, 0xb5, 0x4f, 0x38, 0x54, 0xc7, 0x87, 0x7d, 0x10, 0xe4, 0xb0, 0xea, 0xd2, 0x20, 0x4a,
+	0x2a, 0x8c, 0xbf, 0x14, 0xb4, 0xd1, 0x65, 0x24, 0xe2, 0xc4, 0x15, 0x01, 0x8d, 0xba, 0x8c, 0xb8,
+	0xaf, 0x83, 0xc8, 0xc7, 0x4f, 0x51, 0x29, 0x24, 0x13, 0xc7, 0x27, 0xdc, 0x21, 0x83, 0x01, 0xbd,
+	0x02, 0x4f, 0x53, 0xca, 0xca, 0xc1, 0xa2, 0xbd, 0x16, 0x92, 0x49, 0x9d, 0xf0, 0x5a, 0x12, 0xc4,
+	0x4d, 0xf4, 0x24, 0xc6, 0xb9, 0x34, 0x12, 0x8c, 0xb8, 0xc2, 0x61, 0x70, 0x45, 0x98, 0xc7, 0xb5,
+	0x62, 0xb9, 0x78, 0xb0, 0x72, 0xb4, 0x5b, 0x49, 0xc6, 0x57, 0xe2, 0xf1, 0x95, 0x74, 0x7c, 0xe5,
+	0x14, 0x5c, 0x93, 0x06, 0x91, 0x8d, 0x43, 0x32, 0x31, 0xd3, 0x42, 0x3b, 0xa9, 0xc3, 0xdf, 0xa1,
+	0xed, 0xbb, 0x5e, 0x22, 0x5d, 0xc6, 0x09, 0xa2, 0x73, 0xca, 0xb5, 0x45, 0xd9, 0x72, 0xbf, 0xf2,
+	0x36, 0xc7, 0x4a, 0xd6, 0xa3, 0x4e, 0x78, 0xb6, 0xbf, 0xbd, 0x99, 0x75, 0xc9, 0x22, 0x8d, 0xb8,
+	0x87, 0xf1, 0xab, 0x82, 0x36, 0x72, 0xe0, 0x58, 0x43, 0x0f, 0x88, 0xe7, 0x31, 0xe0, 0x5c, 0xd2,
+	0x7c, 0x64, 0x67, 0xaf, 0xf8, 0x53, 0xb4, 0x1a, 0x8b, 0xe0, 0xd2, 0x88, 0x8f, 0x42, 0xf0, 0xb4,
+	0x82, 0x54, 0x61, 0xc5, 0x27, 0xdc, 0x4c, 0x43, 0xf8, 0x18, 0x6d, 0x05, 0xdc, 0x81, 0x41, 0xe0,
+	0x07, 0xfd, 0x01, 0x38, 0xe7, 0x94, 0xa5, 0x32, 0x68, 0xc5, 0xb2, 0x72, 0xf0, 0xd0, 0xde, 0x08,
+	0xb8, 0x95, 0x26, 0x9f, 0x51, 0x96, 0x30, 0xc5, 0x35, 0xf4, 0x88, 0x0e, 0x81, 0x91, 0x58, 0x75,
+	0x6d, 0xb1, 0xac, 0x1c, 0xac, 0x1f, 0xed, 0xdd, 0x4f, 0xad, 0x95, 0x41, 0xed, 0x7f, 0xaa, 0x0c,
+	0x40, 0xea, 0xc9, 0x80, 0xba, 0xaf, 0xa7, 0x89, 0x9c, 0xa1, 0xc7, 0x62, 0xf2, 0xb6, 0x72, 0xca,
+	0x7d, 0xca, 0xe5, 0x38, 0x6f, 0x97, 0xc4, 0x64, 0x56, 0xb3, 0x9f, 0x0b, 0x68, 0x73, 0x6e, 0x8f,
+	0x38, 0x35, 0xa7, 0x8d, 0x32, 0xaf, 0xcd, 0x0c, 0xcd, 0xc2, 0xfb, 0xd0, 0xc4, 0xfb, 0x68, 0x3d,
+	0x91, 0xd3, 0xc9, 0x2c, 0x2a, 0x4a, 0x8b, 0xd6, 0x92, 0x68, 0x2d, 0x35, 0xea, 0x08, 0x6d, 0xc5,
+	0xcb, 0x30, 0xe8, 0x13, 0x01, 0x8e, 0xa0, 0x0e, 0x44, 0x9e, 0x33, 0xe2, 0xc0, 0xa4, 0xba, 0x0f,
+	0x6d, 0xec, 0x13, 0x6e, 0xcb, 0x64, 0x97, 0x5a, 0x91, 0xd7, 0xe3, 0xc0, 0xf0, 0xe7, 0xa8, 0xe4,
+	0xd2, 0xc1, 0x00, 0x5c, 0xe1, 0x0c, 0x19, 0x84, 0xc1, 0x28, 0xd4, 0x96, 0x24, 0x78, 0x3d, 0x0d,
+	0xb7, 0x93, 0x28, 0xfe, 0x0a, 0xed, 0xa4, 0x00, 0x67, 0x08, 0xcc, 0x85, 0x48, 0x10, 0x1f, 0x1c,
+	0xf7, 0x82, 0x30, 0x1f, 0x3c, 0x6d, 0x59, 0xf2, 0xd6, 0x52, 0x44, 0xfb, 0x0e, 0x60, 0x26, 0x79,
+	0xe3, 0x02, 0xe9, 0x53, 0x1e, 0x9d, 0x8d, 0x80, 0x5d, 0xdb, 0x70, 0x39, 0x02, 0x2e, 0x5e, 0x32,
+	0x32, 0x1c, 0x02, 0x8b, 0x95, 0x0c, 0x89, 0x1f, 0xb8, 0x0e, 0x17, 0x2c, 0x88, 0xfc, 0xf4, 0x4b,
+	0xb8, 0x22, 0x63, 0x1d, 0x19, 0xc2, 0x7b, 0x68, 0xed, 0x32, 0xae, 0x74, 0x58, 0x52, 0x2a, 0xd5,
+	0x5c, 0xb5, 0x57, 0x2f, 0xa7, 0xda, 0x19, 0x01, 0xfa, 0x64, 0x7e, 0x12, 0x1f, 0x0d, 0xa6, 0x07,
+	0xfd, 0x97, 0x65, 0xfb, 0x68, 0x3d, 0x1b, 0xc4, 0x87, 0x34, 0xe2, 0x90, 0x4e, 0x5a, 0x4b, 0x27,
+	0x25, 0x41, 0xe3, 0xa7, 0x02, 0xda, 0xcb, 0x7c, 0x6b, 0x44, 0x5c, 0x90, 0x48, 0x04, 0x89, 0x77,
+	0xb3, 0xd4, 0xe6, 0xed, 0x53, 0xf2, 0xec, 0xfb, 0x12, 0xe1, 0x59, 0xfb, 0xa4, 0x75, 0x05, 0xe9,
+	0x46, 0x69, 0xca, 0xba, 0xfb, 0x7c, 0x2b, 0xbe, 0x87, 0x6f, 0x8b, 0xff, 0xee, 0x1b, 0x3e, 0x46,
+	0x9b, 0xc1, 0x34, 0xb3, 0x3b, 0xe9, 0x97, 0x24, 0x83, 0x27, 0x41, 0x0e, 0x6d, 0xe3, 0x77, 0x05,
+	0x69, 0xb3, 0xba, 0xb8, 0xf0, 0x02, 0x04, 0xf1, 0x88, 0x20, 0x1f, 0xb0, 0x18, 0xc6, 0xf7, 0x68,
+	0xe3, 0x39, 0x9c, 0x8b, 0xd6, 0x18, 0xd2, 0x23, 0xcc, 0x8a, 0x04, 0xbb, 0xc6, 0x75, 0xa4, 0xce,
+	0x1d, 0xfe, 0xca, 0x3b, 0x1c, 0xfe, 0x25, 0x77, 0xf6, 0xe4, 0x37, 0x7e, 0x53, 0xd0, 0x76, 0xf2,
+	0xf9, 0x34, 0x88, 0x7f, 0x05, 0xfd, 0x51, 0xac, 0xaa, 0x35, 0x86, 0x48, 0xbc, 0xab, 0x6c, 0xa7,
+	0x39, 0xbb, 0x14, 0xe4, 0x2e, 0x1f, 0xe5, 0xee, 0x92, 0xbb, 0x48, 0xcc, 0x68, 0x00, 0xe7, 0x82,
+	0x8e, 0x81, 0xfd, 0xaf, 0xbf, 0xb3, 0x52, 0x56, 0x95, 0x31, 0x5a, 0x47, 0xab, 0x75, 0x88, 0x80,
+	0x07, 0xbc, 0x23, 0x88, 0x80, 0x2f, 0x7e, 0x2c, 0xa0, 0xc7, 0x73, 0x27, 0x1d, 0x36, 0x90, 0x6e,
+	0xb6, 0x9a, 0x5d, 0xbb, 0x66, 0x76, 0x9d, 0x56, 0xdb, 0xb2, 0x6b, 0xdd, 0x46, 0xab, 0xe9, 0xf4,
+	0x9a, 0x9d, 0xb6, 0x65, 0x36, 0x9e, 0x35, 0xac, 0x53, 0x75, 0x01, 0x7f, 0x86, 0xca, 0x39, 0x98,
+	0x46, 0xb3, 0xd3, 0xad, 0x35, 0xbb, 0x0d, 0xf9, 0xa6, 0x2a, 0xb8, 0x8c, 0x76, 0x73, 0x50, 0xd6,
+	0x37, 0x96, 0xd9, 0x93, 0x88, 0x02, 0xde, 0x45, 0x5a, 0x0e, 0xe2, 0xac, 0x67, 0xd9, 0xaf, 0xd4,
+	0x22, 0xd6, 0xd1, 0x4e, 0x4e, 0xf6, 0x45, 0xa3, 0x6e, 0xd7, 0xba, 0x96, 0xba, 0x88, 0x77, 0xd0,
+	0x56, 0xde, 0x16, 0x27, 0xa6, 0xba, 0x84, 0x3f, 0x46, 0xdb, 0x39, 0xb9, 0x4e, 0xef, 0xb4, 0xa5,
+	0x2e, 0xdf, 0x33, 0xd6, 0xb6, 0xda, 0xcf, 0x5f, 0xa9, 0x0f, 0x4e, 0xbe, 0xfe, 0xe5, 0x46, 0x57,
+	0xde, 0xdc, 0xe8, 0xca, 0x9f, 0x37, 0xba, 0xf2, 0xc3, 0xad, 0xbe, 0xf0, 0xe6, 0x56, 0x5f, 0xf8,
+	0xe3, 0x56, 0x5f, 0xf8, 0xf6, 0xa9, 0x1f, 0x88, 0x8b, 0x51, 0xbf, 0xe2, 0xd2, 0xb0, 0x6a, 0x52,
+	0x1e, 0xbe, 0xcc, 0x6e, 0x3e, 0x5e, 0x75, 0x92, 0xdc, 0x80, 0xe4, 0xf5, 0xa7, 0xbf, 0x2c, 0xef,
+	0x32, 0xc7, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff, 0xf9, 0x41, 0x3c, 0xd1, 0x1f, 0x09, 0x00, 0x00,
 }
 
 func (m *TransactionTracking) Marshal() (dAtA []byte, err error) {
@@ -807,7 +848,7 @@ func (m *TransactionTracking) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 					return 0, err
 				}
 				i -= size
-				i = encodeVarintTypes(dAtA, i, uint64(size))
+				i = encodeVarintTypes_2(dAtA, i, uint64(size))
 			}
 			i--
 			dAtA[i] = 0x22
@@ -821,14 +862,14 @@ func (m *TransactionTracking) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 					return 0, err
 				}
 				i -= size
-				i = encodeVarintTypes(dAtA, i, uint64(size))
+				i = encodeVarintTypes_2(dAtA, i, uint64(size))
 			}
 			i--
 			dAtA[i] = 0x1a
 		}
 	}
 	if m.MaxGasAllowed != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.MaxGasAllowed))
+		i = encodeVarintTypes_2(dAtA, i, uint64(m.MaxGasAllowed))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -856,7 +897,7 @@ func (m *ContractGasTracking) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Operation != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.Operation))
+		i = encodeVarintTypes_2(dAtA, i, uint64(m.Operation))
 		i--
 		dAtA[i] = 0x20
 	}
@@ -871,14 +912,14 @@ func (m *ContractGasTracking) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x18
 	}
 	if m.GasConsumed != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.GasConsumed))
+		i = encodeVarintTypes_2(dAtA, i, uint64(m.GasConsumed))
 		i--
 		dAtA[i] = 0x10
 	}
 	if len(m.Address) > 0 {
 		i -= len(m.Address)
 		copy(dAtA[i:], m.Address)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Address)))
+		i = encodeVarintTypes_2(dAtA, i, uint64(len(m.Address)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -913,7 +954,7 @@ func (m *BlockGasTracking) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 					return 0, err
 				}
 				i -= size
-				i = encodeVarintTypes(dAtA, i, uint64(size))
+				i = encodeVarintTypes_2(dAtA, i, uint64(size))
 			}
 			i--
 			dAtA[i] = 0xa
@@ -943,7 +984,7 @@ func (m *ContractOperationInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.PremiumPercentageCharged != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.PremiumPercentageCharged))
+		i = encodeVarintTypes_2(dAtA, i, uint64(m.PremiumPercentageCharged))
 		i--
 		dAtA[i] = 0x30
 	}
@@ -970,17 +1011,17 @@ func (m *ContractOperationInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if len(m.RewardAddress) > 0 {
 		i -= len(m.RewardAddress)
 		copy(dAtA[i:], m.RewardAddress)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.RewardAddress)))
+		i = encodeVarintTypes_2(dAtA, i, uint64(len(m.RewardAddress)))
 		i--
 		dAtA[i] = 0x1a
 	}
 	if m.Operation != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.Operation))
+		i = encodeVarintTypes_2(dAtA, i, uint64(m.Operation))
 		i--
 		dAtA[i] = 0x10
 	}
 	if m.GasConsumed != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.GasConsumed))
+		i = encodeVarintTypes_2(dAtA, i, uint64(m.GasConsumed))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -1010,14 +1051,14 @@ func (m *GasTrackingQueryRequestWrapper) MarshalToSizedBuffer(dAtA []byte) (int,
 	if len(m.QueryRequest) > 0 {
 		i -= len(m.QueryRequest)
 		copy(dAtA[i:], m.QueryRequest)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.QueryRequest)))
+		i = encodeVarintTypes_2(dAtA, i, uint64(len(m.QueryRequest)))
 		i--
 		dAtA[i] = 0x12
 	}
 	if len(m.MagicString) > 0 {
 		i -= len(m.MagicString)
 		copy(dAtA[i:], m.MagicString)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.MagicString)))
+		i = encodeVarintTypes_2(dAtA, i, uint64(len(m.MagicString)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1047,12 +1088,12 @@ func (m *GasTrackingQueryResultWrapper) MarshalToSizedBuffer(dAtA []byte) (int, 
 	if len(m.QueryResponse) > 0 {
 		i -= len(m.QueryResponse)
 		copy(dAtA[i:], m.QueryResponse)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.QueryResponse)))
+		i = encodeVarintTypes_2(dAtA, i, uint64(len(m.QueryResponse)))
 		i--
 		dAtA[i] = 0x12
 	}
 	if m.GasConsumed != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.GasConsumed))
+		i = encodeVarintTypes_2(dAtA, i, uint64(m.GasConsumed))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -1082,12 +1123,12 @@ func (m *ContractInstantiationRequestWrapper) MarshalToSizedBuffer(dAtA []byte) 
 	if len(m.InstantiationRequest) > 0 {
 		i -= len(m.InstantiationRequest)
 		copy(dAtA[i:], m.InstantiationRequest)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.InstantiationRequest)))
+		i = encodeVarintTypes_2(dAtA, i, uint64(len(m.InstantiationRequest)))
 		i--
 		dAtA[i] = 0x2a
 	}
 	if m.PremiumPercentageCharged != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.PremiumPercentageCharged))
+		i = encodeVarintTypes_2(dAtA, i, uint64(m.PremiumPercentageCharged))
 		i--
 		dAtA[i] = 0x20
 	}
@@ -1114,7 +1155,7 @@ func (m *ContractInstantiationRequestWrapper) MarshalToSizedBuffer(dAtA []byte) 
 	if len(m.RewardAddress) > 0 {
 		i -= len(m.RewardAddress)
 		copy(dAtA[i:], m.RewardAddress)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.RewardAddress)))
+		i = encodeVarintTypes_2(dAtA, i, uint64(len(m.RewardAddress)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1142,7 +1183,7 @@ func (m *ContractInstanceMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error
 	var l int
 	_ = l
 	if m.PremiumPercentageCharged != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.PremiumPercentageCharged))
+		i = encodeVarintTypes_2(dAtA, i, uint64(m.PremiumPercentageCharged))
 		i--
 		dAtA[i] = 0x20
 	}
@@ -1169,7 +1210,7 @@ func (m *ContractInstanceMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error
 	if len(m.RewardAddress) > 0 {
 		i -= len(m.RewardAddress)
 		copy(dAtA[i:], m.RewardAddress)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.RewardAddress)))
+		i = encodeVarintTypes_2(dAtA, i, uint64(len(m.RewardAddress)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1204,7 +1245,7 @@ func (m *LeftOverRewardEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 					return 0, err
 				}
 				i -= size
-				i = encodeVarintTypes(dAtA, i, uint64(size))
+				i = encodeVarintTypes_2(dAtA, i, uint64(size))
 			}
 			i--
 			dAtA[i] = 0xa
@@ -1241,7 +1282,7 @@ func (m *RewardDistributionEvent) MarshalToSizedBuffer(dAtA []byte) (int, error)
 					return 0, err
 				}
 				i -= size
-				i = encodeVarintTypes(dAtA, i, uint64(size))
+				i = encodeVarintTypes_2(dAtA, i, uint64(size))
 			}
 			i--
 			dAtA[i] = 0x1a
@@ -1255,7 +1296,7 @@ func (m *RewardDistributionEvent) MarshalToSizedBuffer(dAtA []byte) (int, error)
 					return 0, err
 				}
 				i -= size
-				i = encodeVarintTypes(dAtA, i, uint64(size))
+				i = encodeVarintTypes_2(dAtA, i, uint64(size))
 			}
 			i--
 			dAtA[i] = 0x12
@@ -1264,15 +1305,38 @@ func (m *RewardDistributionEvent) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	if len(m.RewardAddress) > 0 {
 		i -= len(m.RewardAddress)
 		copy(dAtA[i:], m.RewardAddress)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.RewardAddress)))
+		i = encodeVarintTypes_2(dAtA, i, uint64(len(m.RewardAddress)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
-	offset -= sovTypes(v)
+func (m *GenesisState) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GenesisState) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintTypes_2(dAtA []byte, offset int, v uint64) int {
+	offset -= sovTypes_2(v)
 	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1289,18 +1353,18 @@ func (m *TransactionTracking) Size() (n int) {
 	var l int
 	_ = l
 	if m.MaxGasAllowed != 0 {
-		n += 1 + sovTypes(uint64(m.MaxGasAllowed))
+		n += 1 + sovTypes_2(uint64(m.MaxGasAllowed))
 	}
 	if len(m.MaxContractRewards) > 0 {
 		for _, e := range m.MaxContractRewards {
 			l = e.Size()
-			n += 1 + l + sovTypes(uint64(l))
+			n += 1 + l + sovTypes_2(uint64(l))
 		}
 	}
 	if len(m.ContractTrackingInfos) > 0 {
 		for _, e := range m.ContractTrackingInfos {
 			l = e.Size()
-			n += 1 + l + sovTypes(uint64(l))
+			n += 1 + l + sovTypes_2(uint64(l))
 		}
 	}
 	return n
@@ -1314,16 +1378,16 @@ func (m *ContractGasTracking) Size() (n int) {
 	_ = l
 	l = len(m.Address)
 	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
+		n += 1 + l + sovTypes_2(uint64(l))
 	}
 	if m.GasConsumed != 0 {
-		n += 1 + sovTypes(uint64(m.GasConsumed))
+		n += 1 + sovTypes_2(uint64(m.GasConsumed))
 	}
 	if m.IsEligibleForReward {
 		n += 2
 	}
 	if m.Operation != 0 {
-		n += 1 + sovTypes(uint64(m.Operation))
+		n += 1 + sovTypes_2(uint64(m.Operation))
 	}
 	return n
 }
@@ -1337,7 +1401,7 @@ func (m *BlockGasTracking) Size() (n int) {
 	if len(m.TxTrackingInfos) > 0 {
 		for _, e := range m.TxTrackingInfos {
 			l = e.Size()
-			n += 1 + l + sovTypes(uint64(l))
+			n += 1 + l + sovTypes_2(uint64(l))
 		}
 	}
 	return n
@@ -1350,14 +1414,14 @@ func (m *ContractOperationInfo) Size() (n int) {
 	var l int
 	_ = l
 	if m.GasConsumed != 0 {
-		n += 1 + sovTypes(uint64(m.GasConsumed))
+		n += 1 + sovTypes_2(uint64(m.GasConsumed))
 	}
 	if m.Operation != 0 {
-		n += 1 + sovTypes(uint64(m.Operation))
+		n += 1 + sovTypes_2(uint64(m.Operation))
 	}
 	l = len(m.RewardAddress)
 	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
+		n += 1 + l + sovTypes_2(uint64(l))
 	}
 	if m.GasRebateToEndUser {
 		n += 2
@@ -1366,7 +1430,7 @@ func (m *ContractOperationInfo) Size() (n int) {
 		n += 2
 	}
 	if m.PremiumPercentageCharged != 0 {
-		n += 1 + sovTypes(uint64(m.PremiumPercentageCharged))
+		n += 1 + sovTypes_2(uint64(m.PremiumPercentageCharged))
 	}
 	return n
 }
@@ -1379,11 +1443,11 @@ func (m *GasTrackingQueryRequestWrapper) Size() (n int) {
 	_ = l
 	l = len(m.MagicString)
 	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
+		n += 1 + l + sovTypes_2(uint64(l))
 	}
 	l = len(m.QueryRequest)
 	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
+		n += 1 + l + sovTypes_2(uint64(l))
 	}
 	return n
 }
@@ -1395,11 +1459,11 @@ func (m *GasTrackingQueryResultWrapper) Size() (n int) {
 	var l int
 	_ = l
 	if m.GasConsumed != 0 {
-		n += 1 + sovTypes(uint64(m.GasConsumed))
+		n += 1 + sovTypes_2(uint64(m.GasConsumed))
 	}
 	l = len(m.QueryResponse)
 	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
+		n += 1 + l + sovTypes_2(uint64(l))
 	}
 	return n
 }
@@ -1412,7 +1476,7 @@ func (m *ContractInstantiationRequestWrapper) Size() (n int) {
 	_ = l
 	l = len(m.RewardAddress)
 	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
+		n += 1 + l + sovTypes_2(uint64(l))
 	}
 	if m.GasRebateToUser {
 		n += 2
@@ -1421,11 +1485,11 @@ func (m *ContractInstantiationRequestWrapper) Size() (n int) {
 		n += 2
 	}
 	if m.PremiumPercentageCharged != 0 {
-		n += 1 + sovTypes(uint64(m.PremiumPercentageCharged))
+		n += 1 + sovTypes_2(uint64(m.PremiumPercentageCharged))
 	}
 	l = len(m.InstantiationRequest)
 	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
+		n += 1 + l + sovTypes_2(uint64(l))
 	}
 	return n
 }
@@ -1438,7 +1502,7 @@ func (m *ContractInstanceMetadata) Size() (n int) {
 	_ = l
 	l = len(m.RewardAddress)
 	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
+		n += 1 + l + sovTypes_2(uint64(l))
 	}
 	if m.GasRebateToUser {
 		n += 2
@@ -1447,7 +1511,7 @@ func (m *ContractInstanceMetadata) Size() (n int) {
 		n += 2
 	}
 	if m.PremiumPercentageCharged != 0 {
-		n += 1 + sovTypes(uint64(m.PremiumPercentageCharged))
+		n += 1 + sovTypes_2(uint64(m.PremiumPercentageCharged))
 	}
 	return n
 }
@@ -1461,7 +1525,7 @@ func (m *LeftOverRewardEntry) Size() (n int) {
 	if len(m.ContractRewards) > 0 {
 		for _, e := range m.ContractRewards {
 			l = e.Size()
-			n += 1 + l + sovTypes(uint64(l))
+			n += 1 + l + sovTypes_2(uint64(l))
 		}
 	}
 	return n
@@ -1475,28 +1539,37 @@ func (m *RewardDistributionEvent) Size() (n int) {
 	_ = l
 	l = len(m.RewardAddress)
 	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
+		n += 1 + l + sovTypes_2(uint64(l))
 	}
 	if len(m.ContractRewards) > 0 {
 		for _, e := range m.ContractRewards {
 			l = e.Size()
-			n += 1 + l + sovTypes(uint64(l))
+			n += 1 + l + sovTypes_2(uint64(l))
 		}
 	}
 	if len(m.LeftoverRewards) > 0 {
 		for _, e := range m.LeftoverRewards {
 			l = e.Size()
-			n += 1 + l + sovTypes(uint64(l))
+			n += 1 + l + sovTypes_2(uint64(l))
 		}
 	}
 	return n
 }
 
-func sovTypes(x uint64) (n int) {
+func (m *GenesisState) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func sovTypes_2(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
-func sozTypes(x uint64) (n int) {
-	return sovTypes(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+func sozTypes_2(x uint64) (n int) {
+	return sovTypes_2(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
 func (m *TransactionTracking) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1506,7 +1579,7 @@ func (m *TransactionTracking) Unmarshal(dAtA []byte) error {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return ErrIntOverflowTypes
+				return ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
@@ -1534,7 +1607,7 @@ func (m *TransactionTracking) Unmarshal(dAtA []byte) error {
 			m.MaxGasAllowed = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1553,7 +1626,7 @@ func (m *TransactionTracking) Unmarshal(dAtA []byte) error {
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1566,11 +1639,11 @@ func (m *TransactionTracking) Unmarshal(dAtA []byte) error {
 				}
 			}
 			if msglen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + msglen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -1587,7 +1660,7 @@ func (m *TransactionTracking) Unmarshal(dAtA []byte) error {
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1600,11 +1673,11 @@ func (m *TransactionTracking) Unmarshal(dAtA []byte) error {
 				}
 			}
 			if msglen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + msglen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -1616,12 +1689,12 @@ func (m *TransactionTracking) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -1643,7 +1716,7 @@ func (m *ContractGasTracking) Unmarshal(dAtA []byte) error {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return ErrIntOverflowTypes
+				return ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
@@ -1671,7 +1744,7 @@ func (m *ContractGasTracking) Unmarshal(dAtA []byte) error {
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1685,11 +1758,11 @@ func (m *ContractGasTracking) Unmarshal(dAtA []byte) error {
 			}
 			intStringLen := int(stringLen)
 			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -1703,7 +1776,7 @@ func (m *ContractGasTracking) Unmarshal(dAtA []byte) error {
 			m.GasConsumed = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1722,7 +1795,7 @@ func (m *ContractGasTracking) Unmarshal(dAtA []byte) error {
 			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1742,7 +1815,7 @@ func (m *ContractGasTracking) Unmarshal(dAtA []byte) error {
 			m.Operation = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1756,12 +1829,12 @@ func (m *ContractGasTracking) Unmarshal(dAtA []byte) error {
 			}
 		default:
 			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -1783,7 +1856,7 @@ func (m *BlockGasTracking) Unmarshal(dAtA []byte) error {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return ErrIntOverflowTypes
+				return ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
@@ -1811,7 +1884,7 @@ func (m *BlockGasTracking) Unmarshal(dAtA []byte) error {
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1824,11 +1897,11 @@ func (m *BlockGasTracking) Unmarshal(dAtA []byte) error {
 				}
 			}
 			if msglen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + msglen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -1840,12 +1913,12 @@ func (m *BlockGasTracking) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -1867,7 +1940,7 @@ func (m *ContractOperationInfo) Unmarshal(dAtA []byte) error {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return ErrIntOverflowTypes
+				return ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
@@ -1895,7 +1968,7 @@ func (m *ContractOperationInfo) Unmarshal(dAtA []byte) error {
 			m.GasConsumed = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1914,7 +1987,7 @@ func (m *ContractOperationInfo) Unmarshal(dAtA []byte) error {
 			m.Operation = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1933,7 +2006,7 @@ func (m *ContractOperationInfo) Unmarshal(dAtA []byte) error {
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1947,11 +2020,11 @@ func (m *ContractOperationInfo) Unmarshal(dAtA []byte) error {
 			}
 			intStringLen := int(stringLen)
 			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -1965,7 +2038,7 @@ func (m *ContractOperationInfo) Unmarshal(dAtA []byte) error {
 			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -1985,7 +2058,7 @@ func (m *ContractOperationInfo) Unmarshal(dAtA []byte) error {
 			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2005,7 +2078,7 @@ func (m *ContractOperationInfo) Unmarshal(dAtA []byte) error {
 			m.PremiumPercentageCharged = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2019,12 +2092,12 @@ func (m *ContractOperationInfo) Unmarshal(dAtA []byte) error {
 			}
 		default:
 			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -2046,7 +2119,7 @@ func (m *GasTrackingQueryRequestWrapper) Unmarshal(dAtA []byte) error {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return ErrIntOverflowTypes
+				return ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
@@ -2074,7 +2147,7 @@ func (m *GasTrackingQueryRequestWrapper) Unmarshal(dAtA []byte) error {
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2088,11 +2161,11 @@ func (m *GasTrackingQueryRequestWrapper) Unmarshal(dAtA []byte) error {
 			}
 			intStringLen := int(stringLen)
 			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -2106,7 +2179,7 @@ func (m *GasTrackingQueryRequestWrapper) Unmarshal(dAtA []byte) error {
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2119,11 +2192,11 @@ func (m *GasTrackingQueryRequestWrapper) Unmarshal(dAtA []byte) error {
 				}
 			}
 			if byteLen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -2135,12 +2208,12 @@ func (m *GasTrackingQueryRequestWrapper) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -2162,7 +2235,7 @@ func (m *GasTrackingQueryResultWrapper) Unmarshal(dAtA []byte) error {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return ErrIntOverflowTypes
+				return ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
@@ -2190,7 +2263,7 @@ func (m *GasTrackingQueryResultWrapper) Unmarshal(dAtA []byte) error {
 			m.GasConsumed = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2209,7 +2282,7 @@ func (m *GasTrackingQueryResultWrapper) Unmarshal(dAtA []byte) error {
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2222,11 +2295,11 @@ func (m *GasTrackingQueryResultWrapper) Unmarshal(dAtA []byte) error {
 				}
 			}
 			if byteLen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + byteLen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -2238,12 +2311,12 @@ func (m *GasTrackingQueryResultWrapper) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -2265,7 +2338,7 @@ func (m *ContractInstantiationRequestWrapper) Unmarshal(dAtA []byte) error {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return ErrIntOverflowTypes
+				return ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
@@ -2293,7 +2366,7 @@ func (m *ContractInstantiationRequestWrapper) Unmarshal(dAtA []byte) error {
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2307,11 +2380,11 @@ func (m *ContractInstantiationRequestWrapper) Unmarshal(dAtA []byte) error {
 			}
 			intStringLen := int(stringLen)
 			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -2325,7 +2398,7 @@ func (m *ContractInstantiationRequestWrapper) Unmarshal(dAtA []byte) error {
 			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2345,7 +2418,7 @@ func (m *ContractInstantiationRequestWrapper) Unmarshal(dAtA []byte) error {
 			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2365,7 +2438,7 @@ func (m *ContractInstantiationRequestWrapper) Unmarshal(dAtA []byte) error {
 			m.PremiumPercentageCharged = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2384,7 +2457,7 @@ func (m *ContractInstantiationRequestWrapper) Unmarshal(dAtA []byte) error {
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2398,11 +2471,11 @@ func (m *ContractInstantiationRequestWrapper) Unmarshal(dAtA []byte) error {
 			}
 			intStringLen := int(stringLen)
 			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -2411,12 +2484,12 @@ func (m *ContractInstantiationRequestWrapper) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -2438,7 +2511,7 @@ func (m *ContractInstanceMetadata) Unmarshal(dAtA []byte) error {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return ErrIntOverflowTypes
+				return ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
@@ -2466,7 +2539,7 @@ func (m *ContractInstanceMetadata) Unmarshal(dAtA []byte) error {
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2480,11 +2553,11 @@ func (m *ContractInstanceMetadata) Unmarshal(dAtA []byte) error {
 			}
 			intStringLen := int(stringLen)
 			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -2498,7 +2571,7 @@ func (m *ContractInstanceMetadata) Unmarshal(dAtA []byte) error {
 			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2518,7 +2591,7 @@ func (m *ContractInstanceMetadata) Unmarshal(dAtA []byte) error {
 			var v int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2538,7 +2611,7 @@ func (m *ContractInstanceMetadata) Unmarshal(dAtA []byte) error {
 			m.PremiumPercentageCharged = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2552,12 +2625,12 @@ func (m *ContractInstanceMetadata) Unmarshal(dAtA []byte) error {
 			}
 		default:
 			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -2579,7 +2652,7 @@ func (m *LeftOverRewardEntry) Unmarshal(dAtA []byte) error {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return ErrIntOverflowTypes
+				return ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
@@ -2607,7 +2680,7 @@ func (m *LeftOverRewardEntry) Unmarshal(dAtA []byte) error {
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2620,11 +2693,11 @@ func (m *LeftOverRewardEntry) Unmarshal(dAtA []byte) error {
 				}
 			}
 			if msglen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + msglen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -2636,12 +2709,12 @@ func (m *LeftOverRewardEntry) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -2663,7 +2736,7 @@ func (m *RewardDistributionEvent) Unmarshal(dAtA []byte) error {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return ErrIntOverflowTypes
+				return ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
@@ -2691,7 +2764,7 @@ func (m *RewardDistributionEvent) Unmarshal(dAtA []byte) error {
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2705,11 +2778,11 @@ func (m *RewardDistributionEvent) Unmarshal(dAtA []byte) error {
 			}
 			intStringLen := int(stringLen)
 			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -2723,7 +2796,7 @@ func (m *RewardDistributionEvent) Unmarshal(dAtA []byte) error {
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2736,11 +2809,11 @@ func (m *RewardDistributionEvent) Unmarshal(dAtA []byte) error {
 				}
 			}
 			if msglen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + msglen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -2757,7 +2830,7 @@ func (m *RewardDistributionEvent) Unmarshal(dAtA []byte) error {
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return ErrIntOverflowTypes
+					return ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return io.ErrUnexpectedEOF
@@ -2770,11 +2843,11 @@ func (m *RewardDistributionEvent) Unmarshal(dAtA []byte) error {
 				}
 			}
 			if msglen < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			postIndex := iNdEx + msglen
 			if postIndex < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
@@ -2786,12 +2859,12 @@ func (m *RewardDistributionEvent) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
 			if err != nil {
 				return err
 			}
 			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
+				return ErrInvalidLengthTypes_2
 			}
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
@@ -2805,7 +2878,57 @@ func (m *RewardDistributionEvent) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func skipTypes(dAtA []byte) (n int, err error) {
+func (m *GenesisState) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes_2
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GenesisState: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GenesisState: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes_2(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTypes_2
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipTypes_2(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
 	depth := 0
@@ -2813,7 +2936,7 @@ func skipTypes(dAtA []byte) (n int, err error) {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
 			if shift >= 64 {
-				return 0, ErrIntOverflowTypes
+				return 0, ErrIntOverflowTypes_2
 			}
 			if iNdEx >= l {
 				return 0, io.ErrUnexpectedEOF
@@ -2830,7 +2953,7 @@ func skipTypes(dAtA []byte) (n int, err error) {
 		case 0:
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return 0, ErrIntOverflowTypes
+					return 0, ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
@@ -2846,7 +2969,7 @@ func skipTypes(dAtA []byte) (n int, err error) {
 			var length int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
-					return 0, ErrIntOverflowTypes
+					return 0, ErrIntOverflowTypes_2
 				}
 				if iNdEx >= l {
 					return 0, io.ErrUnexpectedEOF
@@ -2859,14 +2982,14 @@ func skipTypes(dAtA []byte) (n int, err error) {
 				}
 			}
 			if length < 0 {
-				return 0, ErrInvalidLengthTypes
+				return 0, ErrInvalidLengthTypes_2
 			}
 			iNdEx += length
 		case 3:
 			depth++
 		case 4:
 			if depth == 0 {
-				return 0, ErrUnexpectedEndOfGroupTypes
+				return 0, ErrUnexpectedEndOfGroupTypes_2
 			}
 			depth--
 		case 5:
@@ -2875,7 +2998,7 @@ func skipTypes(dAtA []byte) (n int, err error) {
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
 		if iNdEx < 0 {
-			return 0, ErrInvalidLengthTypes
+			return 0, ErrInvalidLengthTypes_2
 		}
 		if depth == 0 {
 			return iNdEx, nil
@@ -2885,7 +3008,7 @@ func skipTypes(dAtA []byte) (n int, err error) {
 }
 
 var (
-	ErrInvalidLengthTypes        = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowTypes          = fmt.Errorf("proto: integer overflow")
-	ErrUnexpectedEndOfGroupTypes = fmt.Errorf("proto: unexpected end of group")
+	ErrInvalidLengthTypes_2        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowTypes_2          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupTypes_2 = fmt.Errorf("proto: unexpected end of group")
 )
