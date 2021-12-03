@@ -25,6 +25,7 @@ spec:
   image:
     name: gcr.io/tendermint-dev/archway
     version: NODE_VERSION
+    imagePullPolicy: Always
   init:
     assets:
       - 10000000000000000000uconst

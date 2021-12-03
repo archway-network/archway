@@ -49,6 +49,9 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 		panic(err)
 	}
 
+	if !keeper.IsGasTrackingEnabled(context) { // No rewards or calculations should take place
+		return
+	}
 	var calculatedGasConsumedInLastBlock uint64 = 0
 	for _, txTrackingInfo := range blockTxDetails.TxTrackingInfos {
 		for _, contractTrackingInfo := range txTrackingInfo.ContractTrackingInfos {
@@ -94,22 +97,30 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 			gasUsageForInflationRewards := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(contractTrackingInfo.GasConsumed))
 
 			var gasUsageForUsageRewards sdk.Dec
-			if metadata.CollectPremium {
+			if metadata.CollectPremium && keeper.IsContractPremiumEnabled(context) {
 				premiumGas := gasUsageForInflationRewards.Mul(sdk.NewDecFromBigInt(ConvertUint64ToBigInt(metadata.PremiumPercentageCharged))).QuoInt64(100)
 				gasUsageForUsageRewards = gasUsageForInflationRewards.Add(premiumGas)
 			} else {
 				gasUsageForUsageRewards = gasUsageForInflationRewards
 			}
 
-
-			contractRewards := make(sdk.DecCoins, len(txTrackingInfo.MaxContractRewards))
-			for i, rewardCoin := range txTrackingInfo.MaxContractRewards {
-				contractRewards[i] = sdk.NewDecCoinFromDec(rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(decGasLimit))
+			contractRewards := make(sdk.DecCoins, 0, len(txTrackingInfo.MaxContractRewards))
+			if keeper.IsGasRebateEnabled(context) {
+				for _, rewardCoin := range txTrackingInfo.MaxContractRewards {
+					contractRewards = append(contractRewards, sdk.NewDecCoinFromDec(rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(decGasLimit)))
+				}
+				context.Logger().Info("Calculated contract gas rebate rewards:", "contractAddress", contractTrackingInfo.Address, "contractGasReward", contractRewards)
 			}
-			context.Logger().Info("Calculated contract gas rebate rewards:", "contractAddress", contractTrackingInfo.Address, "contractGasReward", contractRewards)
-			contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasUsageForInflationRewards).Quo(totalGasConsumedInLastBlock))
-			context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractTrackingInfo.Address, "contractInflationReward", contractInflationReward)
-			contractRewards = contractRewards.Add(contractInflationReward)
+
+			if keeper.IsDappInflationRewardsEnabled(context) {
+				contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasUsageForInflationRewards).Quo(totalGasConsumedInLastBlock))
+				context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractTrackingInfo.Address, "contractInflationReward", contractInflationReward)
+				if !contractRewards.IsZero() {
+					contractRewards = contractRewards.Add(contractInflationReward)
+				} else {
+					contractRewards = append(contractRewards, contractInflationReward)
+				}
+			}
 
 			if _, ok := rewardsByAddress[metadata.RewardAddress]; !ok {
 				rewardAddresses = append(rewardAddresses, metadata.RewardAddress)
@@ -163,7 +174,6 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 		if err != nil {
 			panic(err)
 		}
-
 
 		err = EmitRewardPayingEvent(context, rewardAddress, rewardsToBePayed, leftOverEntry.ContractRewards)
 		if err != nil {

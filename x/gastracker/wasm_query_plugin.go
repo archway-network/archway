@@ -2,6 +2,7 @@ package gastracker
 
 import (
 	"encoding/json"
+
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,7 +42,7 @@ func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmQuer
 			}
 
 			gasTrackingQueryRequestWrapper := gstTypes.GasTrackingQueryRequestWrapper{
-				MagicString: GasTrackingQueryRequestMagicString,
+				MagicString:  GasTrackingQueryRequestMagicString,
 				QueryRequest: request.Smart.Msg,
 			}
 			wrappedMsg, err := json.Marshal(gasTrackingQueryRequestWrapper)
@@ -65,12 +66,12 @@ func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmQuer
 				return nil, err
 			}
 
-			if contractInstanceMetadata.GasRebateToUser {
+			if contractInstanceMetadata.GasRebateToUser && gasTrackingKeeper.IsGasRebateToUserEnabled(ctx) {
 				ctx.Logger().Info("Rebating gas to the user", "contractAddress", request.Smart.ContractAddr, "gasConsumed", gasTrackingQueryResultWrapper.GasConsumed)
 				ctx.GasMeter().RefundGas(gasTrackingQueryResultWrapper.GasConsumed, gstTypes.GasRebateToUserDescriptor)
 			}
 
-			if contractInstanceMetadata.CollectPremium {
+			if contractInstanceMetadata.CollectPremium && gasTrackingKeeper.IsContractPremiumEnabled(ctx) {
 				ctx.Logger().Info("Charging premium to user", "premiumPercentage", contractInstanceMetadata.PremiumPercentageCharged)
 				premiumGas := (gasTrackingQueryResultWrapper.GasConsumed * contractInstanceMetadata.PremiumPercentageCharged) / 100
 				ctx.GasMeter().ConsumeGas(premiumGas, gstTypes.PremiumGasDescriptor)

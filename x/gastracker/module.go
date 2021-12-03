@@ -2,6 +2,7 @@ package gastracker
 
 import (
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,12 +17,12 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
+	_ module.AppModule = AppModule{}
 )
 
-type AppModule struct{
+type AppModule struct {
 	bankKeeper bankkeeper.Keeper
-	keeper GasTrackingKeeper
+	keeper     GasTrackingKeeper
 	mintKeeper mintkeeper.Keeper
 }
 
@@ -66,6 +67,8 @@ func (a AppModule) GetQueryCmd() *cobra.Command {
 }
 
 func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONMarshaler, message json.RawMessage) []abci.ValidatorUpdate {
+	InitParams(context, a.keeper)
+
 	return []abci.ValidatorUpdate{}
 }
 
@@ -78,7 +81,7 @@ func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
 }
 
 func (a AppModule) Route() sdk.Route {
-	return sdk.NewRoute("dummy",  func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+	return sdk.NewRoute("dummy", func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		return nil, nil
 	})
 }
@@ -104,5 +107,3 @@ func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock)
 func (a AppModule) EndBlock(context sdk.Context, block abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlock(context, a.keeper, block)
 }
-
-

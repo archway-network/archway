@@ -10,6 +10,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	cosmwasm "github.com/CosmWasm/wasmvm"
 	"github.com/archway-network/archway/x/gastracker"
+	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/gorilla/mux"
@@ -91,8 +93,6 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	gsttypes "github.com/archway-network/archway/x/gastracker/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -293,7 +293,7 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	scopedTransferKeeper := app.capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.capabilityKeeper.ScopeToModule(wasm.ModuleName)
 
-	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey], app.appCodec)
+	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey], app.appCodec, app.getSubspace(gstTypes.DefaultParamSpace))
 
 	// add keepers
 	app.accountKeeper = authkeeper.NewAccountKeeper(
@@ -475,7 +475,7 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
-		gsttypes.ModuleName,
+		gstTypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.crisisKeeper)
@@ -680,6 +680,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
+	paramsKeeper.Subspace(gstTypes.ModuleName).WithKeyTable(gstTypes.ParamKeyTable())
 
 	return paramsKeeper
 }
