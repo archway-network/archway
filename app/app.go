@@ -1,14 +1,15 @@
 package app
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/CosmWasm/wasmvm"
-	"github.com/archway-network/archway/x/gastracker"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	cosmwasm "github.com/CosmWasm/wasmvm"
+	"github.com/archway-network/archway/x/gastracker"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/gorilla/mux"
@@ -90,6 +91,8 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	gsttypes "github.com/archway-network/archway/x/gastracker/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -178,14 +181,14 @@ var (
 	// module account permissions
 	maccPerms = map[string][]string{
 		gastracker.ContractRewardCollector: nil,
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		wasm.ModuleName:                {authtypes.Burner},
+		authtypes.FeeCollectorName:         nil,
+		distrtypes.ModuleName:              nil,
+		minttypes.ModuleName:               {authtypes.Minter},
+		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                {authtypes.Burner},
+		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		wasm.ModuleName:                    {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -472,6 +475,7 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
+		gsttypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.crisisKeeper)
