@@ -104,3 +104,6 @@ message RewardDistributionEvent {
   repeated cosmos.base.v1beta1.Coin contract_rewards = 2;
   repeated cosmos.base.v1beta1.DecCoin leftover_rewards = 3;
 }
+
+// Genesis state of the Gastracker module
+message GenesisState {}

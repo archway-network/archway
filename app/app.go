@@ -175,6 +175,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		gastracker.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -474,6 +475,7 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
+		gastracker.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.crisisKeeper)
