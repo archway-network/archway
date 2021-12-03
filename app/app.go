@@ -1,14 +1,16 @@
 package app
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/CosmWasm/wasmvm"
-	"github.com/archway-network/archway/x/gastracker"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	cosmwasm "github.com/CosmWasm/wasmvm"
+	"github.com/archway-network/archway/x/gastracker"
+	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/gorilla/mux"
@@ -178,14 +180,14 @@ var (
 	// module account permissions
 	maccPerms = map[string][]string{
 		gastracker.ContractRewardCollector: nil,
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		wasm.ModuleName:                {authtypes.Burner},
+		authtypes.FeeCollectorName:         nil,
+		distrtypes.ModuleName:              nil,
+		minttypes.ModuleName:               {authtypes.Minter},
+		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                {authtypes.Burner},
+		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		wasm.ModuleName:                    {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -290,7 +292,7 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	scopedTransferKeeper := app.capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.capabilityKeeper.ScopeToModule(wasm.ModuleName)
 
-	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey], app.appCodec)
+	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey], app.appCodec, app.getSubspace(gstTypes.DefaultParamSpace))
 
 	// add keepers
 	app.accountKeeper = authkeeper.NewAccountKeeper(
@@ -676,6 +678,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
+	paramsKeeper.Subspace(gstTypes.ModuleName).WithKeyTable(gstTypes.ParamKeyTable())
 
 	return paramsKeeper
 }

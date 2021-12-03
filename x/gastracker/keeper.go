@@ -4,6 +4,7 @@ import (
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var _ GasTrackingKeeper = &Keeper{}
@@ -20,13 +21,21 @@ type GasTrackingKeeper interface {
 	CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error)
 	GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress string) (gstTypes.LeftOverRewardEntry, error)
 
+	SetParams(ctx sdk.Context, params gstTypes.Params)
+	IsGasTrackingEnabled(ctx sdk.Context) bool
+	IsDappInflationRewardsEnabled(ctx sdk.Context) bool
+	IsGasRebateEnabled(ctx sdk.Context) bool
+	IsGasRebateToUserEnabled(ctx sdk.Context) bool
+	IsContractPremiumEnabled(ctx sdk.Context) bool
+
 	GetPreviousBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
 	MarkEndOfTheBlock(ctx sdk.Context) error
 }
 
 type Keeper struct {
-	key      sdk.StoreKey
-	appCodec codec.Marshaler
+	key        sdk.StoreKey
+	appCodec   codec.Marshaler
+	paramSpace gstTypes.Subspace 
 }
 
 func (k *Keeper) GetPreviousBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
@@ -199,8 +208,8 @@ func (k *Keeper) AddNewContractMetadata(ctx sdk.Context, address string, metadat
 	return nil
 }
 
-func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler) *Keeper {
-	return &Keeper{key: key, appCodec: appCodec}
+func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler, paramSpace paramsTypes.Subspace) *Keeper {
+	return &Keeper{key: key, appCodec: appCodec, paramSpace: paramSpace}
 }
 
 func (k *Keeper) TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockGasTracking) error {
