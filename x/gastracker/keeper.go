@@ -27,49 +27,12 @@ type GasTrackingKeeper interface {
 	IsGasRebateEnabled(ctx sdk.Context) bool
 	IsGasRebateToUserEnabled(ctx sdk.Context) bool
 	IsContractPremiumEnabled(ctx sdk.Context) bool
-
-	GetPreviousBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
-	MarkEndOfTheBlock(ctx sdk.Context) error
 }
 
 type Keeper struct {
 	key        sdk.StoreKey
 	appCodec   codec.Marshaler
 	paramSpace gstTypes.Subspace 
-}
-
-func (k *Keeper) GetPreviousBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
-	gstKvStore := ctx.KVStore(k.key)
-
-	var previousBlockTracking gstTypes.BlockGasTracking
-	bz := gstKvStore.Get([]byte(gstTypes.PreviousBlockTrackingKey))
-	if bz == nil {
-		return previousBlockTracking, gstTypes.ErrBlockTrackingDataNotFound
-	}
-	err := k.appCodec.UnmarshalBinaryBare(bz, &previousBlockTracking)
-	return previousBlockTracking, err
-}
-
-// We need to mark the end of each block because ... TODO:
-
-func (k *Keeper) MarkEndOfTheBlock(ctx sdk.Context) error {
-	gstKvStore := ctx.KVStore(k.key)
-
-	var currentBlockTracking gstTypes.BlockGasTracking
-	bz := gstKvStore.Get([]byte(gstTypes.CurrentBlockTrackingKey))
-	if bz == nil {
-		return gstTypes.ErrBlockTrackingDataNotFound
-	}
-	err := k.appCodec.UnmarshalBinaryBare(bz, &currentBlockTracking)
-	if err != nil {
-		return err
-	}
-
-	gstKvStore.Delete([]byte(gstTypes.CurrentBlockTrackingKey))
-
-	gstKvStore.Set([]byte(gstTypes.PreviousBlockTrackingKey), bz)
-
-	return nil
 }
 
 func (k *Keeper) GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error) {
@@ -214,12 +177,6 @@ func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler, paramSpace
 
 func (k *Keeper) TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockGasTracking) error {
 	gstKvStore := ctx.KVStore(k.key)
-
-	bz := gstKvStore.Get([]byte(gstTypes.CurrentBlockTrackingKey))
-	if bz != nil {
-		return gstTypes.ErrCurrentBlockTrackingDataAlreadyExists
-	}
-
 	bz, err := k.appCodec.MarshalBinaryBare(&blockGasTracking)
 	if err != nil {
 		return err

@@ -112,5 +112,5 @@ func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock)
 }
 
 func (a AppModule) EndBlock(context sdk.Context, block abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlock(context, a.keeper, block)
+	return []abci.ValidatorUpdate{}
 }

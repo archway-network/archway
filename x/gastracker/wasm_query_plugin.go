@@ -30,17 +30,6 @@ func NewGasTrackingWASMQueryPlugin(gasTrackingKeeper GasTrackingKeeper, wasmQuer
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Smart.ContractAddr)
 			}
 
-			// Check if we are inside a tx or not
-			_, err = gasTrackingKeeper.GetCurrentTxTrackingInfo(ctx)
-			if err != nil {
-				switch err {
-				case gstTypes.ErrBlockTrackingDataNotFound:
-					return wasmQuerier.QuerySmart(ctx, addr, request.Smart.Msg)
-				default:
-					return nil, err
-				}
-			}
-
 			gasTrackingQueryRequestWrapper := gstTypes.GasTrackingQueryRequestWrapper{
 				MagicString:  GasTrackingQueryRequestMagicString,
 				QueryRequest: request.Smart.Msg,
