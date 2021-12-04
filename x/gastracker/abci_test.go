@@ -140,14 +140,6 @@ func TestABCIPanicBehaviour(t *testing.T) {
 	config.SetBech32PrefixForAccount("archway", "archway")
 
 	ctx = ctx.WithBlockHeight(0)
-	require.NotPanics(t, func() {
-		EndBlock(ctx, keeper, types.RequestEndBlock{})
-	}, "EndBlock should not panic")
-
-	ctx = ctx.WithBlockHeight(1)
-	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func() {
-		EndBlock(ctx, keeper, types.RequestEndBlock{})
-	}, "Endblock should panic")
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
 	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
@@ -155,7 +147,7 @@ func TestABCIPanicBehaviour(t *testing.T) {
 	ctx = ctx.WithBlockHeight(2)
 	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func() {
 		BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
-	}, "Endblock should panic")
+	}, "BeginBlock should panic")
 
 	ctx = ctx.WithBlockHeight(1)
 
@@ -166,15 +158,6 @@ func TestABCIPanicBehaviour(t *testing.T) {
 	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
 	require.NoError(t, err, "We should be able to get new block gas tracking")
 	require.Equal(t, gstTypes.BlockGasTracking{}, blockGasTracking, "We should have overwritten block gas tracking obj")
-
-	_ = EndBlock(ctx, keeper, types.RequestEndBlock{})
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.EqualError(t, err, gstTypes.ErrBlockTrackingDataNotFound.Error(), "Block tracking data should not be found")
-
-	// Calling EndBlock again should result in an error
-	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func() {
-		EndBlock(ctx, keeper, types.RequestEndBlock{})
-	})
 }
 
 // Test reward calculation
@@ -324,9 +307,6 @@ func TestRewardCalculation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.NoError(t, err, "We should be able to end the block")
-
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -469,9 +449,6 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.NoError(t, err, "We should be able to end the block")
-
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -609,9 +586,6 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.NoError(t, err, "We should be able to end the block")
-
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -747,9 +721,6 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.NoError(t, err, "We should be able to end the block")
-
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -882,9 +853,6 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.NoError(t, err, "We should be able to end the block")
-
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -1016,9 +984,6 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 	}})
 
 	require.NoError(t, err, "We should be able to track new block")
-
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.NoError(t, err, "We should be able to end the block")
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first

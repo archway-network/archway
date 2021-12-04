@@ -20,8 +20,6 @@ const (
 
 	CurrentBlockTrackingKey = "current_blk"
 
-	PreviousBlockTrackingKey = "previous_blk"
-
 	ContractInstanceMetadataKeyPrefix = "c_inst_md"
 
 	RewardEntryKeyPrefix = "reward_entry"
