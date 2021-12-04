@@ -283,9 +283,6 @@ func TestAddContractGasUsage(t *testing.T) {
 		},
 	}, *blockTrackingObj.TxTrackingInfos[1])
 
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.NoError(t, err, "We should be able to mark previous block as ended")
-
 	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{})
 	require.NoError(t, err, "We should be able to track new block")
 
@@ -308,39 +305,19 @@ func TestBlockTrackingReadWrite(t *testing.T) {
 		MaxGasAllowed: 1000,
 	}
 
-	err := keeper.MarkEndOfTheBlock(ctx)
-	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(), "We cannot mark end of the block when there is no current block")
-
-	_, err = keeper.GetPreviousBlockTrackingInfo(ctx)
-	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(), "No previous block tracking data should exists")
-
-	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{TxTrackingInfos: []*types.TransactionTracking{&dummyTxTracking1}})
+	err := keeper.TrackNewBlock(ctx, types.BlockGasTracking{TxTrackingInfos: []*types.TransactionTracking{&dummyTxTracking1}})
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{TxTrackingInfos: []*types.TransactionTracking{&dummyTxTracking2}})
-	require.EqualError(t, err, types.ErrCurrentBlockTrackingDataAlreadyExists.Error(), "Current block tracking data already exists")
-
 	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTrackingInfo(ctx)
-	require.NoError(t, err, "We should be able to get current block")
+	require.NoError(t, err, "We should be able to get current block tracking")
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
 	require.Equal(t, dummyTxTracking1, *currentBlockTrackingInfo.TxTrackingInfos[0])
 
-	err = keeper.MarkEndOfTheBlock(ctx)
-	require.NoError(t, err, "We should be able to mark current block as ended")
-
-	previousBlockTracking, err := keeper.GetPreviousBlockTrackingInfo(ctx)
-	require.NoError(t, err, "We should be able to get the previous block")
-	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
-	require.Equal(t, dummyTxTracking1, *previousBlockTracking.TxTrackingInfos[0])
-
-	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTrackingInfo(ctx)
-	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(), "No current block tracking data should exists")
-
 	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{TxTrackingInfos: []*types.TransactionTracking{&dummyTxTracking2}})
-	require.NoError(t, err, "We should be able to track new block")
+	require.NoError(t, err, "We should be able to track new block in any case")
 
 	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTrackingInfo(ctx)
-	require.NoError(t, err, "We should be able to get current block tracking")
+	require.NoError(t, err, "We should be able to get current block")
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
 	require.Equal(t, dummyTxTracking2, *currentBlockTrackingInfo.TxTrackingInfos[0])
 }

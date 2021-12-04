@@ -218,31 +218,6 @@ func (l *loggingGasTrackerKeeper) GetLeftOverRewardEntry(ctx sdk.Context, reward
 	return leftOverEntry, err
 }
 
-func (l *loggingGasTrackerKeeper) GetPreviousBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
-	blockGasTracking, err := l.underlyingKeeper.GetPreviousBlockTrackingInfo(ctx)
-
-	log := gasTrackerKeeperCallLog{
-		MethodName:       "GetPreviousBlockTrackingInfo",
-		BlockGasTracking: blockGasTracking,
-		Error:            err,
-	}
-
-	l.callLogs = append(l.callLogs, log)
-	return blockGasTracking, err
-}
-
-func (l *loggingGasTrackerKeeper) MarkEndOfTheBlock(ctx sdk.Context) error {
-	err := l.underlyingKeeper.MarkEndOfTheBlock(ctx)
-
-	log := gasTrackerKeeperCallLog{
-		MethodName: "MarkEndOfTheBlock",
-		Error:      err,
-	}
-
-	l.callLogs = append(l.callLogs, log)
-	return err
-}
-
 type loggingWASMQuerier struct {
 	LastCallWithSmart    bool
 	RawRequest           []byte
@@ -390,40 +365,6 @@ func TestWASMQueryPluginSmart(t *testing.T) {
 	)
 	require.Equal(t, uint64(0), loggingQuerier.TimesInvoked)
 	loggingQuerier.Reset()
-
-	// We are not in a tx, so there should not be any tracking call happening.
-	query := types.SmartQuery{
-		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		Msg:          []byte{1},
-	}
-	wasmQuery = types.WasmQuery{
-		Smart: &query,
-		Raw:   nil,
-	}
-	_, err = plugin(ctx, &wasmQuery)
-	require.NoError(
-		t,
-		err,
-		"Query should succeed",
-	)
-
-	require.Equal(t, len(loggingKeeper.callLogs), 1)
-	filteredLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, len(filteredLogs), 1)
-	require.Equal(t, gstTypes.ErrBlockTrackingDataNotFound, filteredLogs[0].Error)
-
-	require.Equal(t, loggingQuerier.TimesInvoked, uint64(1))
-	require.Equal(t, loggingQuerier.LastCallWithSmart, true)
-	require.Equal(t, loggingQuerier.RawRequest, query.Msg)
-	require.Equal(t, loggingQuerier.ContractAddress, query.ContractAddr)
-
-	gasMeterLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas")
-	require.Equal(t, 0, len(gasMeterLogs))
-
-	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
-	require.Equal(t, 0, len(gasMeterLogs))
-
-	loggingQuerier.Reset()
 	loggingKeeper.ResetLogs()
 	loggingGasMeter.log = nil
 
@@ -437,6 +378,15 @@ func TestWASMQueryPluginSmart(t *testing.T) {
 	require.NoError(t, err, "Tracking new tx should succeed")
 
 	// Without contract metadata there should be an error
+	query := types.SmartQuery{
+		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		Msg:          []byte{1},
+	}
+	wasmQuery = types.WasmQuery{
+		Smart: &query,
+		Raw:   nil,
+	}
+
 	_, err = plugin(ctx, &wasmQuery)
 	require.EqualError(
 		t,
@@ -503,19 +453,13 @@ func TestWASMQueryPluginSmart(t *testing.T) {
 		QueryRequest: []byte{1},
 	})
 
-	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	require.Equal(t, 2, len(loggingKeeper.callLogs))
 
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	filteredLogs := loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
 	require.Equal(t, 1, len(filteredLogs))
 	require.Equal(t, nil, filteredLogs[0].Error)
 	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
 	require.Equal(t, contractMetadata, filteredLogs[0].Metadata)
-
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, 1, len(filteredLogs))
-	require.Equal(t, nil, filteredLogs[0].Error)
-	require.Equal(t, currentGasLimit, filteredLogs[0].TransactionTracking.MaxGasAllowed)
-	require.Equal(t, currentFee, filteredLogs[0].TransactionTracking.MaxContractRewards)
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
 	require.Equal(t, 1, len(filteredLogs))
@@ -525,7 +469,7 @@ func TestWASMQueryPluginSmart(t *testing.T) {
 	require.Equal(t, gstTypes.ContractOperation_CONTRACT_OPERATION_QUERY, filteredLogs[0].Operation)
 	require.Equal(t, false, filteredLogs[0].IsEligibleForReward)
 
-	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	gasMeterLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	require.Equal(t, 1, len(gasMeterLogs))
 	require.Equal(t, fmt.Sprint(234), gasMeterLogs[0].InputArg[0])
 
@@ -569,19 +513,13 @@ func TestWASMQueryPluginSmart(t *testing.T) {
 		QueryRequest: []byte{5},
 	})
 
-	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	require.Equal(t, 2, len(loggingKeeper.callLogs))
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
 	require.Equal(t, 1, len(filteredLogs))
 	require.Equal(t, nil, filteredLogs[0].Error)
 	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
 	require.Equal(t, contractMetadata, filteredLogs[0].Metadata)
-
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, 1, len(filteredLogs))
-	require.Equal(t, nil, filteredLogs[0].Error)
-	require.Equal(t, currentGasLimit, filteredLogs[0].TransactionTracking.MaxGasAllowed)
-	require.Equal(t, currentFee, filteredLogs[0].TransactionTracking.MaxContractRewards)
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
 	require.Equal(t, 1, len(filteredLogs))
@@ -657,40 +595,6 @@ func TestWASMQueryPluginSmartWithoutGasRebateToUser(t *testing.T) {
 	)
 	require.Equal(t, uint64(0), loggingQuerier.TimesInvoked)
 	loggingQuerier.Reset()
-
-	// We are not in a tx, so there should not be any tracking call happening.
-	query := types.SmartQuery{
-		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		Msg:          []byte{1},
-	}
-	wasmQuery = types.WasmQuery{
-		Smart: &query,
-		Raw:   nil,
-	}
-	_, err = plugin(ctx, &wasmQuery)
-	require.NoError(
-		t,
-		err,
-		"Query should succeed",
-	)
-
-	require.Equal(t, len(loggingKeeper.callLogs), 1)
-	filteredLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, len(filteredLogs), 1)
-	require.Equal(t, gstTypes.ErrBlockTrackingDataNotFound, filteredLogs[0].Error)
-
-	require.Equal(t, loggingQuerier.TimesInvoked, uint64(1))
-	require.Equal(t, loggingQuerier.LastCallWithSmart, true)
-	require.Equal(t, loggingQuerier.RawRequest, query.Msg)
-	require.Equal(t, loggingQuerier.ContractAddress, query.ContractAddr)
-
-	gasMeterLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas")
-	require.Equal(t, 0, len(gasMeterLogs))
-
-	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
-	require.Equal(t, 0, len(gasMeterLogs))
-
-	loggingQuerier.Reset()
 	loggingKeeper.ResetLogs()
 	loggingGasMeter.log = nil
 
@@ -704,6 +608,14 @@ func TestWASMQueryPluginSmartWithoutGasRebateToUser(t *testing.T) {
 	require.NoError(t, err, "Tracking new tx should succeed")
 
 	// Without contract metadata there should be an error
+	query := types.SmartQuery{
+		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		Msg:          []byte{1},
+	}
+	wasmQuery = types.WasmQuery{
+		Smart: &query,
+		Raw:   nil,
+	}
 	_, err = plugin(ctx, &wasmQuery)
 	require.EqualError(
 		t,
@@ -770,19 +682,13 @@ func TestWASMQueryPluginSmartWithoutGasRebateToUser(t *testing.T) {
 		QueryRequest: []byte{1},
 	})
 
-	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	require.Equal(t, 2, len(loggingKeeper.callLogs))
 
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	filteredLogs := loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
 	require.Equal(t, 1, len(filteredLogs))
 	require.Equal(t, nil, filteredLogs[0].Error)
 	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
 	require.Equal(t, contractMetadata, filteredLogs[0].Metadata)
-
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, 1, len(filteredLogs))
-	require.Equal(t, nil, filteredLogs[0].Error)
-	require.Equal(t, currentGasLimit, filteredLogs[0].TransactionTracking.MaxGasAllowed)
-	require.Equal(t, currentFee, filteredLogs[0].TransactionTracking.MaxContractRewards)
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
 	require.Equal(t, 1, len(filteredLogs))
@@ -792,7 +698,7 @@ func TestWASMQueryPluginSmartWithoutGasRebateToUser(t *testing.T) {
 	require.Equal(t, gstTypes.ContractOperation_CONTRACT_OPERATION_QUERY, filteredLogs[0].Operation)
 	require.Equal(t, false, filteredLogs[0].IsEligibleForReward)
 
-	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	gasMeterLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	require.Equal(t, 0, len(gasMeterLogs))
 
 	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
@@ -835,19 +741,13 @@ func TestWASMQueryPluginSmartWithoutGasRebateToUser(t *testing.T) {
 		QueryRequest: []byte{5},
 	})
 
-	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	require.Equal(t, 2, len(loggingKeeper.callLogs))
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
 	require.Equal(t, 1, len(filteredLogs))
 	require.Equal(t, nil, filteredLogs[0].Error)
 	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
 	require.Equal(t, contractMetadata, filteredLogs[0].Metadata)
-
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, 1, len(filteredLogs))
-	require.Equal(t, nil, filteredLogs[0].Error)
-	require.Equal(t, currentGasLimit, filteredLogs[0].TransactionTracking.MaxGasAllowed)
-	require.Equal(t, currentFee, filteredLogs[0].TransactionTracking.MaxContractRewards)
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
 	require.Equal(t, 1, len(filteredLogs))
@@ -894,40 +794,6 @@ func TestWASMQueryPluginSmartWithoutContractPremium(t *testing.T) {
 	)
 	require.Equal(t, uint64(0), loggingQuerier.TimesInvoked)
 	loggingQuerier.Reset()
-
-	// We are not in a tx, so there should not be any tracking call happening.
-	query := types.SmartQuery{
-		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		Msg:          []byte{1},
-	}
-	wasmQuery = types.WasmQuery{
-		Smart: &query,
-		Raw:   nil,
-	}
-	_, err = plugin(ctx, &wasmQuery)
-	require.NoError(
-		t,
-		err,
-		"Query should succeed",
-	)
-
-	require.Equal(t, len(loggingKeeper.callLogs), 1)
-	filteredLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, len(filteredLogs), 1)
-	require.Equal(t, gstTypes.ErrBlockTrackingDataNotFound, filteredLogs[0].Error)
-
-	require.Equal(t, loggingQuerier.TimesInvoked, uint64(1))
-	require.Equal(t, loggingQuerier.LastCallWithSmart, true)
-	require.Equal(t, loggingQuerier.RawRequest, query.Msg)
-	require.Equal(t, loggingQuerier.ContractAddress, query.ContractAddr)
-
-	gasMeterLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas")
-	require.Equal(t, 0, len(gasMeterLogs))
-
-	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
-	require.Equal(t, 0, len(gasMeterLogs))
-
-	loggingQuerier.Reset()
 	loggingKeeper.ResetLogs()
 	loggingGasMeter.log = nil
 
@@ -941,6 +807,14 @@ func TestWASMQueryPluginSmartWithoutContractPremium(t *testing.T) {
 	require.NoError(t, err, "Tracking new tx should succeed")
 
 	// Without contract metadata there should be an error
+	query := types.SmartQuery{
+		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		Msg:          []byte{1},
+	}
+	wasmQuery = types.WasmQuery{
+		Smart: &query,
+		Raw:   nil,
+	}
 	_, err = plugin(ctx, &wasmQuery)
 	require.EqualError(
 		t,
@@ -1007,19 +881,13 @@ func TestWASMQueryPluginSmartWithoutContractPremium(t *testing.T) {
 		QueryRequest: []byte{1},
 	})
 
-	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	require.Equal(t, 2, len(loggingKeeper.callLogs))
 
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	filteredLogs := loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
 	require.Equal(t, 1, len(filteredLogs))
 	require.Equal(t, nil, filteredLogs[0].Error)
 	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
 	require.Equal(t, contractMetadata, filteredLogs[0].Metadata)
-
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, 1, len(filteredLogs))
-	require.Equal(t, nil, filteredLogs[0].Error)
-	require.Equal(t, currentGasLimit, filteredLogs[0].TransactionTracking.MaxGasAllowed)
-	require.Equal(t, currentFee, filteredLogs[0].TransactionTracking.MaxContractRewards)
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
 	require.Equal(t, 1, len(filteredLogs))
@@ -1029,7 +897,7 @@ func TestWASMQueryPluginSmartWithoutContractPremium(t *testing.T) {
 	require.Equal(t, gstTypes.ContractOperation_CONTRACT_OPERATION_QUERY, filteredLogs[0].Operation)
 	require.Equal(t, false, filteredLogs[0].IsEligibleForReward)
 
-	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	gasMeterLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	require.Equal(t, 1, len(gasMeterLogs))
 
 	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
@@ -1072,19 +940,13 @@ func TestWASMQueryPluginSmartWithoutContractPremium(t *testing.T) {
 		QueryRequest: []byte{5},
 	})
 
-	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	require.Equal(t, 2, len(loggingKeeper.callLogs))
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
 	require.Equal(t, 1, len(filteredLogs))
 	require.Equal(t, nil, filteredLogs[0].Error)
 	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
 	require.Equal(t, contractMetadata, filteredLogs[0].Metadata)
-
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, 1, len(filteredLogs))
-	require.Equal(t, nil, filteredLogs[0].Error)
-	require.Equal(t, currentGasLimit, filteredLogs[0].TransactionTracking.MaxGasAllowed)
-	require.Equal(t, currentFee, filteredLogs[0].TransactionTracking.MaxContractRewards)
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
 	require.Equal(t, 1, len(filteredLogs))
@@ -1130,40 +992,6 @@ func TestWASMQueryPluginSmartWithoutContractPremiumOrGasRebateToUser(t *testing.
 	)
 	require.Equal(t, uint64(0), loggingQuerier.TimesInvoked)
 	loggingQuerier.Reset()
-
-	// We are not in a tx, so there should not be any tracking call happening.
-	query := types.SmartQuery{
-		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		Msg:          []byte{1},
-	}
-	wasmQuery = types.WasmQuery{
-		Smart: &query,
-		Raw:   nil,
-	}
-	_, err = plugin(ctx, &wasmQuery)
-	require.NoError(
-		t,
-		err,
-		"Query should succeed",
-	)
-
-	require.Equal(t, len(loggingKeeper.callLogs), 1)
-	filteredLogs := loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, len(filteredLogs), 1)
-	require.Equal(t, gstTypes.ErrBlockTrackingDataNotFound, filteredLogs[0].Error)
-
-	require.Equal(t, loggingQuerier.TimesInvoked, uint64(1))
-	require.Equal(t, loggingQuerier.LastCallWithSmart, true)
-	require.Equal(t, loggingQuerier.RawRequest, query.Msg)
-	require.Equal(t, loggingQuerier.ContractAddress, query.ContractAddr)
-
-	gasMeterLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas")
-	require.Equal(t, 0, len(gasMeterLogs))
-
-	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
-	require.Equal(t, 0, len(gasMeterLogs))
-
-	loggingQuerier.Reset()
 	loggingKeeper.ResetLogs()
 	loggingGasMeter.log = nil
 
@@ -1177,6 +1005,14 @@ func TestWASMQueryPluginSmartWithoutContractPremiumOrGasRebateToUser(t *testing.
 	require.NoError(t, err, "Tracking new tx should succeed")
 
 	// Without contract metadata there should be an error
+	query := types.SmartQuery{
+		ContractAddr: "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+		Msg:          []byte{1},
+	}
+	wasmQuery = types.WasmQuery{
+		Smart: &query,
+		Raw:   nil,
+	}
 	_, err = plugin(ctx, &wasmQuery)
 	require.EqualError(
 		t,
@@ -1243,19 +1079,13 @@ func TestWASMQueryPluginSmartWithoutContractPremiumOrGasRebateToUser(t *testing.
 		QueryRequest: []byte{1},
 	})
 
-	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	require.Equal(t, 2, len(loggingKeeper.callLogs))
 
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
+	filteredLogs := loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
 	require.Equal(t, 1, len(filteredLogs))
 	require.Equal(t, nil, filteredLogs[0].Error)
 	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
 	require.Equal(t, contractMetadata, filteredLogs[0].Metadata)
-
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, 1, len(filteredLogs))
-	require.Equal(t, nil, filteredLogs[0].Error)
-	require.Equal(t, currentGasLimit, filteredLogs[0].TransactionTracking.MaxGasAllowed)
-	require.Equal(t, currentFee, filteredLogs[0].TransactionTracking.MaxContractRewards)
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
 	require.Equal(t, 1, len(filteredLogs))
@@ -1265,7 +1095,7 @@ func TestWASMQueryPluginSmartWithoutContractPremiumOrGasRebateToUser(t *testing.
 	require.Equal(t, gstTypes.ContractOperation_CONTRACT_OPERATION_QUERY, filteredLogs[0].Operation)
 	require.Equal(t, false, filteredLogs[0].IsEligibleForReward)
 
-	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
+	gasMeterLogs := loggingGasMeter.log.FilterLogWithMethodName("RefundGas").FilterLogWithDescriptor(gstTypes.GasRebateToUserDescriptor)
 	require.Equal(t, 0, len(gasMeterLogs))
 
 	gasMeterLogs = loggingGasMeter.log.FilterLogWithMethodName("ConsumeGas").FilterLogWithDescriptor(gstTypes.PremiumGasDescriptor)
@@ -1308,19 +1138,13 @@ func TestWASMQueryPluginSmartWithoutContractPremiumOrGasRebateToUser(t *testing.
 		QueryRequest: []byte{5},
 	})
 
-	require.Equal(t, 3, len(loggingKeeper.callLogs))
+	require.Equal(t, 2, len(loggingKeeper.callLogs))
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetNewContractMetadata")
 	require.Equal(t, 1, len(filteredLogs))
 	require.Equal(t, nil, filteredLogs[0].Error)
 	require.Equal(t, query.ContractAddr, filteredLogs[0].ContractAddress)
 	require.Equal(t, contractMetadata, filteredLogs[0].Metadata)
-
-	filteredLogs = loggingKeeper.callLogs.FilterByMethod("GetCurrentTxTrackingInfo")
-	require.Equal(t, 1, len(filteredLogs))
-	require.Equal(t, nil, filteredLogs[0].Error)
-	require.Equal(t, currentGasLimit, filteredLogs[0].TransactionTracking.MaxGasAllowed)
-	require.Equal(t, currentFee, filteredLogs[0].TransactionTracking.MaxContractRewards)
 
 	filteredLogs = loggingKeeper.callLogs.FilterByMethod("TrackContractGasUsage")
 	require.Equal(t, 1, len(filteredLogs))
