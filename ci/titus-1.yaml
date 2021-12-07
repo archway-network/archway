@@ -4,6 +4,19 @@ metadata:
   name: titus-1
   namespace: archway
 spec:
+  config:
+    nodes:
+      configOverride:
+        config:
+          - group: rpc
+            key: cors_allowed_origins
+            value:
+              stringList: ["*"]
+        app:
+          - group: api
+            key: enabled-unsafe-cors
+            value:
+              bool: true
   app:
     cliName: archwayd
     daemonName: archwayd
