@@ -37,4 +37,4 @@ EXPOSE 26657
 
 ENTRYPOINT [ "/usr/bin/archwayd" ]
 
-CMD [ "version" ]
+CMD [ "help" ]
