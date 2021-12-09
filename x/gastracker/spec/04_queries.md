@@ -1,7 +1,7 @@
 # Queries 
 
 ## Gas Tracking Query Wasm Plugin
-To intersect query interactions within smart contract we create a custom plugin, this plugin performs determines whether a query is part of a tx, tracks the gas. It may also:
+To track  smart contract query we create a custom plugin, which tracks the gas. It may also:
 - Send gas rebate to user
 - Charge contract premium
 
