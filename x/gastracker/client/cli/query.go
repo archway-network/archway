@@ -37,7 +37,7 @@ func GetCmdContractMetadata() *cobra.Command {
 				return err
 			}
 
-			contractAddress, err := sdk.AccAddressFromBech32(args[1])
+			contractAddress, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
