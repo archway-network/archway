@@ -77,7 +77,7 @@ func CreateTestKeeperAndContext(t *testing.T) (sdk.Context, GasTrackingKeeper) {
 func TestContractMetadataHandling(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t)
 	// Should return appropriate error when contract metadata is not found
-	_, err := keeper.GetNewContractMetadata(ctx, "1")
+	_, err := keeper.GetContractMetadata(ctx, "1")
 	require.EqualError(
 		t,
 		err,
@@ -93,10 +93,10 @@ func TestContractMetadataHandling(t *testing.T) {
 	}
 
 	// Should be successful
-	err = keeper.AddNewContractMetadata(ctx, "1", newMetadata)
+	err = keeper.AddContractMetadata(ctx, "1", newMetadata)
 
 	// Should be able to get the new stored contract metadata
-	metadata, err := keeper.GetNewContractMetadata(ctx, "1")
+	metadata, err := keeper.GetContractMetadata(ctx, "1")
 	// Error must be nil
 	require.NoError(t, err, "We should be able to get already existing metadata")
 	// Metadata must match the one we stored
@@ -109,11 +109,11 @@ func TestContractMetadataHandling(t *testing.T) {
 		CollectPremium:           true,
 		PremiumPercentageCharged: 80,
 	}
-	err = keeper.AddNewContractMetadata(ctx, "1", updatedMetadata)
+	err = keeper.AddContractMetadata(ctx, "1", updatedMetadata)
 	require.NoError(t, err, "We should be able to overwrite existing metadata")
 
 	// Should be able to get the new stored contract metadata
-	metadata, err = keeper.GetNewContractMetadata(ctx, "1")
+	metadata, err = keeper.GetContractMetadata(ctx, "1")
 	// Error must be nil
 	require.NoError(t, err, "We should be able to get already existing metadata")
 	// Metadata must match the one we stored last

@@ -1,14 +1,14 @@
 package app
 
 import (
+	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	cosmwasm "github.com/CosmWasm/wasmvm"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	cosmwasm "github.com/CosmWasm/wasmvm"
 	"github.com/archway-network/archway/x/gastracker"
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 
@@ -95,6 +95,8 @@ import (
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
+
+	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 const appName = "archwayd"
@@ -366,21 +368,12 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 
 	// Declare custom vm and messenger which allow us to track gas
 	supportedFeatures := "staking,stargate,iterator"
-	defaultGasRegister := keeper.NewDefaultWasmGasRegister()
 	wasmer, err := cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
 	if err != nil {
 		panic(err)
 	}
-	gasTrackingVm := gastracker.NewGasTrackingWasmEngine(wasmer, defaultGasRegister)
-	messenger := gastracker.NewGasTrackingMessageHandler(app.Router(), app.ibcKeeper.ChannelKeeper, scopedWasmKeeper, app.bankKeeper, appCodec, app.transferKeeper, app.gastrackingKeeper)
-
-	wasmOpts = append(
-		wasmOpts,
-		keeper.WithGasRegister(defaultGasRegister),
-		keeper.WithWasmEngine(gasTrackingVm),
-		keeper.WithMessageHandler(messenger),
-		keeper.WithQueryPlugins(&keeper.QueryPlugins{Wasm: gastracker.NewGasTrackingWASMQueryPlugin(app.gastrackingKeeper, &app.wasmKeeper)}),
-	)
+	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, app.gastrackingKeeper)
+	wasmOpts = append(wasmOpts, keeper.WithWasmEngine(trackingWasmVm))
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks

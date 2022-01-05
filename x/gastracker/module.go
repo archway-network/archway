@@ -1,8 +1,10 @@
 package gastracker
 
 import (
+	"context"
 	"encoding/json"
-	"github.com/archway-network/archway/x/gastracker/types"
+	"github.com/archway-network/archway/x/gastracker/client/cli"
+	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,11 +20,10 @@ import (
 
 var (
 	_ module.AppModuleBasic = AppModuleBasic{}
-	_ module.AppModule = AppModule{}
+	_ module.AppModule      = AppModule{}
 )
 
 type AppModuleBasic struct {
-
 }
 
 func (a AppModuleBasic) Name() string {
@@ -30,15 +31,15 @@ func (a AppModuleBasic) Name() string {
 }
 
 func (a AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
-
+	gstTypes.RegisterLegacyAminoCodec(amino)
 }
 
 func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-
+	gstTypes.RegisterInterfaces(registry)
 }
 
 func (a AppModuleBasic) DefaultGenesis(marshaler codec.JSONMarshaler) json.RawMessage {
-	return marshaler.MustMarshalJSON(&types.GenesisState{})
+	return marshaler.MustMarshalJSON(&gstTypes.GenesisState{})
 }
 
 func (a AppModuleBasic) ValidateGenesis(marshaler codec.JSONMarshaler, config client.TxEncodingConfig, message json.RawMessage) error {
@@ -49,16 +50,16 @@ func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.R
 
 }
 
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(context client.Context, serveMux *runtime.ServeMux) {
-
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, serveMux *runtime.ServeMux) {
+	gstTypes.RegisterQueryHandlerClient(context.Background(), serveMux, gstTypes.NewQueryClient(clientCtx))
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return cli.GetTxCmd()
 }
 
 func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 type AppModule struct {
@@ -80,7 +81,7 @@ func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONMarshale
 }
 
 func (a AppModule) ExportGenesis(context sdk.Context, marshaler codec.JSONMarshaler) json.RawMessage {
-	return marshaler.MustMarshalJSON(&types.GenesisState{})
+	return marshaler.MustMarshalJSON(&gstTypes.GenesisState{})
 }
 
 func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
@@ -88,23 +89,20 @@ func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
 }
 
 func (a AppModule) Route() sdk.Route {
-	return sdk.NewRoute("dummy", func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		return nil, nil
-	})
+	return sdk.NewRoute(RouterKey, NewHandler(a.keeper))
 }
 
 func (a AppModule) QuerierRoute() string {
-	return "dummy"
+	return QuerierRoute
 }
 
 func (a AppModule) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
-		return []byte{}, nil
-	}
+	return NewLegacyQuerier(a.keeper)
 }
 
-func (a AppModule) RegisterServices(configurator module.Configurator) {
-
+func (a AppModule) RegisterServices(cfg module.Configurator) {
+	gstTypes.RegisterMsgServer(cfg.MsgServer(), NewMsgServer(a.keeper))
+	gstTypes.RegisterQueryServer(cfg.QueryServer(), NewGRPCQuerier(a.keeper))
 }
 
 func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock) {

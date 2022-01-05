@@ -18,14 +18,14 @@ type MintParamsKeeper interface {
 	GetMinter(ctx sdk.Context) (minter mintTypes.Minter)
 }
 
-func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPayed sdk.Coins, leftOverRewards []*sdk.DecCoin) error {
+func EmitRewardPayingEvent(context sdk.Context, rewardAddress sdk.AccAddress, rewardsPayed sdk.Coins, leftOverRewards []*sdk.DecCoin) error {
 	rewards := make([]*sdk.Coin, len(rewardsPayed))
 	for i := range rewards {
 		rewards[i] = &rewardsPayed[i]
 	}
 
 	return context.EventManager().EmitTypedEvent(&gstTypes.RewardDistributionEvent{
-		RewardAddress:   rewardAddress,
+		RewardAddress:   rewardAddress.String(),
 		ContractRewards: rewards,
 		LeftoverRewards: leftOverRewards,
 	})
@@ -45,7 +45,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 		}
 	}
 
-	if err := keeper.TrackNewBlock(context, gstTypes.BlockGasTracking{}); err != nil {
+	if err := keeper.TrackNewBlock(context); err != nil {
 		panic(err)
 	}
 
@@ -82,12 +82,17 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 		}
 
 		for _, contractTrackingInfo := range txTrackingInfo.ContractTrackingInfos {
+			contractAddress, err := sdk.AccAddressFromBech32(contractTrackingInfo.Address)
+			if err != nil {
+				panic(err)
+			}
+
 			if !contractTrackingInfo.IsEligibleForReward {
-				context.Logger().Info("Contract is not eligible for reward, skipping calculation.", "contractAddress", contractTrackingInfo.Address)
+				context.Logger().Info("Contract is not eligible for reward, skipping calculation.", "contractAddress", contractAddress.String())
 				continue
 			}
 
-			metadata, err := keeper.GetNewContractMetadata(context, contractTrackingInfo.Address)
+			metadata, err := keeper.GetContractMetadata(context, contractAddress)
 			if err != nil {
 				panic(err)
 			}
@@ -109,12 +114,12 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 				for _, rewardCoin := range txTrackingInfo.MaxContractRewards {
 					contractRewards = append(contractRewards, sdk.NewDecCoinFromDec(rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(decGasLimit)))
 				}
-				context.Logger().Info("Calculated contract gas rebate rewards:", "contractAddress", contractTrackingInfo.Address, "contractGasReward", contractRewards)
+				context.Logger().Info("Calculated contract gas rebate rewards:", "contractAddress", contractAddress.String(), "contractGasReward", contractRewards)
 			}
 
 			if keeper.IsDappInflationRewardsEnabled(context) {
 				contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasUsageForInflationRewards).Quo(totalGasConsumedInLastBlock))
-				context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractTrackingInfo.Address, "contractInflationReward", contractInflationReward)
+				context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractAddress.String(), "contractInflationReward", contractInflationReward)
 				if !contractRewards.IsZero() {
 					contractRewards = contractRewards.Add(contractInflationReward)
 				} else {
@@ -130,7 +135,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 			}
 			totalContractRewardsInTx = totalContractRewardsInTx.Add(contractRewards...)
 
-			context.Logger().Info("Calculated Contract rewards:", "contractAddress", contractTrackingInfo.Address, "contractRewards", contractRewards)
+			context.Logger().Info("Calculated Contract rewards:", "contractAddress", contractAddress.String(), "contractRewards", contractRewards)
 		}
 
 		totalContractRewardsPerBlock = totalContractRewardsPerBlock.Add(totalContractRewardsInTx...)
@@ -154,28 +159,29 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 
 	for _, rewardAddress := range rewardAddresses {
 		rewards := rewardsByAddress[rewardAddress]
+
+		bech32RewardAddress, err := sdk.AccAddressFromBech32(rewardAddress)
+		if err != nil {
+			panic(err)
+		}
+
 		// TODO: We should take leftOverThreshold from governance
-		rewardsToBePayed, err := keeper.CreateOrMergeLeftOverRewardEntry(context, rewardAddress, rewards, 1)
+		rewardsToBePayed, err := keeper.CreateOrMergeLeftOverRewardEntry(context, bech32RewardAddress, rewards, 1)
 		if err != nil {
 			panic(err)
 		}
 
-		transferAddr, err := sdk.AccAddressFromBech32(rewardAddress)
+		err = rewardTransferKeeper.SendCoinsFromModuleToAccount(context, ContractRewardCollector, bech32RewardAddress, rewardsToBePayed)
 		if err != nil {
 			panic(err)
 		}
 
-		err = rewardTransferKeeper.SendCoinsFromModuleToAccount(context, ContractRewardCollector, transferAddr, rewardsToBePayed)
+		leftOverEntry, err := keeper.GetLeftOverRewardEntry(context, bech32RewardAddress)
 		if err != nil {
 			panic(err)
 		}
 
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(context, rewardAddress)
-		if err != nil {
-			panic(err)
-		}
-
-		err = EmitRewardPayingEvent(context, rewardAddress, rewardsToBePayed, leftOverEntry.ContractRewards)
+		err = EmitRewardPayingEvent(context, bech32RewardAddress, rewardsToBePayed, leftOverEntry.ContractRewards)
 		if err != nil {
 			panic(err)
 		}

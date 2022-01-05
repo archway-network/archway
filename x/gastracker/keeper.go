@@ -1,6 +1,7 @@
 package gastracker
 
 import (
+	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,18 +9,19 @@ import (
 )
 
 var _ GasTrackingKeeper = &Keeper{}
+var _ wasmTypes.ContractGasProcessor = &Keeper{}
 
 type GasTrackingKeeper interface {
 	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error
-	TrackContractGasUsage(ctx sdk.Context, contractAddress string, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error
+	TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error
 	GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
 	GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error)
-	TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockGasTracking) error
-	AddNewContractMetadata(ctx sdk.Context, address string, metadata gstTypes.ContractInstanceMetadata) error
-	GetNewContractMetadata(ctx sdk.Context, address string) (gstTypes.ContractInstanceMetadata, error)
+	TrackNewBlock(ctx sdk.Context) error
+	AddContractMetadata(ctx sdk.Context, admin sdk.AccAddress, address sdk.AccAddress, metadata gstTypes.ContractInstanceMetadata) error
+	GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gstTypes.ContractInstanceMetadata, error)
 
-	CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error)
-	GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress string) (gstTypes.LeftOverRewardEntry, error)
+	CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error)
+	GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress) (gstTypes.LeftOverRewardEntry, error)
 
 	SetParams(ctx sdk.Context, params gstTypes.Params)
 	IsGasTrackingEnabled(ctx sdk.Context) bool
@@ -27,12 +29,105 @@ type GasTrackingKeeper interface {
 	IsGasRebateEnabled(ctx sdk.Context) bool
 	IsGasRebateToUserEnabled(ctx sdk.Context) bool
 	IsContractPremiumEnabled(ctx sdk.Context) bool
+
+	IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error
+	CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractGasRecord) (uint64, error)
 }
 
 type Keeper struct {
 	key        sdk.StoreKey
 	appCodec   codec.Marshaler
-	paramSpace gstTypes.Subspace 
+	paramSpace gstTypes.Subspace
+}
+
+func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error {
+	for _, record := range records {
+		contractAddress, err := sdk.AccAddressFromBech32(record.ContractAddress)
+		if err != nil {
+			return err
+		}
+
+		var contractMetadataExists bool
+		contractMetadata, err := k.GetContractMetadata(ctx, contractAddress)
+		switch err {
+		case gstTypes.ErrContractInstanceMetadataNotFound:
+			contractMetadataExists = false
+		case nil:
+			contractMetadataExists = true
+		default:
+			return err
+		}
+
+		if !contractMetadataExists {
+			continue
+		}
+
+		var operation gstTypes.ContractOperation
+		switch record.OperationId {
+		case wasmTypes.ContractOperationQuery:
+			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_QUERY
+		case wasmTypes.ContractOperationInstantiate:
+			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION
+		case wasmTypes.ContractOperationExecute:
+			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_EXECUTION
+		case wasmTypes.ContractOperationMigrate:
+			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_MIGRATE
+		case wasmTypes.ContractOperationSudo:
+			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO
+		case wasmTypes.ContractOperationReply:
+			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_REPLY
+		case wasmTypes.ContractOperationIbcPacketTimeout:
+		case wasmTypes.ContractOperationIbcPacketAck:
+		case wasmTypes.ContractOperationIbcPacketReceive:
+		case wasmTypes.ContractOperationIbcChannelClose:
+		case wasmTypes.ContractOperationIbcChannelOpen:
+		case wasmTypes.ContractOperationIbcChannelConnect:
+			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_IBC
+		default:
+			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_UNSPECIFIED
+		}
+
+		if err := k.TrackContractGasUsage(ctx, contractAddress, record.GasConsumed, operation, !contractMetadata.GasRebateToUser); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (k *Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractGasRecord) (uint64, error) {
+	var contractMetadataExists bool
+
+	contractAddress, err := sdk.AccAddressFromBech32(record.ContractAddress)
+	if err != nil {
+		return 0, err
+	}
+
+	contractMetadata, err := k.GetContractMetadata(ctx, contractAddress)
+	switch err {
+	case gstTypes.ErrContractInstanceMetadataNotFound:
+		contractMetadataExists = false
+	case nil:
+		contractMetadataExists = true
+	default:
+		return 0, err
+	}
+
+	updatedGas := record.GasConsumed
+
+	if !contractMetadataExists {
+		return updatedGas, nil
+	}
+
+	if contractMetadata.GasRebateToUser {
+		updatedGas = (updatedGas * 50) / 100
+	}
+
+	if contractMetadata.CollectPremium {
+		updatedGas = updatedGas + (updatedGas*contractMetadata.PremiumPercentageCharged)/100
+	}
+
+	return updatedGas, nil
 }
 
 func (k *Keeper) GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error) {
@@ -58,7 +153,7 @@ func (k *Keeper) GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.Transaction
 	return txTrackingInfo, nil
 }
 
-func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress string, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {
+func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {
 	contractRewards = contractRewards.Sort()
 
 	gstKvStore := ctx.KVStore(k.key)
@@ -67,7 +162,7 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 	var updatedRewards sdk.DecCoins
 	var rewardsToBeDistributed sdk.Coins
 
-	bz := gstKvStore.Get(gstTypes.GetRewardEntryKey(rewardAddress))
+	bz := gstKvStore.Get(gstTypes.GetRewardEntryKey(rewardAddress.String()))
 	if bz != nil {
 		err := k.appCodec.UnmarshalBinaryBare(bz, &rewardEntry)
 		if err != nil {
@@ -119,7 +214,7 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 		return rewardsToBeDistributed, err
 	}
 
-	gstKvStore.Set(gstTypes.GetRewardEntryKey(rewardAddress), bz)
+	gstKvStore.Set(gstTypes.GetRewardEntryKey(rewardAddress.String()), bz)
 	return rewardsToBeDistributed, nil
 }
 
@@ -128,12 +223,12 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 // we accumulate all the rewards and once it reaches to
 // an integer number, we pay the integer part and
 // keep the 0.x amount as left over to be paid later
-func (k *Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress string) (gstTypes.LeftOverRewardEntry, error) {
+func (k *Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress) (gstTypes.LeftOverRewardEntry, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var rewardEntry gstTypes.LeftOverRewardEntry
 
-	bz := gstKvStore.Get(gstTypes.GetRewardEntryKey(rewardAddress))
+	bz := gstKvStore.Get(gstTypes.GetRewardEntryKey(rewardAddress.String()))
 	if bz == nil {
 		return rewardEntry, gstTypes.ErrRewardEntryNotFound
 	}
@@ -146,12 +241,12 @@ func (k *Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress string) (
 	return rewardEntry, nil
 }
 
-func (k *Keeper) GetNewContractMetadata(ctx sdk.Context, address string) (gstTypes.ContractInstanceMetadata, error) {
+func (k *Keeper) GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gstTypes.ContractInstanceMetadata, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var contractInstanceMetadata gstTypes.ContractInstanceMetadata
 
-	bz := gstKvStore.Get(gstTypes.GetContractInstanceMetadataKey(address))
+	bz := gstKvStore.Get(gstTypes.GetContractInstanceMetadataKey(address.String()))
 	if bz == nil {
 		return contractInstanceMetadata, gstTypes.ErrContractInstanceMetadataNotFound
 	}
@@ -160,14 +255,28 @@ func (k *Keeper) GetNewContractMetadata(ctx sdk.Context, address string) (gstTyp
 	return contractInstanceMetadata, err
 }
 
-func (k *Keeper) AddNewContractMetadata(ctx sdk.Context, address string, metadata gstTypes.ContractInstanceMetadata) error {
+func (k *Keeper) AddContractMetadata(ctx sdk.Context, admin sdk.AccAddress, address sdk.AccAddress, metadata gstTypes.ContractInstanceMetadata) error {
 	gstKvStore := ctx.KVStore(k.key)
+
+	if _, err := sdk.AccAddressFromBech32(metadata.RewardAddress); err != nil {
+		return err
+	}
+
+	if metadata.GasRebateToUser && metadata.CollectPremium {
+		return gstTypes.ErrInvalidInitRequest1
+	}
+
+	if metadata.CollectPremium {
+		if metadata.PremiumPercentageCharged > 200 {
+			return gstTypes.ErrInvalidInitRequest2
+		}
+	}
 
 	bz, err := k.appCodec.MarshalBinaryBare(&metadata)
 	if err != nil {
 		return err
 	}
-	gstKvStore.Set(gstTypes.GetContractInstanceMetadataKey(address), bz)
+	gstKvStore.Set(gstTypes.GetContractInstanceMetadataKey(address.String()), bz)
 	return nil
 }
 
@@ -175,9 +284,9 @@ func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler, paramSpace
 	return &Keeper{key: key, appCodec: appCodec, paramSpace: paramSpace}
 }
 
-func (k *Keeper) TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockGasTracking) error {
+func (k *Keeper) TrackNewBlock(ctx sdk.Context) error {
 	gstKvStore := ctx.KVStore(k.key)
-	bz, err := k.appCodec.MarshalBinaryBare(&blockGasTracking)
+	bz, err := k.appCodec.MarshalBinaryBare(&gstTypes.BlockGasTracking{})
 	if err != nil {
 		return err
 	}
@@ -226,7 +335,7 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 	return nil
 }
 
-func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress string, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error {
+func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error {
 	gstKvStore := ctx.KVStore(k.key)
 	bz := gstKvStore.Get([]byte(gstTypes.CurrentBlockTrackingKey))
 	if bz == nil {
@@ -244,7 +353,7 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress string, 
 	}
 	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
 	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gstTypes.ContractGasTracking{
-		Address:             contractAddress,
+		Address:             contractAddress.String(),
 		GasConsumed:         gasUsed,
 		Operation:           operation,
 		IsEligibleForReward: isEligibleForReward,
