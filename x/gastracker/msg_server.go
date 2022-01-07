@@ -22,9 +22,9 @@ type msgServer struct {
 func (m *msgServer) SetContractMetadata(goCtx context.Context, msg *gstTypes.MsgSetContractMetadata) (*gstTypes.MsgSetContractMetadataResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	adminAddr, err := sdk.AccAddressFromBech32(msg.Admin)
+	senderAddress, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "admin")
+		return nil, sdkerrors.Wrap(err, "sender")
 	}
 
 	contractAddress, err := sdk.AccAddressFromBech32(msg.ContractAddress)
@@ -35,12 +35,12 @@ func (m *msgServer) SetContractMetadata(goCtx context.Context, msg *gstTypes.Msg
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, gstTypes.ModuleName),
-		sdk.NewAttribute(sdk.AttributeKeySender, msg.Admin),
+		sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 	))
 
 	// TODO: If not happening at earlier stage, we should check whether or not metadata is nil
 
-	if err := m.keeper.AddContractMetadata(ctx, adminAddr, contractAddress, *msg.Metadata); err != nil {
+	if err := m.keeper.SetContractMetadata(ctx, senderAddress, contractAddress, *msg.Metadata); err != nil {
 		return nil, err
 	}
 

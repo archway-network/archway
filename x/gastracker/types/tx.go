@@ -8,27 +8,33 @@ import (
 var _ sdk.Msg = &MsgSetContractMetadata{}
 
 func (m MsgSetContractMetadata) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
-		return err
-	}
-
-	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
-		return err
+	if len(m.ContractAddress) == 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "contract address cannot be empty")
 	}
 
 	if m.Metadata == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "contract metadata cannot be set to nil")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "metadata to be set cannot be nil")
 	}
 
-	if m.Metadata.CollectPremium && m.Metadata.GasRebateToUser {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "contract metadata cannot have both collect premium and "+
-			"gas rebate turned on")
+	if len(m.Metadata.RewardAddress) != 0 {
+		if _, err := sdk.AccAddressFromBech32(m.Metadata.RewardAddress); err != nil {
+			return err
+		}
+	}
+
+	if len(m.Metadata.DeveloperAddress) != 0 {
+		if _, err := sdk.AccAddressFromBech32(m.Metadata.DeveloperAddress); err != nil {
+			return err
+		}
+	}
+
+	if m.Metadata.GasRebateToUser && m.Metadata.CollectPremium {
+		return ErrInvalidInitRequest1
 	}
 
 	if m.Metadata.CollectPremium {
 		if m.Metadata.PremiumPercentageCharged > 200 {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "contract metadata cannot have premium percentage greater "+
-				"than 200")
+			return ErrInvalidInitRequest2
 		}
 	}
 
@@ -48,9 +54,9 @@ func (m MsgSetContractMetadata) GetSignBytes() []byte {
 }
 
 func (m MsgSetContractMetadata) GetSigners() []sdk.AccAddress {
-	adminAddr, err := sdk.AccAddressFromBech32(m.Admin)
+	senderAddr, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
 		panic(err.Error())
 	}
-	return []sdk.AccAddress{adminAddr}
+	return []sdk.AccAddress{senderAddr}
 }

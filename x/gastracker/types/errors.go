@@ -20,4 +20,10 @@ var (
 	ErrInvalidInitRequest1 = sdkErrors.Register(DefaultCodespace, 6, "Invalid instantiation request, you cannot have both gas rebate and premium charge true")
 
 	ErrInvalidInitRequest2 = sdkErrors.Register(DefaultCodespace, 7, "Invalid instantiation request, premium percentage is out of range")
+
+	ErrContractInfoNotFound = sdkErrors.Register(DefaultCodespace, 8, "Contract info not found")
+
+	ErrNoPermissionToSetMetadata = sdkErrors.Register(DefaultCodespace, 9, "Sender does not have permission to set metadata")
+
+	ErrInvalidSetContractMetadataRequest = sdkErrors.Register(DefaultCodespace, 10, "Invalid request to set metadata")
 )

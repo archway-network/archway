@@ -231,19 +231,19 @@ func TestRewardCalculation(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
+	err := keeper.SetContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -251,7 +251,7 @@ func TestRewardCalculation(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -373,19 +373,19 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
+	err := keeper.SetContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -393,7 +393,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -510,19 +510,19 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
+	err := keeper.SetContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -530,7 +530,7 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -645,19 +645,19 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
+	err := keeper.SetContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -665,7 +665,7 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -777,19 +777,19 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
+	err := keeper.SetContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -797,7 +797,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -909,19 +909,19 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
+	err := keeper.SetContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
 		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser: false,
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -929,7 +929,7 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
+	err = keeper.SetContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
 		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
 		GasRebateToUser:          false,
 		CollectPremium:           true,

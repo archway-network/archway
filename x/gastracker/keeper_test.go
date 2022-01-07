@@ -93,7 +93,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	}
 
 	// Should be successful
-	err = keeper.AddContractMetadata(ctx, "1", newMetadata)
+	err = keeper.SetContractMetadata(ctx, "1", newMetadata)
 
 	// Should be able to get the new stored contract metadata
 	metadata, err := keeper.GetContractMetadata(ctx, "1")
@@ -109,7 +109,7 @@ func TestContractMetadataHandling(t *testing.T) {
 		CollectPremium:           true,
 		PremiumPercentageCharged: 80,
 	}
-	err = keeper.AddContractMetadata(ctx, "1", updatedMetadata)
+	err = keeper.SetContractMetadata(ctx, "1", updatedMetadata)
 	require.NoError(t, err, "We should be able to overwrite existing metadata")
 
 	// Should be able to get the new stored contract metadata

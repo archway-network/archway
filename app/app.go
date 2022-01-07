@@ -295,8 +295,6 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	scopedTransferKeeper := app.capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.capabilityKeeper.ScopeToModule(wasm.ModuleName)
 
-	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey], app.appCodec, app.getSubspace(gstTypes.DefaultParamSpace))
-
 	// add keepers
 	app.accountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, keys[authtypes.StoreKey], app.getSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms,
@@ -396,6 +394,8 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 		supportedFeatures,
 		wasmOpts...,
 	)
+
+	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey], app.appCodec, app.getSubspace(gstTypes.DefaultParamSpace), app.wasmKeeper)
 
 	// The gov proposal types can be individually enabled
 	if len(enabledProposals) != 0 {

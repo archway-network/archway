@@ -90,12 +90,14 @@ message ContractInstantiationRequestWrapper {
 
 // Contract instance metadata
 message ContractInstanceMetadata {
-  string reward_address = 1;
-  bool gas_rebate_to_user = 2;
+  // Developer address of the contract
+  string developer_address = 1;
+  string reward_address = 2;
+  bool gas_rebate_to_user = 3;
   // Flag to indicate whether to charge premium or not
-  bool collect_premium = 3;
+  bool collect_premium = 4;
   // Percentage of gas consumed to be charged.
-  uint64 premium_percentage_charged = 4;
+  uint64 premium_percentage_charged = 5;
 }
 
 // Reward entry per beneficiary address

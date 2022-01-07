@@ -85,6 +85,7 @@ Contract instance metadata
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `developer_address` | [string](#string) |  | Developer address of the contract |
 | `reward_address` | [string](#string) |  |  |
 | `gas_rebate_to_user` | [bool](#bool) |  |  |
 | `collect_premium` | [bool](#bool) |  | Flag to indicate whether to charge premium or not |
@@ -349,7 +350,7 @@ Request to set contract metadata
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `admin` | [string](#string) |  |  |
+| `sender` | [string](#string) |  |  |
 | `contract_address` | [string](#string) |  |  |
 | `metadata` | [ContractInstanceMetadata](#archway.gastracker.v1.ContractInstanceMetadata) |  |  |
 

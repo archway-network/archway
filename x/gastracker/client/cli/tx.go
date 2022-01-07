@@ -57,7 +57,7 @@ func parseSetContractMetadataArg(sender sdk.AccAddress, contractAddressStr strin
 	}
 
 	return gstTypes.MsgSetContractMetadata{
-		Admin:           sender.String(),
+		Sender:          sender.String(),
 		ContractAddress: contractAddress.String(),
 		Metadata:        &contractMetadata,
 	}, nil

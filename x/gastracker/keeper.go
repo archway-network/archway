@@ -11,13 +11,17 @@ import (
 var _ GasTrackingKeeper = &Keeper{}
 var _ wasmTypes.ContractGasProcessor = &Keeper{}
 
+type ContractInfoView interface {
+	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
+}
+
 type GasTrackingKeeper interface {
 	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error
 	TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error
 	GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
 	GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error)
 	TrackNewBlock(ctx sdk.Context) error
-	AddContractMetadata(ctx sdk.Context, admin sdk.AccAddress, address sdk.AccAddress, metadata gstTypes.ContractInstanceMetadata) error
+	SetContractMetadata(ctx sdk.Context, admin sdk.AccAddress, address sdk.AccAddress, metadata gstTypes.ContractInstanceMetadata) error
 	GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gstTypes.ContractInstanceMetadata, error)
 
 	CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error)
@@ -35,9 +39,10 @@ type GasTrackingKeeper interface {
 }
 
 type Keeper struct {
-	key        sdk.StoreKey
-	appCodec   codec.Marshaler
-	paramSpace gstTypes.Subspace
+	key              sdk.StoreKey
+	appCodec         codec.Marshaler
+	paramSpace       gstTypes.Subspace
+	contractInfoView ContractInfoView
 }
 
 func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error {
@@ -255,33 +260,65 @@ func (k *Keeper) GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (g
 	return contractInstanceMetadata, err
 }
 
-func (k *Keeper) AddContractMetadata(ctx sdk.Context, admin sdk.AccAddress, address sdk.AccAddress, metadata gstTypes.ContractInstanceMetadata) error {
+// SetContractMetadata checks that the address that requested to add new metadata is admin of the contract or if admin is cleared the
+// developer field of the contract metadata. \
+// The developer field is set the first time when this contract metadata is set.
+// Next time, only the admin (if not cleared) or the developer can change the metadata.
+func (k *Keeper) SetContractMetadata(ctx sdk.Context, sender sdk.AccAddress, address sdk.AccAddress, newMetadata gstTypes.ContractInstanceMetadata) error {
 	gstKvStore := ctx.KVStore(k.key)
 
-	if _, err := sdk.AccAddressFromBech32(metadata.RewardAddress); err != nil {
-		return err
+	contractInfo := k.contractInfoView.GetContractInfo(ctx, address)
+	if contractInfo == nil {
+		return gstTypes.ErrContractInfoNotFound
 	}
 
-	if metadata.GasRebateToUser && metadata.CollectPremium {
-		return gstTypes.ErrInvalidInitRequest1
-	}
-
-	if metadata.CollectPremium {
-		if metadata.PremiumPercentageCharged > 200 {
-			return gstTypes.ErrInvalidInitRequest2
+	contractMetadataExists := true
+	instanceMetadata, err := k.GetContractMetadata(ctx, address)
+	if err != nil {
+		if err == gstTypes.ErrContractInstanceMetadataNotFound {
+			contractMetadataExists = false
+		} else {
+			return err
 		}
 	}
 
-	bz, err := k.appCodec.MarshalBinaryBare(&metadata)
+	if contractMetadataExists {
+		if sender.String() != instanceMetadata.DeveloperAddress {
+			return gstTypes.ErrNoPermissionToSetMetadata
+		}
+	} else {
+		if sender.String() != contractInfo.Admin {
+			return gstTypes.ErrNoPermissionToSetMetadata
+		}
+	}
+
+	if len(newMetadata.DeveloperAddress) == 0 {
+		if contractMetadataExists {
+			newMetadata.DeveloperAddress = instanceMetadata.DeveloperAddress
+		} else {
+			return gstTypes.ErrInvalidSetContractMetadataRequest
+		}
+	}
+
+	if len(newMetadata.RewardAddress) == 0 {
+		if contractMetadataExists {
+			newMetadata.RewardAddress = instanceMetadata.RewardAddress
+		} else {
+			return gstTypes.ErrInvalidSetContractMetadataRequest
+		}
+	}
+
+	bz, err := k.appCodec.MarshalBinaryBare(&newMetadata)
 	if err != nil {
 		return err
 	}
+
 	gstKvStore.Set(gstTypes.GetContractInstanceMetadataKey(address.String()), bz)
 	return nil
 }
 
-func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler, paramSpace paramsTypes.Subspace) *Keeper {
-	return &Keeper{key: key, appCodec: appCodec, paramSpace: paramSpace}
+func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler, paramSpace paramsTypes.Subspace, contractInfoView ContractInfoView) *Keeper {
+	return &Keeper{key: key, appCodec: appCodec, paramSpace: paramSpace, contractInfoView: contractInfoView}
 }
 
 func (k *Keeper) TrackNewBlock(ctx sdk.Context) error {
