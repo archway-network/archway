@@ -282,16 +282,6 @@ func (k *Keeper) SetContractMetadata(ctx sdk.Context, sender sdk.AccAddress, add
 		}
 	}
 
-	if contractMetadataExists {
-		if sender.String() != instanceMetadata.DeveloperAddress {
-			return gstTypes.ErrNoPermissionToSetMetadata
-		}
-	} else {
-		if sender.String() != contractInfo.Admin {
-			return gstTypes.ErrNoPermissionToSetMetadata
-		}
-	}
-
 	if len(newMetadata.DeveloperAddress) == 0 {
 		if contractMetadataExists {
 			newMetadata.DeveloperAddress = instanceMetadata.DeveloperAddress
@@ -305,6 +295,16 @@ func (k *Keeper) SetContractMetadata(ctx sdk.Context, sender sdk.AccAddress, add
 			newMetadata.RewardAddress = instanceMetadata.RewardAddress
 		} else {
 			return gstTypes.ErrInvalidSetContractMetadataRequest
+		}
+	}
+
+	if contractMetadataExists {
+		if sender.String() != instanceMetadata.DeveloperAddress {
+			return gstTypes.ErrNoPermissionToSetMetadata
+		}
+	} else {
+		if sender.String() != contractInfo.Admin {
+			return gstTypes.ErrNoPermissionToSetMetadata
 		}
 	}
 

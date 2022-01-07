@@ -370,8 +370,8 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	if err != nil {
 		panic(err)
 	}
-	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, app.gastrackingKeeper)
-	wasmOpts = append(wasmOpts, keeper.WithWasmEngine(trackingWasmVm))
+	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
+	wasmOpts = append(wasmOpts, keeper.WithWasmEngine(&trackingWasmVm))
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
@@ -396,6 +396,9 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	)
 
 	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey], app.appCodec, app.getSubspace(gstTypes.DefaultParamSpace), app.wasmKeeper)
+
+	// Setting gas recorder here to avoid cyclic loop
+	trackingWasmVm.SetGasRecorder(app.gastrackingKeeper)
 
 	// The gov proposal types can be individually enabled
 	if len(enabledProposals) != 0 {
