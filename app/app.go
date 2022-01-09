@@ -371,7 +371,7 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 		panic(err)
 	}
 	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
-	wasmOpts = append(wasmOpts, keeper.WithWasmEngine(&trackingWasmVm))
+	wasmOpts = append(wasmOpts, keeper.WithWasmEngine(trackingWasmVm))
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks

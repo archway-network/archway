@@ -46,6 +46,10 @@ type Keeper struct {
 }
 
 func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error {
+	if !k.IsGasTrackingEnabled(ctx) {
+		return nil
+	}
+
 	for _, record := range records {
 		contractAddress, err := sdk.AccAddressFromBech32(record.ContractAddress)
 		if err != nil {
@@ -124,11 +128,11 @@ func (k *Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractG
 		return updatedGas, nil
 	}
 
-	if contractMetadata.GasRebateToUser {
+	if contractMetadata.GasRebateToUser && k.IsGasRebateToUserEnabled(ctx) {
 		updatedGas = (updatedGas * 50) / 100
 	}
 
-	if contractMetadata.CollectPremium {
+	if contractMetadata.CollectPremium && k.IsContractPremiumEnabled(ctx) {
 		updatedGas = updatedGas + (updatedGas*contractMetadata.PremiumPercentageCharged)/100
 	}
 
