@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
+	tmLog "github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	db "github.com/tendermint/tm-db"
 
@@ -91,7 +91,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 	ctx := sdk.NewContext(ms, tmproto.Header{
 		Height: 1234567,
 		Time:   time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
-	}, false, log.NewTMLogger(os.Stdout))
+	}, false, tmLog.NewTMLogger(os.Stdout))
 
 	params := gstTypes.DefaultParams()
 	subspace.SetParamSet(ctx, &params)
@@ -374,6 +374,96 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
 }
 
+func TestIngestionOfGasRecords(t *testing.T) {
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
+	ctx, keeper := CreateTestKeeperAndContext(t, spareAddress[0])
+
+	err := keeper.TrackNewBlock(ctx)
+	require.NoError(t, err, "We should be able to track new block")
+
+	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
+	require.NoError(t, err, "We should be able to track new tx")
+
+	// Ingest gas record should be successful, but should skip the entry
+	// since there is no contract metadata
+	err = keeper.IngestGasRecord(ctx, []wasmTypes.ContractGasRecord{
+		{
+			OperationId:     wasmTypes.ContractOperationInstantiate,
+			ContractAddress: spareAddress[1].String(),
+			GasConsumed:     2,
+		},
+	})
+	require.NoError(t, err, "IngestGasRecord should be successful")
+
+	blockTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	require.NoError(t, err, "We should be able to get Current block tracking info")
+
+	require.Equal(t, 1, len(blockTracking.TxTrackingInfos))
+
+	require.Equal(t, 0, len(blockTracking.TxTrackingInfos[0].ContractTrackingInfos))
+
+	// Let's add the metadata and call IngestGasRecord again
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+		DeveloperAddress: spareAddress[0].String(),
+		RewardAddress:    spareAddress[0].String(),
+	})
+	require.NoError(t, err, "We should be able to set contract metadata")
+
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+		DeveloperAddress: spareAddress[0].String(),
+		RewardAddress:    spareAddress[0].String(),
+		GasRebateToUser:  true,
+	})
+	require.NoError(t, err, "We should be able to set contract metadata")
+
+	// First entry is ignored, but since second contract address's metadata
+	// exists, contract tracking entry will be added.
+	err = keeper.IngestGasRecord(ctx, []wasmTypes.ContractGasRecord{
+		{
+			OperationId:     wasmTypes.ContractOperationInstantiate,
+			ContractAddress: spareAddress[1].String(),
+			GasConsumed:     1,
+		},
+		{
+			OperationId:     wasmTypes.ContractOperationIbcPacketReceive,
+			ContractAddress: spareAddress[2].String(),
+			GasConsumed:     2,
+		},
+		{
+			OperationId:     wasmTypes.ContractOperationMigrate,
+			ContractAddress: spareAddress[3].String(),
+			GasConsumed:     3,
+		},
+	})
+	require.NoError(t, err, "IngestGasRecord should be successful")
+
+	blockTracking, err = keeper.GetCurrentBlockTrackingInfo(ctx)
+	require.NoError(t, err, "We should be able to get Current block tracking info")
+
+	require.Equal(t, 1, len(blockTracking.TxTrackingInfos))
+
+	require.Equal(t, 2, len(blockTracking.TxTrackingInfos[0].ContractTrackingInfos))
+
+	require.Equal(t, &gstTypes.ContractGasTracking{
+		Address:             spareAddress[3].String(),
+		GasConsumed:         3,
+		IsEligibleForReward: false,
+		Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_MIGRATE,
+	}, blockTracking.TxTrackingInfos[0].ContractTrackingInfos[1])
+
+	require.Equal(t, &gstTypes.ContractGasTracking{
+		Address:             spareAddress[2].String(),
+		GasConsumed:         2,
+		IsEligibleForReward: true,
+		Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_IBC,
+	}, blockTracking.TxTrackingInfos[0].ContractTrackingInfos[0])
+
+}
+
 // Test storing and retrieving contract gas usage
 func TestAddContractGasUsage(t *testing.T) {
 	var spareAddress = make([]sdk.AccAddress, 10)
@@ -381,7 +471,7 @@ func TestAddContractGasUsage(t *testing.T) {
 		spareAddress[i] = GenerateRandomAccAddress()
 	}
 
-	ctx, keeper := CreateTestKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 
 	err := keeper.TrackContractGasUsage(ctx, spareAddress[1], 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION, false)
 	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(), "We cannot track contract gas since block tracking does not exists")

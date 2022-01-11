@@ -16,8 +16,9 @@ type ContractInfoView interface {
 }
 
 type GasTrackingKeeper interface {
+	wasmTypes.ContractGasProcessor
+
 	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error
-	TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error
 	GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
 	GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error)
 	TrackNewBlock(ctx sdk.Context) error
@@ -33,9 +34,6 @@ type GasTrackingKeeper interface {
 	IsGasRebateEnabled(ctx sdk.Context) bool
 	IsGasRebateToUserEnabled(ctx sdk.Context) bool
 	IsContractPremiumEnabled(ctx sdk.Context) bool
-
-	IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error
-	CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractGasRecord) (uint64, error)
 }
 
 type Keeper struct {
@@ -86,10 +84,15 @@ func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGa
 		case wasmTypes.ContractOperationReply:
 			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_REPLY
 		case wasmTypes.ContractOperationIbcPacketTimeout:
+			fallthrough
 		case wasmTypes.ContractOperationIbcPacketAck:
+			fallthrough
 		case wasmTypes.ContractOperationIbcPacketReceive:
+			fallthrough
 		case wasmTypes.ContractOperationIbcChannelClose:
+			fallthrough
 		case wasmTypes.ContractOperationIbcChannelOpen:
+			fallthrough
 		case wasmTypes.ContractOperationIbcChannelConnect:
 			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_IBC
 		default:
