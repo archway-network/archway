@@ -53,7 +53,7 @@ func dummyNextAnteHandler(_ sdk.Context, _ sdk.Tx, _ bool) (newCtx sdk.Context, 
 }
 
 func TestGasTrackingAnteHandler(t *testing.T) {
-	ctx, keeper := CreateTestKeeperAndContext(t)
+	ctx, keeper := CreateTestKeeperAndContext(t, sdk.AccAddress{})
 
 	testTxGasTrackingDecorator := NewTxGasTrackingDecorator(keeper)
 
