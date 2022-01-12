@@ -374,6 +374,63 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
 }
 
+func TestCalculateUpdatedGas(t *testing.T) {
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
+	ctx, keeper := CreateTestKeeperAndContext(t, spareAddress[0])
+
+	// No change in updated gas when contract's metadata does not exists
+	gasRecord := wasmTypes.ContractGasRecord{
+		OperationId:     wasmTypes.ContractOperationIbcChannelOpen,
+		ContractAddress: spareAddress[1].String(),
+		GasConsumed:     5,
+	}
+	updatedGas, err := keeper.CalculateUpdatedGas(ctx, gasRecord)
+	require.NoError(t, err, "Calculation of updated gas should be succeed")
+	require.Equal(t, gasRecord.GasConsumed, updatedGas)
+
+	// Checking gas rebate calculation
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+		DeveloperAddress:         spareAddress[0].String(),
+		RewardAddress:            spareAddress[1].String(),
+		GasRebateToUser:          true,
+		CollectPremium:           false,
+		PremiumPercentageCharged: 0,
+	})
+	require.NoError(t, err, "SetContractMetadata should be successful")
+
+	gasRecord = wasmTypes.ContractGasRecord{
+		OperationId:     wasmTypes.ContractOperationIbcChannelOpen,
+		ContractAddress: spareAddress[1].String(),
+		GasConsumed:     7,
+	}
+	updatedGas, err = keeper.CalculateUpdatedGas(ctx, gasRecord)
+	require.NoError(t, err, "Calculation of updated gas should be succeed")
+	require.Equal(t, gasRecord.GasConsumed/2, updatedGas)
+
+	// Checking premium percentage calculation
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+		DeveloperAddress:         spareAddress[0].String(),
+		RewardAddress:            spareAddress[1].String(),
+		GasRebateToUser:          false,
+		CollectPremium:           true,
+		PremiumPercentageCharged: 50,
+	})
+	require.NoError(t, err, "SetContractMetadata should be successful")
+
+	gasRecord = wasmTypes.ContractGasRecord{
+		OperationId:     wasmTypes.ContractOperationIbcChannelOpen,
+		ContractAddress: spareAddress[1].String(),
+		GasConsumed:     10,
+	}
+	updatedGas, err = keeper.CalculateUpdatedGas(ctx, gasRecord)
+	require.NoError(t, err, "Calculation of updated gas should be succeed")
+	require.Equal(t, gasRecord.GasConsumed+(gasRecord.GasConsumed*50)/100, updatedGas)
+}
+
 func TestIngestionOfGasRecords(t *testing.T) {
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
