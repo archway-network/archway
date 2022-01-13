@@ -349,7 +349,7 @@ func (l *loggingVM) Reset() {
 	l.GasUsed = nil
 }
 
-func TestGasTracking(t *testing.T) {
+func TestGasTrackingVMInstantiateAndQuery(t *testing.T) {
 	memDB := db.NewMemDB()
 	cms := store.NewCommitMultiStore(memDB)
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
@@ -431,6 +431,949 @@ func TestGasTracking(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, record, loggingVM.GasUsed[i], "Ingested record's gas consumed must match querier's record")
 	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	_, gasUsed, err = gasTrackingVm.Instantiate(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.MessageInfo{},
+		[]byte{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationInstantiate,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	_, gasUsed, err = gasTrackingVm.Query(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		[]byte{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		0,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Nil(t, testGasRecorder.ingestedRecords, "Ingested gas records should be nil")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+}
+
+func TestGasTrackingVMExecute(t *testing.T) {
+	memDB := db.NewMemDB()
+	cms := store.NewCommitMultiStore(memDB)
+	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
+
+	loggingVM := loggingVM{
+		Fail:                false,
+		ShouldEmulateQuery:  true,
+		QueryGasUsage:       50,
+		RecursiveQueryDepth: 4,
+	}
+
+	testGasRecorder := &testGasProcessor{}
+	gasTrackingVm := TrackingWasmerEngine{vm: &loggingVM, gasProcessor: testGasRecorder}
+
+	testQuerier := testQuerier{
+		Ctx: emptyContext,
+		Vm:  &gasTrackingVm,
+	}
+	testQuerier.Ctx = emptyContext
+
+	_, gasUsed, err := gasTrackingVm.Execute(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.MessageInfo{},
+		[]byte{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Instantiation should succeed")
+
+	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	for i, record := range testQuerier.GasUsed {
+		require.Equal(t, loggingVM.GasUsed[i], record)
+		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationExecute,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	_, gasUsed, err = gasTrackingVm.Execute(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.MessageInfo{},
+		[]byte{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationExecute,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+}
+
+func TestGasTrackingVMMigrate(t *testing.T) {
+	memDB := db.NewMemDB()
+	cms := store.NewCommitMultiStore(memDB)
+	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
+
+	loggingVM := loggingVM{
+		Fail:                false,
+		ShouldEmulateQuery:  true,
+		QueryGasUsage:       50,
+		RecursiveQueryDepth: 4,
+	}
+
+	testGasRecorder := &testGasProcessor{}
+	gasTrackingVm := TrackingWasmerEngine{vm: &loggingVM, gasProcessor: testGasRecorder}
+
+	testQuerier := testQuerier{
+		Ctx: emptyContext,
+		Vm:  &gasTrackingVm,
+	}
+	testQuerier.Ctx = emptyContext
+
+	_, gasUsed, err := gasTrackingVm.Migrate(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		[]byte{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Instantiation should succeed")
+
+	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	for i, record := range testQuerier.GasUsed {
+		require.Equal(t, loggingVM.GasUsed[i], record)
+		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationMigrate,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	_, gasUsed, err = gasTrackingVm.Migrate(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		[]byte{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationMigrate,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+}
+
+func TestGasTrackingVMSudo(t *testing.T) {
+	memDB := db.NewMemDB()
+	cms := store.NewCommitMultiStore(memDB)
+	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
+
+	loggingVM := loggingVM{
+		Fail:                false,
+		ShouldEmulateQuery:  true,
+		QueryGasUsage:       50,
+		RecursiveQueryDepth: 4,
+	}
+
+	testGasRecorder := &testGasProcessor{}
+	gasTrackingVm := TrackingWasmerEngine{vm: &loggingVM, gasProcessor: testGasRecorder}
+
+	testQuerier := testQuerier{
+		Ctx: emptyContext,
+		Vm:  &gasTrackingVm,
+	}
+	testQuerier.Ctx = emptyContext
+
+	_, gasUsed, err := gasTrackingVm.Sudo(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		[]byte{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Instantiation should succeed")
+
+	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	for i, record := range testQuerier.GasUsed {
+		require.Equal(t, loggingVM.GasUsed[i], record)
+		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationSudo,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	_, gasUsed, err = gasTrackingVm.Sudo(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		[]byte{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationSudo,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+}
+
+func TestGasTrackingVMReply(t *testing.T) {
+	memDB := db.NewMemDB()
+	cms := store.NewCommitMultiStore(memDB)
+	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
+
+	loggingVM := loggingVM{
+		Fail:                false,
+		ShouldEmulateQuery:  true,
+		QueryGasUsage:       50,
+		RecursiveQueryDepth: 4,
+	}
+
+	testGasRecorder := &testGasProcessor{}
+	gasTrackingVm := TrackingWasmerEngine{vm: &loggingVM, gasProcessor: testGasRecorder}
+
+	testQuerier := testQuerier{
+		Ctx: emptyContext,
+		Vm:  &gasTrackingVm,
+	}
+	testQuerier.Ctx = emptyContext
+
+	_, gasUsed, err := gasTrackingVm.Reply(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.Reply{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Instantiation should succeed")
+
+	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	for i, record := range testQuerier.GasUsed {
+		require.Equal(t, loggingVM.GasUsed[i], record)
+		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationReply,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	_, gasUsed, err = gasTrackingVm.Reply(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.Reply{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationReply,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+}
+
+func TestGasTrackingVMIBCChannelOpen(t *testing.T) {
+	memDB := db.NewMemDB()
+	cms := store.NewCommitMultiStore(memDB)
+	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
+
+	loggingVM := loggingVM{
+		Fail:                false,
+		ShouldEmulateQuery:  true,
+		QueryGasUsage:       50,
+		RecursiveQueryDepth: 4,
+	}
+
+	testGasRecorder := &testGasProcessor{}
+	gasTrackingVm := TrackingWasmerEngine{vm: &loggingVM, gasProcessor: testGasRecorder}
+
+	testQuerier := testQuerier{
+		Ctx: emptyContext,
+		Vm:  &gasTrackingVm,
+	}
+	testQuerier.Ctx = emptyContext
+
+	gasUsed, err := gasTrackingVm.IBCChannelOpen(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCChannelOpenMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Instantiation should succeed")
+
+	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	for i, record := range testQuerier.GasUsed {
+		require.Equal(t, loggingVM.GasUsed[i], record)
+		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcChannelOpen,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	gasUsed, err = gasTrackingVm.IBCChannelOpen(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCChannelOpenMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcChannelOpen,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+}
+
+func TestGasTrackingVMIBCChannelConnect(t *testing.T) {
+	memDB := db.NewMemDB()
+	cms := store.NewCommitMultiStore(memDB)
+	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
+
+	loggingVM := loggingVM{
+		Fail:                false,
+		ShouldEmulateQuery:  true,
+		QueryGasUsage:       50,
+		RecursiveQueryDepth: 4,
+	}
+
+	testGasRecorder := &testGasProcessor{}
+	gasTrackingVm := TrackingWasmerEngine{vm: &loggingVM, gasProcessor: testGasRecorder}
+
+	testQuerier := testQuerier{
+		Ctx: emptyContext,
+		Vm:  &gasTrackingVm,
+	}
+	testQuerier.Ctx = emptyContext
+
+	_, gasUsed, err := gasTrackingVm.IBCChannelConnect(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCChannelConnectMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Instantiation should succeed")
+
+	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	for i, record := range testQuerier.GasUsed {
+		require.Equal(t, loggingVM.GasUsed[i], record)
+		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcChannelConnect,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	_, gasUsed, err = gasTrackingVm.IBCChannelConnect(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCChannelConnectMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcChannelConnect,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+}
+
+func TestGasTrackingVMIBCChannelClose(t *testing.T) {
+	memDB := db.NewMemDB()
+	cms := store.NewCommitMultiStore(memDB)
+	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
+
+	loggingVM := loggingVM{
+		Fail:                false,
+		ShouldEmulateQuery:  true,
+		QueryGasUsage:       50,
+		RecursiveQueryDepth: 4,
+	}
+
+	testGasRecorder := &testGasProcessor{}
+	gasTrackingVm := TrackingWasmerEngine{vm: &loggingVM, gasProcessor: testGasRecorder}
+
+	testQuerier := testQuerier{
+		Ctx: emptyContext,
+		Vm:  &gasTrackingVm,
+	}
+	testQuerier.Ctx = emptyContext
+
+	_, gasUsed, err := gasTrackingVm.IBCChannelClose(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCChannelCloseMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Instantiation should succeed")
+
+	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	for i, record := range testQuerier.GasUsed {
+		require.Equal(t, loggingVM.GasUsed[i], record)
+		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcChannelClose,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	_, gasUsed, err = gasTrackingVm.IBCChannelClose(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCChannelCloseMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcChannelClose,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+}
+
+func TestGasTrackingVMIBCPacketReceive(t *testing.T) {
+	memDB := db.NewMemDB()
+	cms := store.NewCommitMultiStore(memDB)
+	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
+
+	loggingVM := loggingVM{
+		Fail:                false,
+		ShouldEmulateQuery:  true,
+		QueryGasUsage:       50,
+		RecursiveQueryDepth: 4,
+	}
+
+	testGasRecorder := &testGasProcessor{}
+	gasTrackingVm := TrackingWasmerEngine{vm: &loggingVM, gasProcessor: testGasRecorder}
+
+	testQuerier := testQuerier{
+		Ctx: emptyContext,
+		Vm:  &gasTrackingVm,
+	}
+	testQuerier.Ctx = emptyContext
+
+	_, gasUsed, err := gasTrackingVm.IBCPacketReceive(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCPacketReceiveMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Instantiation should succeed")
+
+	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	for i, record := range testQuerier.GasUsed {
+		require.Equal(t, loggingVM.GasUsed[i], record)
+		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcPacketReceive,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	_, gasUsed, err = gasTrackingVm.IBCPacketReceive(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCPacketReceiveMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcPacketReceive,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+}
+
+func TestGasTrackingVMIBCPacketAck(t *testing.T) {
+	memDB := db.NewMemDB()
+	cms := store.NewCommitMultiStore(memDB)
+	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
+
+	loggingVM := loggingVM{
+		Fail:                false,
+		ShouldEmulateQuery:  true,
+		QueryGasUsage:       50,
+		RecursiveQueryDepth: 4,
+	}
+
+	testGasRecorder := &testGasProcessor{}
+	gasTrackingVm := TrackingWasmerEngine{vm: &loggingVM, gasProcessor: testGasRecorder}
+
+	testQuerier := testQuerier{
+		Ctx: emptyContext,
+		Vm:  &gasTrackingVm,
+	}
+	testQuerier.Ctx = emptyContext
+
+	_, gasUsed, err := gasTrackingVm.IBCPacketAck(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCPacketAckMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Instantiation should succeed")
+
+	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	for i, record := range testQuerier.GasUsed {
+		require.Equal(t, loggingVM.GasUsed[i], record)
+		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcPacketAck,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	_, gasUsed, err = gasTrackingVm.IBCPacketAck(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCPacketAckMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcPacketAck,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+}
+
+func TestGasTrackingVMIBCPacketTimeout(t *testing.T) {
+	memDB := db.NewMemDB()
+	cms := store.NewCommitMultiStore(memDB)
+	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
+
+	loggingVM := loggingVM{
+		Fail:                false,
+		ShouldEmulateQuery:  true,
+		QueryGasUsage:       50,
+		RecursiveQueryDepth: 4,
+	}
+
+	testGasRecorder := &testGasProcessor{}
+	gasTrackingVm := TrackingWasmerEngine{vm: &loggingVM, gasProcessor: testGasRecorder}
+
+	testQuerier := testQuerier{
+		Ctx: emptyContext,
+		Vm:  &gasTrackingVm,
+	}
+	testQuerier.Ctx = emptyContext
+
+	_, gasUsed, err := gasTrackingVm.IBCPacketTimeout(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCPacketTimeoutMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Instantiation should succeed")
+
+	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	for i, record := range testQuerier.GasUsed {
+		require.Equal(t, loggingVM.GasUsed[i], record)
+		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+	}
+
+	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcPacketTimeout,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
+
+	loggingVM.Reset()
+	testQuerier.GasUsed = nil
+	testGasRecorder.ingestedRecords = nil
+
+	loggingVM.ShouldEmulateQuery = false
+
+	_, gasUsed, err = gasTrackingVm.IBCPacketTimeout(
+		emptyContext,
+		cosmwasm.Checksum{},
+		wasmvmtypes.Env{Contract: wasmvmtypes.ContractInfo{Address: "1"}},
+		wasmvmtypes.IBCPacketTimeoutMsg{},
+		cosmwasm.KVStore(store.NewCommitMultiStore(db.NewMemDB()).GetCommitKVStore(stTypes.NewKVStoreKey("test"))),
+		cosmwasm.GoAPI{},
+		&testQuerier,
+		sdk.NewInfiniteGasMeter(),
+		50,
+		wasmvmtypes.UFraction{},
+	)
+
+	require.NoError(t, err, "Query should succeed")
+
+	require.Equal(t, 1, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
+	require.Equal(t, 0, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
+
+	require.Equal(t, 1, len(testGasRecorder.ingestedRecords), "There should be proper number of gas records")
+
+	require.Equal(t, ContractGasRecord{
+		OperationId:     ContractOperationIbcPacketTimeout,
+		ContractAddress: "1",
+		GasConsumed:     gasUsed,
+	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
 }
