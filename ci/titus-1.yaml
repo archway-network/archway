@@ -5,6 +5,7 @@ metadata:
   namespace: archway
 spec:
   config:
+    resetDataOnImageUpgrade: true
     nodes:
       configOverride:
         config:
