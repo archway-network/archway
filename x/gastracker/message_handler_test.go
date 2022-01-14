@@ -492,7 +492,7 @@ func TestMessageHandlerSuccessfulInstantiation1(t *testing.T) {
 
 	loggingGasMeter.ClearLogs()
 
-	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	blockGasTracking, err := keeper.GetCurrentBlockGasTracking(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, len(blockGasTracking.TxTrackingInfos), 1, "We should have at least one tx tracking info")
 
@@ -590,7 +590,7 @@ func TestMessageHandlerSuccessfulInstantiation2(t *testing.T) {
 
 	loggingGasMeter.ClearLogs()
 
-	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	blockGasTracking, err := keeper.GetCurrentBlockGasTracking(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, len(blockGasTracking.TxTrackingInfos), 1, "We should have at least one tx tracking info")
 
@@ -696,7 +696,7 @@ func TestMessageHandlerSuccessfulExecution(t *testing.T) {
 
 	loggingGasMeter.ClearLogs()
 
-	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	blockGasTracking, err := keeper.GetCurrentBlockGasTracking(ctx)
 	require.NoError(t, err)
 	require.Equal(t, len(blockGasTracking.TxTrackingInfos), 1, "We should have at least one tx tracking info")
 
@@ -796,7 +796,7 @@ func TestMessageHandlerSuccessfulInstantiation3(t *testing.T) {
 
 	loggingGasMeter.ClearLogs()
 
-	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	blockGasTracking, err := keeper.GetCurrentBlockGasTracking(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, len(blockGasTracking.TxTrackingInfos), 1, "We should have at least one tx tracking info")
 
@@ -893,7 +893,7 @@ func TestMessageHandlerSuccessfulInstantiation4(t *testing.T) {
 
 	loggingGasMeter.ClearLogs()
 
-	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	blockGasTracking, err := keeper.GetCurrentBlockGasTracking(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, len(blockGasTracking.TxTrackingInfos), 1, "We should have at least one tx tracking info")
 

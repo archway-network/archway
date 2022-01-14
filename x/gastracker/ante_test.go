@@ -38,7 +38,6 @@ func (d dummyTx) FeeGranter() sdk.AccAddress {
 }
 
 type InvalidTx struct {
-
 }
 
 func (i InvalidTx) GetMsgs() []sdk.Msg {
@@ -91,7 +90,6 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{})
 	assert.NoError(t, err, "New block gas tracking should succeed")
 
-
 	_, err = testTxGasTrackingDecorator.AnteHandle(ctx, testTx, false, dummyNextAnteHandler)
 	assert.NoError(
 		t,
@@ -99,13 +97,12 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 		"Gastracking ante handler should not return an error",
 	)
 
-	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	currentBlockTrackingInfo, err := keeper.GetCurrentBlockGasTracking(ctx)
 	assert.NoError(t, err, "Current block tracking info should exists")
 
 	assert.Equal(t, 1, len(currentBlockTrackingInfo.TxTrackingInfos), "Only 1 txtracking info should be there")
 	assert.Equal(t, testTx.Gas, currentBlockTrackingInfo.TxTrackingInfos[0].MaxGasAllowed, "MaxGasAllowed must match the Gas field of tx")
 	assert.Equal(t, expectedDecCoins, currentBlockTrackingInfo.TxTrackingInfos[0].MaxContractRewards, "MaxContractReward must be half of the tx fees")
-
 
 	testTx = dummyTx{
 		Gas: 100,
@@ -125,7 +122,7 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 		"Gastracking ante handler should not return an error",
 	)
 
-	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTrackingInfo(ctx)
+	currentBlockTrackingInfo, err = keeper.GetCurrentBlockGasTracking(ctx)
 	assert.NoError(t, err, "Current block tracking info should exists")
 
 	assert.Equal(t, 2, len(currentBlockTrackingInfo.TxTrackingInfos), "Only 1 txtracking info should be there")

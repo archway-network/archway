@@ -128,10 +128,10 @@ func (l *loggingGasTrackerKeeper) TrackContractGasUsage(ctx sdk.Context, contrac
 	return err
 }
 
-func (l *loggingGasTrackerKeeper) GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
-	blockGasTrackingInfo, err := l.underlyingKeeper.GetCurrentBlockTrackingInfo(ctx)
+func (l *loggingGasTrackerKeeper) GetCurrentBlockGasTracking(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
+	blockGasTrackingInfo, err := l.underlyingKeeper.GetCurrentBlockGasTracking(ctx)
 	log := gasTrackerKeeperCallLog{
-		MethodName:       "GetCurrentBlockTrackingInfo",
+		MethodName:       "GetCurrentBlockGasTracking",
 		BlockGasTracking: blockGasTrackingInfo,
 		Error:            err,
 	}

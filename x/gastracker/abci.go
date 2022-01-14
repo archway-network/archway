@@ -31,36 +31,25 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 	})
 }
 
-func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
-	blockTxDetails, err := keeper.GetCurrentBlockTrackingInfo(context)
-	if err != nil {
-		switch err {
-		case gstTypes.ErrBlockTrackingDataNotFound:
-			// Only panic when there was a previous block
-			if context.BlockHeight() > 1 {
-				panic(err)
-			}
-		default:
-			panic(err)
-		}
-	}
+func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
+	currentBlockGasTracking, err := getCurrentBlockGasTracking(context, gasTrackingKeeper)
 
-	if err := keeper.TrackNewBlock(context, gstTypes.BlockGasTracking{}); err != nil {
+	if err := gasTrackingKeeper.TrackNewBlock(context, gstTypes.BlockGasTracking{}); err != nil {
 		panic(err)
 	}
 
-	if !keeper.IsGasTrackingEnabled(context) { // No rewards or calculations should take place
+	if !gasTrackingKeeper.IsGasTrackingEnabled(context) { // No rewards or calculations should take place
 		return
 	}
 	var calculatedGasConsumedInLastBlock uint64 = 0
-	for _, txTrackingInfo := range blockTxDetails.TxTrackingInfos {
+	for _, txTrackingInfo := range currentBlockGasTracking.TxTrackingInfos {
 		for _, contractTrackingInfo := range txTrackingInfo.ContractTrackingInfos {
 			calculatedGasConsumedInLastBlock += contractTrackingInfo.GasConsumed
 		}
 	}
 	var totalGasConsumedInLastBlock = sdk.NewDecFromBigInt(ConvertUint64ToBigInt(calculatedGasConsumedInLastBlock))
 
-	context.Logger().Info("Got the tracking for block", "BlockTxDetails", blockTxDetails)
+	context.Logger().Info("Got the tracking for block", "BlockTxDetails", currentBlockGasTracking)
 
 	rewardsByAddress := make(map[string]sdk.DecCoins)
 	// To enforce a map iteration order. This isn't strictly necessary but is only
@@ -75,7 +64,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 	// TODO: Take the percentage value from governance
 	contractTotalInflationRewards := sdk.NewDecCoinFromDec(totalInflationFee.Denom, totalInflationFee.Amount.MulInt64(20).QuoInt64(100))
 
-	for _, txTrackingInfo := range blockTxDetails.TxTrackingInfos {
+	for _, txTrackingInfo := range currentBlockGasTracking.TxTrackingInfos {
 		totalContractRewardsInTx := make(sdk.DecCoins, len(txTrackingInfo.MaxContractRewards))
 		for i, _ := range totalContractRewardsInTx {
 			totalContractRewardsInTx[i] = sdk.NewDecCoin(txTrackingInfo.MaxContractRewards[i].Denom, sdk.NewInt(0))
@@ -87,7 +76,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 				continue
 			}
 
-			metadata, err := keeper.GetNewContractMetadata(context, contractTrackingInfo.Address)
+			metadata, err := gasTrackingKeeper.GetNewContractMetadata(context, contractTrackingInfo.Address)
 			if err != nil {
 				panic(err)
 			}
@@ -97,7 +86,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 			gasUsageForInflationRewards := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(contractTrackingInfo.GasConsumed))
 
 			var gasUsageForUsageRewards sdk.Dec
-			if metadata.CollectPremium && keeper.IsContractPremiumEnabled(context) {
+			if metadata.CollectPremium && gasTrackingKeeper.IsContractPremiumEnabled(context) {
 				premiumGas := gasUsageForInflationRewards.Mul(sdk.NewDecFromBigInt(ConvertUint64ToBigInt(metadata.PremiumPercentageCharged))).QuoInt64(100)
 				gasUsageForUsageRewards = gasUsageForInflationRewards.Add(premiumGas)
 			} else {
@@ -105,14 +94,14 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 			}
 
 			contractRewards := make(sdk.DecCoins, 0, len(txTrackingInfo.MaxContractRewards))
-			if keeper.IsGasRebateEnabled(context) {
+			if gasTrackingKeeper.IsGasRebateEnabled(context) {
 				for _, rewardCoin := range txTrackingInfo.MaxContractRewards {
 					contractRewards = append(contractRewards, sdk.NewDecCoinFromDec(rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(decGasLimit)))
 				}
 				context.Logger().Info("Calculated contract gas rebate rewards:", "contractAddress", contractTrackingInfo.Address, "contractGasReward", contractRewards)
 			}
 
-			if keeper.IsDappInflationRewardsEnabled(context) {
+			if gasTrackingKeeper.IsDappInflationRewardsEnabled(context) {
 				contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasUsageForInflationRewards).Quo(totalGasConsumedInLastBlock))
 				context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractTrackingInfo.Address, "contractInflationReward", contractInflationReward)
 				if !contractRewards.IsZero() {
@@ -155,7 +144,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 	for _, rewardAddress := range rewardAddresses {
 		rewards := rewardsByAddress[rewardAddress]
 		// TODO: We should take leftOverThreshold from governance
-		rewardsToBePayed, err := keeper.CreateOrMergeLeftOverRewardEntry(context, rewardAddress, rewards, 1)
+		rewardsToBePayed, err := gasTrackingKeeper.CreateOrMergeLeftOverRewardEntry(context, rewardAddress, rewards, 1)
 		if err != nil {
 			panic(err)
 		}
@@ -170,7 +159,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 			panic(err)
 		}
 
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(context, rewardAddress)
+		leftOverEntry, err := gasTrackingKeeper.GetLeftOverRewardEntry(context, rewardAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -182,4 +171,20 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, keeper GasTrackin
 
 		context.Logger().Info("Reward allocation details:", "rewardPayed", rewardsToBePayed, "leftOverEntry", leftOverEntry.ContractRewards)
 	}
+}
+
+func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTrackingKeeper) (gstTypes.BlockGasTracking, error) {
+	currentBlockTrackingInfo, err := gasTrackingKeeper.GetCurrentBlockGasTracking(context)
+	if err != nil {
+		switch err {
+		case gstTypes.ErrBlockTrackingDataNotFound:
+			// Only panic when there was a previous block
+			if context.BlockHeight() > 1 {
+				panic(err)
+			}
+		default:
+			panic(err)
+		}
+	}
+	return currentBlockTrackingInfo, err
 }

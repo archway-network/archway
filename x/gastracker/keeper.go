@@ -12,7 +12,7 @@ var _ GasTrackingKeeper = &Keeper{}
 type GasTrackingKeeper interface {
 	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error
 	TrackContractGasUsage(ctx sdk.Context, contractAddress string, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error
-	GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
+	GetCurrentBlockGasTracking(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
 	GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error)
 	TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockGasTracking) error
 	AddNewContractMetadata(ctx sdk.Context, address string, metadata gstTypes.ContractInstanceMetadata) error
@@ -32,7 +32,7 @@ type GasTrackingKeeper interface {
 type Keeper struct {
 	key        sdk.StoreKey
 	appCodec   codec.Marshaler
-	paramSpace gstTypes.Subspace 
+	paramSpace gstTypes.Subspace
 }
 
 func (k *Keeper) GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error) {
@@ -185,7 +185,8 @@ func (k *Keeper) TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockG
 	return nil
 }
 
-func (k *Keeper) GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
+// GetCurrentBlockTrackingInfo return block
+func (k *Keeper) GetCurrentBlockGasTracking(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var currentBlockTracking gstTypes.BlockGasTracking

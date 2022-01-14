@@ -249,7 +249,7 @@ func TestAddContractGasUsage(t *testing.T) {
 	err = keeper.TrackContractGasUsage(ctx, "3", 3, types.ContractOperation_CONTRACT_OPERATION_SUDO, true)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
 
-	blockTrackingObj, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	blockTrackingObj, err := keeper.GetCurrentBlockGasTracking(ctx)
 	require.NoError(t, err, "We should be able to get block tracking object")
 	require.Equal(t, 2, len(blockTrackingObj.TxTrackingInfos))
 	require.Equal(t, types.TransactionTracking{
@@ -286,7 +286,7 @@ func TestAddContractGasUsage(t *testing.T) {
 	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{})
 	require.NoError(t, err, "We should be able to track new block")
 
-	blockTrackingObj, err = keeper.GetCurrentBlockTrackingInfo(ctx)
+	blockTrackingObj, err = keeper.GetCurrentBlockGasTracking(ctx)
 	require.NoError(t, err, "We should be able to get the block tracking obj")
 	// It should be empty
 	require.Equal(t, types.BlockGasTracking{}, blockTrackingObj)
@@ -308,7 +308,7 @@ func TestBlockTrackingReadWrite(t *testing.T) {
 	err := keeper.TrackNewBlock(ctx, types.BlockGasTracking{TxTrackingInfos: []*types.TransactionTracking{&dummyTxTracking1}})
 	require.NoError(t, err, "We should be able to track new block")
 
-	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	currentBlockTrackingInfo, err := keeper.GetCurrentBlockGasTracking(ctx)
 	require.NoError(t, err, "We should be able to get current block tracking")
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
 	require.Equal(t, dummyTxTracking1, *currentBlockTrackingInfo.TxTrackingInfos[0])
@@ -316,7 +316,7 @@ func TestBlockTrackingReadWrite(t *testing.T) {
 	err = keeper.TrackNewBlock(ctx, types.BlockGasTracking{TxTrackingInfos: []*types.TransactionTracking{&dummyTxTracking2}})
 	require.NoError(t, err, "We should be able to track new block in any case")
 
-	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTrackingInfo(ctx)
+	currentBlockTrackingInfo, err = keeper.GetCurrentBlockGasTracking(ctx)
 	require.NoError(t, err, "We should be able to get current block")
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
 	require.Equal(t, dummyTxTracking2, *currentBlockTrackingInfo.TxTrackingInfos[0])
