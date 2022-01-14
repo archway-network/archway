@@ -34,6 +34,7 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
 	currentBlockGasTracking, err := getCurrentBlockGasTracking(context, gasTrackingKeeper)
 
+	// TODO is tracking an empty block gas tracking.
 	if err := gasTrackingKeeper.TrackNewBlock(context, gstTypes.BlockGasTracking{}); err != nil {
 		panic(err)
 	}
@@ -41,15 +42,10 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	if !gasTrackingKeeper.IsGasTrackingEnabled(context) { // No rewards or calculations should take place
 		return
 	}
-	var calculatedGasConsumedInLastBlock uint64 = 0
-	for _, txTrackingInfo := range currentBlockGasTracking.TxTrackingInfos {
-		for _, contractTrackingInfo := range txTrackingInfo.ContractTrackingInfos {
-			calculatedGasConsumedInLastBlock += contractTrackingInfo.GasConsumed
-		}
-	}
-	var totalGasConsumedInLastBlock = sdk.NewDecFromBigInt(ConvertUint64ToBigInt(calculatedGasConsumedInLastBlock))
 
 	context.Logger().Info("Got the tracking for block", "BlockTxDetails", currentBlockGasTracking)
+
+	gasConsumedInLastBlock := getGasConsumedInLastBlock(currentBlockGasTracking)
 
 	rewardsByAddress := make(map[string]sdk.DecCoins)
 	// To enforce a map iteration order. This isn't strictly necessary but is only
@@ -102,7 +98,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 			}
 
 			if gasTrackingKeeper.IsDappInflationRewardsEnabled(context) {
-				contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasUsageForInflationRewards).Quo(totalGasConsumedInLastBlock))
+				contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasUsageForInflationRewards).Quo(gasConsumedInLastBlock))
 				context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractTrackingInfo.Address, "contractInflationReward", contractInflationReward)
 				if !contractRewards.IsZero() {
 					contractRewards = contractRewards.Add(contractInflationReward)
@@ -187,4 +183,15 @@ func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTracki
 		}
 	}
 	return currentBlockTrackingInfo, err
+}
+
+func getGasConsumedInLastBlock(currentBlockGasTracking gstTypes.BlockGasTracking) sdk.Dec {
+	var calculatedGasConsumedInLastBlock uint64 = 0
+	for _, txTrackingInfo := range currentBlockGasTracking.TxTrackingInfos {
+		for _, contractTrackingInfo := range txTrackingInfo.ContractTrackingInfos {
+			calculatedGasConsumedInLastBlock += contractTrackingInfo.GasConsumed
+		}
+	}
+
+	return sdk.NewDecFromBigInt(ConvertUint64ToBigInt(calculatedGasConsumedInLastBlock))
 }

@@ -182,10 +182,11 @@ func (k *Keeper) TrackNewBlock(ctx sdk.Context, blockGasTracking gstTypes.BlockG
 		return err
 	}
 	gstKvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
+
 	return nil
 }
 
-// GetCurrentBlockTrackingInfo return block
+// GetCurrentBlockGasTracking return block gas tracking for current block.
 func (k *Keeper) GetCurrentBlockGasTracking(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
