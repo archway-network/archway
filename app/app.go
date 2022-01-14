@@ -371,7 +371,9 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 		panic(err)
 	}
 	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
-	wasmOpts = append(wasmOpts, keeper.WithWasmEngine(trackingWasmVm))
+
+	defaultGasRegister := keeper.NewDefaultWasmGasRegister()
+	wasmOpts = append(wasmOpts, keeper.WithWasmEngine(trackingWasmVm), keeper.WithGasRegister(defaultGasRegister))
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
@@ -395,7 +397,13 @@ func New(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 		wasmOpts...,
 	)
 
-	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(keys[gastracker.StoreKey], app.appCodec, app.getSubspace(gstTypes.DefaultParamSpace), app.wasmKeeper)
+	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(
+		keys[gastracker.StoreKey],
+		app.appCodec,
+		app.getSubspace(gstTypes.DefaultParamSpace),
+		app.wasmKeeper,
+		defaultGasRegister,
+	)
 
 	// Setting gas recorder here to avoid cyclic loop
 	trackingWasmVm.SetGasRecorder(app.gastrackingKeeper)

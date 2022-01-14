@@ -1,6 +1,7 @@
 package gastracker
 
 import (
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -41,6 +42,17 @@ type Keeper struct {
 	appCodec         codec.Marshaler
 	paramSpace       gstTypes.Subspace
 	contractInfoView ContractInfoView
+	wasmGasRegister  wasmkeeper.GasRegister
+}
+
+func NewGasTrackingKeeper(
+	key sdk.StoreKey,
+	appCodec codec.Marshaler,
+	paramSpace paramsTypes.Subspace,
+	contractInfoView ContractInfoView,
+	gasRegister wasmkeeper.GasRegister,
+) *Keeper {
+	return &Keeper{key: key, appCodec: appCodec, paramSpace: paramSpace, contractInfoView: contractInfoView, wasmGasRegister: gasRegister}
 }
 
 func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error {
@@ -99,7 +111,7 @@ func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGa
 			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_UNSPECIFIED
 		}
 
-		if err := k.TrackContractGasUsage(ctx, contractAddress, record.GasConsumed, operation, !contractMetadata.GasRebateToUser); err != nil {
+		if err := k.TrackContractGasUsage(ctx, contractAddress, k.wasmGasRegister.FromWasmVMGas(record.GasConsumed), operation, !contractMetadata.GasRebateToUser); err != nil {
 			return err
 		}
 	}
@@ -322,10 +334,6 @@ func (k *Keeper) SetContractMetadata(ctx sdk.Context, sender sdk.AccAddress, add
 
 	gstKvStore.Set(gstTypes.GetContractInstanceMetadataKey(address.String()), bz)
 	return nil
-}
-
-func NewGasTrackingKeeper(key sdk.StoreKey, appCodec codec.Marshaler, paramSpace paramsTypes.Subspace, contractInfoView ContractInfoView) *Keeper {
-	return &Keeper{key: key, appCodec: appCodec, paramSpace: paramSpace, contractInfoView: contractInfoView}
 }
 
 func (k *Keeper) TrackNewBlock(ctx sdk.Context) error {
