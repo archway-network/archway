@@ -34,7 +34,7 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
 	currentBlockGasTracking, err := getCurrentBlockGasTracking(context, gasTrackingKeeper)
 
-	// TODO is tracking an empty block gas tracking.
+	// TODO is tracking an empty block gas tracking mandatory?
 	if err := gasTrackingKeeper.TrackNewBlock(context, gstTypes.BlockGasTracking{}); err != nil {
 		panic(err)
 	}
@@ -42,7 +42,6 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	if !gasTrackingKeeper.IsGasTrackingEnabled(context) { // No rewards or calculations should take place
 		return
 	}
-
 	context.Logger().Info("Got the tracking for block", "BlockTxDetails", currentBlockGasTracking)
 
 	gasConsumedInLastBlock := getGasConsumedInLastBlock(currentBlockGasTracking)
@@ -57,10 +56,12 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	minter := mintParamsKeeper.GetMinter(context)
 	params := mintParamsKeeper.GetParams(context)
 	totalInflationFee := sdk.NewDecCoinFromCoin(minter.BlockProvision(params))
+
 	// TODO: Take the percentage value from governance
 	contractTotalInflationRewards := sdk.NewDecCoinFromDec(totalInflationFee.Denom, totalInflationFee.Amount.MulInt64(20).QuoInt64(100))
 
 	for _, txTrackingInfo := range currentBlockGasTracking.TxTrackingInfos {
+		// We generate empty coins based on the fees coins.
 		totalContractRewardsInTx := make(sdk.DecCoins, len(txTrackingInfo.MaxContractRewards))
 		for i, _ := range totalContractRewardsInTx {
 			totalContractRewardsInTx[i] = sdk.NewDecCoin(txTrackingInfo.MaxContractRewards[i].Denom, sdk.NewInt(0))
@@ -72,21 +73,21 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 				continue
 			}
 
+			decGasLimit := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(txTrackingInfo.MaxGasAllowed))
+			gasUsageForInflationRewards := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(contractTrackingInfo.GasConsumed))
+
 			metadata, err := gasTrackingKeeper.GetNewContractMetadata(context, contractTrackingInfo.Address)
 			if err != nil {
 				panic(err)
 			}
 			context.Logger().Info("Got the metadata", "Metadata", metadata)
 
-			decGasLimit := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(txTrackingInfo.MaxGasAllowed))
-			gasUsageForInflationRewards := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(contractTrackingInfo.GasConsumed))
-
-			var gasUsageForUsageRewards sdk.Dec
+			var gasUsageForUsageRewards = gasUsageForInflationRewards
 			if metadata.CollectPremium && gasTrackingKeeper.IsContractPremiumEnabled(context) {
-				premiumGas := gasUsageForInflationRewards.Mul(sdk.NewDecFromBigInt(ConvertUint64ToBigInt(metadata.PremiumPercentageCharged))).QuoInt64(100)
-				gasUsageForUsageRewards = gasUsageForInflationRewards.Add(premiumGas)
-			} else {
-				gasUsageForUsageRewards = gasUsageForInflationRewards
+				premiumGas := gasUsageForInflationRewards.
+					Mul(sdk.NewDecFromBigInt(ConvertUint64ToBigInt(metadata.PremiumPercentageCharged))).
+					QuoInt64(100)
+				gasUsageForUsageRewards = gasUsageForUsageRewards.Add(premiumGas)
 			}
 
 			contractRewards := make(sdk.DecCoins, 0, len(txTrackingInfo.MaxContractRewards))
