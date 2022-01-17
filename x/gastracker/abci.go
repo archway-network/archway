@@ -52,8 +52,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	gasConsumedInLastBlock := getGasConsumedInLastBlock(lastBlockGasTracking)
 	contractTotalInflationRewards := getContractInflationRewardsPerBlock(context, mintParamsKeeper) // 20%
 
-	totalContractRewardsPerBlock := getContractRewardsPerBlock(
-		context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards, gasConsumedInLastBlock, rewardsByAddress, rewardAddresses)
+	totalContractRewardsPerBlock, rewardAddresses := getContractRewardsPerBlock(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards, gasConsumedInLastBlock, rewardsByAddress, rewardAddresses)
 
 	// Either the tx did not collect any fee or no contracts were executed
 	// So, no need to continue execution
@@ -103,15 +102,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	}
 }
 
-func getContractRewardsPerBlock(
-	context sdk.Context,
-	lastBlockGasTracking gstTypes.BlockGasTracking,
-	gasTrackingKeeper GasTrackingKeeper,
-	contractTotalInflationRewards sdk.DecCoin,
-	gasConsumedInLastBlock sdk.Dec,
-	rewardsByAddress map[string]sdk.DecCoins,
-	rewardAddresses []string,
-) sdk.DecCoins {
+func getContractRewardsPerBlock(context sdk.Context, lastBlockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin, gasConsumedInLastBlock sdk.Dec, rewardsByAddress map[string]sdk.DecCoins, rewardAddresses []string) (sdk.DecCoins, []string) {
 	totalContractRewardsPerBlock := make(sdk.DecCoins, 0)
 	for _, txTrackingInfo := range lastBlockGasTracking.TxTrackingInfos {
 		// We generate empty coins based on the fees coins.
@@ -175,8 +166,7 @@ func getContractRewardsPerBlock(
 
 		totalContractRewardsPerBlock = totalContractRewardsPerBlock.Add(totalContractRewardsInTx...)
 	}
-
-	return totalContractRewardsPerBlock
+	return totalContractRewardsPerBlock, rewardAddresses
 }
 
 // getContractInflationRewardsPerBlock returns the percentage of the block rewards that are dedicated to contracts
