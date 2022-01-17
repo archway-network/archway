@@ -123,16 +123,15 @@ func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByA
 	}
 }
 
-func getContractRewardsPerBlock(context sdk.Context, lastBlockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin) (sdk.DecCoins, []string, map[string]sdk.DecCoins) {
+func getContractRewardsPerBlock(context sdk.Context, blockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin) (sdk.DecCoins, []string, map[string]sdk.DecCoins) {
 	// To enforce a map iteration order. This isn't strictly necessary but is only
 	// done to make this code more deterministic.
 	rewardAddresses := make([]string, 0)
 	rewardsByAddress := make(map[string]sdk.DecCoins)
-
-	gasConsumedInLastBlock := getGasConsumedInLastBlock(lastBlockGasTracking)
+	gasConsumedInLastBlock := blockGasTracking.GetGasConsumed()
 
 	totalContractRewardsPerBlock := make(sdk.DecCoins, 0)
-	for _, txTrackingInfo := range lastBlockGasTracking.TxTrackingInfos {
+	for _, txTrackingInfo := range blockGasTracking.TxTrackingInfos {
 		// We generate empty coins based on the fees coins.
 		totalContractRewardsInTx := make(sdk.DecCoins, len(txTrackingInfo.MaxContractRewards))
 		for i, _ := range totalContractRewardsInTx {
@@ -215,15 +214,4 @@ func getInflationRatePerBlock(context sdk.Context, mintParamsKeeper MintParamsKe
 	totalInflationFee := sdk.NewDecCoinFromCoin(minter.BlockProvision(params))
 
 	return totalInflationFee
-}
-
-func getGasConsumedInLastBlock(currentBlockGasTracking gstTypes.BlockGasTracking) sdk.Dec {
-	var calculatedGasConsumedInLastBlock uint64 = 0
-	for _, txTrackingInfo := range currentBlockGasTracking.TxTrackingInfos {
-		for _, contractTrackingInfo := range txTrackingInfo.ContractTrackingInfos {
-			calculatedGasConsumedInLastBlock += contractTrackingInfo.GasConsumed
-		}
-	}
-
-	return sdk.NewDecFromBigInt(ConvertUint64ToBigInt(calculatedGasConsumedInLastBlock))
 }
