@@ -44,17 +44,13 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	}
 	context.Logger().Info("Got the tracking for block", "BlockTxDetails", lastBlockGasTracking)
 
-	gasConsumedInLastBlock := getGasConsumedInLastBlock(lastBlockGasTracking)
-
-	rewardsByAddress := make(map[string]sdk.DecCoins)
 	// To enforce a map iteration order. This isn't strictly necessary but is only
 	// done to make this code more deterministic.
 	rewardAddresses := make([]string, 0)
+	rewardsByAddress := make(map[string]sdk.DecCoins)
 
-	totalInflationRatePerBlock := getInflationRatePerBlock(context, mintParamsKeeper)
-
-	// TODO: Take the percentage value from governance
-	contractTotalInflationRewards := sdk.NewDecCoinFromDec(totalInflationRatePerBlock.Denom, totalInflationRatePerBlock.Amount.MulInt64(20).QuoInt64(100))
+	gasConsumedInLastBlock := getGasConsumedInLastBlock(lastBlockGasTracking)
+	contractTotalInflationRewards := getContractInflationRewardsPerBlock(context, mintParamsKeeper)
 
 	totalContractRewardsPerBlock := make(sdk.DecCoins, 0)
 	for _, txTrackingInfo := range lastBlockGasTracking.TxTrackingInfos {
@@ -168,6 +164,16 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	}
 }
 
+// getContractInflationRewardsPerBlock returns the percentage of the block rewards that are dedicated to contracts
+// TODO now is 20% of the block rewards hardcoded.
+func getContractInflationRewardsPerBlock(context sdk.Context, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
+	totalInflationRatePerBlock := getInflationRatePerBlock(context, mintParamsKeeper)
+
+	// TODO: Take the percentage value from governance
+	contractTotalInflationRewards := sdk.NewDecCoinFromDec(totalInflationRatePerBlock.Denom, totalInflationRatePerBlock.Amount.MulInt64(20).QuoInt64(100))
+	return contractTotalInflationRewards
+}
+
 // getInflationRatePerBlock returns the inflation per block. (Annual Inflation / NumblocksPerYear)
 func getInflationRatePerBlock(context sdk.Context, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
 	minter := mintParamsKeeper.GetMinter(context)
@@ -190,6 +196,7 @@ func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTracki
 			panic(err)
 		}
 	}
+
 	return currentBlockTrackingInfo, err
 }
 
