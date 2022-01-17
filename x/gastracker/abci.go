@@ -90,7 +90,7 @@ func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTracki
 	return currentBlockTrackingInfo, err
 }
 
-// distributeRewards distributes the calculated rewards to all the contracts.
+// distributeRewards distributes the calculated rewards to all the contracts owners.
 func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByAddress map[string]sdk.DecCoins, gasTrackingKeeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper) {
 	for _, rewardAddress := range rewardAddresses {
 		rewards := rewardsByAddress[rewardAddress]
@@ -124,6 +124,7 @@ func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByA
 	}
 }
 
+// getContractRewardsPerBlock returns the total rewards and the rewards per contract based on the calculations.
 func getContractRewardsPerBlock(context sdk.Context, blockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin) (sdk.DecCoins, []string, map[string]sdk.DecCoins) {
 	// To enforce a map iteration order. This isn't strictly necessary but is only
 	// done to make this code more deterministic.
@@ -144,7 +145,7 @@ func getContractRewardsPerBlock(context sdk.Context, blockGasTracking gstTypes.B
 				continue
 			}
 
-			decGasLimit := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(txTrackingInfo.MaxGasAllowed))
+			maxGasAllowedInTx := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(txTrackingInfo.MaxGasAllowed))
 			gasConsumedInContract := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(contractTrackingInfo.GasConsumed))
 
 			metadata, err := gasTrackingKeeper.GetNewContractMetadata(context, contractTrackingInfo.Address)
@@ -166,7 +167,7 @@ func getContractRewardsPerBlock(context sdk.Context, blockGasTracking gstTypes.B
 			if gasTrackingKeeper.IsGasRebateEnabled(context) {
 				for _, rewardCoin := range txTrackingInfo.MaxContractRewards {
 					contractRewards = append(contractRewards, sdk.NewDecCoinFromDec(
-						rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(decGasLimit)))
+						rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(maxGasAllowedInTx)))
 				}
 				context.Logger().
 					Info("Calculated contract gas rebate rewards:",
