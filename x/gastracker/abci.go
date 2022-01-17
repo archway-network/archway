@@ -49,10 +49,9 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	rewardAddresses := make([]string, 0)
 	rewardsByAddress := make(map[string]sdk.DecCoins)
 
-	gasConsumedInLastBlock := getGasConsumedInLastBlock(lastBlockGasTracking)
 	contractTotalInflationRewards := getContractInflationRewardsPerBlock(context, mintParamsKeeper) // 20%
 
-	totalContractRewardsPerBlock, rewardAddresses := getContractRewardsPerBlock(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards, gasConsumedInLastBlock, rewardsByAddress, rewardAddresses)
+	totalContractRewardsPerBlock, rewardAddresses := getContractRewardsPerBlock(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards, rewardsByAddress, rewardAddresses)
 	// Either the tx did not collect any fee or no contracts were executed
 	// So, no need to continue execution
 	if totalContractRewardsPerBlock == nil || totalContractRewardsPerBlock.IsZero() {
@@ -105,7 +104,9 @@ func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByA
 	}
 }
 
-func getContractRewardsPerBlock(context sdk.Context, lastBlockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin, gasConsumedInLastBlock sdk.Dec, rewardsByAddress map[string]sdk.DecCoins, rewardAddresses []string) (sdk.DecCoins, []string) {
+func getContractRewardsPerBlock(context sdk.Context, lastBlockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin, rewardsByAddress map[string]sdk.DecCoins, rewardAddresses []string) (sdk.DecCoins, []string) {
+	gasConsumedInLastBlock := getGasConsumedInLastBlock(lastBlockGasTracking)
+
 	totalContractRewardsPerBlock := make(sdk.DecCoins, 0)
 	for _, txTrackingInfo := range lastBlockGasTracking.TxTrackingInfos {
 		// We generate empty coins based on the fees coins.
