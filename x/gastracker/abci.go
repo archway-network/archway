@@ -53,7 +53,6 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	contractTotalInflationRewards := getContractInflationRewardsPerBlock(context, mintParamsKeeper) // 20%
 
 	totalContractRewardsPerBlock, rewardAddresses := getContractRewardsPerBlock(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards, gasConsumedInLastBlock, rewardsByAddress, rewardAddresses)
-
 	// Either the tx did not collect any fee or no contracts were executed
 	// So, no need to continue execution
 	if totalContractRewardsPerBlock == nil || totalContractRewardsPerBlock.IsZero() {
@@ -70,6 +69,10 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 		panic(err)
 	}
 
+	distributeRewards(context, rewardAddresses, rewardsByAddress, gasTrackingKeeper, rewardTransferKeeper)
+}
+
+func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByAddress map[string]sdk.DecCoins, gasTrackingKeeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper) {
 	for _, rewardAddress := range rewardAddresses {
 		rewards := rewardsByAddress[rewardAddress]
 		// TODO: We should take leftOverThreshold from governance
