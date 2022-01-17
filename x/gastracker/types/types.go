@@ -1,9 +1,9 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"math/big"
 
-	"github.com/archway-network/archway/x/gastracker"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (b BlockGasTracking) GetGasConsumed() sdk.Dec {
@@ -14,5 +14,5 @@ func (b BlockGasTracking) GetGasConsumed() sdk.Dec {
 		}
 	}
 
-	return sdk.NewDecFromBigInt(gastracker.ConvertUint64ToBigInt(gasConsumed))
+	return sdk.NewDecFromBigInt(big.NewInt(0).SetUint64(gasConsumed))
 }
