@@ -90,6 +90,7 @@ func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTracki
 	return currentBlockTrackingInfo, err
 }
 
+// distributeRewards distributes the calculated rewards to all the contracts.
 func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByAddress map[string]sdk.DecCoins, gasTrackingKeeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper) {
 	for _, rewardAddress := range rewardAddresses {
 		rewards := rewardsByAddress[rewardAddress]
@@ -128,7 +129,6 @@ func getContractRewardsPerBlock(context sdk.Context, blockGasTracking gstTypes.B
 	// done to make this code more deterministic.
 	rewardAddresses := make([]string, 0)
 	rewardsByAddress := make(map[string]sdk.DecCoins)
-	gasConsumedInLastBlock := blockGasTracking.GetGasConsumed()
 
 	totalContractRewardsPerBlock := make(sdk.DecCoins, 0)
 	for _, txTrackingInfo := range blockGasTracking.TxTrackingInfos {
@@ -165,13 +165,16 @@ func getContractRewardsPerBlock(context sdk.Context, blockGasTracking gstTypes.B
 			contractRewards := make(sdk.DecCoins, 0, len(txTrackingInfo.MaxContractRewards))
 			if gasTrackingKeeper.IsGasRebateEnabled(context) {
 				for _, rewardCoin := range txTrackingInfo.MaxContractRewards {
-					contractRewards = append(contractRewards, sdk.NewDecCoinFromDec(rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(decGasLimit)))
+					contractRewards = append(contractRewards, sdk.NewDecCoinFromDec(
+						rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(decGasLimit)))
 				}
-				context.Logger().Info("Calculated contract gas rebate rewards:", "contractAddress", contractTrackingInfo.Address, "contractGasReward", contractRewards)
+				context.Logger().
+					Info("Calculated contract gas rebate rewards:",
+						"contractAddress", contractTrackingInfo.Address, "contractGasReward", contractRewards)
 			}
 
 			if gasTrackingKeeper.IsDappInflationRewardsEnabled(context) {
-				contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasConsumedInContract).Quo(gasConsumedInLastBlock))
+				contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasConsumedInContract).Quo(blockGasTracking.GetGasConsumed()))
 				context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractTrackingInfo.Address, "contractInflationReward", contractInflationReward)
 				if !contractRewards.IsZero() {
 					contractRewards = contractRewards.Add(contractInflationReward)
@@ -204,6 +207,7 @@ func getContractInflationRewardsPerBlock(context sdk.Context, mintParamsKeeper M
 
 	// TODO: Take the percentage value from governance
 	contractTotalInflationRewards := sdk.NewDecCoinFromDec(totalInflationRatePerBlock.Denom, totalInflationRatePerBlock.Amount.MulInt64(20).QuoInt64(100))
+
 	return contractTotalInflationRewards
 }
 
