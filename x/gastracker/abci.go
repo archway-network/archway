@@ -50,8 +50,68 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	rewardsByAddress := make(map[string]sdk.DecCoins)
 
 	gasConsumedInLastBlock := getGasConsumedInLastBlock(lastBlockGasTracking)
-	contractTotalInflationRewards := getContractInflationRewardsPerBlock(context, mintParamsKeeper)
+	contractTotalInflationRewards := getContractInflationRewardsPerBlock(context, mintParamsKeeper) // 20%
 
+	totalContractRewardsPerBlock := getContractRewardsPerBlock(
+		context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards, gasConsumedInLastBlock, rewardsByAddress, rewardAddresses)
+
+	// Either the tx did not collect any fee or no contracts were executed
+	// So, no need to continue execution
+	if totalContractRewardsPerBlock == nil || totalContractRewardsPerBlock.IsZero() {
+		return
+	}
+
+	totalFeeToBeCollected := make(sdk.Coins, len(totalContractRewardsPerBlock))
+	for i := range totalFeeToBeCollected {
+		totalFeeToBeCollected[i] = sdk.NewCoin(totalContractRewardsPerBlock[i].Denom, totalContractRewardsPerBlock[i].Amount.Ceil().RoundInt())
+	}
+
+	err = rewardTransferKeeper.SendCoinsFromModuleToModule(context, authTypes.FeeCollectorName, ContractRewardCollector, totalFeeToBeCollected)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, rewardAddress := range rewardAddresses {
+		rewards := rewardsByAddress[rewardAddress]
+		// TODO: We should take leftOverThreshold from governance
+		rewardsToBePayed, err := gasTrackingKeeper.CreateOrMergeLeftOverRewardEntry(context, rewardAddress, rewards, 1)
+		if err != nil {
+			panic(err)
+		}
+
+		transferAddr, err := sdk.AccAddressFromBech32(rewardAddress)
+		if err != nil {
+			panic(err)
+		}
+
+		err = rewardTransferKeeper.SendCoinsFromModuleToAccount(context, ContractRewardCollector, transferAddr, rewardsToBePayed)
+		if err != nil {
+			panic(err)
+		}
+
+		leftOverEntry, err := gasTrackingKeeper.GetLeftOverRewardEntry(context, rewardAddress)
+		if err != nil {
+			panic(err)
+		}
+
+		err = EmitRewardPayingEvent(context, rewardAddress, rewardsToBePayed, leftOverEntry.ContractRewards)
+		if err != nil {
+			panic(err)
+		}
+
+		context.Logger().Info("Reward allocation details:", "rewardPayed", rewardsToBePayed, "leftOverEntry", leftOverEntry.ContractRewards)
+	}
+}
+
+func getContractRewardsPerBlock(
+	context sdk.Context,
+	lastBlockGasTracking gstTypes.BlockGasTracking,
+	gasTrackingKeeper GasTrackingKeeper,
+	contractTotalInflationRewards sdk.DecCoin,
+	gasConsumedInLastBlock sdk.Dec,
+	rewardsByAddress map[string]sdk.DecCoins,
+	rewardAddresses []string,
+) sdk.DecCoins {
 	totalContractRewardsPerBlock := make(sdk.DecCoins, 0)
 	for _, txTrackingInfo := range lastBlockGasTracking.TxTrackingInfos {
 		// We generate empty coins based on the fees coins.
@@ -116,52 +176,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 		totalContractRewardsPerBlock = totalContractRewardsPerBlock.Add(totalContractRewardsInTx...)
 	}
 
-	// Either the tx did not collect any fee or no contracts were executed
-	// So, no need to continue execution
-	if totalContractRewardsPerBlock == nil || totalContractRewardsPerBlock.IsZero() {
-		return
-	}
-
-	totalFeeToBeCollected := make(sdk.Coins, len(totalContractRewardsPerBlock))
-	for i := range totalFeeToBeCollected {
-		totalFeeToBeCollected[i] = sdk.NewCoin(totalContractRewardsPerBlock[i].Denom, totalContractRewardsPerBlock[i].Amount.Ceil().RoundInt())
-	}
-
-	err = rewardTransferKeeper.SendCoinsFromModuleToModule(context, authTypes.FeeCollectorName, ContractRewardCollector, totalFeeToBeCollected)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, rewardAddress := range rewardAddresses {
-		rewards := rewardsByAddress[rewardAddress]
-		// TODO: We should take leftOverThreshold from governance
-		rewardsToBePayed, err := gasTrackingKeeper.CreateOrMergeLeftOverRewardEntry(context, rewardAddress, rewards, 1)
-		if err != nil {
-			panic(err)
-		}
-
-		transferAddr, err := sdk.AccAddressFromBech32(rewardAddress)
-		if err != nil {
-			panic(err)
-		}
-
-		err = rewardTransferKeeper.SendCoinsFromModuleToAccount(context, ContractRewardCollector, transferAddr, rewardsToBePayed)
-		if err != nil {
-			panic(err)
-		}
-
-		leftOverEntry, err := gasTrackingKeeper.GetLeftOverRewardEntry(context, rewardAddress)
-		if err != nil {
-			panic(err)
-		}
-
-		err = EmitRewardPayingEvent(context, rewardAddress, rewardsToBePayed, leftOverEntry.ContractRewards)
-		if err != nil {
-			panic(err)
-		}
-
-		context.Logger().Info("Reward allocation details:", "rewardPayed", rewardsToBePayed, "leftOverEntry", leftOverEntry.ContractRewards)
-	}
+	return totalContractRewardsPerBlock
 }
 
 // getContractInflationRewardsPerBlock returns the percentage of the block rewards that are dedicated to contracts
