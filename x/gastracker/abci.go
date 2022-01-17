@@ -32,26 +32,16 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 }
 
 func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
-	lastBlockGasTracking, err := getCurrentBlockGasTracking(context, gasTrackingKeeper)
-
-	// TODO is tracking an empty block gas tracking mandatory?
-	if err := gasTrackingKeeper.TrackNewBlock(context, gstTypes.BlockGasTracking{}); err != nil {
-		panic(err)
-	}
+	lastBlockGasTracking, err := updateBlockGasTracking(context, gasTrackingKeeper)
 
 	if !gasTrackingKeeper.IsGasTrackingEnabled(context) { // No rewards or calculations should take place
 		return
 	}
 	context.Logger().Info("Got the tracking for block", "BlockTxDetails", lastBlockGasTracking)
 
-	// To enforce a map iteration order. This isn't strictly necessary but is only
-	// done to make this code more deterministic.
-	rewardAddresses := make([]string, 0)
-	rewardsByAddress := make(map[string]sdk.DecCoins)
+	contractTotalInflationRewards := getContractInflationRewardsPerBlock(context, mintParamsKeeper) // 20% of the rewards distributed on every block
 
-	contractTotalInflationRewards := getContractInflationRewardsPerBlock(context, mintParamsKeeper) // 20%
-
-	totalContractRewardsPerBlock, rewardAddresses := getContractRewardsPerBlock(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards, rewardsByAddress, rewardAddresses)
+	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewardsPerBlock(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
 	// Either the tx did not collect any fee or no contracts were executed
 	// So, no need to continue execution
 	if totalContractRewardsPerBlock == nil || totalContractRewardsPerBlock.IsZero() {
@@ -69,6 +59,35 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	}
 
 	distributeRewards(context, rewardAddresses, rewardsByAddress, gasTrackingKeeper, rewardTransferKeeper)
+}
+
+// updateBlockGasTracking saves the current status and returns the last blockGasTracking
+func updateBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTrackingKeeper) (gstTypes.BlockGasTracking, error) {
+	lastBlockGasTracking, err := getCurrentBlockGasTracking(context, gasTrackingKeeper)
+
+	// TODO is tracking an empty block gas tracking mandatory?
+	if err := gasTrackingKeeper.TrackNewBlock(context, gstTypes.BlockGasTracking{}); err != nil {
+		panic(err)
+	}
+	return lastBlockGasTracking, err
+}
+
+// getCurrentBlockGasTracking returns the actual block gas tracking, panics if empty and block height is bigger than one.
+func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTrackingKeeper) (gstTypes.BlockGasTracking, error) {
+	currentBlockTrackingInfo, err := gasTrackingKeeper.GetCurrentBlockGasTracking(context)
+	if err != nil {
+		switch err {
+		case gstTypes.ErrBlockTrackingDataNotFound:
+			// Only panic when there was a previous block
+			if context.BlockHeight() > 1 {
+				panic(err)
+			}
+		default:
+			panic(err)
+		}
+	}
+
+	return currentBlockTrackingInfo, err
 }
 
 func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByAddress map[string]sdk.DecCoins, gasTrackingKeeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper) {
@@ -104,7 +123,12 @@ func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByA
 	}
 }
 
-func getContractRewardsPerBlock(context sdk.Context, lastBlockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin, rewardsByAddress map[string]sdk.DecCoins, rewardAddresses []string) (sdk.DecCoins, []string) {
+func getContractRewardsPerBlock(context sdk.Context, lastBlockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin) (sdk.DecCoins, []string, map[string]sdk.DecCoins) {
+	// To enforce a map iteration order. This isn't strictly necessary but is only
+	// done to make this code more deterministic.
+	rewardAddresses := make([]string, 0)
+	rewardsByAddress := make(map[string]sdk.DecCoins)
+
 	gasConsumedInLastBlock := getGasConsumedInLastBlock(lastBlockGasTracking)
 
 	totalContractRewardsPerBlock := make(sdk.DecCoins, 0)
@@ -170,7 +194,8 @@ func getContractRewardsPerBlock(context sdk.Context, lastBlockGasTracking gstTyp
 
 		totalContractRewardsPerBlock = totalContractRewardsPerBlock.Add(totalContractRewardsInTx...)
 	}
-	return totalContractRewardsPerBlock, rewardAddresses
+
+	return totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress
 }
 
 // getContractInflationRewardsPerBlock returns the percentage of the block rewards that are dedicated to contracts
@@ -190,23 +215,6 @@ func getInflationRatePerBlock(context sdk.Context, mintParamsKeeper MintParamsKe
 	totalInflationFee := sdk.NewDecCoinFromCoin(minter.BlockProvision(params))
 
 	return totalInflationFee
-}
-
-func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTrackingKeeper) (gstTypes.BlockGasTracking, error) {
-	currentBlockTrackingInfo, err := gasTrackingKeeper.GetCurrentBlockGasTracking(context)
-	if err != nil {
-		switch err {
-		case gstTypes.ErrBlockTrackingDataNotFound:
-			// Only panic when there was a previous block
-			if context.BlockHeight() > 1 {
-				panic(err)
-			}
-		default:
-			panic(err)
-		}
-	}
-
-	return currentBlockTrackingInfo, err
 }
 
 func getGasConsumedInLastBlock(currentBlockGasTracking gstTypes.BlockGasTracking) sdk.Dec {
