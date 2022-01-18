@@ -1,6 +1,7 @@
 package gastracker
 
 import (
+	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"os"
 	"testing"
@@ -86,6 +87,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 		appCodec:         appCodec,
 		paramSpace:       &subspace,
 		contractInfoView: NewTestContractInfoView(contractAdmin.String()),
+		wasmGasRegister:  wasmKeeper.NewDefaultWasmGasRegister(),
 	}
 
 	ctx := sdk.NewContext(ms, tmproto.Header{
@@ -437,7 +439,7 @@ func TestIngestionOfGasRecords(t *testing.T) {
 		spareAddress[i] = GenerateRandomAccAddress()
 	}
 
-	ctx, keeper := CreateTestKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 
 	err := keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
@@ -451,7 +453,7 @@ func TestIngestionOfGasRecords(t *testing.T) {
 		{
 			OperationId:     wasmTypes.ContractOperationInstantiate,
 			ContractAddress: spareAddress[1].String(),
-			GasConsumed:     2,
+			GasConsumed:     keeper.wasmGasRegister.ToWasmVMGas(2),
 		},
 	})
 	require.NoError(t, err, "IngestGasRecord should be successful")
@@ -483,17 +485,17 @@ func TestIngestionOfGasRecords(t *testing.T) {
 		{
 			OperationId:     wasmTypes.ContractOperationInstantiate,
 			ContractAddress: spareAddress[1].String(),
-			GasConsumed:     1,
+			GasConsumed:     keeper.wasmGasRegister.ToWasmVMGas(1),
 		},
 		{
 			OperationId:     wasmTypes.ContractOperationIbcPacketReceive,
 			ContractAddress: spareAddress[2].String(),
-			GasConsumed:     2,
+			GasConsumed:     keeper.wasmGasRegister.ToWasmVMGas(2),
 		},
 		{
 			OperationId:     wasmTypes.ContractOperationMigrate,
 			ContractAddress: spareAddress[3].String(),
-			GasConsumed:     3,
+			GasConsumed:     keeper.wasmGasRegister.ToWasmVMGas(3),
 		},
 	})
 	require.NoError(t, err, "IngestGasRecord should be successful")
