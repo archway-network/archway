@@ -10,12 +10,14 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"math/rand"
 )
 
 var (
@@ -38,11 +40,11 @@ func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 	gstTypes.RegisterInterfaces(registry)
 }
 
-func (a AppModuleBasic) DefaultGenesis(marshaler codec.JSONMarshaler) json.RawMessage {
+func (a AppModuleBasic) DefaultGenesis(marshaler codec.JSONCodec) json.RawMessage {
 	return marshaler.MustMarshalJSON(&gstTypes.GenesisState{})
 }
 
-func (a AppModuleBasic) ValidateGenesis(marshaler codec.JSONMarshaler, config client.TxEncodingConfig, message json.RawMessage) error {
+func (a AppModuleBasic) ValidateGenesis(marshaler codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
 	return nil
 }
 
@@ -70,17 +72,46 @@ type AppModule struct {
 	mintKeeper mintkeeper.Keeper
 }
 
+func (a AppModule) GenerateGenesisState(input *module.SimulationState) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a AppModule) ConsensusVersion() uint64 {
+	return 1
+}
+
 func NewAppModule(keeper GasTrackingKeeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
 	return AppModule{keeper: keeper, bankKeeper: bk, mintKeeper: mk}
 }
 
-func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONMarshaler, message json.RawMessage) []abci.ValidatorUpdate {
+func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
 	InitParams(context, a.keeper)
 
 	return []abci.ValidatorUpdate{}
 }
 
-func (a AppModule) ExportGenesis(context sdk.Context, marshaler codec.JSONMarshaler) json.RawMessage {
+func (a AppModule) ExportGenesis(context sdk.Context, marshaler codec.JSONCodec) json.RawMessage {
 	return marshaler.MustMarshalJSON(&gstTypes.GenesisState{})
 }
 

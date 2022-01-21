@@ -2,9 +2,12 @@ package keeper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+
+	channeltypes "github.com/cosmos/ibc-go/v2/modules/core/04-channel/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -32,14 +35,8 @@ func NewQueryHandler(ctx sdk.Context, vmQueryHandler WasmVMQueryHandler, caller 
 	}
 }
 
-// -- interfaces from baseapp - so we can use the GPRQueryRouter --
-
-// GRPCQueryHandler defines a function type which handles ABCI Query requests
-// using gRPC
-type GRPCQueryHandler = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error)
-
 type GRPCQueryRouter interface {
-	Route(path string) GRPCQueryHandler
+	Route(path string) baseapp.GRPCQueryHandler
 }
 
 // -- end baseapp interfaces --
@@ -56,7 +53,14 @@ func (q QueryHandler) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) (
 	defer func() {
 		q.Ctx.GasMeter().ConsumeGas(subCtx.GasMeter().GasConsumed(), "contract sub-query")
 	}()
-	return q.Plugins.HandleQuery(subCtx, q.Caller, request)
+
+	res, err := q.Plugins.HandleQuery(subCtx, q.Caller, request)
+	// Error mapping
+	var noSuchContract *types.ErrNoSuchContract
+	if ok := errors.As(err, &noSuchContract); ok {
+		return res, wasmvmtypes.NoSuchContract{Addr: noSuchContract.Addr}
+	}
+	return res, err
 }
 
 func (q QueryHandler) GasConsumed() uint64 {
@@ -491,7 +495,7 @@ func WasmQuerier(k wasmQueryKeeper) func(ctx sdk.Context, request *wasmvmtypes.W
 			}
 			info := k.GetContractInfo(ctx, addr)
 			if info == nil {
-				return nil, wasmvmtypes.NoSuchContract{Addr: request.ContractInfo.ContractAddr}
+				return nil, &types.ErrNoSuchContract{Addr: request.ContractInfo.ContractAddr}
 			}
 
 			res := wasmvmtypes.ContractInfoResponse{

@@ -75,12 +75,12 @@ docker volume rm -f musselnet_client
 docker run --rm -it \
     -e PASSWORD=1234567890 \
     --mount type=volume,source=musselnet_client,target=/root \
-    cosmwasm/wasmd:v0.14.0 /opt/setup_wasmd.sh
+    cosmwasm/archwayd:v0.14.0 /opt/setup_wasmd.sh
 
 # enter "1234567890" when prompted
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
-    cosmwasm/wasmd:v0.14.0 wasmd keys show -a validator
+    cosmwasm/archwayd:v0.14.0 archwayd keys show -a validator
 # use the address returned above here
 CLIENT=wasm1anavj4eyxkdljp27sedrdlt9dm26c8a7a8p44l
 ```
@@ -93,17 +93,17 @@ docker volume rm -f musselnet
 # add your testing address here, so you can do something with the client
 docker run --rm -it \
     --mount type=volume,source=musselnet,target=/root \
-    cosmwasm/wasmd:v0.14.0 /opt/setup_wasmd.sh $CLIENT
+    cosmwasm/archwayd:v0.14.0 /opt/setup_wasmd.sh $CLIENT
 
 # Update the voting times in the genesis file
 docker run --rm -it \
     --mount type=volume,source=musselnet,target=/root \
-    cosmwasm/wasmd:v0.14.0 sed -ie 's/172800s/300s/' /root/.wasmd/config/genesis.json
+    cosmwasm/archwayd:v0.14.0 sed -ie 's/172800s/300s/' /root/.archwayd/config/genesis.json
 
 # start up the blockchain and all embedded servers as one process
 docker run --rm -it -p 26657:26657 -p 26656:26656 -p 1317:1317 \
     --mount type=volume,source=musselnet,target=/root \
-    cosmwasm/wasmd:v0.14.0 /opt/run_wasmd.sh
+    cosmwasm/archwayd:v0.14.0 /opt/run_wasmd.sh
 ```
 
 ## Sanity checks
@@ -118,25 +118,25 @@ RCPT=wasm1pypadqklna33nv3gl063rd8z9q8nvauaalz820
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     query bank balances $CLIENT
 
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     query bank balances $RCPT
 
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     tx send validator $RCPT 500000ucosm,600000ustake --chain-id testing
 
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     query bank balances $RCPT
 ```
 
@@ -151,7 +151,7 @@ we have > 67% of the voting power and will pass with the validator not voting.
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     query staking validators
 VALIDATOR=......
 
@@ -159,7 +159,7 @@ VALIDATOR=......
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     tx staking delegate $VALIDATOR 750000000ustake \
     --from validator --chain-id testing
 ```
@@ -179,7 +179,7 @@ you put in your handler):
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     tx gov submit-proposal software-upgrade musselnet-v2 \
     --upgrade-height=500 --deposit=10000000ustake \
     --title="Upgrade" --description="Upgrade to musselnet-v2" \
@@ -189,14 +189,14 @@ docker run --rm -it \
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     query gov proposal 1
 
 # vote for it
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     tx gov vote 1 yes \
     --from validator --chain-id testing
 
@@ -204,7 +204,7 @@ docker run --rm -it \
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     query gov votes 1
 ```
 
@@ -217,7 +217,7 @@ Now, we just wait about 5 minutes for the vote to pass, and ensure it is passed:
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    cosmwasm/wasmd:v0.14.0 wasmd \
+    cosmwasm/archwayd:v0.14.0 archwayd \
     query gov proposal 1
 ```
 
@@ -234,7 +234,7 @@ immediately fail on startup, with the same error message as above.
 ```sh
 docker run --rm -it -p 26657:26657 -p 26656:26656 -p 1317:1317 \
     --mount type=volume,source=musselnet,target=/root \
-    cosmwasm/wasmd:v0.14.0 /opt/run_wasmd.sh
+    cosmwasm/archwayd:v0.14.0 /opt/run_wasmd.sh
 ```
 
 Then, we start with the post-upgrade version and see it properly update:
@@ -242,7 +242,7 @@ Then, we start with the post-upgrade version and see it properly update:
 ```sh
 docker run --rm -it -p 26657:26657 -p 26656:26656 -p 1317:1317 \
     --mount type=volume,source=musselnet,target=/root \
-    wasmd:musselnet-v2 /opt/run_wasmd.sh
+    archwayd:musselnet-v2 /opt/run_wasmd.sh
 ```
 
 On a real network, operators will have to be awake when the upgrade plan is activated
@@ -260,18 +260,18 @@ was successful:
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    wasmd:musselnet-v2 wasmd \
+    archwayd:musselnet-v2 archwayd \
     query bank balances $CLIENT
 
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    wasmd:musselnet-v2 wasmd \
+    archwayd:musselnet-v2 archwayd \
     query bank balances $RCPT
 
 docker run --rm -it \
     --mount type=volume,source=musselnet_client,target=/root \
     --network=host \
-    wasmd:musselnet-v2 wasmd \
+    archwayd:musselnet-v2 archwayd \
     query staking delegations $CLIENT
 ```

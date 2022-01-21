@@ -1,5 +1,5 @@
-# docker build . -t cosmwasm/wasmd:latest
-# docker run --rm -it cosmwasm/wasmd:latest /bin/sh
+# docker build . -t cosmwasm/archwayd:latest
+# docker run --rm -it cosmwasm/archwayd:latest /bin/sh
 FROM golang:1.17.3-alpine AS go-builder
 
 # this comes from standard alpine nightly file

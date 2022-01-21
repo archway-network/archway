@@ -29,5 +29,5 @@ done
 ## Workraround for https://github.com/cosmos/cosmos-sdk/issues/8251
 (echo "$PASSWORD"; echo "$PASSWORD"; echo "$PASSWORD") | wasmd gentx validator "250000000$STAKE" --chain-id="$CHAIN_ID" --amount="250000000$STAKE"
 ## should be:
-# (echo "$PASSWORD"; echo "$PASSWORD"; echo "$PASSWORD") | wasmd gentx validator "250000000$STAKE" --chain-id="$CHAIN_ID"
+# (echo "$PASSWORD"; echo "$PASSWORD"; echo "$PASSWORD") | archwayd gentx validator "250000000$STAKE" --chain-id="$CHAIN_ID"
 wasmd collect-gentxs

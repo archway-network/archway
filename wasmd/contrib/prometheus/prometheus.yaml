@@ -4,7 +4,7 @@ global:
 rule_files:
 
 scrape_configs:
-- job_name: wasmd
+- job_name: archwayd
 
   scrape_interval: 5s
   static_configs:

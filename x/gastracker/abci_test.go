@@ -32,9 +32,9 @@ func GenerateRandomAccAddress() sdk.AccAddress {
 	return address
 }
 
-func CreateTestBlockEntry(ctx sdk.Context, key store.Key, appCodec codec.Marshaler, blockTracking gstTypes.BlockGasTracking) {
+func CreateTestBlockEntry(ctx sdk.Context, key store.Key, appCodec codec.Codec, blockTracking gstTypes.BlockGasTracking) {
 	kvStore := ctx.KVStore(key)
-	bz, err := appCodec.MarshalBinaryBare(&blockTracking)
+	bz, err := appCodec.Marshal(&blockTracking)
 	if err != nil {
 		panic(err)
 	}

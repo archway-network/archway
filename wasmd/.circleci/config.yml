@@ -4,7 +4,7 @@ executors:
   golang:
     docker:
       - image: circleci/golang:1.17
-    working_directory: /go/src/github.com/cosmwasm/wasmd
+    working_directory: /go/src/github.com/cosmwasm/archwayd
 
 commands:
   make:
@@ -62,7 +62,7 @@ jobs:
 
   lint:
     docker:
-      - image: golangci/golangci-lint:v1.42.1-alpine
+      - image: golangci/golangci-lint:v1.43.0
     steps:
       - checkout
       - run:
@@ -146,7 +146,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Build Docker artifact
-          command: docker build --pull -t "cosmwasm/wasmd:${CIRCLE_SHA1}" .
+          command: docker build --pull -t "cosmwasm/archwayd:${CIRCLE_SHA1}" .
       - run:
           name: Push application Docker image to docker hub
           command: |
@@ -166,7 +166,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Build Docker artifact
-          command: docker build --pull -t "cosmwasm/wasmd:${CIRCLE_TAG}" .
+          command: docker build --pull -t "cosmwasm/archwayd:${CIRCLE_TAG}" .
       - run:
           name: Push application Docker image to docker hub
           command: |
