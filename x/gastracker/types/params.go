@@ -12,11 +12,11 @@ const (
 )
 
 var (
-	KeyGasTrackingSwitch     = []byte("GasTrackingSwitch")
-	KeyDappInflationRewards  = []byte("DappInflationRewards")
-	KeyGasRebateSwitch       = []byte("GasRebateSwitch")
-	KeyGasRebateToUserSwitch = []byte("GasRebateToUserSwitch")
-	KeyContractPremiumSwitch = []byte("ContractPremiumSwitch")
+	ParamsKeyGasTrackingSwitch     = []byte("GasTrackingSwitch")
+	ParamsKeyDappInflationRewards  = []byte("DappInflationRewards")
+	ParamsKeyGasRebateSwitch       = []byte("GasRebateSwitch")
+	ParamsKeyGasRebateToUserSwitch = []byte("GasRebateToUserSwitch")
+	ParamsKeyContractPremiumSwitch = []byte("ContractPremiumSwitch")
 )
 
 type Params struct {
@@ -58,11 +58,11 @@ func (p Params) String() string {
 
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
-		paramstypes.NewParamSetPair(KeyGasTrackingSwitch, &p.GasTrackingSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(KeyDappInflationRewards, &p.GasDappInflationRewardsSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(KeyGasRebateSwitch, &p.GasRebateSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(KeyGasRebateToUserSwitch, &p.GasRebateToUserSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(KeyContractPremiumSwitch, &p.ContractPremiumSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyGasTrackingSwitch, &p.GasTrackingSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyDappInflationRewards, &p.GasDappInflationRewardsSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyGasRebateSwitch, &p.GasRebateSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyGasRebateToUserSwitch, &p.GasRebateToUserSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyContractPremiumSwitch, &p.ContractPremiumSwitch, validateSwitch),
 	}
 }
 

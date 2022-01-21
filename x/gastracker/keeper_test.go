@@ -55,11 +55,11 @@ func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
 	if !ok {
 		panic("[mock subspace]: invalid params type")
 	}
-	s.space[string(gstTypes.KeyGasTrackingSwitch)] = params.GasTrackingSwitch
-	s.space[string(gstTypes.KeyDappInflationRewards)] = params.GasDappInflationRewardsSwitch
-	s.space[string(gstTypes.KeyGasRebateSwitch)] = params.GasRebateSwitch
-	s.space[string(gstTypes.KeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
-	s.space[string(gstTypes.KeyContractPremiumSwitch)] = params.ContractPremiumSwitch
+	s.space[string(gstTypes.ParamsKeyGasTrackingSwitch)] = params.GasTrackingSwitch
+	s.space[string(gstTypes.ParamsKeyDappInflationRewards)] = params.GasDappInflationRewardsSwitch
+	s.space[string(gstTypes.ParamsKeyGasRebateSwitch)] = params.GasRebateSwitch
+	s.space[string(gstTypes.ParamsKeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
+	s.space[string(gstTypes.ParamsKeyContractPremiumSwitch)] = params.ContractPremiumSwitch
 
 }
 func (s *subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/archway-network/archway/x/gastracker/client/cli"
+	"github.com/archway-network/archway/x/gastracker/simulation"
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -73,28 +74,23 @@ type AppModule struct {
 }
 
 func (a AppModule) GenerateGenesisState(input *module.SimulationState) {
-	//TODO implement me
-	panic("implement me")
+	simulation.RandomizedGenState(input)
 }
 
 func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	//TODO implement me
-	panic("implement me")
+	return []simtypes.WeightedProposalContent{}
 }
 
 func (a AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	//TODO implement me
-	panic("implement me")
+	simulation.RandomParams(r)
 }
 
 func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
-	//TODO implement me
-	panic("implement me")
+
 }
 
 func (a AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	//TODO implement me
-	panic("implement me")
+	return []simtypes.WeightedOperation{}
 }
 
 func (a AppModule) ConsensusVersion() uint64 {
