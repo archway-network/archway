@@ -16,7 +16,7 @@ require (
 	github.com/opencontainers/runc v1.0.3 // indirect
 	github.com/prometheus/client_golang v1.12.0
 	github.com/rakyll/statik v0.1.7
-	github.com/rs/zerolog v1.26.0
+	github.com/snikch/goodman v0.0.0-20171125024755-10e37e294daa
 	github.com/spf13/cast v1.4.1
 	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
