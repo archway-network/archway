@@ -20,8 +20,8 @@ type GasTrackingKeeper interface {
 	wasmTypes.ContractGasProcessor
 
 	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error
-	GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
-	GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error)
+	GetCurrentBlockTracking(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
+	GetCurrentTxTracking(ctx sdk.Context) (gstTypes.TransactionTracking, error)
 	TrackNewBlock(ctx sdk.Context) error
 	SetContractMetadata(ctx sdk.Context, admin sdk.AccAddress, address sdk.AccAddress, metadata gstTypes.ContractInstanceMetadata) error
 	GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gstTypes.ContractInstanceMetadata, error)
@@ -157,7 +157,7 @@ func (k *Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractG
 	return updatedGas, nil
 }
 
-func (k *Keeper) GetCurrentTxTrackingInfo(ctx sdk.Context) (gstTypes.TransactionTracking, error) {
+func (k *Keeper) GetCurrentTxTracking(ctx sdk.Context) (gstTypes.TransactionTracking, error) {
 	var txTrackingInfo gstTypes.TransactionTracking
 
 	gstKvStore := ctx.KVStore(k.key)
@@ -349,7 +349,7 @@ func (k *Keeper) TrackNewBlock(ctx sdk.Context) error {
 	return nil
 }
 
-func (k *Keeper) GetCurrentBlockTrackingInfo(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
+func (k *Keeper) GetCurrentBlockTracking(ctx sdk.Context) (gstTypes.BlockGasTracking, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var currentBlockTracking gstTypes.BlockGasTracking

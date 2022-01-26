@@ -28,7 +28,7 @@ func NewLegacyQuerier(keeper GasTrackingKeeper) sdk.Querier {
 			}
 			rsp, err = keeper.GetContractMetadata(ctx, contractAddr)
 		case QueryBlockGasTracking:
-			rsp, err = keeper.GetCurrentBlockTrackingInfo(ctx)
+			rsp, err = keeper.GetCurrentBlockTracking(ctx)
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown data query endpoint")
 		}

@@ -171,7 +171,7 @@ func TestABCIPanicBehaviour(t *testing.T) {
 	// We should not have made any call to reward keeper
 	require.Zero(t, testRewardKeeper.Logs, "No logs should be there as no need to make new calls")
 	// We would have overwritten the TrackNewBlock obj
-	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	blockGasTracking, err := keeper.GetCurrentBlockTracking(ctx)
 	require.NoError(t, err, "We should be able to get new block gas tracking")
 	require.Equal(t, gstTypes.BlockGasTracking{}, blockGasTracking, "We should have overwritten block gas tracking obj")
 }

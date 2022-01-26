@@ -97,7 +97,7 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 		"Gastracking ante handler should not return an error",
 	)
 
-	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTracking(ctx)
 	assert.NoError(t, err, "Current block tracking info should exists")
 
 	assert.Equal(t, 1, len(currentBlockTrackingInfo.TxTrackingInfos), "Only 1 txtracking info should be there")
@@ -122,7 +122,7 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 		"Gastracking ante handler should not return an error",
 	)
 
-	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTrackingInfo(ctx)
+	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTracking(ctx)
 	assert.NoError(t, err, "Current block tracking info should exists")
 
 	assert.Equal(t, 2, len(currentBlockTrackingInfo.TxTrackingInfos), "Only 1 txtracking info should be there")

@@ -45,7 +45,7 @@ func (g *grpcQuerier) BlockGasTracking(ctx context.Context, request *gstTypes.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	blockGasTracking, err := g.keeper.GetCurrentBlockTrackingInfo(sdk.UnwrapSDKContext(ctx))
+	blockGasTracking, err := g.keeper.GetCurrentBlockTracking(sdk.UnwrapSDKContext(ctx))
 	if err != nil {
 		return nil, err
 	}
