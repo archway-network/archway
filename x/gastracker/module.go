@@ -68,6 +68,7 @@ func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
+	cdc        codec.Codec
 	bankKeeper bankkeeper.Keeper
 	keeper     GasTrackingKeeper
 	mintKeeper mintkeeper.Keeper
@@ -82,7 +83,7 @@ func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.
 }
 
 func (a AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	simulation.RandomParams(r)
+	return simulation.ParamChanges(r, a.cdc)
 }
 
 func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
@@ -97,8 +98,8 @@ func (a AppModule) ConsensusVersion() uint64 {
 	return 1
 }
 
-func NewAppModule(keeper GasTrackingKeeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
-	return AppModule{keeper: keeper, bankKeeper: bk, mintKeeper: mk}
+func NewAppModule(cdc codec.Codec, keeper GasTrackingKeeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
+	return AppModule{cdc: cdc, keeper: keeper, bankKeeper: bk, mintKeeper: mk}
 }
 
 func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {

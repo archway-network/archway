@@ -553,7 +553,7 @@ func NewArchwayApp(
 		ibc.NewAppModule(app.ibcKeeper),
 		params.NewAppModule(app.paramsKeeper),
 		transferModule,
-		gastracker.NewAppModule(app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
+		gastracker.NewAppModule(app.appCodec, app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
 		crisis.NewAppModule(&app.crisisKeeper, skipGenesisInvariants), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -646,7 +646,7 @@ func NewArchwayApp(
 		wasm.NewAppModule(appCodec, &app.wasmKeeper, app.stakingKeeper),
 		ibc.NewAppModule(app.ibcKeeper),
 		transferModule,
-		gastracker.NewAppModule(app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
+		gastracker.NewAppModule(app.appCodec, app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
