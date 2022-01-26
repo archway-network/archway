@@ -17,7 +17,7 @@ import (
 
 var emptyWasmOpts []wasm.Option = nil
 
-func TestWasmdExport(t *testing.T) {
+func TestArchwaydExport(t *testing.T) {
 	db := db.NewMemDB()
 	gapp := NewArchwayApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), wasm.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
 

@@ -52,6 +52,9 @@ func NewGasTrackingKeeper(
 	contractInfoView ContractInfoView,
 	gasRegister wasmkeeper.GasRegister,
 ) *Keeper {
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(gstTypes.ParamKeyTable())
+	}
 	return &Keeper{key: key, appCodec: appCodec, paramSpace: paramSpace, contractInfoView: contractInfoView, wasmGasRegister: gasRegister}
 }
 
