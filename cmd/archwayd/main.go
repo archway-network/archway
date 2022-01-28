@@ -3,14 +3,16 @@ package main
 import (
 	"os"
 
-	"github.com/archway-network/archway/app"
 	"github.com/cosmos/cosmos-sdk/server"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+
+	"github.com/archway-network/archway/app"
 )
 
 func main() {
 	rootCmd, _ := NewRootCmd()
 
-	if err := Execute(rootCmd, app.DefaultNodeHome); err != nil {
+	if err := svrcmd.Execute(rootCmd, app.DefaultNodeHome); err != nil {
 		switch e := err.(type) {
 		case server.ErrorCode:
 			os.Exit(e.Code)

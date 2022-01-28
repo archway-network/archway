@@ -10,8 +10,9 @@ BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
 
 # for dockerized protobuf tools
+DOCKER := $(shell which docker)
 BUF_IMAGE=bufbuild/buf@sha256:9dc5d6645f8f8a2d5aaafc8957fbbb5ea64eada98a84cb09654e8f49d6f73b3e
-DOCKER_BUF := docker run --rm -v $(CURDIR):/workspace --workdir /workspace $(BUF_IMAGE)
+DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(BUF_IMAGE)
 HTTPS_GIT := https://github.com/archway-network/archway.git
 
 export GO111MODULE = on
@@ -71,7 +72,7 @@ ldflags := $(strip $(ldflags))
 BUILD_FLAGS := -tags "$(build_tags_comma_sep)" -ldflags '$(ldflags)' -trimpath
 
 # The below include contains the tools and runsim targets.
-# include contrib/devtools/Makefile
+include contrib/devtools/Makefile
 
 all: install lint test
 
@@ -166,11 +167,11 @@ proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	docker run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protocgen.sh
+	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protocgen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	docker run --rm -v $(CURDIR):/workspace \
+	$(DOCKER) run --rm -v $(CURDIR):/workspace \
 	--workdir /workspace $(PROTO_FORMATTER_IMAGE) \
 	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
 
@@ -178,10 +179,10 @@ proto-swagger-gen:
 	@./scripts/protoc-swagger-gen.sh
 
 proto-lint:
-	@$(DOCKER_BUF) check lint --error-format=json
+	@$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
-	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
+	@$(DOCKER_BUF) breaking --against-input $(HTTPS_GIT)#branch=master
 
 build-docker:
 	docker build . -t archwayd:latest
@@ -192,4 +193,4 @@ localnet:
 .PHONY: all install install-debug \
 	go-mod-cache draw-deps clean build format \
 	test test-all test-build test-cover test-unit test-race \
-	test-sim-import-export build-docker localnet \
+	test-sim-import-export \

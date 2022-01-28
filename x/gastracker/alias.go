@@ -10,5 +10,8 @@ const (
 	ContractRewardCollector = types.ContractRewardCollector
 
 	GasTrackingQueryRequestMagicString = types.GasTrackingQueryRequestMagicString
-)
 
+	QuerierRoute = types.QuerierRoute
+
+	RouterKey = types.RouterKey
+)
