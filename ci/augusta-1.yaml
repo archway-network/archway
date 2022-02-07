@@ -1,0 +1,75 @@
+apiVersion: apps.starport.cloud/v1
+kind: NodeSet
+metadata:
+  name: augusta-1
+  namespace: archway
+spec:
+  app:
+    cliName: archwayd
+    daemonName: archwayd
+    name: archway
+  config:
+    nodes:
+      configOverride:
+        app:
+        - group: api
+          key: enabled-unsafe-cors
+          value:
+            bool: true
+        config:
+        - group: rpc
+          key: cors_allowed_origins
+          value:
+            stringList:
+            - '*'
+      crisisSkipAssertInvariants: false
+      startupTimeout: 2m
+    reconcilePeriod: 1h
+    resetDataOnGenesisChanges: false
+    resetDataOnImageUpgrade: false
+  expose:
+    api: true
+    apiDomain: api.augusta-1.archway.tech
+    disableBaseDomainRPC: false
+    disableTLS: false
+    domain: augusta-1.archway.tech
+    grpc: true
+    grpcDomain: grpc.augusta-1.archway.tech
+    p2p: true
+    p2pType: NodePort
+    rpc: true
+    rpcDomain: rpc.augusta-1.archway.tech
+    tlsSecretName: augusta-1-cert
+    usePaths: false
+  image:
+    imagePullPolicy: Always
+    name: gcr.io/tendermint-dev/archway
+    version: main
+  init:
+    assets:
+    - 10000000000000000000uaugust
+    bondDenom: uaugust
+    chainID: augusta-1
+    faucet:
+      creditAmount: 10000000
+      denoms:
+      - uaugust
+      domain: faucet.augusta-1.archway.tech
+      funds: 100000000000000000uaugust
+      legacySend: false
+      maxCredit: 100000000
+      replicas: 1
+    stakeAmount: 1000000uaugust
+  moniker: archway
+  persistence:
+    autoResize:
+      enabled: true
+      increment: 5G
+      threshold: 80
+    size: 20G
+  replicas: 2
+  resources:
+    restServer: {}
+    sentry: {}
+    validator: {}
+  sdkVersion: stargate
