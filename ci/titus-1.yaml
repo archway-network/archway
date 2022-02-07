@@ -30,7 +30,7 @@ spec:
     p2p: true
   image:
     name: archway-network/archwayd
-    version: titus
+    version: NODE_VERSION
     imagePullPolicy: Always
   init:
     assets:

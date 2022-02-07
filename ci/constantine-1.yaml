@@ -37,7 +37,7 @@ spec:
     usePaths: false
   image:
     name: archway-network/archwayd
-    version: constantine
+    version: NODE_VERSION
     imagePullPolicy: Always
   init:
     assets:

@@ -75,6 +75,10 @@ jobs:
       - build-docker-image
 
     steps:
+      - name: Update NODE_VERSION
+        run: |
+          sed -i -e "s|NODE_VERSION|${{ needs.build-docker-image.outputs.image-version }}|g" ci/titus-1.yaml
+
       - name: Deploy Chain
         uses: steebchen/kubectl@v2.0.0
         with:
@@ -89,6 +93,10 @@ jobs:
       - build-docker-image
 
     steps:
+      - name: Update NODE_VERSION
+        run: |
+          sed -i -e "s|NODE_VERSION|${{ needs.build-docker-image.outputs.image-version }}|g" ci/constantine-1.yaml
+
       - name: Deploy Chain
         uses: steebchen/kubectl@v2.0.0
         with:
