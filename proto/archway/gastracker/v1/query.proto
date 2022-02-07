@@ -1,0 +1,40 @@
+syntax = "proto3";
+package archway.gastracker.v1;
+
+import "gogoproto/gogo.proto";
+import "archway/gastracker/v1/types.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/archway-network/archway/x/gastracker/types";
+option (gogoproto.goproto_getters_all) = false;
+option (gogoproto.equal_all) = false;
+
+// Query service for Gas tracker
+service Query {
+  // ContractMetadata returns gastracker metadata of contract
+  rpc ContractMetadata(QueryContractMetadataRequest)
+      returns (QueryContractMetadataResponse) {
+    option (google.api.http).get =
+        "/archway/gastracker/v1/contract/metadata/{address}";
+  }
+
+  // BlockGasTracking returns block gas tracking for the latest block
+  rpc BlockGasTracking(QueryBlockGasTrackingRequest)
+      returns (QueryBlockGasTrackingResponse) {
+    option (google.api.http).get = "/archway/gastracker/v1/block_gas_tracking";
+  }
+}
+
+// Request to get the block gas tracking
+message QueryBlockGasTrackingRequest {}
+
+// Response to get the block gas tracking response
+message QueryBlockGasTrackingResponse {
+  BlockGasTracking block_gas_tracking = 1;
+}
+
+// Request to get contract metadata
+message QueryContractMetadataRequest { string address = 1; }
+
+// Response to the contract metadata query
+message QueryContractMetadataResponse { ContractInstanceMetadata metadata = 1; }

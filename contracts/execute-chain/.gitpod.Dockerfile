@@ -1,4 +1,4 @@
-### wasmd ###
+### archwayd ###
 FROM cosmwasm/wasmd:v0.18.0 as wasmd
 
 ### rust-optimizer ###

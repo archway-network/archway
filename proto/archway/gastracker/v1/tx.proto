@@ -1,0 +1,25 @@
+syntax = "proto3";
+package archway.gastracker.v1;
+
+import "gogoproto/gogo.proto";
+import "archway/gastracker/v1/types.proto";
+
+option go_package = "github.com/archway-network/archway/x/gastracker/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// Msg defines the gastracker msg service
+service Msg {
+  // SetContractMetadata to set the gas tracking metadata of contract
+  rpc SetContractMetadata(MsgSetContractMetadata)
+      returns (MsgSetContractMetadataResponse);
+}
+
+// Request to set contract metadata
+message MsgSetContractMetadata {
+  string sender = 1;
+  string contract_address = 2;
+  ContractInstanceMetadata metadata = 3;
+}
+
+// Response returned in rpc call of SetContractMetadata
+message MsgSetContractMetadataResponse {}

@@ -10,23 +10,23 @@ func (k Keeper) SetParams(ctx sdk.Context, params gstTypes.Params) {
 }
 
 func (k Keeper) IsGasTrackingEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.KeyGasTrackingSwitch, &res)
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyGasTrackingSwitch, &res)
 	return
 }
 
 func (k Keeper) IsDappInflationRewardsEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.KeyDappInflationRewards, &res)
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyDappInflationRewards, &res)
 	return
 }
 func (k Keeper) IsGasRebateEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.KeyGasRebateSwitch, &res)
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyGasRebateSwitch, &res)
 	return
 }
 func (k Keeper) IsGasRebateToUserEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.KeyGasRebateToUserSwitch, &res)
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyGasRebateToUserSwitch, &res)
 	return
 }
 func (k Keeper) IsContractPremiumEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.KeyContractPremiumSwitch, &res)
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyContractPremiumSwitch, &res)
 	return
 }

@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package archway.gastracker.v1;
+
+option go_package = "github.com/archway-network/archway/x/gastracker/types";
+
+import "cosmos/base/v1beta1/coin.proto";
+
+// Denotes which operation consumed this gas
+enum ContractOperation {
+  // Invalid or unknown operation
+  CONTRACT_OPERATION_UNSPECIFIED = 0;
+  // Initialization of the contract
+  CONTRACT_OPERATION_INSTANTIATION = 1;
+  // Execution of the contract
+  CONTRACT_OPERATION_EXECUTION = 2;
+  // Querying the contract
+  CONTRACT_OPERATION_QUERY = 3;
+  // Migrating the contract
+  CONTRACT_OPERATION_MIGRATE = 4;
+  // IBC operation
+  CONTRACT_OPERATION_IBC = 5;
+  // Sudo operation
+  CONTRACT_OPERATION_SUDO = 6;
+  // Reply operation
+  CONTRACT_OPERATION_REPLY = 7;
+}
+
+// Tracking contract gas usage and total gas consumption per transaction
+message TransactionTracking {
+  uint64 max_gas_allowed = 1;
+  repeated cosmos.base.v1beta1.DecCoin max_contract_rewards = 3;
+  repeated ContractGasTracking contract_tracking_infos = 4;
+}
+
+// Tracking contract gas usage
+message ContractGasTracking {
+  string address = 1;
+  uint64 gas_consumed = 2;
+  bool is_eligible_for_reward = 3;
+  ContractOperation operation = 4;
+}
+
+// Tracking gas consumption for all tx in a particular block
+message BlockGasTracking { repeated TransactionTracking tx_tracking_infos = 1; }
+
+// Custom Message returned by our wrapper vm
+message ContractOperationInfo {
+  uint64 gas_consumed = 1;
+  ContractOperation operation = 2;
+  // Only set in case of instantiate operation
+  string reward_address = 3;
+  // Only set in case of instantiate operation
+  bool gas_rebate_to_end_user = 4;
+  // Only set in case of instantiate operation
+  bool collect_premium = 5;
+  // Only set in case of instantiate operation
+  uint64 premium_percentage_charged = 6;
+}
+
+// Custom wrapper around Query request
+message GasTrackingQueryRequestWrapper {
+  string magic_string = 1;
+  bytes query_request = 2;
+}
+
+// Custom wrapper around Query result that also gives gas consumption
+message GasTrackingQueryResultWrapper {
+  uint64 gas_consumed = 1;
+  bytes query_response = 2;
+}
+
+// Custom wrapper around contract instantiation request
+message ContractInstantiationRequestWrapper {
+  string reward_address = 1;
+  // If set to true, user will get the gas rebate for the contract execution,
+  // otherwise developer will get some portion of fee relative to the amount of
+  // gas consumed by contract.
+  bool gas_rebate_to_user = 2;
+  // If set to true, developer will receive premium on top of the gas reward. It
+  // is a logical error to have both this and `gas_rebate_to_user` set to true.
+  bool collect_premium = 3;
+  // Percentage of premium received by developer on top of their original gas
+  // reward
+  uint64 premium_percentage_charged = 4;
+  // The `InitMsg` which will be passed to the contract during initialization
+  // call and has to be encoded with Base64.
+  string instantiation_request = 5;
+}
+
+// Contract instance metadata
+message ContractInstanceMetadata {
+  // Developer address of the contract
+  string developer_address = 1;
+  string reward_address = 2;
+  bool gas_rebate_to_user = 3;
+  // Flag to indicate whether to charge premium or not
+  bool collect_premium = 4;
+  // Percentage of gas consumed to be charged.
+  uint64 premium_percentage_charged = 5;
+}
+
+// Reward entry per beneficiary address
+message LeftOverRewardEntry {
+  repeated cosmos.base.v1beta1.DecCoin contract_rewards = 1;
+}
+
+// Event emitted when Reward is allocated
+message RewardDistributionEvent {
+  string reward_address = 1;
+  repeated cosmos.base.v1beta1.Coin contract_rewards = 2;
+  repeated cosmos.base.v1beta1.DecCoin leftover_rewards = 3;
+}
+
+// Genesis state of the Gastracker module
+message GenesisState {}

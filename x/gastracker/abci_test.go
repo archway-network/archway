@@ -2,6 +2,9 @@ package gastracker
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store"
+	"math/rand"
 	"testing"
 
 	gstTypes "github.com/archway-network/archway/x/gastracker/types"
@@ -12,11 +15,6 @@ import (
 	"github.com/tendermint/tendermint/abci/types"
 )
 
-var (
-	addrA = "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt"
-	addrB = "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk"
-)
-
 type Behaviour int
 
 const (
@@ -24,6 +22,24 @@ const (
 	Error
 	Panic
 )
+
+func GenerateRandomAccAddress() sdk.AccAddress {
+	var address sdk.AccAddress = make([]byte, 20)
+	_, err := rand.Read(address)
+	if err != nil {
+		panic(err)
+	}
+	return address
+}
+
+func CreateTestBlockEntry(ctx sdk.Context, key store.Key, appCodec codec.Codec, blockTracking gstTypes.BlockGasTracking) {
+	kvStore := ctx.KVStore(key)
+	bz, err := appCodec.Marshal(&blockTracking)
+	if err != nil {
+		panic(err)
+	}
+	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
+}
 
 type RewardTransferKeeperCallLogs struct {
 	Method          string
@@ -134,7 +150,7 @@ func disableGasRebateToUser(params gstTypes.Params) gstTypes.Params {
 
 // Test the conditions under which BeginBlocker and EndBlocker should panic or not panic
 func TestABCIPanicBehaviour(t *testing.T) {
-	ctx, keeper := CreateTestKeeperAndContext(t)
+	ctx, keeper := CreateTestKeeperAndContext(t, sdk.AccAddress{})
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount("archway", "archway")
@@ -155,7 +171,7 @@ func TestABCIPanicBehaviour(t *testing.T) {
 	// We should not have made any call to reward keeper
 	require.Zero(t, testRewardKeeper.Logs, "No logs should be there as no need to make new calls")
 	// We would have overwritten the TrackNewBlock obj
-	blockGasTracking, err := keeper.GetCurrentBlockTrackingInfo(ctx)
+	blockGasTracking, err := keeper.GetCurrentBlockTracking(ctx)
 	require.NoError(t, err, "We should be able to get new block gas tracking")
 	require.Equal(t, gstTypes.BlockGasTracking{}, blockGasTracking, "We should have overwritten block gas tracking obj")
 }
@@ -195,6 +211,14 @@ func TestABCIPanicBehaviour(t *testing.T) {
 // 109test to "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk" and left over rewards should be 0.8test,0.0666666test1 and 0.65test and 0.68333325test1
 // respectively.
 func TestRewardCalculation(t *testing.T) {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
 	type expect struct {
 		rewardsA []sdk.DecCoin
 		rewardsB []sdk.DecCoin
@@ -212,16 +236,13 @@ func TestRewardCalculation(t *testing.T) {
 		},
 		logs: []*RewardTransferKeeperCallLogs{
 			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(141)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, addrA, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30)))),
-			createLogAddr(gstTypes.ContractRewardCollector, addrB, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(109)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(109)))),
 		},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t)
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	keeper.SetParams(ctx, params)
-
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount("archway", "archway")
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
@@ -231,60 +252,68 @@ func TestRewardCalculation(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddNewContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		GasRebateToUser: false,
+	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[5].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
-		GasRebateToUser: false,
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[6].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 50,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 150,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	err = keeper.TrackNewBlock(ctx)
+
+	require.NoError(t, err, "We should be able to track new block")
+
+	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "1",
+					Address:             spareAddress[1].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         4,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "3",
+					Address:             spareAddress[3].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "4",
+					Address:             spareAddress[4].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: false,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
@@ -296,7 +325,7 @@ func TestRewardCalculation(t *testing.T) {
 			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
@@ -304,8 +333,6 @@ func TestRewardCalculation(t *testing.T) {
 			},
 		},
 	}})
-
-	require.NoError(t, err, "We should be able to track new block")
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
@@ -316,14 +343,14 @@ func TestRewardCalculation(t *testing.T) {
 
 	if len(testRewardKeeper.Logs) > 1 {
 		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt")
+		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsA); i++ {
 			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
 		}
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk")
+		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsB); i++ {
@@ -337,6 +364,14 @@ func TestRewardCalculation(t *testing.T) {
 //}
 
 func TestContractRewardsWithoutContractPremium(t *testing.T) {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
 	type expect struct {
 		rewardsA []sdk.DecCoin
 		rewardsB []sdk.DecCoin
@@ -354,16 +389,13 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 		},
 		logs: []*RewardTransferKeeperCallLogs{
 			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(141)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, addrA, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30)))),
-			createLogAddr(gstTypes.ContractRewardCollector, addrB, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(109)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(109)))),
 		},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t)
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	keeper.SetParams(ctx, params)
-
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount("archway", "archway")
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
@@ -373,60 +405,68 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddNewContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		GasRebateToUser: false,
+	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[5].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
-		GasRebateToUser: false,
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[6].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 50,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 150,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	err = keeper.TrackNewBlock(ctx)
+
+	require.NoError(t, err, "We should be able to track new block")
+
+	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "1",
+					Address:             spareAddress[1].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         4,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "3",
+					Address:             spareAddress[3].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "4",
+					Address:             spareAddress[4].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: false,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
@@ -438,7 +478,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
@@ -446,8 +486,6 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 			},
 		},
 	}})
-
-	require.NoError(t, err, "We should be able to track new block")
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
@@ -458,14 +496,14 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 
 	if len(testRewardKeeper.Logs) > 1 {
 		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt")
+		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsA); i++ {
 			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
 		}
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk")
+		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsB); i++ {
@@ -474,6 +512,14 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	}
 }
 func TestContractRewardsWithoutDappInflation(t *testing.T) {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
 	type expect struct {
 		rewardsA []sdk.DecCoin
 		rewardsB []sdk.DecCoin
@@ -491,16 +537,13 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 		},
 		logs: []*RewardTransferKeeperCallLogs{
 			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, addrA, sdk.NewCoins()),
-			createLogAddr(gstTypes.ContractRewardCollector, addrB, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t)
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	keeper.SetParams(ctx, params)
-
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount("archway", "archway")
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
@@ -510,60 +553,68 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddNewContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		GasRebateToUser: false,
+	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[5].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
-		GasRebateToUser: false,
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[6].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 50,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 150,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	err = keeper.TrackNewBlock(ctx)
+
+	require.NoError(t, err, "We should be able to track new block")
+
+	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "1",
+					Address:             spareAddress[1].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         4,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "3",
+					Address:             spareAddress[3].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "4",
+					Address:             spareAddress[4].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: false,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
@@ -575,7 +626,7 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
@@ -583,8 +634,6 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 			},
 		},
 	}})
-
-	require.NoError(t, err, "We should be able to track new block")
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
@@ -595,14 +644,14 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 
 	if len(testRewardKeeper.Logs) > 1 {
 		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt")
+		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsA); i++ {
 			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
 		}
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk")
+		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsB); i++ {
@@ -611,6 +660,14 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 	}
 }
 func TestContractRewardsWithoutGasRebate(t *testing.T) {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
 	type expect struct {
 		rewardsA []sdk.DecCoin
 		rewardsB []sdk.DecCoin
@@ -626,16 +683,13 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 		},
 		logs: []*RewardTransferKeeperCallLogs{
 			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(138)))),
-			createLogAddr(gstTypes.ContractRewardCollector, addrA, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30)))),
-			createLogAddr(gstTypes.ContractRewardCollector, addrB, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(107)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(107)))),
 		},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t)
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	keeper.SetParams(ctx, params)
-
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount("archway", "archway")
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
@@ -645,60 +699,68 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddNewContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		GasRebateToUser: false,
+	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[5].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
-		GasRebateToUser: false,
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[6].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 50,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 150,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	err = keeper.TrackNewBlock(ctx)
+
+	require.NoError(t, err, "We should be able to track new block")
+
+	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "1",
+					Address:             spareAddress[1].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         4,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "3",
+					Address:             spareAddress[3].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "4",
+					Address:             spareAddress[4].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: false,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
@@ -710,7 +772,7 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
@@ -718,8 +780,6 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 			},
 		},
 	}})
-
-	require.NoError(t, err, "We should be able to track new block")
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
@@ -730,14 +790,14 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 
 	if len(testRewardKeeper.Logs) > 1 {
 		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt")
+		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsA); i++ {
 			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
 		}
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk")
+		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsB); i++ {
@@ -747,6 +807,14 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 }
 
 func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
 	type expect struct {
 		rewardsA []sdk.DecCoin
 		rewardsB []sdk.DecCoin
@@ -763,11 +831,8 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 		logs: []*RewardTransferKeeperCallLogs{},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t)
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	keeper.SetParams(ctx, params)
-
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount("archway", "archway")
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
@@ -777,60 +842,68 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddNewContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		GasRebateToUser: false,
+	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[5].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
-		GasRebateToUser: false,
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[6].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 50,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 150,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	err = keeper.TrackNewBlock(ctx)
+
+	require.NoError(t, err, "We should be able to track new block")
+
+	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "1",
+					Address:             spareAddress[1].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         4,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "3",
+					Address:             spareAddress[3].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "4",
+					Address:             spareAddress[4].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: false,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
@@ -842,7 +915,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
@@ -850,8 +923,6 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 			},
 		},
 	}})
-
-	require.NoError(t, err, "We should be able to track new block")
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
@@ -862,14 +933,14 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 
 	if len(testRewardKeeper.Logs) > 1 {
 		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt")
+		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsA); i++ {
 			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
 		}
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk")
+		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsB); i++ {
@@ -879,6 +950,14 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 }
 
 func TestContractRewardsWithoutGasTracking(t *testing.T) {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
 	type expect struct {
 		rewardsA []sdk.DecCoin
 		rewardsB []sdk.DecCoin
@@ -895,11 +974,8 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 		logs: []*RewardTransferKeeperCallLogs{},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t)
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	keeper.SetParams(ctx, params)
-
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount("archway", "archway")
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
@@ -909,60 +985,68 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.AddNewContractMetadata(ctx, "1", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
-		GasRebateToUser: false,
+	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[5].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "2", gstTypes.ContractInstanceMetadata{
-		RewardAddress:   "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
-		GasRebateToUser: false,
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[6].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "3", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 50,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.AddNewContractMetadata(ctx, "4", gstTypes.ContractInstanceMetadata{
-		RewardAddress:            "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt",
+	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 150,
+		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	err = keeper.TrackNewBlock(ctx)
+
+	require.NoError(t, err, "We should be able to track new block")
+
+	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "1",
+					Address:             spareAddress[1].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         4,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "3",
+					Address:             spareAddress[3].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
-					Address:             "4",
+					Address:             spareAddress[4].String(),
 					GasConsumed:         1,
 					IsEligibleForReward: false,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
@@ -974,7 +1058,7 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
-					Address:             "2",
+					Address:             spareAddress[2].String(),
 					GasConsumed:         2,
 					IsEligibleForReward: true,
 					Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
@@ -982,8 +1066,6 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 			},
 		},
 	}})
-
-	require.NoError(t, err, "We should be able to track new block")
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	// Let's check reward keeper call logs first
@@ -994,14 +1076,14 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 
 	if len(testRewardKeeper.Logs) > 1 {
 		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt")
+		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsA); i++ {
 			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
 		}
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk")
+		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 		require.NoError(t, err, "We should be able to get left over entry")
 		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 		for i := 0; i < len(expected.rewardsB); i++ {

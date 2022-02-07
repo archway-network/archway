@@ -4,32 +4,47 @@
 
 ## Table of Contents
 
-- [gastracker/types.proto](#gastracker/types.proto)
-    - [BlockGasTracking](#gastracker.BlockGasTracking)
-    - [ContractGasTracking](#gastracker.ContractGasTracking)
-    - [ContractInstanceMetadata](#gastracker.ContractInstanceMetadata)
-    - [ContractInstantiationRequestWrapper](#gastracker.ContractInstantiationRequestWrapper)
-    - [ContractOperationInfo](#gastracker.ContractOperationInfo)
-    - [GasTrackingQueryRequestWrapper](#gastracker.GasTrackingQueryRequestWrapper)
-    - [GasTrackingQueryResultWrapper](#gastracker.GasTrackingQueryResultWrapper)
-    - [LeftOverRewardEntry](#gastracker.LeftOverRewardEntry)
-    - [RewardDistributionEvent](#gastracker.RewardDistributionEvent)
-    - [TransactionTracking](#gastracker.TransactionTracking)
+- [archway/gastracker/v1/types.proto](#archway/gastracker/v1/types.proto)
+    - [BlockGasTracking](#archway.gastracker.v1.BlockGasTracking)
+    - [ContractGasTracking](#archway.gastracker.v1.ContractGasTracking)
+    - [ContractInstanceMetadata](#archway.gastracker.v1.ContractInstanceMetadata)
+    - [ContractInstantiationRequestWrapper](#archway.gastracker.v1.ContractInstantiationRequestWrapper)
+    - [ContractOperationInfo](#archway.gastracker.v1.ContractOperationInfo)
+    - [GasTrackingQueryRequestWrapper](#archway.gastracker.v1.GasTrackingQueryRequestWrapper)
+    - [GasTrackingQueryResultWrapper](#archway.gastracker.v1.GasTrackingQueryResultWrapper)
+    - [GenesisState](#archway.gastracker.v1.GenesisState)
+    - [LeftOverRewardEntry](#archway.gastracker.v1.LeftOverRewardEntry)
+    - [RewardDistributionEvent](#archway.gastracker.v1.RewardDistributionEvent)
+    - [TransactionTracking](#archway.gastracker.v1.TransactionTracking)
   
-    - [ContractOperation](#gastracker.ContractOperation)
+    - [ContractOperation](#archway.gastracker.v1.ContractOperation)
+  
+- [archway/gastracker/v1/query.proto](#archway/gastracker/v1/query.proto)
+    - [QueryBlockGasTrackingRequest](#archway.gastracker.v1.QueryBlockGasTrackingRequest)
+    - [QueryBlockGasTrackingResponse](#archway.gastracker.v1.QueryBlockGasTrackingResponse)
+    - [QueryContractMetadataRequest](#archway.gastracker.v1.QueryContractMetadataRequest)
+    - [QueryContractMetadataResponse](#archway.gastracker.v1.QueryContractMetadataResponse)
+  
+    - [Query](#archway.gastracker.v1.Query)
+  
+- [archway/gastracker/v1/tx.proto](#archway/gastracker/v1/tx.proto)
+    - [MsgSetContractMetadata](#archway.gastracker.v1.MsgSetContractMetadata)
+    - [MsgSetContractMetadataResponse](#archway.gastracker.v1.MsgSetContractMetadataResponse)
+  
+    - [Msg](#archway.gastracker.v1.Msg)
   
 - [Scalar Value Types](#scalar-value-types)
 
 
 
-<a name="gastracker/types.proto"></a>
+<a name="archway/gastracker/v1/types.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## gastracker/types.proto
+## archway/gastracker/v1/types.proto
 
 
 
-<a name="gastracker.BlockGasTracking"></a>
+<a name="archway.gastracker.v1.BlockGasTracking"></a>
 
 ### BlockGasTracking
 Tracking gas consumption for all tx in a particular block
@@ -37,14 +52,14 @@ Tracking gas consumption for all tx in a particular block
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tx_tracking_infos` | [TransactionTracking](#gastracker.TransactionTracking) | repeated |  |
+| `tx_tracking_infos` | [TransactionTracking](#archway.gastracker.v1.TransactionTracking) | repeated |  |
 
 
 
 
 
 
-<a name="gastracker.ContractGasTracking"></a>
+<a name="archway.gastracker.v1.ContractGasTracking"></a>
 
 ### ContractGasTracking
 Tracking contract gas usage
@@ -55,14 +70,14 @@ Tracking contract gas usage
 | `address` | [string](#string) |  |  |
 | `gas_consumed` | [uint64](#uint64) |  |  |
 | `is_eligible_for_reward` | [bool](#bool) |  |  |
-| `operation` | [ContractOperation](#gastracker.ContractOperation) |  |  |
+| `operation` | [ContractOperation](#archway.gastracker.v1.ContractOperation) |  |  |
 
 
 
 
 
 
-<a name="gastracker.ContractInstanceMetadata"></a>
+<a name="archway.gastracker.v1.ContractInstanceMetadata"></a>
 
 ### ContractInstanceMetadata
 Contract instance metadata
@@ -70,6 +85,7 @@ Contract instance metadata
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `developer_address` | [string](#string) |  | Developer address of the contract |
 | `reward_address` | [string](#string) |  |  |
 | `gas_rebate_to_user` | [bool](#bool) |  |  |
 | `collect_premium` | [bool](#bool) |  | Flag to indicate whether to charge premium or not |
@@ -80,7 +96,7 @@ Contract instance metadata
 
 
 
-<a name="gastracker.ContractInstantiationRequestWrapper"></a>
+<a name="archway.gastracker.v1.ContractInstantiationRequestWrapper"></a>
 
 ### ContractInstantiationRequestWrapper
 Custom wrapper around contract instantiation request
@@ -89,17 +105,17 @@ Custom wrapper around contract instantiation request
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `reward_address` | [string](#string) |  |  |
-| `gas_rebate_to_user` | [bool](#bool) |  |  |
-| `collect_premium` | [bool](#bool) |  |  |
-| `premium_percentage_charged` | [uint64](#uint64) |  |  |
-| `instantiation_request` | [string](#string) |  | Base64 encoding of instantiation data |
+| `gas_rebate_to_user` | [bool](#bool) |  | If set to true, user will get the gas rebate for the contract execution, otherwise developer will get some portion of fee relative to the amount of gas consumed by contract. |
+| `collect_premium` | [bool](#bool) |  | If set to true, developer will receive premium on top of the gas reward. It is a logical error to have both this and `gas_rebate_to_user` set to true. |
+| `premium_percentage_charged` | [uint64](#uint64) |  | Percentage of premium received by developer on top of their original gas reward |
+| `instantiation_request` | [string](#string) |  | The `InitMsg` which will be passed to the contract during initialization call and has to be encoded with Base64. |
 
 
 
 
 
 
-<a name="gastracker.ContractOperationInfo"></a>
+<a name="archway.gastracker.v1.ContractOperationInfo"></a>
 
 ### ContractOperationInfo
 Custom Message returned by our wrapper vm
@@ -108,7 +124,7 @@ Custom Message returned by our wrapper vm
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gas_consumed` | [uint64](#uint64) |  |  |
-| `operation` | [ContractOperation](#gastracker.ContractOperation) |  |  |
+| `operation` | [ContractOperation](#archway.gastracker.v1.ContractOperation) |  |  |
 | `reward_address` | [string](#string) |  | Only set in case of instantiate operation |
 | `gas_rebate_to_end_user` | [bool](#bool) |  | Only set in case of instantiate operation |
 | `collect_premium` | [bool](#bool) |  | Only set in case of instantiate operation |
@@ -119,7 +135,7 @@ Custom Message returned by our wrapper vm
 
 
 
-<a name="gastracker.GasTrackingQueryRequestWrapper"></a>
+<a name="archway.gastracker.v1.GasTrackingQueryRequestWrapper"></a>
 
 ### GasTrackingQueryRequestWrapper
 Custom wrapper around Query request
@@ -135,7 +151,7 @@ Custom wrapper around Query request
 
 
 
-<a name="gastracker.GasTrackingQueryResultWrapper"></a>
+<a name="archway.gastracker.v1.GasTrackingQueryResultWrapper"></a>
 
 ### GasTrackingQueryResultWrapper
 Custom wrapper around Query result that also gives gas consumption
@@ -151,7 +167,17 @@ Custom wrapper around Query result that also gives gas consumption
 
 
 
-<a name="gastracker.LeftOverRewardEntry"></a>
+<a name="archway.gastracker.v1.GenesisState"></a>
+
+### GenesisState
+Genesis state of the Gastracker module
+
+
+
+
+
+
+<a name="archway.gastracker.v1.LeftOverRewardEntry"></a>
 
 ### LeftOverRewardEntry
 Reward entry per beneficiary address
@@ -166,7 +192,7 @@ Reward entry per beneficiary address
 
 
 
-<a name="gastracker.RewardDistributionEvent"></a>
+<a name="archway.gastracker.v1.RewardDistributionEvent"></a>
 
 ### RewardDistributionEvent
 Event emitted when Reward is allocated
@@ -183,7 +209,7 @@ Event emitted when Reward is allocated
 
 
 
-<a name="gastracker.TransactionTracking"></a>
+<a name="archway.gastracker.v1.TransactionTracking"></a>
 
 ### TransactionTracking
 Tracking contract gas usage and total gas consumption per transaction
@@ -193,7 +219,7 @@ Tracking contract gas usage and total gas consumption per transaction
 | ----- | ---- | ----- | ----------- |
 | `max_gas_allowed` | [uint64](#uint64) |  |  |
 | `max_contract_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
-| `contract_tracking_infos` | [ContractGasTracking](#gastracker.ContractGasTracking) | repeated |  |
+| `contract_tracking_infos` | [ContractGasTracking](#archway.gastracker.v1.ContractGasTracking) | repeated |  |
 
 
 
@@ -202,7 +228,7 @@ Tracking contract gas usage and total gas consumption per transaction
  <!-- end messages -->
 
 
-<a name="gastracker.ContractOperation"></a>
+<a name="archway.gastracker.v1.ContractOperation"></a>
 
 ### ContractOperation
 Denotes which operation consumed this gas
@@ -222,6 +248,141 @@ Denotes which operation consumed this gas
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="archway/gastracker/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/gastracker/v1/query.proto
+
+
+
+<a name="archway.gastracker.v1.QueryBlockGasTrackingRequest"></a>
+
+### QueryBlockGasTrackingRequest
+Request to get the block gas tracking
+
+
+
+
+
+
+<a name="archway.gastracker.v1.QueryBlockGasTrackingResponse"></a>
+
+### QueryBlockGasTrackingResponse
+Response to get the block gas tracking response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `block_gas_tracking` | [BlockGasTracking](#archway.gastracker.v1.BlockGasTracking) |  |  |
+
+
+
+
+
+
+<a name="archway.gastracker.v1.QueryContractMetadataRequest"></a>
+
+### QueryContractMetadataRequest
+Request to get contract metadata
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="archway.gastracker.v1.QueryContractMetadataResponse"></a>
+
+### QueryContractMetadataResponse
+Response to the contract metadata query
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata` | [ContractInstanceMetadata](#archway.gastracker.v1.ContractInstanceMetadata) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="archway.gastracker.v1.Query"></a>
+
+### Query
+Query service for Gas tracker
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `ContractMetadata` | [QueryContractMetadataRequest](#archway.gastracker.v1.QueryContractMetadataRequest) | [QueryContractMetadataResponse](#archway.gastracker.v1.QueryContractMetadataResponse) | ContractMetadata returns gastracker metadata of contract | GET|/archway/gastracker/v1/contract/metadata/{address}|
+| `BlockGasTracking` | [QueryBlockGasTrackingRequest](#archway.gastracker.v1.QueryBlockGasTrackingRequest) | [QueryBlockGasTrackingResponse](#archway.gastracker.v1.QueryBlockGasTrackingResponse) | BlockGasTracking returns block gas tracking for the latest block | GET|/archway/gastracker/v1/block_gas_tracking|
+
+ <!-- end services -->
+
+
+
+<a name="archway/gastracker/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/gastracker/v1/tx.proto
+
+
+
+<a name="archway.gastracker.v1.MsgSetContractMetadata"></a>
+
+### MsgSetContractMetadata
+Request to set contract metadata
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `contract_address` | [string](#string) |  |  |
+| `metadata` | [ContractInstanceMetadata](#archway.gastracker.v1.ContractInstanceMetadata) |  |  |
+
+
+
+
+
+
+<a name="archway.gastracker.v1.MsgSetContractMetadataResponse"></a>
+
+### MsgSetContractMetadataResponse
+Response returned in rpc call of SetContractMetadata
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="archway.gastracker.v1.Msg"></a>
+
+### Msg
+Msg defines the gastracker msg service
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `SetContractMetadata` | [MsgSetContractMetadata](#archway.gastracker.v1.MsgSetContractMetadata) | [MsgSetContractMetadataResponse](#archway.gastracker.v1.MsgSetContractMetadataResponse) | SetContractMetadata to set the gas tracking metadata of contract | |
 
  <!-- end services -->
 
