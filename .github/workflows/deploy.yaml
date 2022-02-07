@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-docker-image:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     outputs:
       image-version: ${{ steps.meta.outputs.version }}
@@ -68,7 +68,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy-titus:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' && endsWith(github.ref, github.event.repository.default_branch) }}
 
     needs:
@@ -86,7 +86,7 @@ jobs:
           command: apply -n archway -f ci/titus-1.yaml
 
   deploy-constantine:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
 
     needs:
