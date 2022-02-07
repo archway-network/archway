@@ -29,8 +29,8 @@ spec:
     rpc: true
     p2p: true
   image:
-    name: gcr.io/tendermint-dev/archway
-    version: NODE_VERSION
+    name: archway-network/archwayd
+    version: titus
     imagePullPolicy: Always
   init:
     assets:
