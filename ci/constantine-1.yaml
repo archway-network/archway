@@ -36,7 +36,7 @@ spec:
     tlsSecretName: constantine-1-cert
     usePaths: false
   image:
-    name: gcr.io/tendermint-dev/archway
+    name: archway-network/archwayd
     version: NODE_VERSION
     imagePullPolicy: Always
   init:

@@ -29,7 +29,7 @@ spec:
     rpc: true
     p2p: true
   image:
-    name: gcr.io/tendermint-dev/archway
+    name: archway-network/archwayd
     version: NODE_VERSION
     imagePullPolicy: Always
   init:
