@@ -76,6 +76,11 @@ jobs:
       - build-docker-image
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: Update NODE_VERSION
         run: |
           sed -i -e "s|NODE_VERSION|${{ needs.build-docker-image.outputs.image-version }}|g" ci/titus-1.yaml
@@ -94,6 +99,11 @@ jobs:
       - build-docker-image
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: Update NODE_VERSION
         run: |
           sed -i -e "s|NODE_VERSION|${{ needs.build-docker-image.outputs.image-version }}|g" ci/constantine-1.yaml
