@@ -43,8 +43,8 @@ spec:
     usePaths: false
   image:
     imagePullPolicy: Always
-    name: gcr.io/tendermint-dev/archway
-    version: main
+    name: docker.io/archwaynetwork/archwayd
+    version: edge
   init:
     assets:
     - 10000000000000000000uaugust

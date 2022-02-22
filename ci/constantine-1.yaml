@@ -36,7 +36,7 @@ spec:
     tlsSecretName: constantine-1-cert
     usePaths: false
   image:
-    name: archway-network/archwayd
+    name: docker.io/archwaynetwork/archwayd
     version: NODE_VERSION
     imagePullPolicy: Always
   init:

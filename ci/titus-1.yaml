@@ -29,7 +29,7 @@ spec:
     rpc: true
     p2p: true
   image:
-    name: archway-network/archwayd
+    name: docker.io/archwaynetwork/archwayd
     version: NODE_VERSION
     imagePullPolicy: Always
   init:
