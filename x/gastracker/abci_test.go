@@ -188,7 +188,7 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
 	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
-	ctx, keeper := CreateTestKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 
 	contractMetadatas := []gstTypes.ContractInstanceMetadata{
 		{

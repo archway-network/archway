@@ -110,7 +110,7 @@ func TestContractMetadataHandling(t *testing.T) {
 		spareAddress[i] = GenerateRandomAccAddress()
 	}
 
-	ctx, keeper := CreateTestKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	// Should return appropriate error when contract metadata is not found
 	_, err := keeper.GetContractMetadata(ctx, spareAddress[1])
 	require.EqualError(

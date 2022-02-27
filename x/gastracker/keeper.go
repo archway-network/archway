@@ -25,8 +25,6 @@ type GasTrackingKeeper interface {
 	TrackNewBlock(ctx sdk.Context) error
 
 	GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gstTypes.ContractInstanceMetadata, error)
-	GetPendingContractMetadataChange(ctx sdk.Context, address sdk.AccAddress) (gstTypes.ContractInstanceMetadata, error)
-
 	AddPendingChangeForContractMetadata(ctx sdk.Context, sender sdk.AccAddress, address sdk.AccAddress, newMetadata gstTypes.ContractInstanceMetadata) error
 	CommitPendingContractMetadata(ctx sdk.Context) (int, error)
 
