@@ -176,6 +176,67 @@ func TestABCIPanicBehaviour(t *testing.T) {
 	require.Equal(t, gstTypes.BlockGasTracking{}, blockGasTracking, "We should have overwritten block gas tracking obj")
 }
 
+func TestABCIContractMetadataCommit(t *testing.T) {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
+	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
+	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
+
+	ctx, keeper := CreateTestKeeperAndContext(t, spareAddress[0])
+
+	contractMetadatas := []gstTypes.ContractInstanceMetadata{
+		{
+			RewardAddress:    spareAddress[5].String(),
+			GasRebateToUser:  false,
+			DeveloperAddress: spareAddress[0].String(),
+		},
+		{
+			RewardAddress:    spareAddress[6].String(),
+			GasRebateToUser:  false,
+			DeveloperAddress: spareAddress[0].String(),
+		},
+		{
+			RewardAddress:            spareAddress[6].String(),
+			GasRebateToUser:          false,
+			CollectPremium:           true,
+			PremiumPercentageCharged: 50,
+			DeveloperAddress:         spareAddress[0].String(),
+		},
+		{
+			RewardAddress:            spareAddress[5].String(),
+			GasRebateToUser:          false,
+			CollectPremium:           true,
+			PremiumPercentageCharged: 150,
+			DeveloperAddress:         spareAddress[0].String(),
+		},
+	}
+
+	for i := 1; i <= 4; i++ {
+		err := keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[i], contractMetadatas[i-1])
+		require.NoError(t, err, "We should be able to add new contract metadata")
+	}
+
+	ctx = ctx.WithBlockHeight(1)
+
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+
+	// Now all pending metadata should have been committed
+	for i := 1; i <= 4; i++ {
+		_, err := keeper.GetPendingContractMetadataChange(ctx, spareAddress[i])
+		require.EqualError(t, err, gstTypes.ErrContractInstanceMetadataNotFound.Error(), "We should not be able to get pending metadata")
+
+		retrievedMetadata, err := keeper.GetContractMetadata(ctx, spareAddress[i])
+		require.NoError(t, err, "We should be able to get committed metadata")
+		require.Equal(t, contractMetadatas[i-1], retrievedMetadata, "Retrieved metadata should be same")
+	}
+}
+
 // Test reward calculation
 
 // Inflation reward cap for a block is hardcoded at 20% of total inflation reward
@@ -252,21 +313,21 @@ func TestRewardCalculation(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+	err := keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[5].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[6].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -275,7 +336,7 @@ func TestRewardCalculation(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -283,6 +344,11 @@ func TestRewardCalculation(t *testing.T) {
 		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	// Commit the pending changes
+	numberOfMetadataCommitted, err := keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit pending contract metadata")
+	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
 	err = keeper.TrackNewBlock(ctx)
@@ -405,21 +471,21 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+	err := keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[5].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[6].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -428,7 +494,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -436,6 +502,11 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	// Commit the pending changes
+	numberOfMetadataCommitted, err := keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit pending contract metadata")
+	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
 	err = keeper.TrackNewBlock(ctx)
@@ -553,21 +624,21 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+	err := keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[5].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[6].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -576,7 +647,7 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -584,6 +655,11 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	// Commit the pending changes
+	numberOfMetadataCommitted, err := keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit pending contract metadata")
+	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
 	err = keeper.TrackNewBlock(ctx)
@@ -699,21 +775,21 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+	err := keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[5].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[6].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -722,7 +798,7 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -730,6 +806,11 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	// Commit the pending changes
+	numberOfMetadataCommitted, err := keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit pending contract metadata")
+	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
 	err = keeper.TrackNewBlock(ctx)
@@ -842,21 +923,21 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+	err := keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[5].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[6].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -865,7 +946,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -873,6 +954,11 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	// Commit the pending changes
+	numberOfMetadataCommitted, err := keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit pending contract metadata")
+	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
 	err = keeper.TrackNewBlock(ctx)
@@ -985,21 +1071,21 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(2)
 
-	err := keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+	err := keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[5].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
 		RewardAddress:    spareAddress[6].String(),
 		GasRebateToUser:  false,
 		DeveloperAddress: spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[6].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -1008,7 +1094,7 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -1016,6 +1102,11 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 		DeveloperAddress:         spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	// Commit the pending changes
+	numberOfMetadataCommitted, err := keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit pending contract metadata")
+	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
 	err = keeper.TrackNewBlock(ctx)

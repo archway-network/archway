@@ -20,6 +20,8 @@ const (
 
 	CurrentBlockTrackingKey = "current_blk"
 
+	PendingContractInstanceMetadataKeyPrefix = "p_c_inst_md"
+
 	ContractInstanceMetadataKeyPrefix = "c_inst_md"
 
 	RewardEntryKeyPrefix = "reward_entry"
@@ -32,6 +34,14 @@ const (
 
 	PremiumGasDescriptor = "SmartContractPremiumGas"
 )
+
+func GetPendingContractInstanceMetadataKey(address string) []byte {
+	return []byte(PendingContractInstanceMetadataKeyPrefix + "/" + address)
+}
+
+func SplitContractAddressFromPendingMetadataKey(key []byte) (contractAddress string) {
+	return string(key[len([]byte(PendingContractInstanceMetadataKeyPrefix+"/")):])
+}
 
 func GetContractInstanceMetadataKey(address string) []byte {
 	return []byte(ContractInstanceMetadataKeyPrefix + "/" + address)

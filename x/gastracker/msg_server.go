@@ -40,7 +40,7 @@ func (m *msgServer) SetContractMetadata(goCtx context.Context, msg *gstTypes.Msg
 
 	// TODO: If not happening at earlier stage, we should check whether or not metadata is nil
 
-	if err := m.keeper.SetContractMetadata(ctx, senderAddress, contractAddress, *msg.Metadata); err != nil {
+	if err := m.keeper.AddPendingChangeForContractMetadata(ctx, senderAddress, contractAddress, *msg.Metadata); err != nil {
 		return nil, err
 	}
 

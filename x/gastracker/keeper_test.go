@@ -127,7 +127,7 @@ func TestContractMetadataHandling(t *testing.T) {
 		PremiumPercentageCharged: 3,
 	}
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], incompleteMetadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], incompleteMetadata)
 	require.EqualError(t, err, gstTypes.ErrInvalidSetContractMetadataRequest.Error(), "We should not be able to set metadata")
 
 	// No developer address
@@ -138,7 +138,7 @@ func TestContractMetadataHandling(t *testing.T) {
 		PremiumPercentageCharged: 3,
 	}
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], incompleteMetadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], incompleteMetadata)
 	require.EqualError(t, err, gstTypes.ErrInvalidSetContractMetadataRequest.Error(), "We should not be able to set metadata")
 
 	// No reward address
@@ -149,7 +149,7 @@ func TestContractMetadataHandling(t *testing.T) {
 		PremiumPercentageCharged: 3,
 	}
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], incompleteMetadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], incompleteMetadata)
 	require.EqualError(t, err, gstTypes.ErrInvalidSetContractMetadataRequest.Error(), "We should not be able to set metadata")
 
 	newMetadata := types.ContractInstanceMetadata{
@@ -161,8 +161,87 @@ func TestContractMetadataHandling(t *testing.T) {
 	}
 
 	// Should be successful
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], newMetadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], newMetadata)
 	require.NoError(t, err, "We should be able to set metadata")
+
+	// Should be able to get pending contract
+	retrievedMetadata, err := keeper.GetPendingContractMetadataChange(ctx, spareAddress[1])
+	require.NoError(t, err, "We should be able to get pending metadata")
+	require.Equal(t, retrievedMetadata, newMetadata)
+
+	newMetadata = types.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[2].String(),
+		GasRebateToUser:          false,
+		CollectPremium:           true,
+		PremiumPercentageCharged: 33,
+		DeveloperAddress:         spareAddress[0].String(),
+	}
+
+	// We should be able to overwrite the pending change
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], newMetadata)
+	require.NoError(t, err, "We should be able to set metadata")
+
+	// Should be able to get new pending contract
+	retrievedMetadata, err = keeper.GetPendingContractMetadataChange(ctx, spareAddress[1])
+	require.NoError(t, err, "We should be able to get pending metadata")
+	require.Equal(t, newMetadata, retrievedMetadata)
+
+	// We should not be able to get current contract metadata as change is pending
+	_, err = keeper.GetContractMetadata(ctx, spareAddress[1])
+	require.EqualError(t, err, types.ErrContractInstanceMetadataNotFound.Error(), "We should get contract metadata not found")
+
+	// Commit pending contract metadata
+	numberOfEntriesCommitted, err := keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, 1, numberOfEntriesCommitted, "One entry should be committed")
+
+	// Now, we should be able to retrieve set metadata, and it should be the same one as was pending
+	retrievedMetadata, err = keeper.GetContractMetadata(ctx, spareAddress[1])
+	require.NoError(t, err, "We should be able to get metadata")
+	require.Equal(t, retrievedMetadata, newMetadata)
+
+	// Now, pending contract metadata should be removed
+	_, err = keeper.GetPendingContractMetadataChange(ctx, spareAddress[1])
+	require.EqualError(t, err, types.ErrContractInstanceMetadataNotFound.Error(), "We should get contract metadata not found")
+
+	// No new metadata to commit
+	numberOfEntriesCommitted, err = keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, 0, numberOfEntriesCommitted, "Zero entry should be committed")
+
+	// Commit pending metadata should be able to handle multiple commits
+
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], types.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[2].String(),
+		GasRebateToUser:          false,
+		CollectPremium:           false,
+		PremiumPercentageCharged: 33,
+		DeveloperAddress:         spareAddress[0].String(),
+	})
+	require.NoError(t, err, "We should be able to set metadata")
+
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[5], types.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[2].String(),
+		GasRebateToUser:          false,
+		CollectPremium:           false,
+		PremiumPercentageCharged: 32,
+		DeveloperAddress:         spareAddress[0].String(),
+	})
+	require.NoError(t, err, "We should be able to set metadata")
+
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[6], types.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[2].String(),
+		GasRebateToUser:          false,
+		CollectPremium:           false,
+		PremiumPercentageCharged: 31,
+		DeveloperAddress:         spareAddress[0].String(),
+	})
+	require.NoError(t, err, "We should be able to set metadata")
+
+	// Commit pending contract metadata
+	numberOfEntriesCommitted, err = keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, 3, numberOfEntriesCommitted, "One entry should be committed")
 
 	// You should be able to omit either developer address or reward address now
 
@@ -174,10 +253,15 @@ func TestContractMetadataHandling(t *testing.T) {
 		DeveloperAddress:         spareAddress[1].String(),
 	}
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], newMetadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], newMetadata)
 	require.NoError(t, err, "We should be able to set metadata")
 
-	retrievedMetadata, err := keeper.GetContractMetadata(ctx, spareAddress[1])
+	// Commit pending contract metadata
+	numberOfEntriesCommitted, err = keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, numberOfEntriesCommitted, 1, "One entry should be committed")
+
+	retrievedMetadata, err = keeper.GetContractMetadata(ctx, spareAddress[1])
 	require.NoError(t, err, "We should be able to get metadata")
 
 	require.Equal(t, spareAddress[2].String(), retrievedMetadata.RewardAddress, "The reward address must be the same")
@@ -191,8 +275,13 @@ func TestContractMetadataHandling(t *testing.T) {
 		RewardAddress:            spareAddress[5].String(),
 	}
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[1], spareAddress[1], newMetadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[1], spareAddress[1], newMetadata)
 	require.NoError(t, err, "We should be able to set metadata")
+
+	// Commit pending contract metadata
+	numberOfEntriesCommitted, err = keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, numberOfEntriesCommitted, 1, "One entry should be committed")
 
 	retrievedMetadata, err = keeper.GetContractMetadata(ctx, spareAddress[1])
 	require.NoError(t, err, "We should be able to get metadata")
@@ -207,8 +296,13 @@ func TestContractMetadataHandling(t *testing.T) {
 		PremiumPercentageCharged: 3,
 	}
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[1], spareAddress[1], newMetadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[1], spareAddress[1], newMetadata)
 	require.NoError(t, err, "We should be able to set metadata")
+
+	// Commit pending contract metadata
+	numberOfEntriesCommitted, err = keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, numberOfEntriesCommitted, 1, "One entry should be committed")
 
 	retrievedMetadata, err = keeper.GetContractMetadata(ctx, spareAddress[1])
 	require.NoError(t, err, "We should be able to get metadata")
@@ -227,15 +321,19 @@ func TestContractMetadataHandling(t *testing.T) {
 		RewardAddress:            spareAddress[7].String(),
 	}
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[5], spareAddress[2], metadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[5], spareAddress[2], metadata)
 	require.EqualError(t, err, gstTypes.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], metadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], metadata)
 	require.NoError(t, err, "We should be able to set metadata")
+
+	numberOfEntriesCommitted, err = keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, 1, numberOfEntriesCommitted, "One entry should be committed")
 
 	// Now that we already set the metadata and developer address is set to spareAddress[6], we would not be able to change
 	// metadata
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], metadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], metadata)
 	require.EqualError(t, err, gstTypes.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
 
 	metadata = types.ContractInstanceMetadata{
@@ -246,8 +344,12 @@ func TestContractMetadataHandling(t *testing.T) {
 		RewardAddress:            spareAddress[7].String(),
 	}
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[6], spareAddress[2], metadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[6], spareAddress[2], metadata)
 	require.NoError(t, err, "We should be able to set metadata")
+
+	numberOfEntriesCommitted, err = keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, 1, numberOfEntriesCommitted, "One entry should be committed")
 
 	metadata = types.ContractInstanceMetadata{
 		DeveloperAddress:         spareAddress[9].String(),
@@ -257,14 +359,14 @@ func TestContractMetadataHandling(t *testing.T) {
 	}
 
 	// Both admin and the previous developer should not be able to set the metadata
-	err = keeper.SetContractMetadata(ctx, spareAddress[6], spareAddress[2], metadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[6], spareAddress[2], metadata)
 	require.EqualError(t, err, gstTypes.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], metadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], metadata)
 	require.EqualError(t, err, gstTypes.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
 
 	// Current developer should be able to set the metadata
-	err = keeper.SetContractMetadata(ctx, spareAddress[8], spareAddress[2], metadata)
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[8], spareAddress[2], metadata)
 	require.NoError(t, err, "We should be able to set metadata")
 }
 
@@ -395,14 +497,19 @@ func TestCalculateUpdatedGas(t *testing.T) {
 	require.Equal(t, gasRecord.GasConsumed, updatedGas)
 
 	// Checking gas rebate calculation
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
 		DeveloperAddress:         spareAddress[0].String(),
 		RewardAddress:            spareAddress[1].String(),
 		GasRebateToUser:          true,
 		CollectPremium:           false,
 		PremiumPercentageCharged: 0,
 	})
-	require.NoError(t, err, "SetContractMetadata should be successful")
+	require.NoError(t, err, "AddPendingChangeForContractMetadata should be successful")
+
+	// Commit pending contract metadata
+	numberOfEntriesCommitted, err := keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, numberOfEntriesCommitted, 1, "One entry should be committed")
 
 	gasRecord = wasmTypes.ContractGasRecord{
 		OperationId:     wasmTypes.ContractOperationIbcChannelOpen,
@@ -414,14 +521,19 @@ func TestCalculateUpdatedGas(t *testing.T) {
 	require.Equal(t, gasRecord.GasConsumed/2, updatedGas)
 
 	// Checking premium percentage calculation
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
 		DeveloperAddress:         spareAddress[0].String(),
 		RewardAddress:            spareAddress[1].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
 		PremiumPercentageCharged: 50,
 	})
-	require.NoError(t, err, "SetContractMetadata should be successful")
+	require.NoError(t, err, "AddPendingChangeForContractMetadata should be successful")
+
+	// Commit pending contract metadata
+	numberOfEntriesCommitted, err = keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, numberOfEntriesCommitted, 1, "One entry should be committed")
 
 	gasRecord = wasmTypes.ContractGasRecord{
 		OperationId:     wasmTypes.ContractOperationIbcChannelOpen,
@@ -466,18 +578,23 @@ func TestIngestionOfGasRecords(t *testing.T) {
 	require.Equal(t, 0, len(blockTracking.TxTrackingInfos[0].ContractTrackingInfos))
 
 	// Let's add the metadata and call IngestGasRecord again
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
 		DeveloperAddress: spareAddress[0].String(),
 		RewardAddress:    spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to set contract metadata")
 
-	err = keeper.SetContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
 		DeveloperAddress: spareAddress[0].String(),
 		RewardAddress:    spareAddress[0].String(),
 		GasRebateToUser:  true,
 	})
 	require.NoError(t, err, "We should be able to set contract metadata")
+
+	// Commit pending contract metadata
+	numberOfEntriesCommitted, err := keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit metadata")
+	require.Equal(t, numberOfEntriesCommitted, 2, "One entry should be committed")
 
 	// First entry is ignored, but since second contract address's metadata
 	// exists, contract tracking entry will be added.
