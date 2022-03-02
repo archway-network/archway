@@ -32,7 +32,7 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 }
 
 func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
-	lastBlockGasTracking, err := resetBlockGasTracking(context, gasTrackingKeeper)
+	lastBlockGasTracking := resetBlockGasTracking(context, gasTrackingKeeper)
 
 	if !gasTrackingKeeper.IsGasTrackingEnabled(context) { // No rewards or calculations should take place
 		return
@@ -42,6 +42,10 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	contractTotalInflationRewards := getContractInflationRewards(context, mintParamsKeeper) // 20% of the rewards distributed on every block
 
 	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
+
+	// We need to commit pending metadata before we return due to not having any tracking activity but after we calculated rewards.
+	commitPendingMetadata(context, gasTrackingKeeper)
+
 	// Either the tx did not collect any fee or no contracts were executed
 	// So, no need to continue execution
 	if totalContractRewardsPerBlock == nil || totalContractRewardsPerBlock.IsZero() {
@@ -53,7 +57,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 		totalFeeToBeCollected[i] = sdk.NewCoin(totalContractRewardsPerBlock[i].Denom, totalContractRewardsPerBlock[i].Amount.Ceil().RoundInt())
 	}
 
-	err = rewardTransferKeeper.SendCoinsFromModuleToModule(context, authTypes.FeeCollectorName, ContractRewardCollector, totalFeeToBeCollected)
+	err := rewardTransferKeeper.SendCoinsFromModuleToModule(context, authTypes.FeeCollectorName, ContractRewardCollector, totalFeeToBeCollected)
 	if err != nil {
 		panic(err)
 	}
@@ -61,18 +65,26 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	distributeRewards(context, rewardAddresses, rewardsByAddress, gasTrackingKeeper, rewardTransferKeeper)
 }
 
+func commitPendingMetadata(context sdk.Context, gasTrackingKeeper GasTrackingKeeper) {
+	numberOfEntriesCommitted, err := gasTrackingKeeper.CommitPendingContractMetadata(context)
+	if err != nil {
+		panic(err)
+	}
+	context.Logger().Info("Committed pending metadata change", "NumberOfMetadataCommitted", numberOfEntriesCommitted)
+}
+
 // resetBlockGasTracking resets the current status and returns the last blockGasTracking
-func resetBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTrackingKeeper) (gstTypes.BlockGasTracking, error) {
-	lastBlockGasTracking, err := getCurrentBlockGasTracking(context, gasTrackingKeeper)
+func resetBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTrackingKeeper) gstTypes.BlockGasTracking {
+	lastBlockGasTracking := getCurrentBlockGasTracking(context, gasTrackingKeeper)
 
 	if err := gasTrackingKeeper.TrackNewBlock(context); err != nil {
 		panic(err)
 	}
-	return lastBlockGasTracking, err
+	return lastBlockGasTracking
 }
 
 // getCurrentBlockGasTracking returns the actual block gas tracking, panics if empty and block height is bigger than one.
-func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTrackingKeeper) (gstTypes.BlockGasTracking, error) {
+func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTrackingKeeper) gstTypes.BlockGasTracking {
 	currentBlockTrackingInfo, err := gasTrackingKeeper.GetCurrentBlockTracking(context)
 	if err != nil {
 		switch err {
@@ -86,7 +98,7 @@ func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper GasTracki
 		}
 	}
 
-	return currentBlockTrackingInfo, err
+	return currentBlockTrackingInfo
 }
 
 // distributeRewards distributes the calculated rewards to all the contracts owners.

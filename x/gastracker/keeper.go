@@ -23,8 +23,10 @@ type GasTrackingKeeper interface {
 	GetCurrentBlockTracking(ctx sdk.Context) (gstTypes.BlockGasTracking, error)
 	GetCurrentTxTracking(ctx sdk.Context) (gstTypes.TransactionTracking, error)
 	TrackNewBlock(ctx sdk.Context) error
-	SetContractMetadata(ctx sdk.Context, admin sdk.AccAddress, address sdk.AccAddress, metadata gstTypes.ContractInstanceMetadata) error
+
 	GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gstTypes.ContractInstanceMetadata, error)
+	AddPendingChangeForContractMetadata(ctx sdk.Context, sender sdk.AccAddress, address sdk.AccAddress, newMetadata gstTypes.ContractInstanceMetadata) error
+	CommitPendingContractMetadata(ctx sdk.Context) (int, error)
 
 	CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error)
 	GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress) (gstTypes.LeftOverRewardEntry, error)
@@ -282,11 +284,21 @@ func (k *Keeper) GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (g
 	return contractInstanceMetadata, err
 }
 
-// SetContractMetadata checks that the address that requested to add new metadata is admin of the contract or if admin is cleared the
-// developer field of the contract metadata. \
-// The developer field is set the first time when this contract metadata is set.
-// Next time, only the admin (if not cleared) or the developer can change the metadata.
-func (k *Keeper) SetContractMetadata(ctx sdk.Context, sender sdk.AccAddress, address sdk.AccAddress, newMetadata gstTypes.ContractInstanceMetadata) error {
+func (k *Keeper) GetPendingContractMetadataChange(ctx sdk.Context, address sdk.AccAddress) (gstTypes.ContractInstanceMetadata, error) {
+	gstKvStore := ctx.KVStore(k.key)
+
+	var contractInstanceMetadata gstTypes.ContractInstanceMetadata
+
+	bz := gstKvStore.Get(gstTypes.GetPendingContractInstanceMetadataKey(address.String()))
+	if bz == nil {
+		return contractInstanceMetadata, gstTypes.ErrContractInstanceMetadataNotFound
+	}
+
+	err := k.appCodec.Unmarshal(bz, &contractInstanceMetadata)
+	return contractInstanceMetadata, err
+}
+
+func (k *Keeper) AddPendingChangeForContractMetadata(ctx sdk.Context, sender sdk.AccAddress, address sdk.AccAddress, newMetadata gstTypes.ContractInstanceMetadata) error {
 	gstKvStore := ctx.KVStore(k.key)
 
 	contractInfo := k.contractInfoView.GetContractInfo(ctx, address)
@@ -335,8 +347,33 @@ func (k *Keeper) SetContractMetadata(ctx sdk.Context, sender sdk.AccAddress, add
 		return err
 	}
 
-	gstKvStore.Set(gstTypes.GetContractInstanceMetadataKey(address.String()), bz)
+	gstKvStore.Set(gstTypes.GetPendingContractInstanceMetadataKey(address.String()), bz)
 	return nil
+}
+
+func (k *Keeper) CommitPendingContractMetadata(ctx sdk.Context) (int, error) {
+	gstKvStore := ctx.KVStore(k.key)
+	keysToBeDeleted := make([][]byte, 0)
+
+	iterator := gstKvStore.Iterator(
+		[]byte(gstTypes.PendingContractInstanceMetadataKeyPrefix),
+		sdk.PrefixEndBytes([]byte(gstTypes.PendingContractInstanceMetadataKeyPrefix)),
+	)
+
+	defer func() {
+		for _, key := range keysToBeDeleted {
+			gstKvStore.Delete(key)
+		}
+		iterator.Close()
+	}()
+	for ; iterator.Valid(); iterator.Next() {
+		contractAddress := gstTypes.SplitContractAddressFromPendingMetadataKey(iterator.Key())
+		bz := iterator.Value()
+		gstKvStore.Set(gstTypes.GetContractInstanceMetadataKey(contractAddress), bz)
+		keysToBeDeleted = append(keysToBeDeleted, iterator.Key())
+	}
+
+	return len(keysToBeDeleted), nil
 }
 
 func (k *Keeper) TrackNewBlock(ctx sdk.Context) error {
