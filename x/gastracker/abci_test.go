@@ -408,23 +408,20 @@ func TestRewardCalculation(t *testing.T) {
 		require.Equal(t, expected.logs[i], testRewardKeeper.Logs[i])
 	}
 
-	if len(testRewardKeeper.Logs) > 1 {
-		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsA); i++ {
-			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
-		}
-
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsB); i++ {
-			require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
-		}
+	// Let's check left-over balances
+	leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
+	for i := 0; i < len(expected.rewardsA); i++ {
+		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
 	}
 
+	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
+	for i := 0; i < len(expected.rewardsB); i++ {
+		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
+	}
 }
 
 //func TestRewardCalculation(t *testing.T) {
@@ -566,21 +563,19 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 		require.Equal(t, expected.logs[i], testRewardKeeper.Logs[i])
 	}
 
-	if len(testRewardKeeper.Logs) > 1 {
-		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsA); i++ {
-			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
-		}
+	// Let's check left-over balances
+	leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
+	for i := 0; i < len(expected.rewardsA); i++ {
+		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
+	}
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsB); i++ {
-			require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
-		}
+	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
+	for i := 0; i < len(expected.rewardsB); i++ {
+		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
 	}
 }
 func TestContractRewardsWithoutDappInflation(t *testing.T) {
@@ -719,21 +714,19 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 		require.Equal(t, expected.logs[i], testRewardKeeper.Logs[i])
 	}
 
-	if len(testRewardKeeper.Logs) > 1 {
-		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsA); i++ {
-			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
-		}
+	// Let's check left-over balances
+	leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
+	for i := 0; i < len(expected.rewardsA); i++ {
+		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
+	}
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsB); i++ {
-			require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
-		}
+	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
+	for i := 0; i < len(expected.rewardsB); i++ {
+		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
 	}
 }
 func TestContractRewardsWithoutGasRebate(t *testing.T) {
@@ -870,21 +863,19 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 		require.Equal(t, expected.logs[i], testRewardKeeper.Logs[i])
 	}
 
-	if len(testRewardKeeper.Logs) > 1 {
-		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsA); i++ {
-			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
-		}
+	// Let's check left-over balances
+	leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
+	for i := 0; i < len(expected.rewardsA); i++ {
+		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
+	}
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsB); i++ {
-			require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
-		}
+	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
+	for i := 0; i < len(expected.rewardsB); i++ {
+		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
 	}
 }
 
@@ -904,13 +895,9 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 	}
 	params := disableDappInflation(disableGasRebate(gstTypes.DefaultParams()))
 	expected := expect{
-		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.6")),
-		},
-		rewardsB: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.1")),
-		},
-		logs: []*RewardTransferKeeperCallLogs{},
+		rewardsA: []sdk.DecCoin{},
+		rewardsB: []sdk.DecCoin{},
+		logs:     []*RewardTransferKeeperCallLogs{},
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
@@ -1018,22 +1005,12 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 		require.Equal(t, expected.logs[i], testRewardKeeper.Logs[i])
 	}
 
-	if len(testRewardKeeper.Logs) > 1 {
-		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsA); i++ {
-			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
-		}
+	// Let's check left-over balances
+	_, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
+	require.EqualError(t, err, gstTypes.ErrRewardEntryNotFound.Error(), "We should get left over entry not found")
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsB); i++ {
-			require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
-		}
-	}
+	_, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
+	require.EqualError(t, err, gstTypes.ErrRewardEntryNotFound.Error(), "We should get left over entry not found")
 }
 
 func TestContractRewardsWithoutGasTracking(t *testing.T) {
@@ -1162,21 +1139,10 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 		require.Equal(t, expected.logs[i], testRewardKeeper.Logs[i])
 	}
 
-	if len(testRewardKeeper.Logs) > 1 {
-		// Let's check left-over balances
-		leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsA); i++ {
-			require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
-		}
+	// Let's check left-over balances
+	_, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
+	require.EqualError(t, err, gstTypes.ErrRewardEntryNotFound.Error(), "We should get left over entry not found")
 
-		leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
-		require.NoError(t, err, "We should be able to get left over entry")
-		require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
-		for i := 0; i < len(expected.rewardsB); i++ {
-			require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
-		}
-	}
-
+	_, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
+	require.EqualError(t, err, gstTypes.ErrRewardEntryNotFound.Error(), "We should get left over entry not found")
 }

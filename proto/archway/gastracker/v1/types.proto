@@ -112,5 +112,12 @@ message RewardDistributionEvent {
   repeated cosmos.base.v1beta1.DecCoin leftover_rewards = 3;
 }
 
+// Event emitted when contract reward is calculated
+message ContractRewardCalculationEvent {
+  string contract_address = 1;
+  repeated cosmos.base.v1beta1.DecCoin contract_rewards = 2;
+  ContractInstanceMetadata metadata = 3;
+}
+
 // Genesis state of the Gastracker module
 message GenesisState {}
