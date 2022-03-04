@@ -248,7 +248,7 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 // Contract "2" is: 61.2 (153 * 4 / 10)
 // Contract "3" is: 15.3 (153 * 1 / 10)
 // Contract "2" is: 30.6 (153 * 2 / 10)
-// Contract "4" does not get any reward
+// Contract "4" is: 15.3 (153 * 1 / 10)
 // All above is in "test" denomination, since that is the denomination minter is minting
 // Now, coming to gas reward calculations:
 // For First tx entry:
@@ -263,13 +263,14 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 // For Contract "1": 30.8test (30.6 + 0.2) and 0.0666666test1
 // For Contract "2": 94.2test (61.2 + 30.6 + 0.4 + 2) and 0.6333333test1 (0.1333333 + 0.5)
 // For Contract "3": 15.45test (15.3 + 0.15) and 0.04999995test1
+// For Contract "4": 15.3test (15.3)
 // Reward distribution per address:
-// (for contract "1") "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt": 30.8test and 0.0666666test1
+// (for contract "1" and "4") "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt": 30.8test + 15.3test (46.1test) and 0.0666666test1
 // (for contract "2" and "3") "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk": 109.65test and 0.6666666test1
-// So, we should be fetching 141test (30.8 + 109.65 = 140.45 rounded to 141) and 1test1 (0.6333333 + 0.04999995 =  0.68333325 rounded to 1)
+// So, we should be fetching 141test (46.1 + 109.65 = 155.75 rounded to 156) and 1test1 (0.6333333 + 0.04999995 =  0.68333325 rounded to 1)
 // from the fee collector
-// Since, left over threshold is hard coded to 1, we should be transferring 30test to "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt" and
-// 109test to "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk" and left over rewards should be 0.8test,0.0666666test1 and 0.65test and 0.68333325test1
+// Since, left over threshold is hard coded to 1, we should be transferring 46test to "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt" and
+// 109test to "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk" and left over rewards should be 0.1test,0.0666666test1 and 0.65test and 0.68333325test1
 // respectively.
 func TestRewardCalculation(t *testing.T) {
 	config := sdk.GetConfig()
@@ -288,7 +289,7 @@ func TestRewardCalculation(t *testing.T) {
 	params := gstTypes.DefaultParams()
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.8")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.1")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.066666666666666667")),
 		},
 		rewardsB: []sdk.DecCoin{
@@ -296,8 +297,8 @@ func TestRewardCalculation(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(141)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(156)), sdk.NewCoin("test1", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(46)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(109)))),
 		},
 	}
@@ -446,7 +447,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	params := disableContractPremium(gstTypes.DefaultParams())
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.8")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.1")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.066666666666666667")),
 		},
 		rewardsB: []sdk.DecCoin{
@@ -454,8 +455,8 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.666666666666666666")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(141)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(156)), sdk.NewCoin("test1", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(46)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(109)))),
 		},
 	}
@@ -752,14 +753,14 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 	params := disableGasRebate(gstTypes.DefaultParams())
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.6")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.9")),
 		},
 		rewardsB: []sdk.DecCoin{
 			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.1")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(138)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(30)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(153)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(45)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(107)))),
 		},
 	}
@@ -1051,13 +1052,9 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 	}
 	params := disableGasTracking(gstTypes.DefaultParams())
 	expected := expect{
-		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.6")),
-		},
-		rewardsB: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.1")),
-		},
-		logs: []*RewardTransferKeeperCallLogs{},
+		rewardsA: []sdk.DecCoin{},
+		rewardsB: []sdk.DecCoin{},
+		logs:     []*RewardTransferKeeperCallLogs{},
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
