@@ -40,10 +40,10 @@ func (a CountTXDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 	if simulate {
 		store.Set(types.TXCounterPrefix, encodeHeightCounter(currentHeight, 0))
 		return next(ctx, tx, simulate)
-	} else {
-		store.Set(types.TXCounterPrefix, encodeHeightCounter(currentHeight, txCounter+1))
-		return next(types.WithTXCounter(ctx, txCounter), tx, simulate)
-	}
+	} 
+
+	store.Set(types.TXCounterPrefix, encodeHeightCounter(currentHeight, txCounter+1))
+	return next(types.WithTXCounter(ctx, txCounter), tx, simulate)
 }
 
 func encodeHeightCounter(height int64, counter uint32) []byte {
