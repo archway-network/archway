@@ -148,11 +148,16 @@ func (k *Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractG
 		return updatedGas, nil
 	}
 
-	if k.IsGasRebateToUserEnabled(ctx) && contractMetadata.GasRebateToUser {
+	// We are pre-fetching the configuration so that
+	// gas usage is similar across all conditions.
+	isGasUpdateEnabled := k.IsGasRebateEnabled(ctx)
+	isContractPremiumEnabled := k.IsContractPremiumEnabled(ctx)
+
+	if isGasUpdateEnabled && contractMetadata.GasRebateToUser {
 		updatedGas = (updatedGas * 50) / 100
 	}
 
-	if k.IsContractPremiumEnabled(ctx) && contractMetadata.CollectPremium {
+	if isContractPremiumEnabled && contractMetadata.CollectPremium {
 		updatedGas = updatedGas + (updatedGas*contractMetadata.PremiumPercentageCharged)/100
 	}
 
