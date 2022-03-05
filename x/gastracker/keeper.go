@@ -72,7 +72,7 @@ func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGa
 		}
 
 		var contractMetadataExists bool
-		contractMetadata, err := k.GetContractMetadata(ctx, contractAddress)
+		_, err = k.GetContractMetadata(ctx, contractAddress)
 		switch err {
 		case gstTypes.ErrContractInstanceMetadataNotFound:
 			contractMetadataExists = false
@@ -116,7 +116,7 @@ func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGa
 			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_UNSPECIFIED
 		}
 
-		if err := k.TrackContractGasUsage(ctx, contractAddress, k.wasmGasRegister.FromWasmVMGas(record.GasConsumed), operation, !contractMetadata.GasRebateToUser); err != nil {
+		if err := k.TrackContractGasUsage(ctx, contractAddress, k.wasmGasRegister.FromWasmVMGas(record.GasConsumed), operation); err != nil {
 			return err
 		}
 	}
@@ -432,7 +432,7 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 	return nil
 }
 
-func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, gasUsed uint64, operation gstTypes.ContractOperation, isEligibleForReward bool) error {
+func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, gasUsed uint64, operation gstTypes.ContractOperation) error {
 	gstKvStore := ctx.KVStore(k.key)
 	bz := gstKvStore.Get([]byte(gstTypes.CurrentBlockTrackingKey))
 	if bz == nil {
@@ -450,10 +450,9 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccA
 	}
 	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
 	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gstTypes.ContractGasTracking{
-		Address:             contractAddress.String(),
-		GasConsumed:         gasUsed,
-		Operation:           operation,
-		IsEligibleForReward: isEligibleForReward,
+		Address:     contractAddress.String(),
+		GasConsumed: gasUsed,
+		Operation:   operation,
 	})
 	bz, err = k.appCodec.Marshal(&currentBlockGasTracking)
 	if err != nil {

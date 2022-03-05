@@ -37,56 +37,11 @@ message TransactionTracking {
 message ContractGasTracking {
   string address = 1;
   uint64 gas_consumed = 2;
-  bool is_eligible_for_reward = 3;
-  ContractOperation operation = 4;
+  ContractOperation operation = 3;
 }
 
 // Tracking gas consumption for all tx in a particular block
 message BlockGasTracking { repeated TransactionTracking tx_tracking_infos = 1; }
-
-// Custom Message returned by our wrapper vm
-message ContractOperationInfo {
-  uint64 gas_consumed = 1;
-  ContractOperation operation = 2;
-  // Only set in case of instantiate operation
-  string reward_address = 3;
-  // Only set in case of instantiate operation
-  bool gas_rebate_to_end_user = 4;
-  // Only set in case of instantiate operation
-  bool collect_premium = 5;
-  // Only set in case of instantiate operation
-  uint64 premium_percentage_charged = 6;
-}
-
-// Custom wrapper around Query request
-message GasTrackingQueryRequestWrapper {
-  string magic_string = 1;
-  bytes query_request = 2;
-}
-
-// Custom wrapper around Query result that also gives gas consumption
-message GasTrackingQueryResultWrapper {
-  uint64 gas_consumed = 1;
-  bytes query_response = 2;
-}
-
-// Custom wrapper around contract instantiation request
-message ContractInstantiationRequestWrapper {
-  string reward_address = 1;
-  // If set to true, user will get the gas rebate for the contract execution,
-  // otherwise developer will get some portion of fee relative to the amount of
-  // gas consumed by contract.
-  bool gas_rebate_to_user = 2;
-  // If set to true, developer will receive premium on top of the gas reward. It
-  // is a logical error to have both this and `gas_rebate_to_user` set to true.
-  bool collect_premium = 3;
-  // Percentage of premium received by developer on top of their original gas
-  // reward
-  uint64 premium_percentage_charged = 4;
-  // The `InitMsg` which will be passed to the contract during initialization
-  // call and has to be encoded with Base64.
-  string instantiation_request = 5;
-}
 
 // Contract instance metadata
 message ContractInstanceMetadata {
