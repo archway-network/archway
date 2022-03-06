@@ -1127,3 +1127,153 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 	_, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 	require.EqualError(t, err, gstTypes.ErrRewardEntryNotFound.Error(), "We should get left over entry not found")
 }
+
+// "4" Contract's reward is: 1 * (1 / 10) = 0.1test and 0.333333333333 * (1 / 10) = 0.0333333333333test1
+func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
+	type expect struct {
+		rewardsA []sdk.DecCoin
+		rewardsB []sdk.DecCoin
+		logs     []*RewardTransferKeeperCallLogs
+	}
+	params := disableGasRebateToUser(gstTypes.DefaultParams())
+	expected := expect{
+		rewardsA: []sdk.DecCoin{
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.302295")),
+			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.100000000000000000")),
+		},
+		rewardsB: []sdk.DecCoin{
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.555355")),
+			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
+		},
+		logs: []*RewardTransferKeeperCallLogs{
+			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
+		},
+	}
+
+	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
+
+	keeper.SetParams(ctx, params)
+
+	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
+	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
+
+	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
+	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
+
+	ctx = ctx.WithBlockHeight(2)
+
+	err := keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[5].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
+	})
+	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[6].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
+	})
+	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[6].String(),
+		GasRebateToUser:          false,
+		CollectPremium:           true,
+		PremiumPercentageCharged: 50,
+		DeveloperAddress:         spareAddress[0].String(),
+	})
+	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[4], gstTypes.ContractInstanceMetadata{
+		RewardAddress:            spareAddress[5].String(),
+		GasRebateToUser:          true,
+		CollectPremium:           false,
+		PremiumPercentageCharged: 150,
+		DeveloperAddress:         spareAddress[0].String(),
+	})
+	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	// Commit the pending changes
+	numberOfMetadataCommitted, err := keeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit pending contract metadata")
+	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
+
+	// Tracking new block with multiple tx tracking obj
+	err = keeper.TrackNewBlock(ctx)
+
+	require.NoError(t, err, "We should be able to track new block")
+
+	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+		{
+			MaxGasAllowed:      10,
+			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
+			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+				{
+					Address:     spareAddress[1].String(),
+					GasConsumed: 2,
+					Operation:   gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+				},
+				{
+					Address:     spareAddress[2].String(),
+					GasConsumed: 4,
+					Operation:   gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+				},
+				{
+					Address:     spareAddress[3].String(),
+					GasConsumed: 1,
+					Operation:   gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+				},
+				{
+					Address:     spareAddress[4].String(),
+					GasConsumed: 1,
+					Operation:   gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+				},
+			},
+		},
+		{
+			MaxGasAllowed:      2,
+			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
+			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+				{
+					Address:     spareAddress[2].String(),
+					GasConsumed: 2,
+					Operation:   gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
+				},
+			},
+		},
+	}})
+
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	// Let's check reward keeper call logs first
+	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
+	for i := 0; i < len(expected.logs); i++ {
+		require.Equal(t, expected.logs[i], testRewardKeeper.Logs[i])
+	}
+
+	// Let's check left-over balances
+	leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
+	for i := 0; i < len(expected.rewardsA); i++ {
+		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
+	}
+
+	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
+	require.NoError(t, err, "We should be able to get left over entry")
+	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
+	for i := 0; i < len(expected.rewardsB); i++ {
+		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
+	}
+}

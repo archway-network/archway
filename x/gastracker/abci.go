@@ -186,7 +186,7 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 				contractRewards = contractRewards.Add(contractInflationReward)
 			}
 
-			if !metadata.GasRebateToUser {
+			if !gasTrackingKeeper.IsGasRebateToUserEnabled(context) || !metadata.GasRebateToUser {
 				maxGasAllowedInTx := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(txTrackingInfo.MaxGasAllowed))
 
 				// Calc premium fees
