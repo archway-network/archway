@@ -244,11 +244,11 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 // 153.
 // Total gas across block is 10 (2+4+1+2+1)
 // So, inflation reward for
-// Contract "1" is: 30.6 (153 * 2 / 10)
-// Contract "2" is: 61.2 (153 * 4 / 10)
-// Contract "3" is: 15.3 (153 * 1 / 10)
-// Contract "2" is: 30.6 (153 * 2 / 10)
-// Contract "4" is: 15.3 (153 * 1 / 10)
+// Contract "1" is: 0.00153 (153 * 2 / 200000)
+// Contract "2" is: 0.00306 (153 * 4 / 200000)
+// Contract "3" is: 0.000765 (153 * 1 / 200000)
+// Contract "2" is: 0.00153 (153 * 2 / 200000)
+// Contract "4" is: 0.000765 (153 * 1 / 200000)
 // All above is in "test" denomination, since that is the denomination minter is minting
 // Now, coming to gas reward calculations:
 // For First tx entry:
@@ -260,17 +260,17 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 //   Gas Used = 2
 //   "2" Contract's reward is: 2 * (2 / 2) = 2test and 0.5 * (2 / 2) = 0.5test1
 // Total rewards:
-// For Contract "1": 30.8test (30.6 + 0.2) and 0.0666666test1
-// For Contract "2": 94.2test (61.2 + 30.6 + 0.4 + 2) and 0.6333333test1 (0.1333333 + 0.5)
-// For Contract "3": 15.45test (15.3 + 0.15) and 0.04999995test1
-// For Contract "4": 15.3test (15.3)
+// For Contract "1": 0.20153test (0.00153 + 0.2) and 0.0666666test1
+// For Contract "2": 2.40459test (0.00306 + 0.00153 + 0.4 + 2) and 0.6333333test1 (0.1333333 + 0.5)
+// For Contract "3": 0.150765test (0.000765 + 0.15) and 0.04999995test1
+// For Contract "4": 0.000765test (0.000706)
 // Reward distribution per address:
-// (for contract "1" and "4") "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt": 30.8test + 15.3test (46.1test) and 0.0666666test1
-// (for contract "2" and "3") "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk": 109.65test and 0.6666666test1
-// So, we should be fetching 141test (46.1 + 109.65 = 155.75 rounded to 156) and 1test1 (0.6333333 + 0.04999995 =  0.68333325 rounded to 1)
+// (for contract "1" and "4") "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt": 0.20153test + 0.000765test (0.202295test) and 0.0666666test1
+// (for contract "2" and "3") "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk": 2.555355test  and 0.6666666test1
+// So, we should be fetching 3test (0.202295 + 2.555296 = 2.757591 rounded to 3) and 1test1 (0.6333333 + 0.04999995 =  0.68333325 rounded to 1)
 // from the fee collector
-// Since, left over threshold is hard coded to 1, we should be transferring 46test to "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt" and
-// 109test to "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk" and left over rewards should be 0.1test,0.0666666test1 and 0.65test and 0.68333325test1
+// Since, left over threshold is hard coded to 1, we should be transferring 0test to "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt" and
+// 2test to "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk" and left over rewards should be 0.202295test,0.0666666test1 and 0.555355test and 0.68333325test1
 // respectively.
 func TestRewardCalculation(t *testing.T) {
 	config := sdk.GetConfig()
@@ -289,21 +289,23 @@ func TestRewardCalculation(t *testing.T) {
 	params := gstTypes.DefaultParams()
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.1")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.202295")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.066666666666666667")),
 		},
 		rewardsB: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.65")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.555355")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(156)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(46)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(109)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
+
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -439,21 +441,22 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	params := disableContractPremium(gstTypes.DefaultParams())
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.1")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.202295")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.066666666666666667")),
 		},
 		rewardsB: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.60")),
-			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.666666666666666666")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.505355")),
+			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(156)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(46)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(109)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -600,6 +603,8 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
+
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -731,19 +736,21 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 	params := disableGasRebate(gstTypes.DefaultParams())
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.9")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.002295")),
 		},
 		rewardsB: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.1")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.005355")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(153)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(45)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(107)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
+			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins()),
 		},
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
+
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -881,6 +888,8 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
+
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -1010,6 +1019,8 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
+
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
