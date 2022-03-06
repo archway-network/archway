@@ -446,7 +446,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 		},
 		rewardsB: []sdk.DecCoin{
 			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.505355")),
-			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
+			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.666666666666666666")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
 			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
