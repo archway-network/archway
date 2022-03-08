@@ -56,7 +56,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 
 	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
 
-	// We need to commit pending metadata before we return due to not having any tracking activity but after we calculated rewards.
+	// We need to commit pending metadata before we return but after we calculated rewards.
 	commitPendingMetadata(context, gasTrackingKeeper)
 
 	// Either the tx did not collect any fee or no contracts were executed

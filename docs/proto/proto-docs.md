@@ -8,10 +8,7 @@
     - [BlockGasTracking](#archway.gastracker.v1.BlockGasTracking)
     - [ContractGasTracking](#archway.gastracker.v1.ContractGasTracking)
     - [ContractInstanceMetadata](#archway.gastracker.v1.ContractInstanceMetadata)
-    - [ContractInstantiationRequestWrapper](#archway.gastracker.v1.ContractInstantiationRequestWrapper)
-    - [ContractOperationInfo](#archway.gastracker.v1.ContractOperationInfo)
-    - [GasTrackingQueryRequestWrapper](#archway.gastracker.v1.GasTrackingQueryRequestWrapper)
-    - [GasTrackingQueryResultWrapper](#archway.gastracker.v1.GasTrackingQueryResultWrapper)
+    - [ContractRewardCalculationEvent](#archway.gastracker.v1.ContractRewardCalculationEvent)
     - [GenesisState](#archway.gastracker.v1.GenesisState)
     - [LeftOverRewardEntry](#archway.gastracker.v1.LeftOverRewardEntry)
     - [RewardDistributionEvent](#archway.gastracker.v1.RewardDistributionEvent)
@@ -69,7 +66,6 @@ Tracking contract gas usage
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `gas_consumed` | [uint64](#uint64) |  |  |
-| `is_eligible_for_reward` | [bool](#bool) |  |  |
 | `operation` | [ContractOperation](#archway.gastracker.v1.ContractOperation) |  |  |
 
 
@@ -96,71 +92,17 @@ Contract instance metadata
 
 
 
-<a name="archway.gastracker.v1.ContractInstantiationRequestWrapper"></a>
+<a name="archway.gastracker.v1.ContractRewardCalculationEvent"></a>
 
-### ContractInstantiationRequestWrapper
-Custom wrapper around contract instantiation request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `reward_address` | [string](#string) |  |  |
-| `gas_rebate_to_user` | [bool](#bool) |  | If set to true, user will get the gas rebate for the contract execution, otherwise developer will get some portion of fee relative to the amount of gas consumed by contract. |
-| `collect_premium` | [bool](#bool) |  | If set to true, developer will receive premium on top of the gas reward. It is a logical error to have both this and `gas_rebate_to_user` set to true. |
-| `premium_percentage_charged` | [uint64](#uint64) |  | Percentage of premium received by developer on top of their original gas reward |
-| `instantiation_request` | [string](#string) |  | The `InitMsg` which will be passed to the contract during initialization call and has to be encoded with Base64. |
-
-
-
-
-
-
-<a name="archway.gastracker.v1.ContractOperationInfo"></a>
-
-### ContractOperationInfo
-Custom Message returned by our wrapper vm
+### ContractRewardCalculationEvent
+Event emitted when contract reward is calculated
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `gas_consumed` | [uint64](#uint64) |  |  |
-| `operation` | [ContractOperation](#archway.gastracker.v1.ContractOperation) |  |  |
-| `reward_address` | [string](#string) |  | Only set in case of instantiate operation |
-| `gas_rebate_to_end_user` | [bool](#bool) |  | Only set in case of instantiate operation |
-| `collect_premium` | [bool](#bool) |  | Only set in case of instantiate operation |
-| `premium_percentage_charged` | [uint64](#uint64) |  | Only set in case of instantiate operation |
-
-
-
-
-
-
-<a name="archway.gastracker.v1.GasTrackingQueryRequestWrapper"></a>
-
-### GasTrackingQueryRequestWrapper
-Custom wrapper around Query request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `magic_string` | [string](#string) |  |  |
-| `query_request` | [bytes](#bytes) |  |  |
-
-
-
-
-
-
-<a name="archway.gastracker.v1.GasTrackingQueryResultWrapper"></a>
-
-### GasTrackingQueryResultWrapper
-Custom wrapper around Query result that also gives gas consumption
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `gas_consumed` | [uint64](#uint64) |  |  |
-| `query_response` | [bytes](#bytes) |  |  |
+| `contract_address` | [string](#string) |  |  |
+| `contract_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
+| `metadata` | [ContractInstanceMetadata](#archway.gastracker.v1.ContractInstanceMetadata) |  |  |
 
 
 
