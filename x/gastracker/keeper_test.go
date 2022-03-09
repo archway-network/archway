@@ -625,17 +625,15 @@ func TestIngestionOfGasRecords(t *testing.T) {
 	require.Equal(t, 2, len(blockTracking.TxTrackingInfos[0].ContractTrackingInfos))
 
 	require.Equal(t, &gstTypes.ContractGasTracking{
-		Address:             spareAddress[3].String(),
-		GasConsumed:         3,
-		IsEligibleForReward: false,
-		Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_MIGRATE,
+		Address:     spareAddress[3].String(),
+		GasConsumed: 3,
+		Operation:   gstTypes.ContractOperation_CONTRACT_OPERATION_MIGRATE,
 	}, blockTracking.TxTrackingInfos[0].ContractTrackingInfos[1])
 
 	require.Equal(t, &gstTypes.ContractGasTracking{
-		Address:             spareAddress[2].String(),
-		GasConsumed:         2,
-		IsEligibleForReward: true,
-		Operation:           gstTypes.ContractOperation_CONTRACT_OPERATION_IBC,
+		Address:     spareAddress[2].String(),
+		GasConsumed: 2,
+		Operation:   gstTypes.ContractOperation_CONTRACT_OPERATION_IBC,
 	}, blockTracking.TxTrackingInfos[0].ContractTrackingInfos[0])
 
 }
@@ -649,26 +647,26 @@ func TestAddContractGasUsage(t *testing.T) {
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 
-	err := keeper.TrackContractGasUsage(ctx, spareAddress[1], 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION, false)
+	err := keeper.TrackContractGasUsage(ctx, spareAddress[1], 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(), "We cannot track contract gas since block tracking does not exists")
 
 	err = keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION, false)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 	require.EqualError(t, err, types.ErrTxTrackingDataNotFound.Error(), "We cannot track contract gas since tx tracking does not exists")
 
 	// Let's track one tx with one contract gas usage
 	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
 	require.NoError(t, err, "We should be able to track new transaction")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION, false)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
 
 	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 6)
 	require.NoError(t, err, "We should be able to track new transaction")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], 2, types.ContractOperation_CONTRACT_OPERATION_REPLY, true)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], 2, types.ContractOperation_CONTRACT_OPERATION_REPLY)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[3], 3, types.ContractOperation_CONTRACT_OPERATION_SUDO, true)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[3], 3, types.ContractOperation_CONTRACT_OPERATION_SUDO)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
 
 	blockTrackingObj, err := keeper.GetCurrentBlockTracking(ctx)
@@ -679,10 +677,9 @@ func TestAddContractGasUsage(t *testing.T) {
 		MaxContractRewards: nil,
 		ContractTrackingInfos: []*types.ContractGasTracking{
 			{
-				Address:             spareAddress[1].String(),
-				GasConsumed:         1,
-				IsEligibleForReward: false,
-				Operation:           types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+				Address:     spareAddress[1].String(),
+				GasConsumed: 1,
+				Operation:   types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 			},
 		},
 	}, *blockTrackingObj.TxTrackingInfos[0])
@@ -691,16 +688,14 @@ func TestAddContractGasUsage(t *testing.T) {
 		MaxContractRewards: nil,
 		ContractTrackingInfos: []*types.ContractGasTracking{
 			{
-				Address:             spareAddress[2].String(),
-				GasConsumed:         2,
-				IsEligibleForReward: true,
-				Operation:           types.ContractOperation_CONTRACT_OPERATION_REPLY,
+				Address:     spareAddress[2].String(),
+				GasConsumed: 2,
+				Operation:   types.ContractOperation_CONTRACT_OPERATION_REPLY,
 			},
 			{
-				Address:             spareAddress[3].String(),
-				GasConsumed:         3,
-				IsEligibleForReward: true,
-				Operation:           types.ContractOperation_CONTRACT_OPERATION_SUDO,
+				Address:     spareAddress[3].String(),
+				GasConsumed: 3,
+				Operation:   types.ContractOperation_CONTRACT_OPERATION_SUDO,
 			},
 		},
 	}, *blockTrackingObj.TxTrackingInfos[1])

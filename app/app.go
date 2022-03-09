@@ -599,6 +599,7 @@ func NewArchwayApp(
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
+		gastracker.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
@@ -614,7 +615,6 @@ func NewArchwayApp(
 		ibctransfertypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
-		gastracker.ModuleName,
 	)
 
 	// Uncomment if you want to set a custom migration order here.
