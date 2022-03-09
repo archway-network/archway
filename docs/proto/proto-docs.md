@@ -101,6 +101,8 @@ Event emitted when contract reward is calculated
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `contract_address` | [string](#string) |  |  |
+| `gas_consumed` | [uint64](#uint64) |  |  |
+| `inflation_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  |  |
 | `contract_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
 | `metadata` | [ContractInstanceMetadata](#archway.gastracker.v1.ContractInstanceMetadata) |  |  |
 

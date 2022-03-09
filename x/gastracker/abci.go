@@ -31,16 +31,18 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 	})
 }
 
-func EmitContractRewardCalculationEvent(context sdk.Context, contractAddress string, contractRewards sdk.DecCoins, metadata *gstTypes.ContractInstanceMetadata) error {
+func EmitContractRewardCalculationEvent(context sdk.Context, contractAddress string, gasConsumed uint64, inflationReward sdk.DecCoin, contractRewards sdk.DecCoins, metadata *gstTypes.ContractInstanceMetadata) error {
 	rewards := make([]*sdk.DecCoin, len(contractRewards))
 	for i := range rewards {
 		rewards[i] = &contractRewards[i]
 	}
 
 	return context.EventManager().EmitTypedEvent(&gstTypes.ContractRewardCalculationEvent{
-		ContractAddress: contractAddress,
-		ContractRewards: rewards,
-		Metadata:        metadata,
+		ContractAddress:  contractAddress,
+		GasConsumed:      gasConsumed,
+		InflationRewards: &inflationReward,
+		ContractRewards:  rewards,
+		Metadata:         metadata,
 	})
 }
 
@@ -164,6 +166,7 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 		}
 
 		for _, contractTrackingInfo := range txTrackingInfo.ContractTrackingInfos {
+			var contractInflationReward sdk.DecCoin
 			contractAddress, err := sdk.AccAddressFromBech32(contractTrackingInfo.Address)
 			if err != nil {
 				panic(err)
@@ -181,7 +184,7 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 
 			if gasTrackingKeeper.IsDappInflationRewardsEnabled(context) && context.BlockGasMeter().Limit() > 0 {
 				blockGasLimit := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(context.BlockGasMeter().Limit()))
-				contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasConsumedInContract).Quo(blockGasLimit))
+				contractInflationReward = sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasConsumedInContract).Quo(blockGasLimit))
 				context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractAddress, "contractInflationReward", contractInflationReward)
 				contractRewards = contractRewards.Add(contractInflationReward)
 			}
@@ -220,7 +223,7 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 
 			totalContractRewardsInTx = totalContractRewardsInTx.Add(contractRewards...)
 
-			if err = EmitContractRewardCalculationEvent(context, contractAddress.String(), contractRewards, &metadata); err != nil {
+			if err = EmitContractRewardCalculationEvent(context, contractAddress.String(), contractTrackingInfo.GasConsumed, contractInflationReward, contractRewards, &metadata); err != nil {
 				panic(err)
 			}
 
