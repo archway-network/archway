@@ -46,12 +46,16 @@ var _ wasmvmtypes.Querier = QueryHandler{}
 func (q QueryHandler) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) ([]byte, error) {
 	// set a limit for a subCtx
 	sdkGas := q.gasRegister.FromWasmVMGas(gasLimit)
-	// discard all changes/ events in subCtx by not committing the cached context
-	subCtx, _ := q.Ctx.WithGasMeter(sdk.NewGasMeter(sdkGas)).CacheContext()
 
-	// make sure we charge the higher level context even on panic
+	if err := types.CreateNewSession(q.Ctx, sdkGas); err != nil {
+		return nil, err
+	}
+
+	// discard all changes/ events in subCtx by not committing the cached context
+	subCtx, _ := q.Ctx.CacheContext() //Instead, use prepare gas tracking sub ctx
+
 	defer func() {
-		q.Ctx.GasMeter().ConsumeGas(subCtx.GasMeter().GasConsumed(), "contract sub-query")
+		_ = types.DestroySession(&q.Ctx)
 	}()
 
 	res, err := q.Plugins.HandleQuery(subCtx, q.Caller, request)

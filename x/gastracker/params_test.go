@@ -17,7 +17,7 @@ func TestSetParams(t *testing.T) {
 
 	// Retrieve default values
 	require.Equal(t, true, keeper.IsGasTrackingEnabled(ctx), "gas tracking is not default value")
-	require.Equal(t, true, keeper.IsGasRebateEnabled(ctx), "gas rebate is not default value")
+	require.Equal(t, true, keeper.IsGasRebateToContractEnabled(ctx), "gas rebate is not default value")
 	require.Equal(t, true, keeper.IsGasRebateToUserEnabled(ctx), "gas rebate to user is not default value")
 	require.Equal(t, true, keeper.IsContractPremiumEnabled(ctx), "contract premium is not default value")
 
@@ -29,7 +29,7 @@ func TestSetParams(t *testing.T) {
 	keeper.SetParams(ctx, params)
 
 	require.Equal(t, false, keeper.IsGasTrackingEnabled(ctx), "gas tracking was not updated ")
-	require.Equal(t, false, keeper.IsGasRebateEnabled(ctx), "gas rebate was not updated")
+	require.Equal(t, false, keeper.IsGasRebateToContractEnabled(ctx), "gas rebate was not updated")
 	require.Equal(t, false, keeper.IsGasRebateToUserEnabled(ctx), "gas rebate to user was not updated")
 	require.Equal(t, false, keeper.IsContractPremiumEnabled(ctx), "contract premium was not updated")
 }

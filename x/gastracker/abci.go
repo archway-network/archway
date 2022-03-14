@@ -201,7 +201,7 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 					gasUsageForUsageRewards = gasUsageForUsageRewards.Add(premiumGas)
 				}
 
-				if gasTrackingKeeper.IsGasRebateEnabled(context) {
+				if gasTrackingKeeper.IsGasRebateToContractEnabled(context) {
 					for _, rewardCoin := range txTrackingInfo.MaxContractRewards {
 						contractRewards = contractRewards.Add(sdk.NewDecCoinFromDec(
 							rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(maxGasAllowedInTx)))

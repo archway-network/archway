@@ -36,8 +36,9 @@ message TransactionTracking {
 // Tracking contract gas usage
 message ContractGasTracking {
   string address = 1;
-  uint64 gas_consumed = 2;
-  ContractOperation operation = 3;
+  uint64 vm_gas_consumed = 2;
+  uint64 sdk_gas_consumed = 3;
+  ContractOperation operation = 4;
 }
 
 // Tracking gas consumption for all tx in a particular block

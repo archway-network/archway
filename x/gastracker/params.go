@@ -18,7 +18,7 @@ func (k Keeper) IsDappInflationRewardsEnabled(ctx sdk.Context) (res bool) {
 	k.paramSpace.Get(ctx, gstTypes.ParamsKeyDappInflationRewards, &res)
 	return
 }
-func (k Keeper) IsGasRebateEnabled(ctx sdk.Context) (res bool) {
+func (k Keeper) IsGasRebateToContractEnabled(ctx sdk.Context) (res bool) {
 	k.paramSpace.Get(ctx, gstTypes.ParamsKeyGasRebateSwitch, &res)
 	return
 }

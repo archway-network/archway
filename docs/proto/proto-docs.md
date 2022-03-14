@@ -65,7 +65,8 @@ Tracking contract gas usage
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
-| `gas_consumed` | [uint64](#uint64) |  |  |
+| `vm_gas_consumed` | [uint64](#uint64) |  |  |
+| `sdk_gas_consumed` | [uint64](#uint64) |  |  |
 | `operation` | [ContractOperation](#archway.gastracker.v1.ContractOperation) |  |  |
 
 
