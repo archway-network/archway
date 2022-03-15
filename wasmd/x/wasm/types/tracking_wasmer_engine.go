@@ -257,8 +257,19 @@ type TrackingVMError struct {
 }
 
 func (t *TrackingVMError) Error() string {
+	vmErrorString := "<nil>"
+	gasProcessorErrorString := "<nil>"
+
+	if t.VmError != nil {
+		vmErrorString = t.VmError.Error()
+	}
+
+	if t.GasProcessorError != nil {
+		gasProcessorErrorString = t.GasProcessorError.Error()
+	}
+
 	return fmt.Sprintf("error in invocation of tracking vm: WASM vm error: %s and Gas recording error: %s",
-		t.VmError.Error(), t.GasProcessorError.Error())
+		vmErrorString, gasProcessorErrorString)
 }
 
 type TrackingWasmerEngine struct {
@@ -359,7 +370,7 @@ func (t *TrackingWasmerEngine) Query(ctx sdk.Context, code wasmvm.Checksum, env 
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    updatedGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -404,7 +415,7 @@ func (t *TrackingWasmerEngine) Instantiate(ctx sdk.Context, checksum wasmvm.Chec
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    updatedGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -463,7 +474,7 @@ func (t *TrackingWasmerEngine) Execute(ctx sdk.Context, code wasmvm.Checksum, en
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    actualGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -522,7 +533,7 @@ func (t *TrackingWasmerEngine) Migrate(ctx sdk.Context, checksum wasmvm.Checksum
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    actualGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -581,7 +592,7 @@ func (t *TrackingWasmerEngine) Sudo(ctx sdk.Context, checksum wasmvm.Checksum, e
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    actualGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -640,7 +651,7 @@ func (t *TrackingWasmerEngine) Reply(ctx sdk.Context, checksum wasmvm.Checksum, 
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    actualGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -707,7 +718,7 @@ func (t *TrackingWasmerEngine) IBCChannelOpen(ctx sdk.Context, checksum wasmvm.C
 		return 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    actualGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -766,7 +777,7 @@ func (t *TrackingWasmerEngine) IBCChannelConnect(ctx sdk.Context, checksum wasmv
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    actualGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -825,7 +836,7 @@ func (t *TrackingWasmerEngine) IBCChannelClose(ctx sdk.Context, checksum wasmvm.
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    actualGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -884,7 +895,7 @@ func (t *TrackingWasmerEngine) IBCPacketReceive(ctx sdk.Context, checksum wasmvm
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    actualGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -943,7 +954,7 @@ func (t *TrackingWasmerEngine) IBCPacketAck(ctx sdk.Context, checksum wasmvm.Che
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    actualGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,
@@ -1002,7 +1013,7 @@ func (t *TrackingWasmerEngine) IBCPacketTimeout(ctx sdk.Context, checksum wasmvm
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
-	trackingErr = AddVMRecord(ctx, &VMRecord{
+	trackingErr = AddVMRecord(*querier.GetCtx(), &VMRecord{
 		OriginalVMGas:  gasInfo.ContractGas,
 		ActualVMGas:    actualGasInfo.ContractGas,
 		OriginalSDKGas: gasInfo.SDKGas,

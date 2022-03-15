@@ -164,7 +164,7 @@ func (k *Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (f
 	}
 
 	if !contractMetadataExists {
-		return passthroughFn, err
+		return passthroughFn, nil
 	}
 
 	// We are pre-fetching the configuration so that
