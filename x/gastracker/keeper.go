@@ -126,10 +126,9 @@ func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGa
 			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_UNSPECIFIED
 		}
 
-		// TODO: Modify this to ingest sdk gas as well
 		if err := k.TrackContractGasUsage(ctx, contractAddress, wasmTypes.GasConsumptionInfo{
-			SDKGas:      record.GasInfo.SDKGas,
-			ContractGas: k.wasmGasRegister.FromWasmVMGas(record.GasInfo.ContractGas),
+			SDKGas:      record.OriginalGas.SDKGas,
+			ContractGas: k.wasmGasRegister.FromWasmVMGas(record.OriginalGas.ContractGas),
 		}, operation); err != nil {
 			return err
 		}
@@ -203,7 +202,7 @@ func (k *Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractG
 		return wasmTypes.GasConsumptionInfo{}, nil
 	}
 
-	return gasCalcFn(record.OperationId, record.GasInfo), nil
+	return gasCalcFn(record.OperationId, record.OriginalGas), nil
 }
 
 func (k *Keeper) GetCurrentTxTracking(ctx sdk.Context) (gstTypes.TransactionTracking, error) {
@@ -474,7 +473,7 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 	return nil
 }
 
-func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, gasUsed wasmTypes.GasConsumptionInfo, operation gstTypes.ContractOperation) error {
+func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, originalGas wasmTypes.GasConsumptionInfo, operation gstTypes.ContractOperation) error {
 	gstKvStore := ctx.KVStore(k.key)
 	bz := gstKvStore.Get([]byte(gstTypes.CurrentBlockTrackingKey))
 	if bz == nil {
@@ -493,8 +492,8 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccA
 	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
 	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gstTypes.ContractGasTracking{
 		Address:        contractAddress.String(),
-		VmGasConsumed:  gasUsed.ContractGas,
-		SdkGasConsumed: gasUsed.SDKGas,
+		OriginalVmGas:  originalGas.ContractGas,
+		OriginalSdkGas: originalGas.SDKGas,
 		Operation:      operation,
 	})
 	bz, err = k.appCodec.Marshal(&currentBlockGasTracking)

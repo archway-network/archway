@@ -8,25 +8,25 @@ import (
 const gasTrackingKey = "__gt_key__"
 
 type SessionRecord struct {
-	SDKGasConsumed  sdk.Gas
-	SDKRequestedGas sdk.Gas
+	ActualSDKGas    sdk.Gas
+	OriginalSDKGas  sdk.Gas
 	OriginalVMGas   sdk.Gas
-	UpdatedVMGas    sdk.Gas
+	ActualVMGas     sdk.Gas
 	ContractAddress string
 }
 
 type VMRecord struct {
-	OriginalVMGas   sdk.Gas
-	UpdatedVMGas    sdk.Gas
-	SDKGasConsumed  sdk.Gas
-	SDKRequestedGas sdk.Gas
+	OriginalVMGas  sdk.Gas
+	ActualVMGas    sdk.Gas
+	ActualSDKGas   sdk.Gas
+	OriginalSDKGas sdk.Gas
 }
 
 type activeSession struct {
 	meter         *ContractSDKGasMeter
 	gasFilledIn   bool
 	originalVMGas sdk.Gas
-	updatedVMGas  sdk.Gas
+	actualVMGas   sdk.Gas
 }
 
 type gasTracking struct {
@@ -53,13 +53,13 @@ func doDestroyCurrentSession(ctx *sdk.Context, queryTracking *gasTracking) error
 	}
 
 	queryTracking.mainGasMeter.ConsumeGas(currentSession.meter.GasConsumed(), "contract sub-query")
-	requestedGas, actualGas := currentSession.meter.GetGasStat()
+
 	queryTracking.sessionRecords = append(queryTracking.sessionRecords, &SessionRecord{
-		SDKGasConsumed:  actualGas,
-		SDKRequestedGas: requestedGas,
+		ActualSDKGas:    currentSession.meter.GetActualGas(),
+		OriginalSDKGas:  currentSession.meter.GetOriginalGas(),
 		ContractAddress: currentSession.meter.GetContractAddress(),
 		OriginalVMGas:   currentSession.originalVMGas,
-		UpdatedVMGas:    currentSession.updatedVMGas,
+		ActualVMGas:     currentSession.actualVMGas,
 	})
 	queryTracking.activeSessions = queryTracking.activeSessions[:len(queryTracking.activeSessions)-1]
 
@@ -148,7 +148,7 @@ func AddVMRecord(ctx sdk.Context, vmRecord *VMRecord) error {
 
 	lastSession.gasFilledIn = true
 	lastSession.originalVMGas = vmRecord.OriginalVMGas
-	lastSession.updatedVMGas = vmRecord.UpdatedVMGas
+	lastSession.actualVMGas = vmRecord.ActualVMGas
 
 	return nil
 }

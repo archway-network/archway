@@ -4,14 +4,11 @@ import (
 	"fmt"
 	wasmvm "github.com/CosmWasm/wasmvm"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-const queryTrackingDataCtxKey = "QueryTrackingData"
 
 type BareWasmVM interface {
 	// Create will compile the wasm code, and store the resulting pre-compile
@@ -244,11 +241,6 @@ type BareWasmVM interface {
 	GetMetrics() (*wasmvmtypes.Metrics, error)
 }
 
-type PrefixStoreInfo struct {
-	Store     store.KVStore
-	PrefixKey []byte
-}
-
 type QueryTrackingData struct {
 	TrackingRecords []ContractTrackingData
 }
@@ -285,11 +277,11 @@ func (t *TrackingWasmerEngine) SetGasRecorder(recorder ContractGasProcessor) {
 	t.gasProcessor = recorder
 }
 
-func (t *TrackingWasmerEngine) getUpdatedGas(ctx sdk.Context, operationId uint64, contractAddress string, gasInfo GasConsumptionInfo) (GasConsumptionInfo, error) {
+func (t *TrackingWasmerEngine) getActualGas(ctx sdk.Context, operationId uint64, contractAddress string, gasInfo GasConsumptionInfo) (GasConsumptionInfo, error) {
 	return t.gasProcessor.CalculateUpdatedGas(ctx, ContractGasRecord{
 		OperationId:     operationId,
 		ContractAddress: contractAddress,
-		GasInfo:         gasInfo,
+		OriginalGas:     gasInfo,
 	})
 }
 
@@ -301,8 +293,8 @@ func (t *TrackingWasmerEngine) ingestGasRecords(ctx sdk.Context, querySessionRec
 		gasRecords[index] = ContractGasRecord{
 			OperationId:     ContractOperationQuery,
 			ContractAddress: operation.ContractAddress,
-			GasInfo: GasConsumptionInfo{
-				SDKGas:      operation.SDKRequestedGas,
+			OriginalGas: GasConsumptionInfo{
+				SDKGas:      operation.OriginalSDKGas,
 				ContractGas: operation.OriginalVMGas,
 			},
 		}
@@ -312,8 +304,8 @@ func (t *TrackingWasmerEngine) ingestGasRecords(ctx sdk.Context, querySessionRec
 	gasRecords[index] = ContractGasRecord{
 		OperationId:     currentOperation,
 		ContractAddress: txSessionRecord.ContractAddress,
-		GasInfo: GasConsumptionInfo{
-			SDKGas:      txSessionRecord.SDKRequestedGas,
+		OriginalGas: GasConsumptionInfo{
+			SDKGas:      txSessionRecord.OriginalSDKGas,
 			ContractGas: txSessionRecord.OriginalVMGas,
 		},
 	}
@@ -359,19 +351,19 @@ func (t *TrackingWasmerEngine) Query(ctx sdk.Context, code wasmvm.Checksum, env 
 	response, gasUsed, err := t.vm.Query(code, env, queryMsg, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	updatedGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    updatedGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   updatedGasInfo.SDKGas,
 	})
 
 	if err != nil && trackingErr == nil {
@@ -403,20 +395,20 @@ func (t *TrackingWasmerEngine) Instantiate(ctx sdk.Context, checksum wasmvm.Chec
 	response, gasUsed, err := t.vm.Instantiate(checksum, env, info, initMsg, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	updatedGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    updatedGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   updatedGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
 		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
@@ -462,42 +454,42 @@ func (t *TrackingWasmerEngine) Execute(ctx sdk.Context, code wasmvm.Checksum, en
 	response, gasUsed, err := t.vm.Execute(code, env, info, executeMsg, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	actualGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    actualGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   actualGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	querySessionRecords, txSessionRecord, trackingErr := TerminateGasTracking(querier.GetCtx())
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	if err != nil && trackingErr == nil {
-		return response, updatedGasInfo.ContractGas, err
+		return response, actualGasInfo.ContractGas, err
 	} else if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	ingestingErr := t.ingestGasRecords(ctx, querySessionRecords, txSessionRecord, CurrentOperation)
 
 	if ingestingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
 	} else {
-		return response, updatedGasInfo.ContractGas, nil
+		return response, actualGasInfo.ContractGas, nil
 	}
 }
 
@@ -521,42 +513,42 @@ func (t *TrackingWasmerEngine) Migrate(ctx sdk.Context, checksum wasmvm.Checksum
 	response, gasUsed, err := t.vm.Migrate(checksum, env, migrateMsg, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	actualGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    actualGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   actualGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	querySessionRecords, txSessionRecord, trackingErr := TerminateGasTracking(querier.GetCtx())
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	if err != nil && trackingErr == nil {
-		return response, updatedGasInfo.ContractGas, err
+		return response, actualGasInfo.ContractGas, err
 	} else if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	ingestingErr := t.ingestGasRecords(ctx, querySessionRecords, txSessionRecord, CurrentOperation)
 
 	if ingestingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
 	} else {
-		return response, updatedGasInfo.ContractGas, nil
+		return response, actualGasInfo.ContractGas, nil
 	}
 }
 
@@ -580,42 +572,42 @@ func (t *TrackingWasmerEngine) Sudo(ctx sdk.Context, checksum wasmvm.Checksum, e
 	response, gasUsed, err := t.vm.Sudo(checksum, env, sudoMsg, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	actualGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    actualGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   actualGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	querySessionRecords, txSessionRecord, trackingErr := TerminateGasTracking(querier.GetCtx())
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	if err != nil && trackingErr == nil {
-		return response, updatedGasInfo.ContractGas, err
+		return response, actualGasInfo.ContractGas, err
 	} else if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	ingestingErr := t.ingestGasRecords(ctx, querySessionRecords, txSessionRecord, CurrentOperation)
 
 	if ingestingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
 	} else {
-		return response, updatedGasInfo.ContractGas, nil
+		return response, actualGasInfo.ContractGas, nil
 	}
 }
 
@@ -639,42 +631,42 @@ func (t *TrackingWasmerEngine) Reply(ctx sdk.Context, checksum wasmvm.Checksum, 
 	response, gasUsed, err := t.vm.Reply(checksum, env, reply, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	actualGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    actualGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   actualGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	querySessionRecords, txSessionRecord, trackingErr := TerminateGasTracking(querier.GetCtx())
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	if err != nil && trackingErr == nil {
-		return response, updatedGasInfo.ContractGas, err
+		return response, actualGasInfo.ContractGas, err
 	} else if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	ingestingErr := t.ingestGasRecords(ctx, querySessionRecords, txSessionRecord, CurrentOperation)
 
 	if ingestingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
 	} else {
-		return response, updatedGasInfo.ContractGas, nil
+		return response, actualGasInfo.ContractGas, nil
 	}
 }
 
@@ -706,42 +698,42 @@ func (t *TrackingWasmerEngine) IBCChannelOpen(ctx sdk.Context, checksum wasmvm.C
 	gasUsed, err := t.vm.IBCChannelOpen(checksum, env, channel, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	actualGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    actualGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   actualGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
-		return updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	querySessionRecords, txSessionRecord, trackingErr := TerminateGasTracking(querier.GetCtx())
 	if trackingErr != nil {
-		return updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	if err != nil && trackingErr == nil {
-		return updatedGasInfo.ContractGas, err
+		return actualGasInfo.ContractGas, err
 	} else if trackingErr != nil {
-		return updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	ingestingErr := t.ingestGasRecords(ctx, querySessionRecords, txSessionRecord, CurrentOperation)
 
 	if ingestingErr != nil {
-		return updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
+		return actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
 	} else {
-		return updatedGasInfo.ContractGas, nil
+		return actualGasInfo.ContractGas, nil
 	}
 }
 
@@ -765,42 +757,42 @@ func (t *TrackingWasmerEngine) IBCChannelConnect(ctx sdk.Context, checksum wasmv
 	response, gasUsed, err := t.vm.IBCChannelConnect(checksum, env, channel, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	actualGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    actualGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   actualGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	querySessionRecords, txSessionRecord, trackingErr := TerminateGasTracking(querier.GetCtx())
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	if err != nil && trackingErr == nil {
-		return response, updatedGasInfo.ContractGas, err
+		return response, actualGasInfo.ContractGas, err
 	} else if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	ingestingErr := t.ingestGasRecords(ctx, querySessionRecords, txSessionRecord, CurrentOperation)
 
 	if ingestingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
 	} else {
-		return response, updatedGasInfo.ContractGas, nil
+		return response, actualGasInfo.ContractGas, nil
 	}
 }
 
@@ -824,42 +816,42 @@ func (t *TrackingWasmerEngine) IBCChannelClose(ctx sdk.Context, checksum wasmvm.
 	response, gasUsed, err := t.vm.IBCChannelClose(checksum, env, channel, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	actualGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    actualGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   actualGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	querySessionRecords, txSessionRecord, trackingErr := TerminateGasTracking(querier.GetCtx())
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	if err != nil && trackingErr == nil {
-		return response, updatedGasInfo.ContractGas, err
+		return response, actualGasInfo.ContractGas, err
 	} else if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	ingestingErr := t.ingestGasRecords(ctx, querySessionRecords, txSessionRecord, CurrentOperation)
 
 	if ingestingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
 	} else {
-		return response, updatedGasInfo.ContractGas, nil
+		return response, actualGasInfo.ContractGas, nil
 	}
 }
 
@@ -883,42 +875,42 @@ func (t *TrackingWasmerEngine) IBCPacketReceive(ctx sdk.Context, checksum wasmvm
 	response, gasUsed, err := t.vm.IBCPacketReceive(checksum, env, packet, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	actualGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    actualGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   actualGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	querySessionRecords, txSessionRecord, trackingErr := TerminateGasTracking(querier.GetCtx())
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	if err != nil && trackingErr == nil {
-		return response, updatedGasInfo.ContractGas, err
+		return response, actualGasInfo.ContractGas, err
 	} else if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	ingestingErr := t.ingestGasRecords(ctx, querySessionRecords, txSessionRecord, CurrentOperation)
 
 	if ingestingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
 	} else {
-		return response, updatedGasInfo.ContractGas, nil
+		return response, actualGasInfo.ContractGas, nil
 	}
 }
 
@@ -942,42 +934,42 @@ func (t *TrackingWasmerEngine) IBCPacketAck(ctx sdk.Context, checksum wasmvm.Che
 	response, gasUsed, err := t.vm.IBCPacketAck(checksum, env, ack, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	actualGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    actualGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   actualGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	querySessionRecords, txSessionRecord, trackingErr := TerminateGasTracking(querier.GetCtx())
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	if err != nil && trackingErr == nil {
-		return response, updatedGasInfo.ContractGas, err
+		return response, actualGasInfo.ContractGas, err
 	} else if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	ingestingErr := t.ingestGasRecords(ctx, querySessionRecords, txSessionRecord, CurrentOperation)
 
 	if ingestingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
 	} else {
-		return response, updatedGasInfo.ContractGas, nil
+		return response, actualGasInfo.ContractGas, nil
 	}
 }
 
@@ -1001,42 +993,42 @@ func (t *TrackingWasmerEngine) IBCPacketTimeout(ctx sdk.Context, checksum wasmvm
 	response, gasUsed, err := t.vm.IBCPacketTimeout(checksum, env, packet, prefixStore, goapi, querier, gasMeter, gasLimit, deserCost)
 
 	gasInfo := GasConsumptionInfo{
-		SDKGas:      storeGasMeter.requestedGas,
+		SDKGas:      storeGasMeter.GetOriginalGas(),
 		ContractGas: gasUsed,
 	}
 
-	updatedGasInfo, trackingErr := t.getUpdatedGas(ctx, CurrentOperation, contractAddress, gasInfo)
+	actualGasInfo, trackingErr := t.getActualGas(ctx, CurrentOperation, contractAddress, gasInfo)
 	if trackingErr != nil {
 		return response, 0, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	trackingErr = AddVMRecord(ctx, &VMRecord{
-		OriginalVMGas:   gasInfo.ContractGas,
-		UpdatedVMGas:    updatedGasInfo.ContractGas,
-		SDKRequestedGas: gasInfo.SDKGas,
-		SDKGasConsumed:  updatedGasInfo.SDKGas,
+		OriginalVMGas:  gasInfo.ContractGas,
+		ActualVMGas:    actualGasInfo.ContractGas,
+		OriginalSDKGas: gasInfo.SDKGas,
+		ActualSDKGas:   actualGasInfo.SDKGas,
 	})
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	querySessionRecords, txSessionRecord, trackingErr := TerminateGasTracking(querier.GetCtx())
 	if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	if err != nil && trackingErr == nil {
-		return response, updatedGasInfo.ContractGas, err
+		return response, actualGasInfo.ContractGas, err
 	} else if trackingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: trackingErr}
 	}
 
 	ingestingErr := t.ingestGasRecords(ctx, querySessionRecords, txSessionRecord, CurrentOperation)
 
 	if ingestingErr != nil {
-		return response, updatedGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
+		return response, actualGasInfo.ContractGas, &TrackingVMError{VmError: err, GasProcessorError: ingestingErr}
 	} else {
-		return response, updatedGasInfo.ContractGas, nil
+		return response, actualGasInfo.ContractGas, nil
 	}
 }
 

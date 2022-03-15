@@ -9,7 +9,7 @@ var _ sdk.GasMeter = &ContractSDKGasMeter{}
 
 type ContractSDKGasMeter struct {
 	actualGasConsumed          sdk.Gas
-	requestedGas               sdk.Gas
+	originalGas                sdk.Gas
 	underlyingGasMeter         sdk.GasMeter
 	contractAddress            string
 	contractGasCalculationFunc func(operationId uint64, info GasConsumptionInfo) GasConsumptionInfo
@@ -18,7 +18,7 @@ type ContractSDKGasMeter struct {
 func NewContractGasMeter(underlyingGasMeter sdk.GasMeter, gasCalculationFunc func(uint64, GasConsumptionInfo) GasConsumptionInfo, contractAddress string) ContractSDKGasMeter {
 	return ContractSDKGasMeter{
 		actualGasConsumed:          0,
-		requestedGas:               0,
+		originalGas:                0,
 		contractGasCalculationFunc: gasCalculationFunc,
 		underlyingGasMeter:         underlyingGasMeter,
 		contractAddress:            contractAddress,
@@ -29,8 +29,12 @@ func (c *ContractSDKGasMeter) GetContractAddress() string {
 	return c.contractAddress
 }
 
-func (c *ContractSDKGasMeter) GetGasStat() (sdk.Gas, sdk.Gas) {
-	return c.requestedGas, c.actualGasConsumed
+func (c *ContractSDKGasMeter) GetOriginalGas() sdk.Gas {
+	return c.originalGas
+}
+
+func (c *ContractSDKGasMeter) GetActualGas() sdk.Gas {
+	return c.actualGasConsumed
 }
 
 func (c *ContractSDKGasMeter) GasConsumed() storetypes.Gas {
@@ -48,14 +52,14 @@ func (c *ContractSDKGasMeter) Limit() storetypes.Gas {
 func (c *ContractSDKGasMeter) ConsumeGas(amount storetypes.Gas, descriptor string) {
 	updatedGasInfo := c.contractGasCalculationFunc(ContractOperationUnknown, GasConsumptionInfo{SDKGas: amount})
 	c.underlyingGasMeter.ConsumeGas(updatedGasInfo.SDKGas, descriptor)
-	c.requestedGas += amount
+	c.originalGas += amount
 	c.actualGasConsumed += updatedGasInfo.SDKGas
 }
 
 func (c *ContractSDKGasMeter) RefundGas(amount storetypes.Gas, descriptor string) {
 	updatedGasInfo := c.contractGasCalculationFunc(ContractOperationUnknown, GasConsumptionInfo{SDKGas: amount})
 	c.underlyingGasMeter.RefundGas(updatedGasInfo.SDKGas, descriptor)
-	c.requestedGas -= amount
+	c.originalGas -= amount
 	c.actualGasConsumed -= updatedGasInfo.SDKGas
 }
 

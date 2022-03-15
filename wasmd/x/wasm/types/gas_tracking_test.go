@@ -62,7 +62,7 @@ func TestQueryGasTracking(t *testing.T) {
 
 	err = AddVMRecord(ctx, &VMRecord{
 		OriginalVMGas: 50,
-		UpdatedVMGas:  500,
+		ActualVMGas:   500,
 	})
 	require.NoError(t, err, "We should be able to add vm record")
 

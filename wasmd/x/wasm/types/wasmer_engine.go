@@ -3,12 +3,18 @@ package types
 import (
 	wasmvm "github.com/CosmWasm/wasmvm"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type QuerierWithCtx interface {
 	wasmvm.Querier
 	GetCtx() *sdk.Context
+}
+
+type PrefixStoreInfo struct {
+	Store     store.KVStore
+	PrefixKey []byte
 }
 
 // WasmerEngine defines the WASM contract runtime engine.
@@ -42,7 +48,7 @@ type WasmerEngine interface {
 		env wasmvmtypes.Env,
 		info wasmvmtypes.MessageInfo,
 		initMsg []byte,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -62,7 +68,7 @@ type WasmerEngine interface {
 		env wasmvmtypes.Env,
 		info wasmvmtypes.MessageInfo,
 		executeMsg []byte,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -78,7 +84,7 @@ type WasmerEngine interface {
 		code wasmvm.Checksum,
 		env wasmvmtypes.Env,
 		queryMsg []byte,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -97,7 +103,7 @@ type WasmerEngine interface {
 		checksum wasmvm.Checksum,
 		env wasmvmtypes.Env,
 		migrateMsg []byte,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -115,7 +121,7 @@ type WasmerEngine interface {
 		checksum wasmvm.Checksum,
 		env wasmvmtypes.Env,
 		sudoMsg []byte,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -129,7 +135,7 @@ type WasmerEngine interface {
 		checksum wasmvm.Checksum,
 		env wasmvmtypes.Env,
 		reply wasmvmtypes.Reply,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -156,7 +162,7 @@ type WasmerEngine interface {
 		checksum wasmvm.Checksum,
 		env wasmvmtypes.Env,
 		channel wasmvmtypes.IBCChannelOpenMsg,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -171,7 +177,7 @@ type WasmerEngine interface {
 		checksum wasmvm.Checksum,
 		env wasmvmtypes.Env,
 		channel wasmvmtypes.IBCChannelConnectMsg,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -186,7 +192,7 @@ type WasmerEngine interface {
 		checksum wasmvm.Checksum,
 		env wasmvmtypes.Env,
 		channel wasmvmtypes.IBCChannelCloseMsg,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -201,7 +207,7 @@ type WasmerEngine interface {
 		checksum wasmvm.Checksum,
 		env wasmvmtypes.Env,
 		packet wasmvmtypes.IBCPacketReceiveMsg,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -217,7 +223,7 @@ type WasmerEngine interface {
 		checksum wasmvm.Checksum,
 		env wasmvmtypes.Env,
 		ack wasmvmtypes.IBCPacketAckMsg,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,
@@ -233,7 +239,7 @@ type WasmerEngine interface {
 		checksum wasmvm.Checksum,
 		env wasmvmtypes.Env,
 		packet wasmvmtypes.IBCPacketTimeoutMsg,
-		store wasmvm.KVStore,
+		store PrefixStoreInfo,
 		goapi wasmvm.GoAPI,
 		querier QuerierWithCtx,
 		gasMeter wasmvm.GasMeter,

@@ -26,7 +26,7 @@ type GasConsumptionInfo struct {
 type ContractGasRecord struct {
 	OperationId     uint64
 	ContractAddress string
-	GasInfo         GasConsumptionInfo
+	OriginalGas     GasConsumptionInfo
 }
 
 type ContractGasProcessor interface {
@@ -52,5 +52,5 @@ func (n *NoOpContractGasProcessor) IngestGasRecord(_ sdk.Context, _ []ContractGa
 }
 
 func (n *NoOpContractGasProcessor) CalculateUpdatedGas(_ sdk.Context, record ContractGasRecord) (GasConsumptionInfo, error) {
-	return record.GasInfo, nil
+	return record.OriginalGas, nil
 }
