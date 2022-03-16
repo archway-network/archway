@@ -16,10 +16,8 @@ type SessionRecord struct {
 }
 
 type VMRecord struct {
-	OriginalVMGas       sdk.Gas
-	ActualVMGas         sdk.Gas
-	ActualStoreSDKGas   sdk.Gas
-	OriginalStoreSDKGas sdk.Gas
+	OriginalVMGas sdk.Gas
+	ActualVMGas   sdk.Gas
 }
 
 type activeSession struct {
@@ -57,8 +55,8 @@ func doDestroyCurrentSession(ctx *sdk.Context, queryTracking *gasTracking) error
 	queryTracking.mainGasMeter.ConsumeGas(currentSession.meter.GasConsumed(), "contract sub-query")
 
 	queryTracking.sessionRecords = append(queryTracking.sessionRecords, &SessionRecord{
-		ActualSDKGas:    currentSession.meter.GetActualGas() + currentSession.actualStoreSDKGas,
-		OriginalSDKGas:  currentSession.meter.GetOriginalGas() + currentSession.originalStoreSDKGas,
+		ActualSDKGas:    currentSession.meter.GetActualGas(),
+		OriginalSDKGas:  currentSession.meter.GetOriginalGas(),
 		ContractAddress: currentSession.meter.GetContractAddress(),
 		OriginalVMGas:   currentSession.originalVMGas,
 		ActualVMGas:     currentSession.actualVMGas,
@@ -151,19 +149,16 @@ func AddVMRecord(ctx sdk.Context, vmRecord *VMRecord) error {
 	lastSession.gasFilledIn = true
 	lastSession.originalVMGas = vmRecord.OriginalVMGas
 	lastSession.actualVMGas = vmRecord.ActualVMGas
-	lastSession.originalStoreSDKGas = vmRecord.OriginalStoreSDKGas
-	lastSession.actualStoreSDKGas = vmRecord.ActualStoreSDKGas
 
 	return nil
 }
 
-func AssociateMeterWithCurrentSession(ctx *sdk.Context, gasMeterFn func(gasLimit uint64) *ContractSDKGasMeter) error {
+func AssociateMeterWithCurrentSession(ctx *sdk.Context, contractGasMeter *ContractSDKGasMeter) error {
 	queryTracking, err := getGasTrackingData(*ctx)
 	if err != nil {
 		return err
 	}
 
-	contractGasMeter := gasMeterFn(queryTracking.limitForUpcomingGasMeter)
 	queryTracking.activeSessions = append(queryTracking.activeSessions, &activeSession{
 		meter:       contractGasMeter,
 		gasFilledIn: false,

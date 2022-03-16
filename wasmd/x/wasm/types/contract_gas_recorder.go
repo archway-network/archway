@@ -19,8 +19,8 @@ const (
 )
 
 type GasConsumptionInfo struct {
-	ContractGas uint64
-	SDKGas      uint64
+	VMGas  uint64
+	SDKGas uint64
 }
 
 type ContractGasRecord struct {

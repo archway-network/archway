@@ -127,8 +127,8 @@ func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGa
 		}
 
 		if err := k.TrackContractGasUsage(ctx, contractAddress, wasmTypes.GasConsumptionInfo{
-			SDKGas:      record.OriginalGas.SDKGas,
-			ContractGas: k.wasmGasRegister.FromWasmVMGas(record.OriginalGas.ContractGas),
+			SDKGas: record.OriginalGas.SDKGas,
+			VMGas:  k.wasmGasRegister.FromWasmVMGas(record.OriginalGas.VMGas),
 		}, operation); err != nil {
 			return err
 		}
@@ -180,14 +180,14 @@ func (k *Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (f
 
 		if isGasRebateToUserEnabled && contractMetadata.GasRebateToUser {
 			updatedGas := wasmTypes.GasConsumptionInfo{
-				SDKGas:      (gasConsumptionInfo.SDKGas * 50) / 100,
-				ContractGas: (gasConsumptionInfo.ContractGas * 50) / 100,
+				SDKGas: (gasConsumptionInfo.SDKGas * 50) / 100,
+				VMGas:  (gasConsumptionInfo.VMGas * 50) / 100,
 			}
 			return updatedGas
 		} else if isContractPremiumEnabled && contractMetadata.CollectPremium {
 			updatedGas := wasmTypes.GasConsumptionInfo{
-				SDKGas:      gasConsumptionInfo.SDKGas + (gasConsumptionInfo.SDKGas*contractMetadata.PremiumPercentageCharged)/100,
-				ContractGas: gasConsumptionInfo.ContractGas + (gasConsumptionInfo.ContractGas*contractMetadata.PremiumPercentageCharged)/100,
+				SDKGas: gasConsumptionInfo.SDKGas + (gasConsumptionInfo.SDKGas*contractMetadata.PremiumPercentageCharged)/100,
+				VMGas:  gasConsumptionInfo.VMGas + (gasConsumptionInfo.VMGas*contractMetadata.PremiumPercentageCharged)/100,
 			}
 			return updatedGas
 		} else {
@@ -492,7 +492,7 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccA
 	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
 	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gstTypes.ContractGasTracking{
 		Address:        contractAddress.String(),
-		OriginalVmGas:  originalGas.ContractGas,
+		OriginalVmGas:  originalGas.VMGas,
 		OriginalSdkGas: originalGas.SDKGas,
 		Operation:      operation,
 	})
