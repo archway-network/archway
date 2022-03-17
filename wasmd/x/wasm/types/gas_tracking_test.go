@@ -9,6 +9,11 @@ import (
 	"testing"
 )
 
+func newContractGasMeterByRef(underlyingMeter sdk.GasMeter, gasCalculationFn func(_ uint64, info GasConsumptionInfo) GasConsumptionInfo, contractAddress string) *ContractSDKGasMeter {
+	gasMeter := NewContractGasMeter(underlyingMeter, gasCalculationFn, contractAddress)
+	return &gasMeter
+}
+
 func TestGasTracking(t *testing.T) {
 	memDB := db.NewMemDB()
 	cms := store.NewCommitMultiStore(memDB)
@@ -48,12 +53,11 @@ func TestGasTracking(t *testing.T) {
 	ctx.GasMeter().ConsumeGas(50, "")
 
 	// {{}{ Session 2: Meter associated
-	gasMeter := NewContractGasMeter(sdk.NewGasMeter(5000), func(_ uint64, info GasConsumptionInfo) GasConsumptionInfo {
+	err = AssociateMeterWithCurrentSession(&ctx, newContractGasMeterByRef(sdk.NewGasMeter(5000), func(_ uint64, info GasConsumptionInfo) GasConsumptionInfo {
 		return GasConsumptionInfo{
 			SDKGas: info.SDKGas / 3,
 		}
-	}, contracts[1])
-	err = AssociateMeterWithCurrentSession(&ctx, &gasMeter)
+	}, contracts[1]))
 	require.NoError(t, err, "There should not be an error")
 
 	ctx.GasMeter().ConsumeGas(100, "")
@@ -63,12 +67,11 @@ func TestGasTracking(t *testing.T) {
 	require.NoError(t, err, "There should not be an error")
 
 	// {{}{{ Session 3: Meter associated
-	gasMeter = NewContractGasMeter(sdk.NewGasMeter(5000), func(_ uint64, info GasConsumptionInfo) GasConsumptionInfo {
+	err = AssociateMeterWithCurrentSession(&ctx, newContractGasMeterByRef(sdk.NewGasMeter(5000), func(_ uint64, info GasConsumptionInfo) GasConsumptionInfo {
 		return GasConsumptionInfo{
 			SDKGas: info.SDKGas * 7,
 		}
-	}, contracts[2])
-	err = AssociateMeterWithCurrentSession(&ctx, &gasMeter)
+	}, contracts[2]))
 	require.NoError(t, err, "There should not be an error")
 
 	ctx.GasMeter().ConsumeGas(140, "")
