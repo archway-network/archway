@@ -60,6 +60,9 @@ type testQuerier struct {
 
 func (t *testQuerier) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) ([]byte, error) {
 	t.Ctx, _ = t.Ctx.CacheContext()
+	if err := CreateNewSession(t.Ctx, gasLimit); err != nil {
+		return nil, err
+	}
 	response, gasUsed, err := t.Vm.Query(
 		t.Ctx,
 		cosmwasm.Checksum{},
@@ -72,6 +75,9 @@ func (t *testQuerier) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) (
 		gasLimit,
 		wasmvmtypes.UFraction{},
 	)
+	if err := DestroySession(&t.Ctx); err != nil {
+		return nil, err
+	}
 	t.GasUsed = append(t.GasUsed, gasUsed)
 	t.TotalGasUsed += gasUsed
 	return response, err
@@ -397,7 +403,7 @@ func TestGasTrackingVMInstantiateAndQuery(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -406,11 +412,12 @@ func TestGasTrackingVMInstantiateAndQuery(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationInstantiate,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	_, gasUsed, err = gasTrackingVm.Query(
@@ -442,6 +449,7 @@ func TestGasTrackingVMInstantiateAndQuery(t *testing.T) {
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -470,13 +478,14 @@ func TestGasTrackingVMInstantiateAndQuery(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationInstantiate,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	_, gasUsed, err = gasTrackingVm.Query(
@@ -544,7 +553,7 @@ func TestGasTrackingVMExecute(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -553,11 +562,12 @@ func TestGasTrackingVMExecute(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationExecute,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -586,7 +596,7 @@ func TestGasTrackingVMExecute(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationExecute,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -633,7 +643,7 @@ func TestGasTrackingVMMigrate(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -642,11 +652,12 @@ func TestGasTrackingVMMigrate(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationMigrate,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -674,7 +685,7 @@ func TestGasTrackingVMMigrate(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationMigrate,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -721,7 +732,7 @@ func TestGasTrackingVMSudo(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -730,11 +741,12 @@ func TestGasTrackingVMSudo(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationSudo,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -762,7 +774,7 @@ func TestGasTrackingVMSudo(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationSudo,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -809,7 +821,7 @@ func TestGasTrackingVMReply(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -818,11 +830,12 @@ func TestGasTrackingVMReply(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationReply,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -850,7 +863,7 @@ func TestGasTrackingVMReply(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationReply,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -897,7 +910,7 @@ func TestGasTrackingVMIBCChannelOpen(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -906,11 +919,12 @@ func TestGasTrackingVMIBCChannelOpen(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcChannelOpen,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -938,7 +952,7 @@ func TestGasTrackingVMIBCChannelOpen(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcChannelOpen,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -985,7 +999,7 @@ func TestGasTrackingVMIBCChannelConnect(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -994,11 +1008,12 @@ func TestGasTrackingVMIBCChannelConnect(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcChannelConnect,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -1026,7 +1041,7 @@ func TestGasTrackingVMIBCChannelConnect(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcChannelConnect,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -1073,7 +1088,7 @@ func TestGasTrackingVMIBCChannelClose(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -1082,11 +1097,12 @@ func TestGasTrackingVMIBCChannelClose(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcChannelClose,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -1114,7 +1130,7 @@ func TestGasTrackingVMIBCChannelClose(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcChannelClose,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -1161,7 +1177,7 @@ func TestGasTrackingVMIBCPacketReceive(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -1170,11 +1186,12 @@ func TestGasTrackingVMIBCPacketReceive(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcPacketReceive,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -1202,7 +1219,7 @@ func TestGasTrackingVMIBCPacketReceive(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcPacketReceive,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -1249,7 +1266,7 @@ func TestGasTrackingVMIBCPacketAck(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -1258,11 +1275,12 @@ func TestGasTrackingVMIBCPacketAck(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcPacketAck,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -1290,7 +1308,7 @@ func TestGasTrackingVMIBCPacketAck(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcPacketAck,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -1337,7 +1355,7 @@ func TestGasTrackingVMIBCPacketTimeout(t *testing.T) {
 
 	for i, record := range testQuerier.GasUsed {
 		require.Equal(t, loggingVM.GasUsed[i], record)
-		require.Equal(t, testGasRecorder.ingestedRecords[i].GasConsumed, record, "Ingested record's gas consumed must match querier's record")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
 	}
@@ -1346,11 +1364,12 @@ func TestGasTrackingVMIBCPacketTimeout(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcPacketTimeout,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	loggingVM.Reset()
 	testQuerier.GasUsed = nil
+	testQuerier.Ctx = emptyContext
 	testGasRecorder.ingestedRecords = nil
 
 	loggingVM.ShouldEmulateQuery = false
@@ -1378,7 +1397,7 @@ func TestGasTrackingVMIBCPacketTimeout(t *testing.T) {
 	require.Equal(t, ContractGasRecord{
 		OperationId:     ContractOperationIbcPacketTimeout,
 		ContractAddress: "1",
-		GasConsumed:     gasUsed,
+		OriginalGas:     GasConsumptionInfo{VMGas: gasUsed},
 	}, testGasRecorder.ingestedRecords[len(testGasRecorder.ingestedRecords)-1], "Last record must be correct")
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
