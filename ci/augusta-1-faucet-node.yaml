@@ -1,7 +1,7 @@
 apiVersion: apps.starport.cloud/v1
 kind: NodeSet
 metadata:
-  name: augusta-1
+  name: augusta-1-faucet-node
   namespace: archway
 spec:
   app:
@@ -27,28 +27,11 @@ spec:
     reconcilePeriod: 1h
     resetDataOnGenesisChanges: false
     resetDataOnImageUpgrade: false
-  expose:
-    api: true
-    apiDomain: api.augusta-1.archway.tech
-    disableBaseDomainRPC: false
-    disableTLS: false
-    domain: augusta-1.archway.tech
-    grpc: true
-    grpcDomain: grpc.augusta-1.archway.tech
-    p2p: true
-    p2pType: NodePort
-    rpc: true
-    rpcDomain: rpc.augusta-1.archway.tech
-    tlsSecretName: augusta-1-cert
-    usePaths: false
   image:
     imagePullPolicy: Always
     name: docker.io/archwaynetwork/archwayd
     version: edge
   join:
-    validator:
-      amount: 1000000uaugust
-      faucet: https://faucet.augusta-1.archway.tech
     genesis:
       url: https://raw.githubusercontent.com/archway-network/testnets/main/augusta-1/genesis.json
     persistentPeers:
@@ -67,9 +50,6 @@ spec:
       - id: e85af9d76574e575615955428c487376d1653434
         address: 66.94.108.7
         port: 26656
-      - id: 4ccd6be0b5ecdde878626a7ac83e6bbaca171d7e
-        address: 84.51.90.14
-        port: 26656
     seeds:
       - address: 89.163.208.161
         id: 85d470d79bac485e81db390b15865af3035c31aa
@@ -83,13 +63,13 @@ spec:
       - id: ced83bebe4239b7d595e82b9696c13fbb28f048f
         address: 69.197.157.42
         port: 26656
-  moniker: archway
+  moniker: tendermint
   persistence:
     autoResize:
       enabled: true
       increment: 5G
       threshold: 80
-    size: 20G
+    size: 210G
   replicas: 2
   resources:
     restServer: {}

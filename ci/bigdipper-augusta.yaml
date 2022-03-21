@@ -48,8 +48,8 @@ data:
         "banners":false
       },
       "remote":{
-        "rpc":"http://augusta-1:26657",
-        "api":"http://augusta-1:1317"
+        "rpc":"http://augusta-1-faucet-node:26657",
+        "api":"http://augusta-1-faucet-node:1317"
       },
       "debug":{
         "startTimer":true
