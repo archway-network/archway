@@ -1,7 +1,7 @@
 apiVersion: apps.starport.cloud/v1
 kind: NodeSet
 metadata:
-  name: augusta-1
+  name: augusta-faucet-node
   namespace: archway
 spec:
   app:
@@ -29,47 +29,39 @@ spec:
     resetDataOnImageUpgrade: false
   expose:
     api: true
-    apiDomain: api.augusta-1.archway.tech
+    apiDomain: api.augusta-faucet-node.archway.tech
     disableBaseDomainRPC: false
     disableTLS: false
-    domain: augusta-1.archway.tech
+    domain: augusta-faucet-node.archway.tech
     grpc: true
-    grpcDomain: grpc.augusta-1.archway.tech
+    grpcDomain: grpc.augusta-faucet-node.archway.tech
     p2p: true
     p2pType: NodePort
     rpc: true
-    rpcDomain: rpc.augusta-1.archway.tech
-    tlsSecretName: augusta-1-cert
+    rpcDomain: rpc.augusta-faucet-node.archway.tech
+    tlsSecretName: augusta-faucet-node-cert
     usePaths: false
   image:
     imagePullPolicy: Always
     name: docker.io/archwaynetwork/archwayd
     version: edge
   join:
-    validator:
-      amount: 1000000uaugust
     genesis:
       url: https://tmpfiles.org/dl/242292/augusta-1-genesis.json
     seeds:
-      - id: 85d470d79bac485e81db390b15865af3035c31aa
-        address: 89.163.208.161
-        port: 26656
-      - id: 189637118acbc5faee545d3685a7286828a0e447
-        address: 91.242.229.234
-        port: 26656
-      - id: 81567aa1b294e312e8ddc0ce5b89b7bf3c92c583
-        address: 34.73.244.83
-        port: 32335
-      - id: a7db3a3f35b66c54e6d245f5c9f0fdc2c62addd0
-        address: 34.138.172.248
-        port: 30028
-  moniker: archway
+    - address: 89.163.208.161
+      id: 85d470d79bac485e81db390b15865af3035c31aa
+      port: 26656
+    - address: 91.242.229.234
+      id: 189637118acbc5faee545d3685a7286828a0e447
+      port: 26656
+  moniker: tendermint
   persistence:
     autoResize:
       enabled: true
       increment: 5G
       threshold: 80
-    size: 20G
+    size: 210G
   replicas: 2
   resources:
     restServer: {}
