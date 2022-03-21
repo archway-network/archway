@@ -43,7 +43,7 @@ type GRPCQueryRouter interface {
 
 var _ wasmvmtypes.Querier = QueryHandler{}
 
-func (q QueryHandler) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) ([]byte, error) {
+func (q QueryHandler) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) (res []byte, err error) {
 	// set a limit for a subCtx
 	sdkGas := q.gasRegister.FromWasmVMGas(gasLimit)
 
@@ -55,10 +55,16 @@ func (q QueryHandler) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) (
 	subCtx, _ := q.Ctx.CacheContext() //Instead, use prepare gas tracking sub ctx
 
 	defer func() {
-		_ = types.DestroySession(&q.Ctx)
+		destroySessionErr := types.DestroySession(&q.Ctx)
+		if destroySessionErr != nil {
+			q.Ctx.Logger().Error("error while destroying a gas tracking session", "error", destroySessionErr)
+		}
+		if err != nil {
+			err = fmt.Errorf("error while querying from wasm smart contract, querier error: %s, error: %s", err, destroySessionErr)
+		}
 	}()
 
-	res, err := q.Plugins.HandleQuery(subCtx, q.Caller, request)
+	res, err = q.Plugins.HandleQuery(subCtx, q.Caller, request)
 	// Error mapping
 	var noSuchContract *types.ErrNoSuchContract
 	if ok := errors.As(err, &noSuchContract); ok {
