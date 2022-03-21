@@ -59,8 +59,11 @@ func (q QueryHandler) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) (
 		if destroySessionErr != nil {
 			q.Ctx.Logger().Error("error while destroying a gas tracking session", "error", destroySessionErr)
 		}
+
 		if err != nil {
 			err = fmt.Errorf("error while querying from wasm smart contract, querier error: %s, error: %s", err, destroySessionErr)
+		} else {
+			err = destroySessionErr
 		}
 	}()
 
