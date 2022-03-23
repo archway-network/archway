@@ -8,11 +8,13 @@ import (
 const gasTrackingKey = "__gt_key__"
 
 type SessionRecord struct {
-	ActualSDKGas    sdk.Gas
-	OriginalSDKGas  sdk.Gas
-	OriginalVMGas   sdk.Gas
-	ActualVMGas     sdk.Gas
-	ContractAddress string
+	ActualSDKGas      sdk.Gas
+	OriginalSDKGas    sdk.Gas
+	ActualVMGas       sdk.Gas
+	OriginalVMGas     sdk.Gas
+	ContractAddress   string
+	ContractOperation uint64
+	description       string
 }
 
 type VMRecord struct {
@@ -21,20 +23,17 @@ type VMRecord struct {
 }
 
 type activeSession struct {
-	meter               *ContractSDKGasMeter
-	gasFilledIn         bool
-	originalVMGas       sdk.Gas
-	actualVMGas         sdk.Gas
-	originalStoreSDKGas sdk.Gas
-	actualStoreSDKGas   sdk.Gas
+	invokedGasMeter *ContractSDKGasMeter
+	invokerGasMeter *ContractSDKGasMeter
+	gasFilledIn     bool
+	originalVMGas   sdk.Gas
+	actualVMGas     sdk.Gas
 }
 
 type gasTracking struct {
-	depth                    uint64
-	limitForUpcomingGasMeter uint64
-	mainGasMeter             sdk.GasMeter
-	activeSessions           []*activeSession
-	sessionRecords           []*SessionRecord
+	mainGasMeter   sdk.GasMeter
+	activeSessions []*activeSession
+	sessionRecords []*SessionRecord
 }
 
 func getGasTrackingData(ctx sdk.Context) (*gasTracking, error) {
@@ -46,26 +45,94 @@ func getGasTrackingData(ctx sdk.Context) (*gasTracking, error) {
 	return queryTracking, nil
 }
 
-func doDestroyCurrentSession(ctx *sdk.Context, queryTracking *gasTracking) error {
-	currentSession := queryTracking.activeSessions[len(queryTracking.activeSessions)-1]
-	if !currentSession.gasFilledIn {
-		return fmt.Errorf("vm gas is not recorded in query tracking")
+func currentContractGasMeter(queryTracking *gasTracking) (*ContractSDKGasMeter, error) {
+	if len(queryTracking.activeSessions) == 0 {
+		return nil, fmt.Errorf("no active sessions")
 	}
 
-	queryTracking.mainGasMeter.ConsumeGas(currentSession.meter.GasConsumed(), "contract sub-query")
+	lastSession := queryTracking.activeSessions[len(queryTracking.activeSessions)-1]
 
-	queryTracking.sessionRecords = append(queryTracking.sessionRecords, &SessionRecord{
-		ActualSDKGas:    currentSession.meter.GetActualGas(),
-		OriginalSDKGas:  currentSession.meter.GetOriginalGas(),
-		ContractAddress: currentSession.meter.GetContractAddress(),
-		OriginalVMGas:   currentSession.originalVMGas,
-		ActualVMGas:     currentSession.actualVMGas,
-	})
+	if lastSession.invokedGasMeter == nil {
+		return nil, fmt.Errorf("no contract meter in current session")
+	}
+
+	return lastSession.invokedGasMeter, nil
+}
+
+func createCompositeKey(record *SessionRecord) string {
+	return record.ContractAddress + "." + fmt.Sprint(record.ContractOperation)
+}
+
+func consolidateSessions(queryTracking *gasTracking) {
+	sessionRecords := queryTracking.sessionRecords
+
+	recordSet := make(map[string]*SessionRecord)
+
+	recordKeys := make([]string, 0)
+
+	for _, sessionRecord := range sessionRecords {
+		compositeKey := createCompositeKey(sessionRecord)
+		existingRecord, ok := recordSet[compositeKey]
+		if !ok {
+			recordSet[compositeKey] = sessionRecord
+			recordKeys = append(recordKeys, compositeKey)
+		} else {
+			recordSet[compositeKey] = &SessionRecord{
+				ActualSDKGas:      existingRecord.ActualSDKGas + sessionRecord.ActualSDKGas,
+				OriginalSDKGas:    existingRecord.OriginalSDKGas + sessionRecord.OriginalSDKGas,
+				ActualVMGas:       existingRecord.ActualVMGas + sessionRecord.ActualVMGas,
+				OriginalVMGas:     existingRecord.OriginalVMGas + sessionRecord.OriginalVMGas,
+				ContractAddress:   sessionRecord.ContractAddress,
+				ContractOperation: sessionRecord.ContractOperation,
+			}
+		}
+	}
+
+	queryTracking.sessionRecords = make([]*SessionRecord, len(recordKeys))
+
+	for i, recordKey := range recordKeys {
+		queryTracking.sessionRecords[i] = recordSet[recordKey]
+	}
+}
+
+func doDestroyCurrentSession(ctx *sdk.Context, queryTracking *gasTracking) error {
+	currentSession := queryTracking.activeSessions[len(queryTracking.activeSessions)-1]
+
+	if currentSession.invokedGasMeter != nil {
+		if !currentSession.gasFilledIn {
+			return fmt.Errorf("vm gas is not recorded in query tracking")
+		}
+
+		queryTracking.mainGasMeter.ConsumeGas(currentSession.invokedGasMeter.GasConsumed(), "contract sub-query")
+
+		queryTracking.sessionRecords = append(queryTracking.sessionRecords, &SessionRecord{
+			ActualSDKGas:      currentSession.invokedGasMeter.GetActualGas(),
+			OriginalSDKGas:    currentSession.invokedGasMeter.GetOriginalGas(),
+			ContractAddress:   currentSession.invokedGasMeter.GetContractAddress(),
+			ContractOperation: currentSession.invokedGasMeter.GetContractOperation(),
+			OriginalVMGas:     currentSession.originalVMGas,
+			ActualVMGas:       currentSession.actualVMGas,
+			description:       "invoked",
+		})
+	}
+
+	if currentSession.invokerGasMeter != nil {
+		queryTracking.mainGasMeter.ConsumeGas(currentSession.invokerGasMeter.GasConsumed(), "query sdk gas consumption")
+
+		queryTracking.sessionRecords = append(queryTracking.sessionRecords, &SessionRecord{
+			ActualSDKGas:      currentSession.invokerGasMeter.GetActualGas(),
+			OriginalSDKGas:    currentSession.invokerGasMeter.GetOriginalGas(),
+			ContractAddress:   currentSession.invokerGasMeter.GetContractAddress(),
+			ContractOperation: currentSession.invokerGasMeter.GetContractOperation(),
+			description:       "invoker",
+		})
+	}
+
 	queryTracking.activeSessions = queryTracking.activeSessions[:len(queryTracking.activeSessions)-1]
 
-	// Revert to previous gas meter
+	// Revert to previous gas invokedGasMeter
 	if len(queryTracking.activeSessions) != 0 {
-		*ctx = ctx.WithGasMeter(queryTracking.activeSessions[len(queryTracking.activeSessions)-1].meter)
+		*ctx = ctx.WithGasMeter(queryTracking.activeSessions[len(queryTracking.activeSessions)-1].invokedGasMeter)
 	} else {
 		*ctx = ctx.WithGasMeter(queryTracking.mainGasMeter)
 	}
@@ -85,11 +152,10 @@ func InitializeGasTracking(ctx *sdk.Context, initialContractGasMeter *ContractSD
 	}
 
 	queryTracking := gasTracking{
-		depth:        0,
 		mainGasMeter: ctx.GasMeter(),
 		activeSessions: []*activeSession{
 			{
-				meter: initialContractGasMeter,
+				invokedGasMeter: initialContractGasMeter,
 			},
 		},
 		sessionRecords: nil,
@@ -100,35 +166,30 @@ func InitializeGasTracking(ctx *sdk.Context, initialContractGasMeter *ContractSD
 	return nil
 }
 
-func TerminateGasTracking(ctx *sdk.Context) ([]*SessionRecord, *SessionRecord, error) {
+func TerminateGasTracking(ctx *sdk.Context) ([]*SessionRecord, error) {
 	queryTracking, err := getGasTrackingData(*ctx)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	if queryTracking.depth != 0 {
-		return nil, nil, fmt.Errorf("cannot terminate gas tracking as there are sessions in progress")
+		return nil, err
 	}
 
 	if len(queryTracking.activeSessions) != 1 {
 		if len(queryTracking.activeSessions) == 0 {
-			return nil, nil, fmt.Errorf("internal error: the initial contract gas meter not found")
+			return nil, fmt.Errorf("internal error: the initial contract gas invokedGasMeter not found")
 		} else {
-			return nil, nil, fmt.Errorf("internal error: multiple active gas trackers in session")
+			return nil, fmt.Errorf("internal error: multiple active gas trackers in session")
 		}
 	}
 
 	if err := doDestroyCurrentSession(ctx, queryTracking); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
+
+	consolidateSessions(queryTracking)
 
 	*ctx = ctx.WithValue(gasTrackingKey, nil)
 	*ctx = ctx.WithGasMeter(queryTracking.mainGasMeter)
 
-	querySessionRecords := queryTracking.sessionRecords[:len(queryTracking.sessionRecords)-1]
-	txSessionRecord := queryTracking.sessionRecords[len(queryTracking.sessionRecords)-1]
-
-	return querySessionRecords, txSessionRecord, nil
+	return queryTracking.sessionRecords, nil
 }
 
 func AddVMRecord(ctx sdk.Context, vmRecord *VMRecord) error {
@@ -153,29 +214,48 @@ func AddVMRecord(ctx sdk.Context, vmRecord *VMRecord) error {
 	return nil
 }
 
-func AssociateMeterWithCurrentSession(ctx *sdk.Context, contractGasMeter *ContractSDKGasMeter) error {
+func AssociateContractMeterWithCurrentSession(ctx *sdk.Context, contractGasMeter *ContractSDKGasMeter) error {
 	queryTracking, err := getGasTrackingData(*ctx)
 	if err != nil {
 		return err
 	}
 
-	queryTracking.activeSessions = append(queryTracking.activeSessions, &activeSession{
-		meter:       contractGasMeter,
-		gasFilledIn: false,
-	})
+	if len(queryTracking.activeSessions) == 0 {
+		return fmt.Errorf("no current session found")
+	}
+
+	lastSession := queryTracking.activeSessions[len(queryTracking.activeSessions)-1]
+	if lastSession.invokedGasMeter != nil {
+		return fmt.Errorf("invokedGasMeter is associated already")
+	}
+
+	lastSession.invokedGasMeter = contractGasMeter
 
 	*ctx = ctx.WithGasMeter(contractGasMeter)
 	return nil
 }
 
-func CreateNewSession(ctx sdk.Context, gasLimitForSession uint64) error {
-	queryTracking, err := getGasTrackingData(ctx)
+func CreateNewSession(ctx *sdk.Context, gasLimit uint64) error {
+	queryTracking, err := getGasTrackingData(*ctx)
 	if err != nil {
 		return err
 	}
 
-	queryTracking.depth += 1
-	queryTracking.limitForUpcomingGasMeter = gasLimitForSession
+	currentContractMeter, err := currentContractGasMeter(queryTracking)
+	if err != nil {
+		return err
+	}
+
+	invokerGasMeter := currentContractMeter.CloneWithNewLimit(gasLimit, "cloned for sdk")
+
+	queryTracking.activeSessions = append(queryTracking.activeSessions, &activeSession{
+		invokerGasMeter: invokerGasMeter,
+		invokedGasMeter: nil,
+		gasFilledIn:     false,
+	})
+
+	*ctx = ctx.WithGasMeter(invokerGasMeter)
+
 	return nil
 }
 
@@ -185,20 +265,5 @@ func DestroySession(ctx *sdk.Context) error {
 		return err
 	}
 
-	if queryTracking.depth == 0 {
-		return fmt.Errorf("trying to destroy last session which does not exists")
-	}
-
-	if queryTracking.depth < uint64(len(queryTracking.activeSessions))-1 {
-		return fmt.Errorf("internal data corruption: mismatch between number of sessions and active gas meters")
-	}
-
-	if queryTracking.depth == uint64(len(queryTracking.activeSessions))-1 {
-		if err := doDestroyCurrentSession(ctx, queryTracking); err != nil {
-			return err
-		}
-	}
-	queryTracking.depth -= 1
-
-	return nil
+	return doDestroyCurrentSession(ctx, queryTracking)
 }

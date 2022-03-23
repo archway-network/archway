@@ -47,7 +47,7 @@ func (q QueryHandler) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) (
 	// set a limit for a subCtx
 	sdkGas := q.gasRegister.FromWasmVMGas(gasLimit)
 
-	if err := types.CreateNewSession(q.Ctx, sdkGas); err != nil {
+	if err := types.CreateNewSession(&q.Ctx, sdkGas); err != nil {
 		return nil, err
 	}
 

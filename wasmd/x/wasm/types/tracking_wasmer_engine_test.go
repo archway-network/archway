@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	cosmwasm "github.com/CosmWasm/wasmvm"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -60,7 +61,7 @@ type testQuerier struct {
 
 func (t *testQuerier) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) ([]byte, error) {
 	t.Ctx, _ = t.Ctx.CacheContext()
-	if err := CreateNewSession(t.Ctx, gasLimit); err != nil {
+	if err := CreateNewSession(&t.Ctx, gasLimit); err != nil {
 		return nil, err
 	}
 	response, gasUsed, err := t.Vm.Query(
@@ -92,12 +93,12 @@ func (t *testQuerier) GetCtx() *sdk.Context {
 }
 
 type loggingVM struct {
-	logs                loggingVMLogs
-	GasUsed             []uint64
-	Fail                bool
-	ShouldEmulateQuery  bool
-	QueryGasUsage       uint64
-	RecursiveQueryDepth uint64
+	logs               loggingVMLogs
+	GasUsed            []uint64
+	Fail               bool
+	ShouldEmulateQuery bool
+	QueryGasUsage      uint64
+	QueryContracts     []string
 }
 
 func (l *loggingVM) Create(code cosmwasm.WasmCode) (cosmwasm.Checksum, error) {
@@ -126,8 +127,8 @@ func (l *loggingVM) Instantiate(checksum cosmwasm.Checksum, env wasmvmtypes.Env,
 	if l.Fail {
 		return &wasmvmtypes.Response{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -142,8 +143,8 @@ func (l *loggingVM) Execute(code cosmwasm.Checksum, env wasmvmtypes.Env, info wa
 	if l.Fail {
 		return &wasmvmtypes.Response{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -158,8 +159,8 @@ func (l *loggingVM) Query(code cosmwasm.Checksum, env wasmvmtypes.Env, queryMsg 
 	if l.Fail {
 		return []byte{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery && gasLimit > 1 {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, gasLimit-1)
+	if l.ShouldEmulateQuery && gasLimit >= 1 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[uint64(len(l.QueryContracts))-gasLimit]}}}, gasLimit-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -174,8 +175,8 @@ func (l *loggingVM) Migrate(checksum cosmwasm.Checksum, env wasmvmtypes.Env, mig
 	if l.Fail {
 		return &wasmvmtypes.Response{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -190,8 +191,8 @@ func (l *loggingVM) Sudo(checksum cosmwasm.Checksum, env wasmvmtypes.Env, sudoMs
 	if l.Fail {
 		return &wasmvmtypes.Response{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -206,8 +207,8 @@ func (l *loggingVM) Reply(checksum cosmwasm.Checksum, env wasmvmtypes.Env, reply
 	if l.Fail {
 		return &wasmvmtypes.Response{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -230,8 +231,8 @@ func (l *loggingVM) IBCChannelOpen(checksum cosmwasm.Checksum, env wasmvmtypes.E
 	if l.Fail {
 		return 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -246,8 +247,8 @@ func (l *loggingVM) IBCChannelConnect(checksum cosmwasm.Checksum, env wasmvmtype
 	if l.Fail {
 		return &wasmvmtypes.IBCBasicResponse{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -262,8 +263,8 @@ func (l *loggingVM) IBCChannelClose(checksum cosmwasm.Checksum, env wasmvmtypes.
 	if l.Fail {
 		return &wasmvmtypes.IBCBasicResponse{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -278,8 +279,8 @@ func (l *loggingVM) IBCPacketReceive(checksum cosmwasm.Checksum, env wasmvmtypes
 	if l.Fail {
 		return &wasmvmtypes.IBCReceiveResult{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -294,8 +295,8 @@ func (l *loggingVM) IBCPacketAck(checksum cosmwasm.Checksum, env wasmvmtypes.Env
 	if l.Fail {
 		return &wasmvmtypes.IBCBasicResponse{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -310,8 +311,8 @@ func (l *loggingVM) IBCPacketTimeout(checksum cosmwasm.Checksum, env wasmvmtypes
 	if l.Fail {
 		return &wasmvmtypes.IBCBasicResponse{}, 0, errTestFail
 	}
-	if l.ShouldEmulateQuery {
-		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: env.Contract.Address}}}, l.RecursiveQueryDepth)
+	if l.ShouldEmulateQuery && len(l.QueryContracts) > 0 {
+		querier.Query(wasmvmtypes.QueryRequest{Wasm: &wasmvmtypes.WasmQuery{Raw: &wasmvmtypes.RawQuery{ContractAddr: l.QueryContracts[0]}}}, uint64(len(l.QueryContracts))-1)
 	}
 	currentOperationGas := rand.Uint64() % 50000
 	l.GasUsed = append(l.GasUsed, currentOperationGas)
@@ -367,10 +368,10 @@ func TestGasTrackingVMInstantiateAndQuery(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -405,7 +406,7 @@ func TestGasTrackingVMInstantiateAndQuery(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -429,7 +430,7 @@ func TestGasTrackingVMInstantiateAndQuery(t *testing.T) {
 		cosmwasm.GoAPI{},
 		&testQuerier,
 		sdk.NewInfiniteGasMeter(),
-		5,
+		4,
 		wasmvmtypes.UFraction{},
 	)
 
@@ -517,10 +518,10 @@ func TestGasTrackingVMExecute(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -555,7 +556,7 @@ func TestGasTrackingVMExecute(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -608,10 +609,10 @@ func TestGasTrackingVMMigrate(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -645,7 +646,7 @@ func TestGasTrackingVMMigrate(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -697,10 +698,10 @@ func TestGasTrackingVMSudo(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -727,6 +728,8 @@ func TestGasTrackingVMSudo(t *testing.T) {
 
 	require.NoError(t, err, "Instantiation should succeed")
 
+	fmt.Println(testGasRecorder.ingestedRecords, loggingVM.GasUsed, testQuerier.GasUsed)
+
 	require.Equal(t, 5, len(loggingVM.GasUsed), "There should be proper number of records of gas used")
 	require.Equal(t, 4, len(testQuerier.GasUsed), "There should be proper number of records of query gas")
 
@@ -734,7 +737,7 @@ func TestGasTrackingVMSudo(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -786,10 +789,10 @@ func TestGasTrackingVMReply(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -823,7 +826,7 @@ func TestGasTrackingVMReply(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -875,10 +878,10 @@ func TestGasTrackingVMIBCChannelOpen(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -912,7 +915,7 @@ func TestGasTrackingVMIBCChannelOpen(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -964,10 +967,10 @@ func TestGasTrackingVMIBCChannelConnect(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -1001,7 +1004,7 @@ func TestGasTrackingVMIBCChannelConnect(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -1053,10 +1056,10 @@ func TestGasTrackingVMIBCChannelClose(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -1090,7 +1093,7 @@ func TestGasTrackingVMIBCChannelClose(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -1142,10 +1145,10 @@ func TestGasTrackingVMIBCPacketReceive(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -1179,7 +1182,7 @@ func TestGasTrackingVMIBCPacketReceive(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -1231,10 +1234,10 @@ func TestGasTrackingVMIBCPacketAck(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -1268,7 +1271,7 @@ func TestGasTrackingVMIBCPacketAck(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
@@ -1320,10 +1323,10 @@ func TestGasTrackingVMIBCPacketTimeout(t *testing.T) {
 	emptyContext := sdk.NewContext(cms, tmproto.Header{}, false, nil)
 
 	loggingVM := loggingVM{
-		Fail:                false,
-		ShouldEmulateQuery:  true,
-		QueryGasUsage:       50,
-		RecursiveQueryDepth: 4,
+		Fail:               false,
+		ShouldEmulateQuery: true,
+		QueryGasUsage:      50,
+		QueryContracts:     []string{"1contract", "2contract", "3contract", "4contract"},
 	}
 
 	testGasRecorder := &testGasProcessor{}
@@ -1357,7 +1360,7 @@ func TestGasTrackingVMIBCPacketTimeout(t *testing.T) {
 		require.Equal(t, loggingVM.GasUsed[i], record)
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OriginalGas.VMGas, record, "Ingested record's gas consumed must match querier's record")
 		require.Equal(t, testGasRecorder.ingestedRecords[i].OperationId, ContractOperationQuery, "Operation must be query")
-		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, "1", "Contract address must be correct")
+		require.Equal(t, testGasRecorder.ingestedRecords[i].ContractAddress, loggingVM.QueryContracts[(len(loggingVM.QueryContracts)-1)-i], "Contract address must be correct")
 	}
 
 	require.Equal(t, gasUsed, loggingVM.GasUsed[len(loggingVM.GasUsed)-1], "GasUsed received on response should be same as loggingVm's logs")
