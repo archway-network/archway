@@ -32,10 +32,20 @@ type GasTrackingKeeper interface {
 	GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress) (gstTypes.LeftOverRewardEntry, error)
 
 	SetParams(ctx sdk.Context, params gstTypes.Params)
+
+	// IsGasTrackingEnabled gives a flag which describes whether gas tracking functionality is enabled or not
 	IsGasTrackingEnabled(ctx sdk.Context) bool
+
+	// IsDappInflationRewardsEnabled gives a flag which describes whether inflation reward is enabled or not
 	IsDappInflationRewardsEnabled(ctx sdk.Context) bool
-	IsGasRebateEnabled(ctx sdk.Context) bool
+
+	// IsGasRebateToContractEnabled gives a flag which describes whether gas reward to contract is enabled or not
+	IsGasRebateToContractEnabled(ctx sdk.Context) bool
+
+	// IsGasRebateToUserEnabled gives a flag which describes whether gas reward to user is enabled or not
 	IsGasRebateToUserEnabled(ctx sdk.Context) bool
+
+	// IsContractPremiumEnabled gives a flag which describes whether contract premium is enabled or not
 	IsContractPremiumEnabled(ctx sdk.Context) bool
 }
 
@@ -116,7 +126,10 @@ func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGa
 			operation = gstTypes.ContractOperation_CONTRACT_OPERATION_UNSPECIFIED
 		}
 
-		if err := k.TrackContractGasUsage(ctx, contractAddress, k.wasmGasRegister.FromWasmVMGas(record.GasConsumed), operation); err != nil {
+		if err := k.TrackContractGasUsage(ctx, contractAddress, wasmTypes.GasConsumptionInfo{
+			SDKGas: record.OriginalGas.SDKGas,
+			VMGas:  k.wasmGasRegister.FromWasmVMGas(record.OriginalGas.VMGas),
+		}, operation); err != nil {
 			return err
 		}
 	}
@@ -124,44 +137,72 @@ func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGa
 	return nil
 }
 
-func (k *Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractGasRecord) (uint64, error) {
+func (k *Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (func(operationId uint64, gasInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo, error) {
 	var contractMetadataExists bool
 
-	contractAddress, err := sdk.AccAddressFromBech32(record.ContractAddress)
-	if err != nil {
-		return 0, err
+	passthroughFn := func(operationId uint64, gasConsumptionInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
+		return gasConsumptionInfo
 	}
 
-	contractMetadata, err := k.GetContractMetadata(ctx, contractAddress)
+	doNotUse := func(operationId uint64, _ wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
+		panic("do not use this function")
+	}
+
+	contractAddr, err := sdk.AccAddressFromBech32(contractAddress)
+	if err != nil {
+		return doNotUse, err
+	}
+
+	contractMetadata, err := k.GetContractMetadata(ctx, contractAddr)
 	switch err {
 	case gstTypes.ErrContractInstanceMetadataNotFound:
 		contractMetadataExists = false
 	case nil:
 		contractMetadataExists = true
 	default:
-		return 0, err
+		return doNotUse, err
 	}
 
-	updatedGas := record.GasConsumed
-
 	if !contractMetadataExists {
-		return updatedGas, nil
+		return passthroughFn, nil
 	}
 
 	// We are pre-fetching the configuration so that
 	// gas usage is similar across all conditions.
-	isGasUpdateEnabled := k.IsGasRebateEnabled(ctx)
+	isGasRebateToUserEnabled := k.IsGasRebateToUserEnabled(ctx)
 	isContractPremiumEnabled := k.IsContractPremiumEnabled(ctx)
+	isGasTrackingEnabled := k.IsGasTrackingEnabled(ctx)
 
-	if isGasUpdateEnabled && contractMetadata.GasRebateToUser {
-		updatedGas = (updatedGas * 50) / 100
+	return func(operationId uint64, gasConsumptionInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
+		if !isGasTrackingEnabled {
+			return gasConsumptionInfo
+		}
+
+		if isGasRebateToUserEnabled && contractMetadata.GasRebateToUser {
+			updatedGas := wasmTypes.GasConsumptionInfo{
+				SDKGas: (gasConsumptionInfo.SDKGas * 50) / 100,
+				VMGas:  (gasConsumptionInfo.VMGas * 50) / 100,
+			}
+			return updatedGas
+		} else if isContractPremiumEnabled && contractMetadata.CollectPremium {
+			updatedGas := wasmTypes.GasConsumptionInfo{
+				SDKGas: gasConsumptionInfo.SDKGas + (gasConsumptionInfo.SDKGas*contractMetadata.PremiumPercentageCharged)/100,
+				VMGas:  gasConsumptionInfo.VMGas + (gasConsumptionInfo.VMGas*contractMetadata.PremiumPercentageCharged)/100,
+			}
+			return updatedGas
+		} else {
+			return gasConsumptionInfo
+		}
+	}, nil
+}
+
+func (k *Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractGasRecord) (wasmTypes.GasConsumptionInfo, error) {
+	gasCalcFn, err := k.GetGasCalculationFn(ctx, record.ContractAddress)
+	if err != nil {
+		return wasmTypes.GasConsumptionInfo{}, nil
 	}
 
-	if isContractPremiumEnabled && contractMetadata.CollectPremium {
-		updatedGas = updatedGas + (updatedGas*contractMetadata.PremiumPercentageCharged)/100
-	}
-
-	return updatedGas, nil
+	return gasCalcFn(record.OperationId, record.OriginalGas), nil
 }
 
 func (k *Keeper) GetCurrentTxTracking(ctx sdk.Context) (gstTypes.TransactionTracking, error) {
@@ -432,7 +473,7 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 	return nil
 }
 
-func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, gasUsed uint64, operation gstTypes.ContractOperation) error {
+func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, originalGas wasmTypes.GasConsumptionInfo, operation gstTypes.ContractOperation) error {
 	gstKvStore := ctx.KVStore(k.key)
 	bz := gstKvStore.Get([]byte(gstTypes.CurrentBlockTrackingKey))
 	if bz == nil {
@@ -450,9 +491,10 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccA
 	}
 	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
 	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gstTypes.ContractGasTracking{
-		Address:     contractAddress.String(),
-		GasConsumed: gasUsed,
-		Operation:   operation,
+		Address:        contractAddress.String(),
+		OriginalVmGas:  originalGas.VMGas,
+		OriginalSdkGas: originalGas.SDKGas,
+		Operation:      operation,
 	})
 	bz, err = k.appCodec.Marshal(&currentBlockGasTracking)
 	if err != nil {

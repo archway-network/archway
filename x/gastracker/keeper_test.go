@@ -490,11 +490,14 @@ func TestCalculateUpdatedGas(t *testing.T) {
 	gasRecord := wasmTypes.ContractGasRecord{
 		OperationId:     wasmTypes.ContractOperationIbcChannelOpen,
 		ContractAddress: spareAddress[1].String(),
-		GasConsumed:     5,
+		OriginalGas: wasmTypes.GasConsumptionInfo{
+			SDKGas: 2,
+			VMGas:  3,
+		},
 	}
 	updatedGas, err := keeper.CalculateUpdatedGas(ctx, gasRecord)
 	require.NoError(t, err, "Calculation of updated gas should be succeed")
-	require.Equal(t, gasRecord.GasConsumed, updatedGas)
+	require.Equal(t, gasRecord.OriginalGas, updatedGas)
 
 	// Checking gas rebate calculation
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
@@ -514,11 +517,15 @@ func TestCalculateUpdatedGas(t *testing.T) {
 	gasRecord = wasmTypes.ContractGasRecord{
 		OperationId:     wasmTypes.ContractOperationIbcChannelOpen,
 		ContractAddress: spareAddress[1].String(),
-		GasConsumed:     7,
+		OriginalGas: wasmTypes.GasConsumptionInfo{
+			SDKGas: 4,
+			VMGas:  3,
+		},
 	}
 	updatedGas, err = keeper.CalculateUpdatedGas(ctx, gasRecord)
 	require.NoError(t, err, "Calculation of updated gas should be succeed")
-	require.Equal(t, gasRecord.GasConsumed/2, updatedGas)
+	require.Equal(t, (gasRecord.OriginalGas.VMGas)/2, updatedGas.VMGas)
+	require.Equal(t, (gasRecord.OriginalGas.SDKGas)/2, updatedGas.SDKGas)
 
 	// Checking premium percentage calculation
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
@@ -538,11 +545,15 @@ func TestCalculateUpdatedGas(t *testing.T) {
 	gasRecord = wasmTypes.ContractGasRecord{
 		OperationId:     wasmTypes.ContractOperationIbcChannelOpen,
 		ContractAddress: spareAddress[1].String(),
-		GasConsumed:     10,
+		OriginalGas: wasmTypes.GasConsumptionInfo{
+			SDKGas: 6,
+			VMGas:  4,
+		},
 	}
 	updatedGas, err = keeper.CalculateUpdatedGas(ctx, gasRecord)
 	require.NoError(t, err, "Calculation of updated gas should be succeed")
-	require.Equal(t, gasRecord.GasConsumed+(gasRecord.GasConsumed*50)/100, updatedGas)
+	require.Equal(t, gasRecord.OriginalGas.SDKGas+(gasRecord.OriginalGas.SDKGas*50)/100, updatedGas.SDKGas)
+	require.Equal(t, gasRecord.OriginalGas.VMGas+(gasRecord.OriginalGas.VMGas*50)/100, updatedGas.VMGas)
 }
 
 func TestIngestionOfGasRecords(t *testing.T) {
@@ -565,7 +576,10 @@ func TestIngestionOfGasRecords(t *testing.T) {
 		{
 			OperationId:     wasmTypes.ContractOperationInstantiate,
 			ContractAddress: spareAddress[1].String(),
-			GasConsumed:     keeper.wasmGasRegister.ToWasmVMGas(2),
+			OriginalGas: wasmTypes.GasConsumptionInfo{
+				SDKGas: 4,
+				VMGas:  keeper.wasmGasRegister.ToWasmVMGas(2),
+			},
 		},
 	})
 	require.NoError(t, err, "IngestGasRecord should be successful")
@@ -602,17 +616,26 @@ func TestIngestionOfGasRecords(t *testing.T) {
 		{
 			OperationId:     wasmTypes.ContractOperationInstantiate,
 			ContractAddress: spareAddress[1].String(),
-			GasConsumed:     keeper.wasmGasRegister.ToWasmVMGas(1),
+			OriginalGas: wasmTypes.GasConsumptionInfo{
+				SDKGas: 2,
+				VMGas:  keeper.wasmGasRegister.ToWasmVMGas(1),
+			},
 		},
 		{
 			OperationId:     wasmTypes.ContractOperationIbcPacketReceive,
 			ContractAddress: spareAddress[2].String(),
-			GasConsumed:     keeper.wasmGasRegister.ToWasmVMGas(2),
+			OriginalGas: wasmTypes.GasConsumptionInfo{
+				SDKGas: 3,
+				VMGas:  keeper.wasmGasRegister.ToWasmVMGas(2),
+			},
 		},
 		{
 			OperationId:     wasmTypes.ContractOperationMigrate,
 			ContractAddress: spareAddress[3].String(),
-			GasConsumed:     keeper.wasmGasRegister.ToWasmVMGas(3),
+			OriginalGas: wasmTypes.GasConsumptionInfo{
+				SDKGas: 4,
+				VMGas:  keeper.wasmGasRegister.ToWasmVMGas(3),
+			},
 		},
 	})
 	require.NoError(t, err, "IngestGasRecord should be successful")
@@ -625,15 +648,17 @@ func TestIngestionOfGasRecords(t *testing.T) {
 	require.Equal(t, 2, len(blockTracking.TxTrackingInfos[0].ContractTrackingInfos))
 
 	require.Equal(t, &gstTypes.ContractGasTracking{
-		Address:     spareAddress[3].String(),
-		GasConsumed: 3,
-		Operation:   gstTypes.ContractOperation_CONTRACT_OPERATION_MIGRATE,
+		Address:        spareAddress[3].String(),
+		OriginalVmGas:  3,
+		OriginalSdkGas: 4,
+		Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_MIGRATE,
 	}, blockTracking.TxTrackingInfos[0].ContractTrackingInfos[1])
 
 	require.Equal(t, &gstTypes.ContractGasTracking{
-		Address:     spareAddress[2].String(),
-		GasConsumed: 2,
-		Operation:   gstTypes.ContractOperation_CONTRACT_OPERATION_IBC,
+		Address:        spareAddress[2].String(),
+		OriginalVmGas:  2,
+		OriginalSdkGas: 3,
+		Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_IBC,
 	}, blockTracking.TxTrackingInfos[0].ContractTrackingInfos[0])
 
 }
@@ -647,26 +672,26 @@ func TestAddContractGasUsage(t *testing.T) {
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 
-	err := keeper.TrackContractGasUsage(ctx, spareAddress[1], 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
+	err := keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 0}, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(), "We cannot track contract gas since block tracking does not exists")
 
 	err = keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 8}, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 	require.EqualError(t, err, types.ErrTxTrackingDataNotFound.Error(), "We cannot track contract gas since tx tracking does not exists")
 
 	// Let's track one tx with one contract gas usage
 	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
 	require.NoError(t, err, "We should be able to track new transaction")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], 1, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 2}, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
 
 	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 6)
 	require.NoError(t, err, "We should be able to track new transaction")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], 2, types.ContractOperation_CONTRACT_OPERATION_REPLY)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], wasmTypes.GasConsumptionInfo{SDKGas: 2, VMGas: 3}, types.ContractOperation_CONTRACT_OPERATION_REPLY)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[3], 3, types.ContractOperation_CONTRACT_OPERATION_SUDO)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[3], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 3}, types.ContractOperation_CONTRACT_OPERATION_SUDO)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
 
 	blockTrackingObj, err := keeper.GetCurrentBlockTracking(ctx)
@@ -677,9 +702,10 @@ func TestAddContractGasUsage(t *testing.T) {
 		MaxContractRewards: nil,
 		ContractTrackingInfos: []*types.ContractGasTracking{
 			{
-				Address:     spareAddress[1].String(),
-				GasConsumed: 1,
-				Operation:   types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+				Address:        spareAddress[1].String(),
+				OriginalSdkGas: 1,
+				OriginalVmGas:  2,
+				Operation:      types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 			},
 		},
 	}, *blockTrackingObj.TxTrackingInfos[0])
@@ -688,14 +714,16 @@ func TestAddContractGasUsage(t *testing.T) {
 		MaxContractRewards: nil,
 		ContractTrackingInfos: []*types.ContractGasTracking{
 			{
-				Address:     spareAddress[2].String(),
-				GasConsumed: 2,
-				Operation:   types.ContractOperation_CONTRACT_OPERATION_REPLY,
+				Address:        spareAddress[2].String(),
+				OriginalSdkGas: 2,
+				OriginalVmGas:  3,
+				Operation:      types.ContractOperation_CONTRACT_OPERATION_REPLY,
 			},
 			{
-				Address:     spareAddress[3].String(),
-				GasConsumed: 3,
-				Operation:   types.ContractOperation_CONTRACT_OPERATION_SUDO,
+				Address:        spareAddress[3].String(),
+				OriginalSdkGas: 4,
+				OriginalVmGas:  3,
+				Operation:      types.ContractOperation_CONTRACT_OPERATION_SUDO,
 			},
 		},
 	}, *blockTrackingObj.TxTrackingInfos[1])

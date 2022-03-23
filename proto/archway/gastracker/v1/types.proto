@@ -4,6 +4,8 @@ package archway.gastracker.v1;
 
 option go_package = "github.com/archway-network/archway/x/gastracker/types";
 
+import "gogoproto/gogo.proto";
+
 import "cosmos/base/v1beta1/coin.proto";
 
 // Denotes which operation consumed this gas
@@ -36,8 +38,9 @@ message TransactionTracking {
 // Tracking contract gas usage
 message ContractGasTracking {
   string address = 1;
-  uint64 gas_consumed = 2;
-  ContractOperation operation = 3;
+  uint64 original_vm_gas = 2;
+  uint64 original_sdk_gas = 3;
+  ContractOperation operation = 4;
 }
 
 // Tracking gas consumption for all tx in a particular block
