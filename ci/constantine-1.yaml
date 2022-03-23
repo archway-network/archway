@@ -69,7 +69,7 @@ spec:
       legacySend: false
       maxCredit: 100000000
       replicas: 1
-    stakeAmount: 1000000uconst
+    stakeAmount: 100000000000000000uconst
   moniker: archway
   persistence:
     autoResize:
