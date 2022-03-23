@@ -1,0 +1,70 @@
+apiVersion: apps.starport.cloud/v1
+kind: NodeSet
+metadata:
+  name: augusta-faucet-node
+  namespace: archway
+spec:
+  app:
+    cliName: archwayd
+    daemonName: archwayd
+    name: archway
+  config:
+    nodes:
+      configOverride:
+        app:
+        - group: api
+          key: enabled-unsafe-cors
+          value:
+            bool: true
+        config:
+        - group: rpc
+          key: cors_allowed_origins
+          value:
+            stringList:
+            - '*'
+      crisisSkipAssertInvariants: false
+      startupTimeout: 2m
+    reconcilePeriod: 1h
+    resetDataOnGenesisChanges: false
+    resetDataOnImageUpgrade: false
+  expose:
+    api: true
+    apiDomain: api.augusta-faucet-node.archway.tech
+    disableBaseDomainRPC: false
+    disableTLS: false
+    domain: augusta-faucet-node.archway.tech
+    grpc: true
+    grpcDomain: grpc.augusta-faucet-node.archway.tech
+    p2p: true
+    p2pType: NodePort
+    rpc: true
+    rpcDomain: rpc.augusta-faucet-node.archway.tech
+    tlsSecretName: augusta-faucet-node-cert
+    usePaths: false
+  image:
+    imagePullPolicy: Always
+    name: docker.io/archwaynetwork/archwayd
+    version: edge
+  join:
+    genesis:
+      url: https://tmpfiles.org/dl/242292/augusta-1-genesis.json
+    seeds:
+    - address: 89.163.208.161
+      id: 85d470d79bac485e81db390b15865af3035c31aa
+      port: 26656
+    - address: 91.242.229.234
+      id: 189637118acbc5faee545d3685a7286828a0e447
+      port: 26656
+  moniker: tendermint
+  persistence:
+    autoResize:
+      enabled: true
+      increment: 5G
+      threshold: 80
+    size: 210G
+  replicas: 2
+  resources:
+    restServer: {}
+    sentry: {}
+    validator: {}
+  sdkVersion: stargate
