@@ -18,6 +18,22 @@ spec:
             key: enabled-unsafe-cors
             value:
               bool: true
+          - group: telemetry
+            key: enabled
+            value:
+              bool: true
+          - group: telemetry
+            key: enable-service-label
+            value:
+              bool: true
+          - group: telemetry
+            key: prometheus-retention-time
+            value:
+              int: 10
+          - group: telemetry
+            key: service-name
+            value:
+              string: titus-1
   app:
     cliName: archwayd
     daemonName: archwayd
@@ -59,4 +75,6 @@ spec:
     restServer: {}
     sentry: {}
     validator: {}
+  serviceMonitorLabels:
+    release: monitoring-stack
   sdkVersion: stargate
