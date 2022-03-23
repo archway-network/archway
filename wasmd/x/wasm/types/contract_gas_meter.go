@@ -56,14 +56,14 @@ func (c *ContractSDKGasMeter) Limit() storetypes.Gas {
 }
 
 func (c *ContractSDKGasMeter) ConsumeGas(amount storetypes.Gas, descriptor string) {
-	updatedGasInfo := c.contractGasCalculationFunc(ContractOperationUnknown, GasConsumptionInfo{SDKGas: amount})
+	updatedGasInfo := c.contractGasCalculationFunc(c.contractOperation, GasConsumptionInfo{SDKGas: amount})
 	c.underlyingGasMeter.ConsumeGas(updatedGasInfo.SDKGas, descriptor)
 	c.originalGas += amount
 	c.actualGasConsumed += updatedGasInfo.SDKGas
 }
 
 func (c *ContractSDKGasMeter) RefundGas(amount storetypes.Gas, descriptor string) {
-	updatedGasInfo := c.contractGasCalculationFunc(ContractOperationUnknown, GasConsumptionInfo{SDKGas: amount})
+	updatedGasInfo := c.contractGasCalculationFunc(c.contractOperation, GasConsumptionInfo{SDKGas: amount})
 	c.underlyingGasMeter.RefundGas(updatedGasInfo.SDKGas, descriptor)
 	c.originalGas -= amount
 	c.actualGasConsumed -= updatedGasInfo.SDKGas
