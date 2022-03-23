@@ -202,13 +202,15 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 				}
 
 				if gasTrackingKeeper.IsGasRebateToContractEnabled(context) {
+					gasRebateRewards := make(sdk.DecCoins, 0)
 					for _, rewardCoin := range txTrackingInfo.MaxContractRewards {
-						contractRewards = contractRewards.Add(sdk.NewDecCoinFromDec(
+						gasRebateRewards = gasRebateRewards.Add(sdk.NewDecCoinFromDec(
 							rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(maxGasAllowedInTx)))
 					}
 					context.Logger().
 						Info("Calculated contract gas rebate rewards:",
-							"contractAddress", contractAddress, "contractGasReward", contractRewards)
+							"contractAddress", contractAddress, "contractGasReward", gasRebateRewards)
+					contractRewards = contractRewards.Add(gasRebateRewards...)
 				}
 			} else {
 				context.Logger().Info("Contract is not eligible for gas rewards, skipping calculation.", "contractAddress", contractAddress)
