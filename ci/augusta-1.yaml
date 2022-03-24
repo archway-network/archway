@@ -12,16 +12,16 @@ spec:
     nodes:
       configOverride:
         app:
-        - group: api
-          key: enabled-unsafe-cors
-          value:
-            bool: true
+          - group: api
+            key: enabled-unsafe-cors
+            value:
+              bool: true
         config:
-        - group: rpc
-          key: cors_allowed_origins
-          value:
-            stringList:
-            - '*'
+          - group: rpc
+            key: cors_allowed_origins
+            value:
+              stringList:
+                - "*"
       crisisSkipAssertInvariants: false
       startupTimeout: 2m
     reconcilePeriod: 1h
@@ -44,7 +44,7 @@ spec:
   image:
     imagePullPolicy: Always
     name: docker.io/archwaynetwork/archwayd
-    version: edge
+    version: augusta
   join:
     validator:
       amount: 1000000uaugust

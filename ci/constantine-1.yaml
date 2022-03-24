@@ -17,6 +17,22 @@ spec:
             key: enabled-unsafe-cors
             value:
               bool: true
+          - group: telemetry
+            key: enabled
+            value:
+              bool: true
+          - group: telemetry
+            key: enable-service-label
+            value:
+              bool: true
+          - group: telemetry
+            key: prometheus-retention-time
+            value:
+              int: 5
+          - group: telemetry
+            key: service-name
+            value:
+              string: constantine-1
   app:
     cliName: archwayd
     daemonName: archwayd
@@ -53,7 +69,7 @@ spec:
       legacySend: false
       maxCredit: 100000000
       replicas: 1
-    stakeAmount: 1000000uconst
+    stakeAmount: 100000000000000000uconst
   moniker: archway
   persistence:
     autoResize:
@@ -66,4 +82,6 @@ spec:
     restServer: {}
     sentry: {}
     validator: {}
+  serviceMonitorLabels:
+    release: monitoring-stack
   sdkVersion: stargate
