@@ -12,6 +12,10 @@ spec:
             key: cors_allowed_origins
             value:
               stringList: ["*"]
+          - group: instrumentation
+            key: prometheus
+            value:
+              bool: true
         app:
           - group: api
             key: enabled-unsafe-cors
@@ -28,11 +32,15 @@ spec:
           - group: telemetry
             key: prometheus-retention-time
             value:
-              int: 5
+              int: 30
           - group: telemetry
             key: service-name
             value:
-              string: constantine-1
+              string: archway
+          - group: telemetry
+            key: global-label
+            value:
+              stringListList: [["chain_id", "constantine-1"]]
   app:
     cliName: archwayd
     daemonName: archwayd
