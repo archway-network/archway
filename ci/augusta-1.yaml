@@ -89,7 +89,7 @@ spec:
       enabled: true
       increment: 5G
       threshold: 80
-    size: 20G
+    size: 200G
   replicas: 2
   resources:
     restServer: {}
