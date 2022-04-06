@@ -52,7 +52,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	if !gasTrackingKeeper.IsGasTrackingEnabled(context) { // No rewards or calculations should take place
 		return
 	}
-	context.Logger().Info("Got the tracking for block", "BlockTxDetails", lastBlockGasTracking)
+	context.Logger().Debug("Got the tracking for block", "BlockTxDetails", lastBlockGasTracking)
 
 	contractTotalInflationRewards := getContractInflationRewards(context, mintParamsKeeper) // 20% of the rewards distributed on every block
 
@@ -85,7 +85,7 @@ func commitPendingMetadata(context sdk.Context, gasTrackingKeeper GasTrackingKee
 	if err != nil {
 		panic(err)
 	}
-	context.Logger().Info("Committed pending metadata change", "NumberOfMetadataCommitted", numberOfEntriesCommitted)
+	context.Logger().Debug("Committed pending metadata change", "NumberOfMetadataCommitted", numberOfEntriesCommitted)
 }
 
 // resetBlockGasTracking resets the current status and returns the last blockGasTracking
@@ -146,7 +146,7 @@ func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByA
 			panic(err)
 		}
 
-		context.Logger().Info("Reward allocation details:", "rewardPayed", rewardsToBePayed, "leftOverEntry", leftOverEntry.ContractRewards)
+		context.Logger().Debug("Reward allocation details:", "rewardPayed", rewardsToBePayed, "leftOverEntry", leftOverEntry.ContractRewards)
 	}
 }
 
@@ -176,7 +176,7 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 			if err != nil {
 				panic(err)
 			}
-			context.Logger().Info("Got the metadata", "Metadata", metadata)
+			context.Logger().Debug("Got the metadata for contract", "contract", contractAddress, "metadata", metadata)
 
 			contractRewards := make(sdk.DecCoins, 0, 0)
 
@@ -185,7 +185,7 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 			if gasTrackingKeeper.IsDappInflationRewardsEnabled(context) && context.BlockGasMeter().Limit() > 0 {
 				blockGasLimit := sdk.NewDecFromBigInt(ConvertUint64ToBigInt(context.BlockGasMeter().Limit()))
 				contractInflationReward = sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasConsumedInContract).Quo(blockGasLimit))
-				context.Logger().Info("Calculated contract inflation rewards:", "contractAddress", contractAddress, "contractInflationReward", contractInflationReward)
+				context.Logger().Debug("Calculated contract inflation rewards:", "contractAddress", contractAddress, "contractInflationReward", contractInflationReward)
 				contractRewards = contractRewards.Add(contractInflationReward)
 			}
 
@@ -208,12 +208,12 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 							rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(maxGasAllowedInTx)))
 					}
 					context.Logger().
-						Info("Calculated contract gas rebate rewards:",
+						Debug("Calculated contract gas rebate rewards:",
 							"contractAddress", contractAddress, "contractGasReward", gasRebateRewards)
 					contractRewards = contractRewards.Add(gasRebateRewards...)
 				}
 			} else {
-				context.Logger().Info("Contract is not eligible for gas rewards, skipping calculation.", "contractAddress", contractAddress)
+				context.Logger().Debug("Contract is not eligible for gas rewards, skipping calculation.", "contractAddress", contractAddress)
 			}
 
 			if _, ok := rewardsByAddress[metadata.RewardAddress]; !ok {
@@ -229,7 +229,7 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 				panic(err)
 			}
 
-			context.Logger().Info("Calculated Contract rewards:", "contractAddress", contractAddress, "contractRewards", contractRewards)
+			context.Logger().Debug("Calculated Contract rewards:", "contractAddress", contractAddress, "contractRewards", contractRewards)
 		}
 
 		totalContractRewardsPerBlock = totalContractRewardsPerBlock.Add(totalContractRewardsInTx...)
