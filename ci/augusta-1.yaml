@@ -22,6 +22,26 @@ spec:
             value:
               stringList:
                 - "*"
+          - group: telemetry
+            key: enabled
+            value:
+              bool: true
+          - group: telemetry
+            key: enable-service-label
+            value:
+              bool: true
+          - group: telemetry
+            key: prometheus-retention-time
+            value:
+              int: 30
+          - group: telemetry
+            key: service-name
+            value:
+              string: archway
+          - group: telemetry
+            key: global-label
+            value:
+              stringListList: [["chain_id", "augusta-1"]]
       crisisSkipAssertInvariants: false
       startupTimeout: 2m
     reconcilePeriod: 1h
