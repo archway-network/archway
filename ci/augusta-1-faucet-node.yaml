@@ -50,7 +50,7 @@ spec:
   image:
     imagePullPolicy: Always
     name: docker.io/archwaynetwork/archwayd
-    version: augusta
+    version: sha-a782ade
   join:
     genesis:
       url: https://raw.githubusercontent.com/archway-network/testnets/main/augusta-1/genesis.json

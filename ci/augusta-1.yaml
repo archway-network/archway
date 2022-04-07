@@ -64,7 +64,7 @@ spec:
   image:
     imagePullPolicy: Always
     name: docker.io/archwaynetwork/archwayd
-    version: augusta
+    version: sha-a782ade
   join:
     validator:
       amount: 1000000uaugust
