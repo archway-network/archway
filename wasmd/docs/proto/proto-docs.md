@@ -46,10 +46,12 @@
   
 - [cosmwasm/wasm/v1/proposal.proto](#cosmwasm/wasm/v1/proposal.proto)
     - [ClearAdminProposal](#cosmwasm.wasm.v1.ClearAdminProposal)
+    - [ExecuteContractProposal](#cosmwasm.wasm.v1.ExecuteContractProposal)
     - [InstantiateContractProposal](#cosmwasm.wasm.v1.InstantiateContractProposal)
     - [MigrateContractProposal](#cosmwasm.wasm.v1.MigrateContractProposal)
     - [PinCodesProposal](#cosmwasm.wasm.v1.PinCodesProposal)
     - [StoreCodeProposal](#cosmwasm.wasm.v1.StoreCodeProposal)
+    - [SudoContractProposal](#cosmwasm.wasm.v1.SudoContractProposal)
     - [UnpinCodesProposal](#cosmwasm.wasm.v1.UnpinCodesProposal)
     - [UpdateAdminProposal](#cosmwasm.wasm.v1.UpdateAdminProposal)
   
@@ -673,6 +675,27 @@ contract.
 
 
 
+<a name="cosmwasm.wasm.v1.ExecuteContractProposal"></a>
+
+### ExecuteContractProposal
+ExecuteContractProposal gov proposal content type to call execute on a
+contract.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  | Title is a short summary |
+| `description` | [string](#string) |  | Description is a human readable text |
+| `run_as` | [string](#string) |  | RunAs is the address that is passed to the contract's environment as sender |
+| `contract` | [string](#string) |  | Contract is the address of the smart contract |
+| `msg` | [bytes](#bytes) |  | Msg json encoded message to be passed to the contract as execute |
+| `funds` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | Funds coins that are transferred to the contract on instantiation |
+
+
+
+
+
+
 <a name="cosmwasm.wasm.v1.InstantiateContractProposal"></a>
 
 ### InstantiateContractProposal
@@ -705,10 +728,11 @@ MigrateContractProposal gov proposal content type to migrate a contract.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  | Title is a short summary |
-| `description` | [string](#string) |  | Description is a human readable text |
-| `run_as` | [string](#string) |  | RunAs is the address that is passed to the contract's environment as sender |
+| `description` | [string](#string) |  | Description is a human readable text
+
+Note: skipping 3 as this was previously used for unneeded run_as |
 | `contract` | [string](#string) |  | Contract is the address of the smart contract |
-| `code_id` | [uint64](#uint64) |  | CodeID references the new WASM code |
+| `code_id` | [uint64](#uint64) |  | CodeID references the new WASM codesudo |
 | `msg` | [bytes](#bytes) |  | Msg json encoded message to be passed to the contract on migration |
 
 
@@ -747,6 +771,24 @@ StoreCodeProposal gov proposal content type to submit WASM code to the system
 | `run_as` | [string](#string) |  | RunAs is the address that is passed to the contract's environment as sender |
 | `wasm_byte_code` | [bytes](#bytes) |  | WASMByteCode can be raw or gzip compressed |
 | `instantiate_permission` | [AccessConfig](#cosmwasm.wasm.v1.AccessConfig) |  | InstantiatePermission to apply on contract creation, optional |
+
+
+
+
+
+
+<a name="cosmwasm.wasm.v1.SudoContractProposal"></a>
+
+### SudoContractProposal
+SudoContractProposal gov proposal content type to call sudo on a contract.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  | Title is a short summary |
+| `description` | [string](#string) |  | Description is a human readable text |
+| `contract` | [string](#string) |  | Contract is the address of the smart contract |
+| `msg` | [bytes](#bytes) |  | Msg json encoded message to be passed to the contract as sudo |
 
 
 
@@ -1135,8 +1177,8 @@ Query provides defines the gRPC querier service
 | `ContractHistory` | [QueryContractHistoryRequest](#cosmwasm.wasm.v1.QueryContractHistoryRequest) | [QueryContractHistoryResponse](#cosmwasm.wasm.v1.QueryContractHistoryResponse) | ContractHistory gets the contract code history | GET|/cosmwasm/wasm/v1/contract/{address}/history|
 | `ContractsByCode` | [QueryContractsByCodeRequest](#cosmwasm.wasm.v1.QueryContractsByCodeRequest) | [QueryContractsByCodeResponse](#cosmwasm.wasm.v1.QueryContractsByCodeResponse) | ContractsByCode lists all smart contracts for a code id | GET|/cosmwasm/wasm/v1/code/{code_id}/contracts|
 | `AllContractState` | [QueryAllContractStateRequest](#cosmwasm.wasm.v1.QueryAllContractStateRequest) | [QueryAllContractStateResponse](#cosmwasm.wasm.v1.QueryAllContractStateResponse) | AllContractState gets all raw store data for a single contract | GET|/cosmwasm/wasm/v1/contract/{address}/state|
-| `RawContractState` | [QueryRawContractStateRequest](#cosmwasm.wasm.v1.QueryRawContractStateRequest) | [QueryRawContractStateResponse](#cosmwasm.wasm.v1.QueryRawContractStateResponse) | RawContractState gets single key from the raw store data of a contract | GET|/wasm/v1/contract/{address}/raw/{query_data}|
-| `SmartContractState` | [QuerySmartContractStateRequest](#cosmwasm.wasm.v1.QuerySmartContractStateRequest) | [QuerySmartContractStateResponse](#cosmwasm.wasm.v1.QuerySmartContractStateResponse) | SmartContractState get smart query result from the contract | GET|/wasm/v1/contract/{address}/smart/{query_data}|
+| `RawContractState` | [QueryRawContractStateRequest](#cosmwasm.wasm.v1.QueryRawContractStateRequest) | [QueryRawContractStateResponse](#cosmwasm.wasm.v1.QueryRawContractStateResponse) | RawContractState gets single key from the raw store data of a contract | GET|/cosmwasm/wasm/v1/contract/{address}/raw/{query_data}|
+| `SmartContractState` | [QuerySmartContractStateRequest](#cosmwasm.wasm.v1.QuerySmartContractStateRequest) | [QuerySmartContractStateResponse](#cosmwasm.wasm.v1.QuerySmartContractStateResponse) | SmartContractState get smart query result from the contract | GET|/cosmwasm/wasm/v1/contract/{address}/smart/{query_data}|
 | `Code` | [QueryCodeRequest](#cosmwasm.wasm.v1.QueryCodeRequest) | [QueryCodeResponse](#cosmwasm.wasm.v1.QueryCodeResponse) | Code gets the binary code and metadata for a singe wasm code | GET|/cosmwasm/wasm/v1/code/{code_id}|
 | `Codes` | [QueryCodesRequest](#cosmwasm.wasm.v1.QueryCodesRequest) | [QueryCodesResponse](#cosmwasm.wasm.v1.QueryCodesResponse) | Codes gets the metadata for all stored wasm codes | GET|/cosmwasm/wasm/v1/code|
 | `PinnedCodes` | [QueryPinnedCodesRequest](#cosmwasm.wasm.v1.QueryPinnedCodesRequest) | [QueryPinnedCodesResponse](#cosmwasm.wasm.v1.QueryPinnedCodesResponse) | PinnedCodes gets the pinned code ids | GET|/cosmwasm/wasm/v1/codes/pinned|

@@ -142,6 +142,7 @@ func TestInstantiateContractCmd(t *testing.T) {
 				flagSet := cmd.Flags()
 				flagSet.Set("label", "testing")
 				flagSet.Set("run-as", myWellFundedAccount)
+				flagSet.Set("no-admin", "true")
 			},
 			expMsgCount: 1,
 		},
@@ -157,6 +158,7 @@ func TestInstantiateContractCmd(t *testing.T) {
 				flagSet := cmd.Flags()
 				flagSet.Set("label", "testing")
 				flagSet.Set("run-as", myWellFundedAccount)
+				flagSet.Set("admin", myWellFundedAccount)
 			},
 			expMsgCount: 2,
 		},
@@ -175,6 +177,7 @@ func TestInstantiateContractCmd(t *testing.T) {
 				flagSet := cmd.Flags()
 				flagSet.Set("label", "testing")
 				flagSet.Set("run-as", myWellFundedAccount)
+				flagSet.Set("no-admin", "true")
 			},
 			expMsgCount: 2,
 		},
@@ -185,6 +188,7 @@ func TestInstantiateContractCmd(t *testing.T) {
 				flagSet := cmd.Flags()
 				flagSet.Set("label", "testing")
 				flagSet.Set("run-as", myWellFundedAccount)
+				flagSet.Set("no-admin", "true")
 			},
 			expError: true,
 		},
@@ -202,6 +206,59 @@ func TestInstantiateContractCmd(t *testing.T) {
 				flagSet := cmd.Flags()
 				flagSet.Set("label", "testing")
 				flagSet.Set("run-as", myWellFundedAccount)
+				flagSet.Set("no-admin", "true")
+			},
+			expError: true,
+		},
+		"fails if no explicit --no-admin passed": {
+			srcGenesis: types.GenesisState{
+				Params: types.DefaultParams(),
+				Codes: []types.Code{
+					{
+						CodeID: 1,
+						CodeInfo: types.CodeInfo{
+							CodeHash: []byte("a-valid-code-hash"),
+							Creator:  keeper.RandomBech32AccountAddress(t),
+							InstantiateConfig: types.AccessConfig{
+								Permission: types.AccessTypeEverybody,
+							},
+						},
+						CodeBytes: wasmIdent,
+					},
+				},
+			},
+			mutator: func(cmd *cobra.Command) {
+				cmd.SetArgs([]string{"1", `{}`})
+				flagSet := cmd.Flags()
+				flagSet.Set("label", "testing")
+				flagSet.Set("run-as", myWellFundedAccount)
+			},
+			expError: true,
+		},
+		"fails if both --admin and --no-admin passed": {
+			srcGenesis: types.GenesisState{
+				Params: types.DefaultParams(),
+				Codes: []types.Code{
+					{
+						CodeID: 1,
+						CodeInfo: types.CodeInfo{
+							CodeHash: []byte("a-valid-code-hash"),
+							Creator:  keeper.RandomBech32AccountAddress(t),
+							InstantiateConfig: types.AccessConfig{
+								Permission: types.AccessTypeEverybody,
+							},
+						},
+						CodeBytes: wasmIdent,
+					},
+				},
+			},
+			mutator: func(cmd *cobra.Command) {
+				cmd.SetArgs([]string{"1", `{}`})
+				flagSet := cmd.Flags()
+				flagSet.Set("label", "testing")
+				flagSet.Set("run-as", myWellFundedAccount)
+				flagSet.Set("no-admin", "true")
+				flagSet.Set("admin", myWellFundedAccount)
 			},
 			expError: true,
 		},
@@ -227,6 +284,7 @@ func TestInstantiateContractCmd(t *testing.T) {
 				flagSet := cmd.Flags()
 				flagSet.Set("label", "testing")
 				flagSet.Set("run-as", keeper.RandomBech32AccountAddress(t))
+				flagSet.Set("no-admin", "true")
 			},
 			expMsgCount: 1,
 		},
@@ -253,6 +311,7 @@ func TestInstantiateContractCmd(t *testing.T) {
 				flagSet.Set("label", "testing")
 				flagSet.Set("run-as", myWellFundedAccount)
 				flagSet.Set("amount", "100stake")
+				flagSet.Set("no-admin", "true")
 			},
 			expMsgCount: 1,
 		},
@@ -279,6 +338,7 @@ func TestInstantiateContractCmd(t *testing.T) {
 				flagSet.Set("label", "testing")
 				flagSet.Set("run-as", keeper.RandomBech32AccountAddress(t))
 				flagSet.Set("amount", "10stake")
+				flagSet.Set("no-admin", "true")
 			},
 			expError: true,
 		},
@@ -507,7 +567,7 @@ func TestExecuteContractCmd(t *testing.T) {
 func TestGetAllContracts(t *testing.T) {
 	specs := map[string]struct {
 		src types.GenesisState
-		exp []contractMeta
+		exp []ContractMeta
 	}{
 		"read from contracts state": {
 			src: types.GenesisState{
@@ -522,7 +582,7 @@ func TestGetAllContracts(t *testing.T) {
 					},
 				},
 			},
-			exp: []contractMeta{
+			exp: []ContractMeta{
 				{
 					ContractAddress: "first-contract",
 					Info:            types.ContractInfo{Label: "first"},
@@ -540,7 +600,7 @@ func TestGetAllContracts(t *testing.T) {
 					{Sum: &types.GenesisState_GenMsgs_InstantiateContract{InstantiateContract: &types.MsgInstantiateContract{Label: "second"}}},
 				},
 			},
-			exp: []contractMeta{
+			exp: []ContractMeta{
 				{
 					ContractAddress: keeper.BuildContractAddress(0, 1).String(),
 					Info:            types.ContractInfo{Label: "first"},
@@ -560,7 +620,7 @@ func TestGetAllContracts(t *testing.T) {
 					{Sum: &types.GenesisState_GenMsgs_InstantiateContract{InstantiateContract: &types.MsgInstantiateContract{Label: "hundred"}}},
 				},
 			},
-			exp: []contractMeta{
+			exp: []ContractMeta{
 				{
 					ContractAddress: keeper.BuildContractAddress(0, 100).String(),
 					Info:            types.ContractInfo{Label: "hundred"},
@@ -582,7 +642,7 @@ func TestGetAllContracts(t *testing.T) {
 					{Sum: &types.GenesisState_GenMsgs_InstantiateContract{InstantiateContract: &types.MsgInstantiateContract{Label: "hundred"}}},
 				},
 			},
-			exp: []contractMeta{
+			exp: []ContractMeta{
 				{
 					ContractAddress: "first-contract",
 					Info:            types.ContractInfo{Label: "first"},
@@ -596,7 +656,7 @@ func TestGetAllContracts(t *testing.T) {
 	}
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			got := getAllContracts(&spec.src)
+			got := GetAllContracts(&spec.src)
 			assert.Equal(t, spec.exp, got)
 		})
 	}

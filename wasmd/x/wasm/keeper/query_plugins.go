@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
@@ -68,12 +69,19 @@ func (q QueryHandler) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) (
 	}()
 
 	res, err = q.Plugins.HandleQuery(subCtx, q.Caller, request)
-	// Error mapping
+	if err == nil {
+		// short-circuit, the rest is dealing with handling existing errors
+		return res, nil
+	}
+
+	// special mappings to system error (which are not redacted)
 	var noSuchContract *types.ErrNoSuchContract
 	if ok := errors.As(err, &noSuchContract); ok {
-		return res, wasmvmtypes.NoSuchContract{Addr: noSuchContract.Addr}
+		err = wasmvmtypes.NoSuchContract{Addr: noSuchContract.Addr}
 	}
-	return res, err
+
+	// Issue #759 - we don't return error string for worries of non-determinism
+	return nil, redactError(err)
 }
 
 func (q QueryHandler) GasConsumed() uint64 {
@@ -183,7 +191,7 @@ func BankQuerier(bankKeeper types.BankViewKeeper) func(ctx sdk.Context, request 
 			}
 			coins := bankKeeper.GetAllBalances(ctx, addr)
 			res := wasmvmtypes.AllBalancesResponse{
-				Amount: convertSdkCoinsToWasmCoins(coins),
+				Amount: ConvertSdkCoinsToWasmCoins(coins),
 			}
 			return json.Marshal(res)
 		}
@@ -280,8 +288,19 @@ func IBCQuerier(wasm contractMetaDataSource, channelKeeper types.ChannelKeeper) 
 	}
 }
 
+var queryDenyList = []string{
+	"/cosmos.tx.",
+	"/cosmos.base.tendermint.",
+}
+
 func StargateQuerier(queryRouter GRPCQueryRouter) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 	return func(ctx sdk.Context, msg *wasmvmtypes.StargateQuery) ([]byte, error) {
+		for _, b := range queryDenyList {
+			if strings.HasPrefix(msg.Path, b) {
+				return nil, wasmvmtypes.UnsupportedRequest{Kind: "path is not allowed from the contract"}
+			}
+		}
+
 		route := queryRouter.Route(msg.Path)
 		if route == nil {
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", msg.Path)}
@@ -405,7 +424,7 @@ func sdkToDelegations(ctx sdk.Context, keeper types.StakingKeeper, delegations [
 		result[i] = wasmvmtypes.Delegation{
 			Delegator: delAddr.String(),
 			Validator: valAddr.String(),
-			Amount:    convertSdkCoinToWasmCoin(amount),
+			Amount:    ConvertSdkCoinToWasmCoin(amount),
 		}
 	}
 	return result, nil
@@ -427,7 +446,7 @@ func sdkToFullDelegation(ctx sdk.Context, keeper types.StakingKeeper, distKeeper
 	bondDenom := keeper.BondDenom(ctx)
 	amount := sdk.NewCoin(bondDenom, val.TokensFromShares(delegation.Shares).TruncateInt())
 
-	delegationCoins := convertSdkCoinToWasmCoin(amount)
+	delegationCoins := ConvertSdkCoinToWasmCoin(amount)
 
 	// FIXME: this is very rough but better than nothing...
 	// https://github.com/CosmWasm/wasmd/issues/282
@@ -524,15 +543,17 @@ func WasmQuerier(k wasmQueryKeeper) func(ctx sdk.Context, request *wasmvmtypes.W
 	}
 }
 
-func convertSdkCoinsToWasmCoins(coins []sdk.Coin) wasmvmtypes.Coins {
+// ConvertSdkCoinsToWasmCoins covert sdk type to wasmvm coins type
+func ConvertSdkCoinsToWasmCoins(coins []sdk.Coin) wasmvmtypes.Coins {
 	converted := make(wasmvmtypes.Coins, len(coins))
 	for i, c := range coins {
-		converted[i] = convertSdkCoinToWasmCoin(c)
+		converted[i] = ConvertSdkCoinToWasmCoin(c)
 	}
 	return converted
 }
 
-func convertSdkCoinToWasmCoin(coin sdk.Coin) wasmvmtypes.Coin {
+// ConvertSdkCoinToWasmCoin covert sdk type to wasmvm coin type
+func ConvertSdkCoinToWasmCoin(coin sdk.Coin) wasmvmtypes.Coin {
 	return wasmvmtypes.Coin{
 		Denom:  coin.Denom,
 		Amount: coin.Amount.String(),
