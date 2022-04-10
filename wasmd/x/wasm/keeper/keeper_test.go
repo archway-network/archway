@@ -123,7 +123,7 @@ func TestCreateStoresInstantiatePermission(t *testing.T) {
 		t.Run(msg, func(t *testing.T) {
 			ctx, keepers := CreateTestInput(t, false, SupportedFeatures)
 			accKeeper, keeper, bankKeeper := keepers.AccountKeeper, keepers.ContractKeeper, keepers.BankKeeper
-			keepers.WasmKeeper.setParams(ctx, types.Params{
+			keepers.WasmKeeper.SetParams(ctx, types.Params{
 				CodeUploadAccess:             types.AllowEverybody,
 				InstantiateDefaultPermission: spec.srcPermission,
 				MaxWasmCodeSize:              types.DefaultMaxWasmCodeSize,
@@ -174,7 +174,7 @@ func TestCreateWithParamPermissions(t *testing.T) {
 		t.Run(msg, func(t *testing.T) {
 			params := types.DefaultParams()
 			params.CodeUploadAccess = spec.srcPermission
-			keepers.WasmKeeper.setParams(ctx, params)
+			keepers.WasmKeeper.SetParams(ctx, params)
 			_, err := keeper.Create(ctx, creator, hackatomWasm, nil)
 			require.True(t, spec.expError.Is(err), err)
 			if spec.expError != nil {
@@ -313,7 +313,7 @@ func TestInstantiate(t *testing.T) {
 
 	gasAfter := ctx.GasMeter().GasConsumed()
 	if types.EnableGasVerification {
-		require.Equal(t, uint64(0x18dab), gasAfter-gasBefore)
+		require.Equal(t, uint64(0x18db5), gasAfter-gasBefore)
 	}
 
 	// ensure it is stored properly
@@ -672,6 +672,7 @@ func TestExecuteWithNonExistingAddress(t *testing.T) {
 }
 
 func TestExecuteWithPanic(t *testing.T) {
+	SkipIfM1(t)
 	ctx, keepers := CreateTestInput(t, false, SupportedFeatures)
 	keeper := keepers.ContractKeeper
 
@@ -703,6 +704,7 @@ func TestExecuteWithPanic(t *testing.T) {
 }
 
 func TestExecuteWithCpuLoop(t *testing.T) {
+	SkipIfM1(t)
 	ctx, keepers := CreateTestInput(t, false, SupportedFeatures)
 	keeper := keepers.ContractKeeper
 
@@ -745,6 +747,7 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 }
 
 func TestExecuteWithStorageLoop(t *testing.T) {
+	SkipIfM1(t)
 	ctx, keepers := CreateTestInput(t, false, SupportedFeatures)
 	keeper := keepers.ContractKeeper
 
@@ -786,6 +789,7 @@ func TestExecuteWithStorageLoop(t *testing.T) {
 }
 
 func TestMigrate(t *testing.T) {
+	SkipIfM1(t)
 	ctx, keepers := CreateTestInput(t, false, SupportedFeatures)
 	keeper := keepers.ContractKeeper
 
@@ -967,6 +971,7 @@ func TestMigrate(t *testing.T) {
 }
 
 func TestMigrateReplacesTheSecondIndex(t *testing.T) {
+	SkipIfM1(t)
 	ctx, keepers := CreateTestInput(t, false, SupportedFeatures)
 	example := InstantiateHackatomExampleContract(t, ctx, keepers)
 
