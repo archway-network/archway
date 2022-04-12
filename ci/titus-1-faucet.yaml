@@ -1,0 +1,22 @@
+apiVersion: apps.starport.cloud/v1
+kind: Faucet
+metadata:
+  name: titus-1-faucet
+  namespace: archway
+spec:
+  cliName: archwayd
+  creditAmount: 10000000
+  denoms:
+  - utitus
+  disableTLS: false
+  domain: faucet.titus-1.archway.tech
+  image:
+    imagePullPolicy: Always
+    name: docker.io/archwaynetwork/archwayd
+    version: sha-8e3e5be
+  legacySend: false
+  maxCredit: 100000000
+  node: tcp://titus-1.archway.svc.cluster.local:26657
+  private: true
+  replicas: 1
+  sdkVersion: stargate
