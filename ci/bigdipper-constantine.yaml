@@ -105,7 +105,7 @@ spec:
     spec:
       containers:
         - name: constantine-big-dipper
-          image: drewstaylor/bigdipper:latest
+          image: drewstaylor/bigdipper:1.0.0-archway
           imagePullPolicy: Always
           ports:        
           - containerPort: 3000
