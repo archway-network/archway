@@ -4,8 +4,8 @@
 
 set -e
 
-echo clearing /root/.archway
-rm -rf /root/.archway
+echo clearing $HOME/.archway
+rm -rf $HOME/.archway
 echo initting new chain
 # init config files
 archwayd init archwayd-id --chain-id localnet
@@ -27,7 +27,7 @@ archwayd collect-gentxs
 # verify genesis file is fine
 archwayd validate-genesis
 echo changing network settings
-sed -i 's/127.0.0.1/0.0.0.0/g' /root/.archway/config/config.toml
+sed -i 's/127.0.0.1/0.0.0.0/g' $HOME/.archway/config/config.toml
 
 echo test account address: "$addr"
 echo test account private key: "$(yes | archwayd keys export fd --unsafe --unarmored-hex --keyring-backend=test)"

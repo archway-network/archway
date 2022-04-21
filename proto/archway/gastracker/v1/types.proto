@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package archway.gastracker.v1;
 
-option go_package = "github.com/archway-network/archway/x/gastracker/types";
+option go_package = "github.com/archway-network/archway/x/gastracker";
 
 import "gogoproto/gogo.proto";
 

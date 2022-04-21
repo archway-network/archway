@@ -2,11 +2,13 @@ package cli
 
 import (
 	"context"
-	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
+
+	gstTypes "github.com/archway-network/archway/x/gastracker"
 )
 
 func GetQueryCmd() *cobra.Command {

@@ -1,11 +1,13 @@
-package gastracker
+package keeper
 
 import (
 	"context"
-	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	gstTypes "github.com/archway-network/archway/x/gastracker"
 )
 
 var _ gstTypes.QueryServer = &grpcQuerier{}

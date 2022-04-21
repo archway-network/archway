@@ -2,17 +2,15 @@ package app
 
 import (
 	"fmt"
-	wasmdKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	cosmwasm "github.com/CosmWasm/wasmvm"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/archway-network/archway/x/gastracker"
-	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+	wasmdKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	cosmwasm "github.com/CosmWasm/wasmvm"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -104,6 +102,10 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	archwayappparams "github.com/archway-network/archway/app/params"
+
+	"github.com/archway-network/archway/x/gastracker"
+	gastrackerkeeper "github.com/archway-network/archway/x/gastracker/keeper"
+	gastrackermodule "github.com/archway-network/archway/x/gastracker/module"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -197,7 +199,7 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		wasm.AppModuleBasic{},
-		gastracker.AppModuleBasic{},
+		gastrackermodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -265,7 +267,7 @@ type ArchwayApp struct {
 	// module configurator
 	configurator module.Configurator
 
-	gastrackingKeeper gastracker.GasTrackingKeeper
+	gastrackingKeeper gastrackerkeeper.GasTrackingKeeper
 }
 
 // NewArchwayApp returns a reference to an initialized ArchwayApp.
@@ -494,10 +496,10 @@ func NewArchwayApp(
 		wasmOpts...,
 	)
 
-	app.gastrackingKeeper = gastracker.NewGasTrackingKeeper(
+	app.gastrackingKeeper = gastrackerkeeper.NewGasTrackingKeeper(
 		keys[gastracker.StoreKey],
 		app.appCodec,
-		app.getSubspace(gstTypes.DefaultParamSpace),
+		app.getSubspace(gastracker.DefaultParamSpace),
 		app.wasmKeeper,
 		defaultGasRegister,
 	)
@@ -553,7 +555,7 @@ func NewArchwayApp(
 		ibc.NewAppModule(app.ibcKeeper),
 		params.NewAppModule(app.paramsKeeper),
 		transferModule,
-		gastracker.NewAppModule(app.appCodec, app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
+		gastrackermodule.NewAppModule(app.appCodec, app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
 		crisis.NewAppModule(&app.crisisKeeper, skipGenesisInvariants), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -646,7 +648,7 @@ func NewArchwayApp(
 		wasm.NewAppModule(appCodec, &app.wasmKeeper, app.stakingKeeper),
 		ibc.NewAppModule(app.ibcKeeper),
 		transferModule,
-		gastracker.NewAppModule(app.appCodec, app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
+		gastrackermodule.NewAppModule(app.appCodec, app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -830,7 +832,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
-	paramsKeeper.Subspace(gstTypes.DefaultParamSpace)
+	paramsKeeper.Subspace(gastracker.DefaultParamSpace)
 
 	return paramsKeeper
 }

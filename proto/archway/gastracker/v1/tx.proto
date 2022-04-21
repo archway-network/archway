@@ -4,7 +4,7 @@ package archway.gastracker.v1;
 import "gogoproto/gogo.proto";
 import "archway/gastracker/v1/types.proto";
 
-option go_package = "github.com/archway-network/archway/x/gastracker/types";
+option go_package = "github.com/archway-network/archway/x/gastracker";
 option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the gastracker msg service

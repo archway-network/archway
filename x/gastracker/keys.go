@@ -1,4 +1,4 @@
-package types
+package gastracker
 
 const (
 	// ModuleName is the name of the contract module
