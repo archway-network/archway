@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  mnemonic: ZXhvdGljIHN0aWNrIGVkZ2UgbGF1Z2ggYmFsYW5jZSBxdWVzdGlvbiByYXZlbiBwaWN0dXJlIHN0dW1ibGUgbWluZCBkZWJyaXMgd2F2ZSBmYXVsdCB3b3JrIGZsYW1lIGF0b20gYnJpc2sgbG90dGVyeSB0cmF5IGh1bnQgb3JpZ2luYWwgc2hhZnQgYmFtYm9vIHllbGxvdw==
+immutable: true
+kind: Secret
+metadata:
+  name: titus-1-faucet-account
+  namespace: archway
+type: Opaque

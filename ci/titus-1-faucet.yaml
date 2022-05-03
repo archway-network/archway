@@ -1,25 +1,22 @@
 apiVersion: apps.starport.cloud/v1
 kind: Faucet
 metadata:
-  name: augusta-1-faucet
+  name: titus-1-faucet
   namespace: archway
 spec:
   cliName: archwayd
   creditAmount: 10000000
   denoms:
-  - uaugust
+  - utitus
   disableTLS: false
-  domain: faucet.augusta-1.archway.tech
+  domain: faucet.titus-1.archway.tech
   image:
     imagePullPolicy: Always
     name: docker.io/archwaynetwork/archwayd
-    version: edge
+    version: sha-8e3e5be
   legacySend: false
   maxCredit: 100000000
-  node: tcp://augusta-1-faucet-node.archway.svc.cluster.local:26657
-  private: false
+  node: tcp://titus-1.archway.svc.cluster.local:26657
+  private: true
   replicas: 1
-  resources: {}
   sdkVersion: stargate
-  tlsSecretName: faucet-augusta-1-cert
-  usePaths: false

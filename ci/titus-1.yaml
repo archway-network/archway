@@ -54,23 +54,17 @@ spec:
     p2p: true
   image:
     name: docker.io/archwaynetwork/archwayd
-    version: NODE_VERSION
+    version: sha-8e3e5be
     imagePullPolicy: Always
   init:
     assets:
       - 10000000000000000000utitus
+    accounts:
+      - address: archway1zsetek833g3upk2dgc56nqskm8tg804y6vvw0l
+        coins:
+          - 100000000000000000utitus
     bondDenom: utitus
     chainID: titus-1
-    faucet:
-      creditAmount: 10000000
-      denoms:
-        - utitus
-      domain: faucet.titus-1.archway.tech
-      funds: 100000000000000000utitus
-      legacySend: false
-      maxCredit: 100000000
-      replicas: 1
-    stakeAmount: 100000000000000000utitus
   moniker: archway
   persistence:
     autoResize:
