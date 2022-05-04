@@ -1,7 +1,7 @@
 # v0.0.5
 
 ## Breaking Changes
-- Update wasmd to 0.25
+- Update wasmd to 0.25.
 
 ## Bug Fixes
 - Fix logs printing total contract rewards instead of gas rebate reward.
