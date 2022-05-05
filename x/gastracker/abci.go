@@ -39,7 +39,7 @@ func EmitContractRewardCalculationEvent(context sdk.Context, contractAddress str
 
 	return context.EventManager().EmitTypedEvent(&gstTypes.ContractRewardCalculationEvent{
 		ContractAddress:  contractAddress,
-		GasConsumed:      gasConsumed.BigInt().Uint64(),
+		GasConsumed:      gasConsumed.RoundInt().Uint64(),
 		InflationRewards: &inflationReward,
 		ContractRewards:  rewards,
 		Metadata:         metadata,
