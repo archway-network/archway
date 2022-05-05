@@ -5,7 +5,7 @@ services:
     image: archwaynetwork/archwayd:latest
     build:
       context: .
-    entrypoint: ["sh", "/opt/localnet.sh"]
+    command: ["sh", "/opt/localnet.sh"]
     ports:
       - 9090:9090
       - 26657:26657
