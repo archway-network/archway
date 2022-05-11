@@ -1,3 +1,4 @@
+// DONTCOVER
 package app
 
 import (
