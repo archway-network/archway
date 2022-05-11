@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true 
+      matrix:
+        os: [ubuntu-latest]
+        db_backend: [ goleveldb ]
+    env: # Or as an environment variable
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
+      - uses: actions/setup-go@v2
+        with:
+          go-version: "^1.17" # The Go version to download (if necessary) and use.
+      - name: Build
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }} DB_BACKEND=${{ matrix.db_backend }} make build
+          tar -czvf archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz build/archwayd
+      - uses: actions/upload-artifact@v2
+        with:
+          name: archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz
+          path: archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz
