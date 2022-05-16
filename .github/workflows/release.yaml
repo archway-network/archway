@@ -24,7 +24,7 @@ jobs:
           go-version: "^1.17" # The Go version to download (if necessary) and use.
       - name: Build
         run: |
-          VERSION=${{ steps.get_version.outputs.VERSION }} DB_BACKEND=${{ matrix.db_backend }} make build
+          VERSION=${{ steps.get_version.outputs.VERSION }} DB_BACKEND=${{ matrix.db_backend }} LINK_STATICALLY=true make build
           tar -czvf archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz build/archwayd
       - uses: actions/upload-artifact@v2
         with:
