@@ -1,9 +1,8 @@
 name: Release
 
 on:
-  push:
-    release:
-      types: [published]
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -30,8 +29,8 @@ jobs:
         with:
           name: archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz
           path: archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz
-      - uses: softprops/action-gh-release@v1
       - name: Release
+      - uses: softprops/action-gh-release@v1
         with:
           files: archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz
 
