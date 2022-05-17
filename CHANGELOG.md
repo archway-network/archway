@@ -1,3 +1,11 @@
+# v0.0.6
+
+## Bug Fixes
+- Update Gas Consumed to Decimal values [#159](https://github.com/archway-network/archway/pull/159)
+
+# Changes
+- Use archway/wasmd fork [#162](https://github.com/archway-network/archway/pull/159)
+
 # v0.0.5
 
 ## Breaking Changes
