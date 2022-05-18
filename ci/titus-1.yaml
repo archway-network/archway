@@ -68,10 +68,10 @@ spec:
   moniker: archway
   persistence:
     autoResize:
-      enabled: true
+      enabled: false
       increment: 5G
       threshold: 80
-    size: 5G
+    size: 160G
   replicas: 2
   resources:
     restServer: {}
