@@ -1,4 +1,4 @@
-package types
+package gastracker
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

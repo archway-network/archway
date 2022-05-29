@@ -2,12 +2,14 @@ package cli
 
 import (
 	"encoding/json"
-	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
+
+	gstTypes "github.com/archway-network/archway/x/gastracker"
 )
 
 func GetTxCmd() *cobra.Command {

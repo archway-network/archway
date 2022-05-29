@@ -1,23 +1,26 @@
-package gastracker
+package keeper
 
 import (
-	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"crypto/rand"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/archway-network/archway/x/gastracker/types"
+	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
 	tmLog "github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	db "github.com/tendermint/tm-db"
 
-	gstTypes "github.com/archway-network/archway/x/gastracker/types"
-	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/archway-network/archway/x/gastracker"
+	gstTypes "github.com/archway-network/archway/x/gastracker"
 )
 
 type TestContractInfoView struct {
@@ -51,15 +54,15 @@ type subspace struct {
 }
 
 func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
-	params, ok := paramset.(*gstTypes.Params)
+	params, ok := paramset.(*gastracker.Params)
 	if !ok {
 		panic("[mock subspace]: invalid params type")
 	}
-	s.space[string(gstTypes.ParamsKeyGasTrackingSwitch)] = params.GasTrackingSwitch
-	s.space[string(gstTypes.ParamsKeyDappInflationRewards)] = params.GasDappInflationRewardsSwitch
-	s.space[string(gstTypes.ParamsKeyGasRebateSwitch)] = params.GasRebateSwitch
-	s.space[string(gstTypes.ParamsKeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
-	s.space[string(gstTypes.ParamsKeyContractPremiumSwitch)] = params.ContractPremiumSwitch
+	s.space[string(gastracker.ParamsKeyGasTrackingSwitch)] = params.GasTrackingSwitch
+	s.space[string(gastracker.ParamsKeyDappInflationRewards)] = params.GasDappInflationRewardsSwitch
+	s.space[string(gastracker.ParamsKeyGasRebateSwitch)] = params.GasRebateSwitch
+	s.space[string(gastracker.ParamsKeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
+	s.space[string(gastracker.ParamsKeyContractPremiumSwitch)] = params.ContractPremiumSwitch
 
 }
 func (s *subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
@@ -95,7 +98,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 		Time:   time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
 	}, false, tmLog.NewTMLogger(os.Stdout))
 
-	params := gstTypes.DefaultParams()
+	params := gastracker.DefaultParams()
 	subspace.SetParamSet(ctx, &params)
 	return ctx, &keeper
 }
@@ -116,22 +119,22 @@ func TestContractMetadataHandling(t *testing.T) {
 	require.EqualError(
 		t,
 		err,
-		types.ErrContractInstanceMetadataNotFound.Error(),
+		gastracker.ErrContractInstanceMetadataNotFound.Error(),
 		"We should get not found error when try to get non existent contract metadata",
 	)
 
 	// No developer and reward address
-	incompleteMetadata := types.ContractInstanceMetadata{
+	incompleteMetadata := gastracker.ContractInstanceMetadata{
 		GasRebateToUser:          true,
 		CollectPremium:           false,
 		PremiumPercentageCharged: 3,
 	}
 
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], incompleteMetadata)
-	require.EqualError(t, err, gstTypes.ErrInvalidSetContractMetadataRequest.Error(), "We should not be able to set metadata")
+	require.EqualError(t, err, gastracker.ErrInvalidSetContractMetadataRequest.Error(), "We should not be able to set metadata")
 
 	// No developer address
-	incompleteMetadata = types.ContractInstanceMetadata{
+	incompleteMetadata = gastracker.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[5].String(),
 		GasRebateToUser:          true,
 		CollectPremium:           false,
@@ -139,10 +142,10 @@ func TestContractMetadataHandling(t *testing.T) {
 	}
 
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], incompleteMetadata)
-	require.EqualError(t, err, gstTypes.ErrInvalidSetContractMetadataRequest.Error(), "We should not be able to set metadata")
+	require.EqualError(t, err, gastracker.ErrInvalidSetContractMetadataRequest.Error(), "We should not be able to set metadata")
 
 	// No reward address
-	incompleteMetadata = types.ContractInstanceMetadata{
+	incompleteMetadata = gastracker.ContractInstanceMetadata{
 		DeveloperAddress:         spareAddress[5].String(),
 		GasRebateToUser:          true,
 		CollectPremium:           false,
@@ -150,9 +153,9 @@ func TestContractMetadataHandling(t *testing.T) {
 	}
 
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], incompleteMetadata)
-	require.EqualError(t, err, gstTypes.ErrInvalidSetContractMetadataRequest.Error(), "We should not be able to set metadata")
+	require.EqualError(t, err, gastracker.ErrInvalidSetContractMetadataRequest.Error(), "We should not be able to set metadata")
 
-	newMetadata := types.ContractInstanceMetadata{
+	newMetadata := gastracker.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[2].String(),
 		GasRebateToUser:          true,
 		CollectPremium:           false,
@@ -169,7 +172,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	require.NoError(t, err, "We should be able to get pending metadata")
 	require.Equal(t, retrievedMetadata, newMetadata)
 
-	newMetadata = types.ContractInstanceMetadata{
+	newMetadata = gastracker.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[2].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           true,
@@ -188,7 +191,7 @@ func TestContractMetadataHandling(t *testing.T) {
 
 	// We should not be able to get current contract metadata as change is pending
 	_, err = keeper.GetContractMetadata(ctx, spareAddress[1])
-	require.EqualError(t, err, types.ErrContractInstanceMetadataNotFound.Error(), "We should get contract metadata not found")
+	require.EqualError(t, err, gastracker.ErrContractInstanceMetadataNotFound.Error(), "We should get contract metadata not found")
 
 	// Commit pending contract metadata
 	numberOfEntriesCommitted, err := keeper.CommitPendingContractMetadata(ctx)
@@ -202,7 +205,7 @@ func TestContractMetadataHandling(t *testing.T) {
 
 	// Now, pending contract metadata should be removed
 	_, err = keeper.GetPendingContractMetadataChange(ctx, spareAddress[1])
-	require.EqualError(t, err, types.ErrContractInstanceMetadataNotFound.Error(), "We should get contract metadata not found")
+	require.EqualError(t, err, gastracker.ErrContractInstanceMetadataNotFound.Error(), "We should get contract metadata not found")
 
 	// No new metadata to commit
 	numberOfEntriesCommitted, err = keeper.CommitPendingContractMetadata(ctx)
@@ -211,7 +214,7 @@ func TestContractMetadataHandling(t *testing.T) {
 
 	// Commit pending metadata should be able to handle multiple commits
 
-	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], types.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gastracker.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[2].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           false,
@@ -220,7 +223,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to set metadata")
 
-	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[5], types.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[5], gastracker.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[2].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           false,
@@ -229,7 +232,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	})
 	require.NoError(t, err, "We should be able to set metadata")
 
-	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[6], types.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[6], gastracker.ContractInstanceMetadata{
 		RewardAddress:            spareAddress[2].String(),
 		GasRebateToUser:          false,
 		CollectPremium:           false,
@@ -246,7 +249,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	// You should be able to omit either developer address or reward address now
 
 	// Test to omit Reward address
-	newMetadata = types.ContractInstanceMetadata{
+	newMetadata = gastracker.ContractInstanceMetadata{
 		GasRebateToUser:          true,
 		CollectPremium:           false,
 		PremiumPercentageCharged: 3,
@@ -268,7 +271,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	require.Equal(t, spareAddress[1].String(), retrievedMetadata.DeveloperAddress, "Developer address must be changed")
 
 	// Test to omit Developer address
-	newMetadata = types.ContractInstanceMetadata{
+	newMetadata = gastracker.ContractInstanceMetadata{
 		GasRebateToUser:          true,
 		CollectPremium:           false,
 		PremiumPercentageCharged: 3,
@@ -290,7 +293,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	require.Equal(t, spareAddress[1].String(), retrievedMetadata.DeveloperAddress, "Developer address must be same")
 
 	// Test to omit both
-	newMetadata = types.ContractInstanceMetadata{
+	newMetadata = gastracker.ContractInstanceMetadata{
 		GasRebateToUser:          true,
 		CollectPremium:           false,
 		PremiumPercentageCharged: 3,
@@ -313,7 +316,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	// Sender validation check
 
 	// Right now default admin is senderAddress[0], passing anything else should not work
-	metadata := types.ContractInstanceMetadata{
+	metadata := gastracker.ContractInstanceMetadata{
 		DeveloperAddress:         spareAddress[6].String(),
 		GasRebateToUser:          true,
 		CollectPremium:           false,
@@ -322,7 +325,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	}
 
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[5], spareAddress[2], metadata)
-	require.EqualError(t, err, gstTypes.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
+	require.EqualError(t, err, gastracker.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
 
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], metadata)
 	require.NoError(t, err, "We should be able to set metadata")
@@ -334,9 +337,9 @@ func TestContractMetadataHandling(t *testing.T) {
 	// Now that we already set the metadata and developer address is set to spareAddress[6], we would not be able to change
 	// metadata
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], metadata)
-	require.EqualError(t, err, gstTypes.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
+	require.EqualError(t, err, gastracker.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
 
-	metadata = types.ContractInstanceMetadata{
+	metadata = gastracker.ContractInstanceMetadata{
 		DeveloperAddress:         spareAddress[8].String(),
 		GasRebateToUser:          true,
 		CollectPremium:           false,
@@ -351,7 +354,7 @@ func TestContractMetadataHandling(t *testing.T) {
 	require.NoError(t, err, "We should be able to commit metadata")
 	require.Equal(t, 1, numberOfEntriesCommitted, "One entry should be committed")
 
-	metadata = types.ContractInstanceMetadata{
+	metadata = gastracker.ContractInstanceMetadata{
 		DeveloperAddress:         spareAddress[9].String(),
 		GasRebateToUser:          true,
 		CollectPremium:           false,
@@ -360,10 +363,10 @@ func TestContractMetadataHandling(t *testing.T) {
 
 	// Both admin and the previous developer should not be able to set the metadata
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[6], spareAddress[2], metadata)
-	require.EqualError(t, err, gstTypes.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
+	require.EqualError(t, err, gastracker.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
 
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], metadata)
-	require.EqualError(t, err, gstTypes.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
+	require.EqualError(t, err, gastracker.ErrNoPermissionToSetMetadata.Error(), "keeper should not allow metadata change")
 
 	// Current developer should be able to set the metadata
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[8], spareAddress[2], metadata)
@@ -380,7 +383,7 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	ctx, keeper := CreateTestKeeperAndContext(t, spareAddress[0])
 
 	_, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[1])
-	require.EqualError(t, err, types.ErrRewardEntryNotFound.Error(), "Getting left over reward entry should fail")
+	require.EqualError(t, err, gastracker.ErrRewardEntryNotFound.Error(), "Getting left over reward entry should fail")
 
 	rewardCoins := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1).QuoInt64(3)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 	rewardCoins.Sort()
@@ -500,7 +503,7 @@ func TestCalculateUpdatedGas(t *testing.T) {
 	require.Equal(t, gasRecord.OriginalGas, updatedGas)
 
 	// Checking gas rebate calculation
-	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gastracker.ContractInstanceMetadata{
 		DeveloperAddress:         spareAddress[0].String(),
 		RewardAddress:            spareAddress[1].String(),
 		GasRebateToUser:          true,
@@ -528,7 +531,7 @@ func TestCalculateUpdatedGas(t *testing.T) {
 	require.Equal(t, (gasRecord.OriginalGas.SDKGas)/2, updatedGas.SDKGas)
 
 	// Checking premium percentage calculation
-	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gastracker.ContractInstanceMetadata{
 		DeveloperAddress:         spareAddress[0].String(),
 		RewardAddress:            spareAddress[1].String(),
 		GasRebateToUser:          false,
@@ -592,13 +595,13 @@ func TestIngestionOfGasRecords(t *testing.T) {
 	require.Equal(t, 0, len(blockTracking.TxTrackingInfos[0].ContractTrackingInfos))
 
 	// Let's add the metadata and call IngestGasRecord again
-	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[2], gastracker.ContractInstanceMetadata{
 		DeveloperAddress: spareAddress[0].String(),
 		RewardAddress:    spareAddress[0].String(),
 	})
 	require.NoError(t, err, "We should be able to set contract metadata")
 
-	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[3], gstTypes.ContractInstanceMetadata{
+	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[3], gastracker.ContractInstanceMetadata{
 		DeveloperAddress: spareAddress[0].String(),
 		RewardAddress:    spareAddress[0].String(),
 		GasRebateToUser:  true,
@@ -647,18 +650,18 @@ func TestIngestionOfGasRecords(t *testing.T) {
 
 	require.Equal(t, 2, len(blockTracking.TxTrackingInfos[0].ContractTrackingInfos))
 
-	require.Equal(t, &gstTypes.ContractGasTracking{
+	require.Equal(t, &gastracker.ContractGasTracking{
 		Address:        spareAddress[3].String(),
 		OriginalVmGas:  3,
 		OriginalSdkGas: 4,
-		Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_MIGRATE,
+		Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_MIGRATE,
 	}, blockTracking.TxTrackingInfos[0].ContractTrackingInfos[1])
 
-	require.Equal(t, &gstTypes.ContractGasTracking{
+	require.Equal(t, &gastracker.ContractGasTracking{
 		Address:        spareAddress[2].String(),
 		OriginalVmGas:  2,
 		OriginalSdkGas: 3,
-		Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_IBC,
+		Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_IBC,
 	}, blockTracking.TxTrackingInfos[0].ContractTrackingInfos[0])
 
 }
@@ -672,58 +675,58 @@ func TestAddContractGasUsage(t *testing.T) {
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 
-	err := keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 0}, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
-	require.EqualError(t, err, types.ErrBlockTrackingDataNotFound.Error(), "We cannot track contract gas since block tracking does not exists")
+	err := keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 0}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
+	require.EqualError(t, err, gastracker.ErrBlockTrackingDataNotFound.Error(), "We cannot track contract gas since block tracking does not exists")
 
 	err = keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 8}, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
-	require.EqualError(t, err, types.ErrTxTrackingDataNotFound.Error(), "We cannot track contract gas since tx tracking does not exists")
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 8}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
+	require.EqualError(t, err, gastracker.ErrTxTrackingDataNotFound.Error(), "We cannot track contract gas since tx tracking does not exists")
 
 	// Let's track one tx with one contract gas usage
 	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
 	require.NoError(t, err, "We should be able to track new transaction")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 2}, types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 2}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
 
 	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 6)
 	require.NoError(t, err, "We should be able to track new transaction")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], wasmTypes.GasConsumptionInfo{SDKGas: 2, VMGas: 3}, types.ContractOperation_CONTRACT_OPERATION_REPLY)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], wasmTypes.GasConsumptionInfo{SDKGas: 2, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_REPLY)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[3], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 3}, types.ContractOperation_CONTRACT_OPERATION_SUDO)
+	err = keeper.TrackContractGasUsage(ctx, spareAddress[3], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_SUDO)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
 
 	blockTrackingObj, err := keeper.GetCurrentBlockTracking(ctx)
 	require.NoError(t, err, "We should be able to get block tracking object")
 	require.Equal(t, 2, len(blockTrackingObj.TxTrackingInfos))
-	require.Equal(t, types.TransactionTracking{
+	require.Equal(t, gastracker.TransactionTracking{
 		MaxGasAllowed:      5,
 		MaxContractRewards: nil,
-		ContractTrackingInfos: []*types.ContractGasTracking{
+		ContractTrackingInfos: []*gastracker.ContractGasTracking{
 			{
 				Address:        spareAddress[1].String(),
 				OriginalSdkGas: 1,
 				OriginalVmGas:  2,
-				Operation:      types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+				Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 			},
 		},
 	}, *blockTrackingObj.TxTrackingInfos[0])
-	require.Equal(t, types.TransactionTracking{
+	require.Equal(t, gastracker.TransactionTracking{
 		MaxGasAllowed:      6,
 		MaxContractRewards: nil,
-		ContractTrackingInfos: []*types.ContractGasTracking{
+		ContractTrackingInfos: []*gastracker.ContractGasTracking{
 			{
 				Address:        spareAddress[2].String(),
 				OriginalSdkGas: 2,
 				OriginalVmGas:  3,
-				Operation:      types.ContractOperation_CONTRACT_OPERATION_REPLY,
+				Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_REPLY,
 			},
 			{
 				Address:        spareAddress[3].String(),
 				OriginalSdkGas: 4,
 				OriginalVmGas:  3,
-				Operation:      types.ContractOperation_CONTRACT_OPERATION_SUDO,
+				Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_SUDO,
 			},
 		},
 	}, *blockTrackingObj.TxTrackingInfos[1])
@@ -734,7 +737,7 @@ func TestAddContractGasUsage(t *testing.T) {
 	blockTrackingObj, err = keeper.GetCurrentBlockTracking(ctx)
 	require.NoError(t, err, "We should be able to get the block tracking obj")
 	// It should be empty
-	require.Equal(t, types.BlockGasTracking{}, blockTrackingObj)
+	require.Equal(t, gastracker.BlockGasTracking{}, blockTrackingObj)
 }
 
 // Test initialization of block tracking data for new block as well as marking end of the block for current block tracking
@@ -742,18 +745,18 @@ func TestAddContractGasUsage(t *testing.T) {
 func TestBlockTrackingReadWrite(t *testing.T) {
 	ctx, keeper := createTestBaseKeeperAndContext(t, sdk.AccAddress{})
 
-	dummyTxTracking1 := types.TransactionTracking{
+	dummyTxTracking1 := gastracker.TransactionTracking{
 		MaxGasAllowed: 500,
 	}
 
-	dummyTxTracking2 := types.TransactionTracking{
+	dummyTxTracking2 := gastracker.TransactionTracking{
 		MaxGasAllowed: 1000,
 	}
 
 	err := keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, types.BlockGasTracking{TxTrackingInfos: []*types.TransactionTracking{&dummyTxTracking1}})
+	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gastracker.BlockGasTracking{TxTrackingInfos: []*gastracker.TransactionTracking{&dummyTxTracking1}})
 
 	// We should be able to retrieve the block tracking info
 	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTracking(ctx)
@@ -764,10 +767,32 @@ func TestBlockTrackingReadWrite(t *testing.T) {
 	err = keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block in any case")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, types.BlockGasTracking{TxTrackingInfos: []*types.TransactionTracking{&dummyTxTracking2}})
+	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gastracker.BlockGasTracking{TxTrackingInfos: []*gastracker.TransactionTracking{&dummyTxTracking2}})
 
 	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTracking(ctx)
 	require.NoError(t, err, "We should be able to get current block")
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
 	require.Equal(t, dummyTxTracking2, *currentBlockTrackingInfo.TxTrackingInfos[0])
+}
+
+// TODO: this is shared test util, that is copied
+// from /module/abci_test, refactor
+func GenerateRandomAccAddress() sdk.AccAddress {
+	var address sdk.AccAddress = make([]byte, 20)
+	_, err := rand.Read(address)
+	if err != nil {
+		panic(err)
+	}
+	return address
+}
+
+// TODO: this is shared test util, that is copied
+// from /module/abci_test, refactor
+func CreateTestBlockEntry(ctx sdk.Context, key store.Key, appCodec codec.Codec, blockTracking gstTypes.BlockGasTracking) {
+	kvStore := ctx.KVStore(key)
+	bz, err := appCodec.Marshal(&blockTracking)
+	if err != nil {
+		panic(err)
+	}
+	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
 }

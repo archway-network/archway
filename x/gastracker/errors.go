@@ -1,4 +1,4 @@
-package types
+package gastracker
 
 import (
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"

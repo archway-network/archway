@@ -2,7 +2,6 @@
 package app
 
 import (
-	"github.com/archway-network/archway/x/gastracker"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -11,6 +10,9 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
+	gastrackerante "github.com/archway-network/archway/x/gastracker/ante"
+	keeper "github.com/archway-network/archway/x/gastracker/keeper"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
@@ -23,7 +25,7 @@ type HandlerOptions struct {
 
 	TXCounterStoreKey sdk.StoreKey
 
-	GasTrackingKeeper gastracker.GasTrackingKeeper
+	GasTrackingKeeper keeper.GasTrackingKeeper
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -66,7 +68,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewAnteDecorator(options.IBCChannelkeeper),
-		gastracker.NewTxGasTrackingDecorator(options.GasTrackingKeeper),
+		gastrackerante.NewTxGasTrackingDecorator(options.GasTrackingKeeper),
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

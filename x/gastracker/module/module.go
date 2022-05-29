@@ -1,11 +1,10 @@
-package gastracker
+package module
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/archway-network/archway/x/gastracker/client/cli"
-	"github.com/archway-network/archway/x/gastracker/simulation"
-	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+	"math/rand"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,7 +17,11 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"math/rand"
+
+	gstTypes "github.com/archway-network/archway/x/gastracker"
+	"github.com/archway-network/archway/x/gastracker/client/cli"
+	keeper "github.com/archway-network/archway/x/gastracker/keeper"
+	"github.com/archway-network/archway/x/gastracker/simulation"
 )
 
 var (
@@ -30,7 +33,7 @@ type AppModuleBasic struct {
 }
 
 func (a AppModuleBasic) Name() string {
-	return ModuleName
+	return gstTypes.ModuleName
 }
 
 func (a AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
@@ -70,7 +73,7 @@ type AppModule struct {
 
 	cdc        codec.Codec
 	bankKeeper bankkeeper.Keeper
-	keeper     GasTrackingKeeper
+	keeper     keeper.GasTrackingKeeper
 	mintKeeper mintkeeper.Keeper
 }
 
@@ -98,12 +101,12 @@ func (a AppModule) ConsensusVersion() uint64 {
 	return 1
 }
 
-func NewAppModule(cdc codec.Codec, keeper GasTrackingKeeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.GasTrackingKeeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
 	return AppModule{cdc: cdc, keeper: keeper, bankKeeper: bk, mintKeeper: mk}
 }
 
 func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
-	InitParams(context, a.keeper)
+	keeper.InitParams(context, a.keeper)
 
 	return []abci.ValidatorUpdate{}
 }
@@ -112,25 +115,21 @@ func (a AppModule) ExportGenesis(context sdk.Context, marshaler codec.JSONCodec)
 	return marshaler.MustMarshalJSON(&gstTypes.GenesisState{})
 }
 
-func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
+func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {}
 
-}
-
-func (a AppModule) Route() sdk.Route {
-	return sdk.NewRoute(RouterKey, NewHandler(a.keeper))
-}
+func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
 func (a AppModule) QuerierRoute() string {
-	return QuerierRoute
+	return gstTypes.QuerierRoute
 }
 
 func (a AppModule) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
-	return NewLegacyQuerier(a.keeper)
+	return nil
 }
 
 func (a AppModule) RegisterServices(cfg module.Configurator) {
-	gstTypes.RegisterMsgServer(cfg.MsgServer(), NewMsgServer(a.keeper))
-	gstTypes.RegisterQueryServer(cfg.QueryServer(), NewGRPCQuerier(a.keeper))
+	gstTypes.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(a.keeper))
+	gstTypes.RegisterQueryServer(cfg.QueryServer(), keeper.NewGRPCQuerier(a.keeper))
 }
 
 func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock) {

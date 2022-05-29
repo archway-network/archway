@@ -1,8 +1,9 @@
-package gastracker
+package keeper
 
 import (
 	"context"
-	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+
+	gstTypes "github.com/archway-network/archway/x/gastracker"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

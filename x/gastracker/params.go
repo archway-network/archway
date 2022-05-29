@@ -1,32 +1,74 @@
 package gastracker
 
 import (
-	gstTypes "github.com/archway-network/archway/x/gastracker/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	fmt "fmt"
+
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"gopkg.in/yaml.v2"
 )
 
-func (k Keeper) SetParams(ctx sdk.Context, params gstTypes.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
+const (
+	DefaultParamSpace = ModuleName
+)
+
+var (
+	ParamsKeyGasTrackingSwitch     = []byte("GasTrackingSwitch")
+	ParamsKeyDappInflationRewards  = []byte("DappInflationRewards")
+	ParamsKeyGasRebateSwitch       = []byte("GasRebateSwitch")
+	ParamsKeyGasRebateToUserSwitch = []byte("GasRebateToUserSwitch")
+	ParamsKeyContractPremiumSwitch = []byte("ContractPremiumSwitch")
+)
+
+type Params struct {
+	GasTrackingSwitch             bool
+	GasDappInflationRewardsSwitch bool
+	GasRebateSwitch               bool
+	GasRebateToUserSwitch         bool
+	ContractPremiumSwitch         bool
 }
 
-func (k Keeper) IsGasTrackingEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.ParamsKeyGasTrackingSwitch, &res)
-	return
+var (
+	DefaultGasTrackingSwitch      = true
+	GasDappInflationRewardsSwitch = true
+	DefaultGasRebateSwitch        = true
+	DefaultGasRebateToUserSwitch  = true
+	DefaultContractPremiumSwitch  = true
+)
+
+var _ paramstypes.ParamSet = &Params{}
+
+func DefaultParams() Params {
+	return Params{
+		GasTrackingSwitch:             DefaultGasTrackingSwitch,
+		GasDappInflationRewardsSwitch: GasDappInflationRewardsSwitch,
+		GasRebateSwitch:               DefaultGasRebateSwitch,
+		GasRebateToUserSwitch:         DefaultGasRebateToUserSwitch,
+		ContractPremiumSwitch:         DefaultContractPremiumSwitch,
+	}
 }
 
-func (k Keeper) IsDappInflationRewardsEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.ParamsKeyDappInflationRewards, &res)
-	return
+func ParamKeyTable() paramstypes.KeyTable {
+	return paramstypes.NewKeyTable().RegisterParamSet(&Params{})
 }
-func (k Keeper) IsGasRebateToContractEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.ParamsKeyGasRebateSwitch, &res)
-	return
+
+func (p Params) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
 }
-func (k Keeper) IsGasRebateToUserEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.ParamsKeyGasRebateToUserSwitch, &res)
-	return
+
+func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
+	return paramstypes.ParamSetPairs{
+		paramstypes.NewParamSetPair(ParamsKeyGasTrackingSwitch, &p.GasTrackingSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyDappInflationRewards, &p.GasDappInflationRewardsSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyGasRebateSwitch, &p.GasRebateSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyGasRebateToUserSwitch, &p.GasRebateToUserSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyContractPremiumSwitch, &p.ContractPremiumSwitch, validateSwitch),
+	}
 }
-func (k Keeper) IsContractPremiumEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.ParamsKeyContractPremiumSwitch, &res)
-	return
+
+func validateSwitch(i interface{}) error {
+	if _, ok := i.(bool); !ok {
+		return fmt.Errorf("Invalid parameter type %T", i)
+	}
+	return nil
 }

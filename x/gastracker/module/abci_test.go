@@ -1,18 +1,31 @@
-package gastracker
+package module
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	"math/rand"
+	"os"
 	"testing"
+	"time"
 
-	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/store"
+
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/abci/types"
+	tmLog "github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	db "github.com/tendermint/tm-db"
+
+	gastracker "github.com/archway-network/archway/x/gastracker"
+	gstTypes "github.com/archway-network/archway/x/gastracker"
+	keeper "github.com/archway-network/archway/x/gastracker/keeper"
 )
 
 type Behaviour int
@@ -23,23 +36,10 @@ const (
 	Panic
 )
 
-func GenerateRandomAccAddress() sdk.AccAddress {
-	var address sdk.AccAddress = make([]byte, 20)
-	_, err := rand.Read(address)
-	if err != nil {
-		panic(err)
-	}
-	return address
-}
-
-func CreateTestBlockEntry(ctx sdk.Context, key store.Key, appCodec codec.Codec, blockTracking gstTypes.BlockGasTracking) {
-	kvStore := ctx.KVStore(key)
-	bz, err := appCodec.Marshal(&blockTracking)
-	if err != nil {
-		panic(err)
-	}
-	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
-}
+// NOTE: this is needed to allow the keeper to set BlockGasTracking
+var (
+	storeKey = sdk.NewKVStoreKey(gastracker.StoreKey)
+)
 
 type RewardTransferKeeperCallLogs struct {
 	Method          string
@@ -358,7 +358,7 @@ func TestRewardCalculation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
@@ -514,7 +514,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
@@ -667,7 +667,7 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
@@ -818,7 +818,7 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
@@ -962,7 +962,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
@@ -1098,7 +1098,7 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
@@ -1245,7 +1245,7 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
@@ -1311,4 +1311,94 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 	for i := 0; i < len(expected.rewardsB); i++ {
 		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
 	}
+}
+
+// TODO: this is shared test util, that is copied
+// from /keeper/keeper_test, refactor
+func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *keeper.Keeper) {
+	encodingConfig := simapp.MakeTestEncodingConfig()
+	appCodec := encodingConfig.Marshaler
+
+	memDB := db.NewMemDB()
+	ms := store.NewCommitMultiStore(memDB)
+
+	mkey := sdk.NewKVStoreKey("test")
+	tkey := sdk.NewTransientStoreKey("transient_test")
+	tstoreKey := sdk.NewTransientStoreKey(gastracker.TStoreKey)
+
+	ms.MountStoreWithDB(mkey, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(tkey, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(tstoreKey, sdk.StoreTypeTransient, memDB)
+
+	err := ms.LoadLatestVersion()
+	require.NoError(t, err, "Loading latest version should not fail")
+
+	pkeeper := paramskeeper.NewKeeper(appCodec, encodingConfig.Amino, mkey, tkey)
+	subspace := pkeeper.Subspace(gstTypes.ModuleName)
+
+	keeper := keeper.NewGasTrackingKeeper(
+		storeKey,
+		appCodec,
+		subspace,
+		NewTestContractInfoView(contractAdmin.String()),
+		wasmkeeper.NewDefaultWasmGasRegister(),
+	)
+
+	ctx := sdk.NewContext(ms, tmproto.Header{
+		Time: time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
+	}, false, tmLog.NewTMLogger(os.Stdout))
+
+	params := gstTypes.DefaultParams()
+	subspace.SetParamSet(ctx, &params)
+	return ctx, keeper
+}
+
+func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.GasTrackingKeeper) {
+	return createTestBaseKeeperAndContext(t, contractAdmin)
+}
+
+func CreateTestBlockEntry(ctx sdk.Context, blockTracking gstTypes.BlockGasTracking) {
+	kvStore := ctx.KVStore(storeKey)
+	bz, err := simapp.MakeTestEncodingConfig().Marshaler.Marshal(&blockTracking)
+	if err != nil {
+		panic(err)
+	}
+	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
+}
+
+type TestContractInfoView struct {
+	keeper.ContractInfoView
+	adminMap     map[string]string
+	defaultAdmin string
+}
+
+func NewTestContractInfoView(defaultAdmin string) *TestContractInfoView {
+	return &TestContractInfoView{
+		adminMap:     make(map[string]string),
+		defaultAdmin: defaultAdmin,
+	}
+}
+
+func (t *TestContractInfoView) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
+	if admin, ok := t.adminMap[contractAddress.String()]; ok {
+		return &wasmTypes.ContractInfo{Admin: admin}
+	} else {
+		return &wasmTypes.ContractInfo{Admin: t.defaultAdmin}
+	}
+}
+
+func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string, admin string) {
+	t.adminMap[contractAddress] = admin
+}
+
+var _ keeper.ContractInfoView = &TestContractInfoView{}
+
+func GenerateRandomAccAddress() sdk.AccAddress {
+	var address sdk.AccAddress = make([]byte, 20)
+	_, err := rand.Read(address)
+	if err != nil {
+		panic(err)
+	}
+	return address
 }

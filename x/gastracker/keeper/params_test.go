@@ -1,10 +1,11 @@
-package gastracker
+package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
-	gstTypes "github.com/archway-network/archway/x/gastracker/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	gstTypes "github.com/archway-network/archway/x/gastracker"
 	"github.com/stretchr/testify/require"
 )
 
