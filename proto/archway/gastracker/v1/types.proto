@@ -31,8 +31,9 @@ enum ContractOperation {
 // Tracking contract gas usage and total gas consumption per transaction
 message TransactionTracking {
   uint64 max_gas_allowed = 1;
-  repeated cosmos.base.v1beta1.DecCoin max_contract_rewards = 3;
-  repeated ContractGasTracking contract_tracking_infos = 4;
+  repeated cosmos.base.v1beta1.DecCoin max_contract_rewards = 2;
+  repeated ContractGasTracking contract_tracking_infos = 3;
+  bool is_eligible_for_rewards = 4;
 }
 
 // Tracking contract gas usage
@@ -74,10 +75,43 @@ message RewardDistributionEvent {
 message ContractRewardCalculationEvent {
   string contract_address = 1;
   uint64 gas_consumed = 2;
-  cosmos.base.v1beta1.DecCoin inflation_rewards = 3;
+  repeated cosmos.base.v1beta1.DecCoin inflation_rewards = 3;
   repeated cosmos.base.v1beta1.DecCoin contract_rewards = 4;
   ContractInstanceMetadata metadata = 5;
 }
 
 // Genesis state of the Gastracker module
 message GenesisState {}
+
+// Wasm message type
+enum WasmMsgType {
+  // Unknown wasm message. It is not used.
+  WASM_MSG_TYPE_UNSPECIFIED = 0;
+  // Execute wasm message
+  WASM_MSG_TYPE_EXECUTE = 1;
+  // Migrate wasm message
+  WASM_MSG_TYPE_MIGRATE = 2;
+}
+
+// wasm message sent in a tx
+message WasmMsg {
+  WasmMsgType msg_type = 1;
+  bytes data = 2;
+}
+
+// special sudo message to be sent to contract
+message ContractValidFeeGranteeMsg { ValidateFeeGrant validate_fee_grant = 1; }
+
+// special sudo payload to be handled by contract
+message ValidateFeeGrant {
+  string grantee = 1;
+  repeated cosmos.base.v1beta1.Coin gas_fee_to_grant = 2;
+  repeated WasmMsg msgs = 3;
+}
+
+// Contract instance system level metadata, not updatable externally.
+message ContractInstanceSystemMetadata {
+  // Inflation reward balance of this contract instance.
+  repeated cosmos.base.v1beta1.DecCoin inflation_balance = 1;
+  bytes gas_counter = 2;
+}

@@ -297,9 +297,9 @@ func TestRewardCalculation(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.GasRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.GasRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
+			createLogAddr(gstTypes.GasRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
 	}
 
@@ -454,9 +454,9 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.666666666666666666")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.GasRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.GasRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
+			createLogAddr(gstTypes.GasRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
 	}
 
@@ -606,9 +606,9 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.GasRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.GasRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
+			createLogAddr(gstTypes.GasRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
 	}
 
@@ -757,9 +757,9 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.005355")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins()),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.GasRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.GasRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
+			createLogAddr(gstTypes.GasRewardCollector, spareAddress[6].String(), sdk.NewCoins()),
 		},
 	}
 
@@ -1184,9 +1184,9 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
-			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.GasRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
+			createLogAddr(gstTypes.GasRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
+			createLogAddr(gstTypes.GasRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
 	}
 
