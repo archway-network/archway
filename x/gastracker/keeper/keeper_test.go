@@ -50,7 +50,8 @@ func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string,
 var _ ContractInfoView = &TestContractInfoView{}
 
 type subspace struct {
-	space map[string]bool
+	space    map[string]bool
+	feeGrant map[string]uint64
 }
 
 func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
@@ -64,13 +65,21 @@ func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
 	s.space[string(gastracker.ParamsKeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
 	s.space[string(gastracker.ParamsKeyContractPremiumSwitch)] = params.ContractPremiumSwitch
 
+	s.feeGrant[string(gastracker.ParamsKeyMaxGasForGlobalGrant)] = params.MaxGasForGlobalFeeGrant
+	s.feeGrant[string(gastracker.ParamsKeyMaxGasForContractFeeGrant)] = params.MaxGasForContractFeeGrant
 }
 func (s *subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
-	x, ok := ptr.(*bool)
-	if !ok {
+	x, boolOk := ptr.(*bool)
+	y, uint64Ok := ptr.(*uint64)
+	if !boolOk && !uint64Ok {
 		panic("[mock subspace]: ptr is invalid type")
 	}
-	*x = s.space[string(key)]
+
+	if boolOk {
+		*x = s.space[string(key)]
+	} else {
+		*y = s.feeGrant[string(key)]
+	}
 }
 
 func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *Keeper) {
@@ -83,7 +92,10 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 	encodingConfig := simapp.MakeTestEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 
-	subspace := subspace{space: make(map[string]bool)}
+	subspace := subspace{
+		space:    make(map[string]bool),
+		feeGrant: make(map[string]uint64),
+	}
 
 	keeper := Keeper{
 		key:              storeKey,
@@ -97,8 +109,9 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 		Height: 1234567,
 		Time:   time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
 	}, false, tmLog.NewTMLogger(os.Stdout))
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(1000000))
 
-	params := gastracker.DefaultParams()
+	params := gastracker.DefaultParams(ctx)
 	subspace.SetParamSet(ctx, &params)
 	return ctx, &keeper
 }

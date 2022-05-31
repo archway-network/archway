@@ -2,16 +2,13 @@ package module
 
 import (
 	"fmt"
-	"math/rand"
-	"os"
-	"testing"
-	"time"
-
+	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	gstTypes "github.com/archway-network/archway/x/gastracker"
+	gstKeeper "github.com/archway-network/archway/x/gastracker/keeper"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -20,12 +17,15 @@ import (
 	"github.com/tendermint/tendermint/abci/types"
 	tmLog "github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	db "github.com/tendermint/tm-db"
+	"math/rand"
+	"os"
+	"testing"
+	"time"
+)
 
-	gastracker "github.com/archway-network/archway/x/gastracker"
-	gstTypes "github.com/archway-network/archway/x/gastracker"
-	keeper "github.com/archway-network/archway/x/gastracker/keeper"
+var (
+	storeKey = sdk.NewKVStoreKey(gstTypes.StoreKey)
 )
 
 type Behaviour int
@@ -36,10 +36,93 @@ const (
 	Panic
 )
 
-// NOTE: this is needed to allow the keeper to set BlockGasTracking
-var (
-	storeKey = sdk.NewKVStoreKey(gastracker.StoreKey)
-)
+type TestContractInfoView struct {
+	adminMap     map[string]string
+	defaultAdmin string
+}
+
+func NewTestContractInfoView(defaultAdmin string) *TestContractInfoView {
+	return &TestContractInfoView{
+		adminMap:     make(map[string]string),
+		defaultAdmin: defaultAdmin,
+	}
+}
+
+func (t *TestContractInfoView) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
+	if admin, ok := t.adminMap[contractAddress.String()]; ok {
+		return &wasmTypes.ContractInfo{Admin: admin}
+	} else {
+		return &wasmTypes.ContractInfo{Admin: t.defaultAdmin}
+	}
+}
+
+func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string, admin string) {
+	t.adminMap[contractAddress] = admin
+}
+
+var _ gstKeeper.ContractInfoView = &TestContractInfoView{}
+
+func GenerateRandomAccAddress() sdk.AccAddress {
+	var address sdk.AccAddress = make([]byte, 20)
+	_, err := rand.Read(address)
+	if err != nil {
+		panic(err)
+	}
+	return address
+}
+
+func CreateTestBlockEntry(ctx sdk.Context, key store.Key, appCodec codec.Codec, blockTracking gstTypes.BlockGasTracking) {
+	kvStore := ctx.KVStore(key)
+	bz, err := appCodec.Marshal(&blockTracking)
+	if err != nil {
+		panic(err)
+	}
+	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
+}
+
+func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *gstKeeper.Keeper) {
+	encodingConfig := simapp.MakeTestEncodingConfig()
+	appCodec := encodingConfig.Marshaler
+
+	memDB := db.NewMemDB()
+	ms := store.NewCommitMultiStore(memDB)
+
+	mkey := sdk.NewKVStoreKey("test")
+	tkey := sdk.NewTransientStoreKey("transient_test")
+	tstoreKey := sdk.NewTransientStoreKey(gstTypes.TStoreKey)
+
+	ms.MountStoreWithDB(mkey, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(tkey, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(tstoreKey, sdk.StoreTypeTransient, memDB)
+
+	err := ms.LoadLatestVersion()
+	require.NoError(t, err, "Loading latest version should not fail")
+
+	pkeeper := paramskeeper.NewKeeper(appCodec, encodingConfig.Amino, mkey, tkey)
+	subspace := pkeeper.Subspace(gstTypes.ModuleName)
+
+	keeper := gstKeeper.NewGasTrackingKeeper(
+		storeKey,
+		appCodec,
+		subspace,
+		NewTestContractInfoView(contractAdmin.String()),
+		wasmKeeper.NewDefaultWasmGasRegister(),
+	)
+
+	ctx := sdk.NewContext(ms, tmproto.Header{
+		Time: time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
+	}, false, tmLog.NewTMLogger(os.Stdout))
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(100000))
+
+	params := gstTypes.DefaultParams(ctx)
+	subspace.SetParamSet(ctx, &params)
+	return ctx, keeper
+}
+
+func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, gstKeeper.GasTrackingKeeper) {
+	return createTestBaseKeeperAndContext(t, contractAdmin)
+}
 
 type RewardTransferKeeperCallLogs struct {
 	Method          string
@@ -260,10 +343,10 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 //   Gas Used = 2
 //   "2" Contract's reward is: 2 * (2 / 2) = 2test and 0.5 * (2 / 2) = 0.5test1
 // Total rewards:
-// For Contract "1": 0.20153test (0.00153 + 0.2) and 0.0666666test1
-// For Contract "2": 2.40459test (0.00306 + 0.00153 + 0.4 + 2) and 0.6333333test1 (0.1333333 + 0.5)
-// For Contract "3": 0.150765test (0.000765 + 0.15) and 0.04999995test1
-// For Contract "4": 0.000765test (0.000706)
+// For Contract "1": 0.20153test (0.00153(I) + 0.2) and 0.0666666test1
+// For Contract "2": 2.40459test (0.00306(I) + 0.00153(I) + 0.4 + 2) and 0.6333333test1 (0.1333333 + 0.5)
+// For Contract "3": 0.150765test (0.000765(I) + 0.15) and 0.04999995test1
+// For Contract "4": 0.000765test (0.000706(I))
 // Reward distribution per address:
 // (for contract "1" and "4") "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt": 0.20153test + 0.000765test (0.202295test) and 0.0666666test1
 // (for contract "2" and "3") "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk": 2.555355test  and 0.6666666test1
@@ -286,26 +369,27 @@ func TestRewardCalculation(t *testing.T) {
 		rewardsB []sdk.DecCoin
 		logs     []*RewardTransferKeeperCallLogs
 	}
-	params := gstTypes.DefaultParams()
+
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.202295")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.2")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.066666666666666667")),
 		},
 		rewardsB: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.555355")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.55")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
 			createLogModule(authTypes.FeeCollectorName, gstTypes.GasRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.GasRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.GasRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.InflationRewardAccumulator, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1)))),
 		},
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
-
+	params := gstTypes.DefaultParams(ctx)
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -358,10 +442,11 @@ func TestRewardCalculation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper.StoreKey(), keeper.AppCodec(), gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
-			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        10,
+			MaxContractRewards:   []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
@@ -390,8 +475,9 @@ func TestRewardCalculation(t *testing.T) {
 			},
 		},
 		{
-			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        2,
+			MaxContractRewards:   []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
@@ -426,9 +512,6 @@ func TestRewardCalculation(t *testing.T) {
 	}
 }
 
-//func TestRewardCalculation(t *testing.T) {
-//}
-
 func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount("archway", "archway")
@@ -443,25 +526,26 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 		rewardsB []sdk.DecCoin
 		logs     []*RewardTransferKeeperCallLogs
 	}
-	params := disableContractPremium(gstTypes.DefaultParams())
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.202295")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.2")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.066666666666666667")),
 		},
 		rewardsB: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.505355")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.5")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.666666666666666666")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
 			createLogModule(authTypes.FeeCollectorName, gstTypes.GasRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.GasRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.GasRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.InflationRewardAccumulator, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1)))),
 		},
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
+	params := disableContractPremium(gstTypes.DefaultParams(ctx))
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -514,10 +598,11 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper.StoreKey(), keeper.AppCodec(), gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
-			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        10,
+			MaxContractRewards:   []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
@@ -546,8 +631,9 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 			},
 		},
 		{
-			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        2,
+			MaxContractRewards:   []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
@@ -595,7 +681,6 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 		rewardsB []sdk.DecCoin
 		logs     []*RewardTransferKeeperCallLogs
 	}
-	params := disableDappInflation(gstTypes.DefaultParams())
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
 			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.2")),
@@ -614,7 +699,7 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
-
+	params := disableDappInflation(gstTypes.DefaultParams(ctx))
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -667,10 +752,11 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper.StoreKey(), keeper.AppCodec(), gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
-			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        10,
+			MaxContractRewards:   []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
@@ -699,8 +785,9 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 			},
 		},
 		{
-			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        2,
+			MaxContractRewards:   []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
@@ -748,24 +835,15 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 		rewardsB []sdk.DecCoin
 		logs     []*RewardTransferKeeperCallLogs
 	}
-	params := disableGasRebate(gstTypes.DefaultParams())
 	expected := expect{
-		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.002295")),
-		},
-		rewardsB: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.005355")),
-		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.GasRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1)))),
-			createLogAddr(gstTypes.GasRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
-			createLogAddr(gstTypes.GasRewardCollector, spareAddress[6].String(), sdk.NewCoins()),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.InflationRewardAccumulator, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1)))),
 		},
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
-
+	params := disableGasRebate(gstTypes.DefaultParams(ctx))
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -818,10 +896,11 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper.StoreKey(), keeper.AppCodec(), gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
-			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        10,
+			MaxContractRewards:   []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
@@ -850,8 +929,9 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 			},
 		},
 		{
-			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        2,
+			MaxContractRewards:   []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
@@ -871,19 +951,11 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 	}
 
 	// Let's check left-over balances
-	leftOverEntry, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
-	require.NoError(t, err, "We should be able to get left over entry")
-	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
-	for i := 0; i < len(expected.rewardsA); i++ {
-		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
-	}
+	_, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[5])
+	require.EqualError(t, err, gstTypes.ErrRewardEntryNotFound.Error(), "We should get left over entry not found")
 
-	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
-	require.NoError(t, err, "We should be able to get left over entry")
-	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
-	for i := 0; i < len(expected.rewardsB); i++ {
-		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
-	}
+	_, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
+	require.EqualError(t, err, gstTypes.ErrRewardEntryNotFound.Error(), "We should get left over entry not found")
 }
 
 func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
@@ -900,7 +972,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 		rewardsB []sdk.DecCoin
 		logs     []*RewardTransferKeeperCallLogs
 	}
-	params := disableDappInflation(disableGasRebate(gstTypes.DefaultParams()))
+
 	expected := expect{
 		rewardsA: []sdk.DecCoin{},
 		rewardsB: []sdk.DecCoin{},
@@ -909,7 +981,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
-
+	params := disableDappInflation(disableGasRebate(gstTypes.DefaultParams(ctx)))
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -962,10 +1034,11 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper.StoreKey(), keeper.AppCodec(), gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
-			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        10,
+			MaxContractRewards:   []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
@@ -994,8 +1067,9 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 			},
 		},
 		{
-			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        2,
+			MaxContractRewards:   []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
@@ -1036,7 +1110,6 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 		rewardsB []sdk.DecCoin
 		logs     []*RewardTransferKeeperCallLogs
 	}
-	params := disableGasTracking(gstTypes.DefaultParams())
 	expected := expect{
 		rewardsA: []sdk.DecCoin{},
 		rewardsB: []sdk.DecCoin{},
@@ -1045,7 +1118,7 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
-
+	params := disableGasTracking(gstTypes.DefaultParams(ctx))
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -1098,10 +1171,11 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper.StoreKey(), keeper.AppCodec(), gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
-			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        10,
+			MaxContractRewards:   []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
@@ -1130,8 +1204,9 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 			},
 		},
 		{
-			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        2,
+			MaxContractRewards:   []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
@@ -1173,26 +1248,26 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 		rewardsB []sdk.DecCoin
 		logs     []*RewardTransferKeeperCallLogs
 	}
-	params := disableGasRebateToUser(gstTypes.DefaultParams())
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.302295")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.3")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.100000000000000000")),
 		},
 		rewardsB: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.555355")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.55")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
 			createLogModule(authTypes.FeeCollectorName, gstTypes.GasRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.GasRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.GasRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
+			createLogModule(authTypes.FeeCollectorName, gstTypes.InflationRewardAccumulator, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1)))),
 		},
 	}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
-
+	params := disableGasRebateToUser(gstTypes.DefaultParams(ctx))
 	keeper.SetParams(ctx, params)
 
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
@@ -1245,10 +1320,11 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper.StoreKey(), keeper.AppCodec(), gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
-			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        10,
+			MaxContractRewards:   []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
@@ -1277,8 +1353,9 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 			},
 		},
 		{
-			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
+			IsEligibleForRewards: true,
+			MaxGasAllowed:        2,
+			MaxContractRewards:   []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
@@ -1311,94 +1388,4 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 	for i := 0; i < len(expected.rewardsB); i++ {
 		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
 	}
-}
-
-// TODO: this is shared test util, that is copied
-// from /keeper/keeper_test, refactor
-func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *keeper.Keeper) {
-	encodingConfig := simapp.MakeTestEncodingConfig()
-	appCodec := encodingConfig.Marshaler
-
-	memDB := db.NewMemDB()
-	ms := store.NewCommitMultiStore(memDB)
-
-	mkey := sdk.NewKVStoreKey("test")
-	tkey := sdk.NewTransientStoreKey("transient_test")
-	tstoreKey := sdk.NewTransientStoreKey(gastracker.TStoreKey)
-
-	ms.MountStoreWithDB(mkey, sdk.StoreTypeIAVL, memDB)
-	ms.MountStoreWithDB(tkey, sdk.StoreTypeIAVL, memDB)
-	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, memDB)
-	ms.MountStoreWithDB(tstoreKey, sdk.StoreTypeTransient, memDB)
-
-	err := ms.LoadLatestVersion()
-	require.NoError(t, err, "Loading latest version should not fail")
-
-	pkeeper := paramskeeper.NewKeeper(appCodec, encodingConfig.Amino, mkey, tkey)
-	subspace := pkeeper.Subspace(gstTypes.ModuleName)
-
-	keeper := keeper.NewGasTrackingKeeper(
-		storeKey,
-		appCodec,
-		subspace,
-		NewTestContractInfoView(contractAdmin.String()),
-		wasmkeeper.NewDefaultWasmGasRegister(),
-	)
-
-	ctx := sdk.NewContext(ms, tmproto.Header{
-		Time: time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
-	}, false, tmLog.NewTMLogger(os.Stdout))
-
-	params := gstTypes.DefaultParams()
-	subspace.SetParamSet(ctx, &params)
-	return ctx, keeper
-}
-
-func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.GasTrackingKeeper) {
-	return createTestBaseKeeperAndContext(t, contractAdmin)
-}
-
-func CreateTestBlockEntry(ctx sdk.Context, blockTracking gstTypes.BlockGasTracking) {
-	kvStore := ctx.KVStore(storeKey)
-	bz, err := simapp.MakeTestEncodingConfig().Marshaler.Marshal(&blockTracking)
-	if err != nil {
-		panic(err)
-	}
-	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
-}
-
-type TestContractInfoView struct {
-	keeper.ContractInfoView
-	adminMap     map[string]string
-	defaultAdmin string
-}
-
-func NewTestContractInfoView(defaultAdmin string) *TestContractInfoView {
-	return &TestContractInfoView{
-		adminMap:     make(map[string]string),
-		defaultAdmin: defaultAdmin,
-	}
-}
-
-func (t *TestContractInfoView) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
-	if admin, ok := t.adminMap[contractAddress.String()]; ok {
-		return &wasmTypes.ContractInfo{Admin: admin}
-	} else {
-		return &wasmTypes.ContractInfo{Admin: t.defaultAdmin}
-	}
-}
-
-func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string, admin string) {
-	t.adminMap[contractAddress] = admin
-}
-
-var _ keeper.ContractInfoView = &TestContractInfoView{}
-
-func GenerateRandomAccAddress() sdk.AccAddress {
-	var address sdk.AccAddress = make([]byte, 20)
-	_, err := rand.Read(address)
-	if err != nil {
-		panic(err)
-	}
-	return address
 }

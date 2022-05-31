@@ -7,5 +7,5 @@ import (
 )
 
 func InitParams(context sdk.Context, k GasTrackingKeeper) {
-	k.SetParams(context, gstTypes.DefaultParams())
+	k.SetParams(context, gstTypes.DefaultParams(context))
 }
