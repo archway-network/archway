@@ -187,8 +187,9 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 		Height: 10000,
 		Time:   time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
 	}, false, tmLog.NewTMLogger(os.Stdout))
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(1000000))
 
-	params := gstTypes.DefaultParams()
+	params := gstTypes.DefaultParams(ctx)
 	subspace.SetParamSet(ctx, &params)
 	return ctx, keeper
 }

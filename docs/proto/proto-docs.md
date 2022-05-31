@@ -8,13 +8,18 @@
     - [BlockGasTracking](#archway.gastracker.v1.BlockGasTracking)
     - [ContractGasTracking](#archway.gastracker.v1.ContractGasTracking)
     - [ContractInstanceMetadata](#archway.gastracker.v1.ContractInstanceMetadata)
+    - [ContractInstanceSystemMetadata](#archway.gastracker.v1.ContractInstanceSystemMetadata)
     - [ContractRewardCalculationEvent](#archway.gastracker.v1.ContractRewardCalculationEvent)
+    - [ContractValidFeeGranteeMsg](#archway.gastracker.v1.ContractValidFeeGranteeMsg)
     - [GenesisState](#archway.gastracker.v1.GenesisState)
     - [LeftOverRewardEntry](#archway.gastracker.v1.LeftOverRewardEntry)
     - [RewardDistributionEvent](#archway.gastracker.v1.RewardDistributionEvent)
     - [TransactionTracking](#archway.gastracker.v1.TransactionTracking)
+    - [ValidateFeeGrant](#archway.gastracker.v1.ValidateFeeGrant)
+    - [WasmMsg](#archway.gastracker.v1.WasmMsg)
   
     - [ContractOperation](#archway.gastracker.v1.ContractOperation)
+    - [WasmMsgType](#archway.gastracker.v1.WasmMsgType)
   
 - [archway/gastracker/v1/query.proto](#archway/gastracker/v1/query.proto)
     - [QueryBlockGasTrackingRequest](#archway.gastracker.v1.QueryBlockGasTrackingRequest)
@@ -93,6 +98,22 @@ Contract instance metadata
 
 
 
+<a name="archway.gastracker.v1.ContractInstanceSystemMetadata"></a>
+
+### ContractInstanceSystemMetadata
+Contract instance system level metadata, not updatable externally.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `inflation_balance` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated | Inflation reward balance of this contract instance. |
+| `gas_counter` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
 <a name="archway.gastracker.v1.ContractRewardCalculationEvent"></a>
 
 ### ContractRewardCalculationEvent
@@ -103,9 +124,24 @@ Event emitted when contract reward is calculated
 | ----- | ---- | ----- | ----------- |
 | `contract_address` | [string](#string) |  |  |
 | `gas_consumed` | [uint64](#uint64) |  |  |
-| `inflation_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  |  |
+| `inflation_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
 | `contract_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
 | `metadata` | [ContractInstanceMetadata](#archway.gastracker.v1.ContractInstanceMetadata) |  |  |
+
+
+
+
+
+
+<a name="archway.gastracker.v1.ContractValidFeeGranteeMsg"></a>
+
+### ContractValidFeeGranteeMsg
+special sudo message to be sent to contract
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `validate_fee_grant` | [ValidateFeeGrant](#archway.gastracker.v1.ValidateFeeGrant) |  |  |
 
 
 
@@ -165,6 +201,40 @@ Tracking contract gas usage and total gas consumption per transaction
 | `max_gas_allowed` | [uint64](#uint64) |  |  |
 | `max_contract_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
 | `contract_tracking_infos` | [ContractGasTracking](#archway.gastracker.v1.ContractGasTracking) | repeated |  |
+| `is_eligible_for_rewards` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="archway.gastracker.v1.ValidateFeeGrant"></a>
+
+### ValidateFeeGrant
+special sudo payload to be handled by contract
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grantee` | [string](#string) |  |  |
+| `gas_fee_to_grant` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `msgs` | [WasmMsg](#archway.gastracker.v1.WasmMsg) | repeated |  |
+
+
+
+
+
+
+<a name="archway.gastracker.v1.WasmMsg"></a>
+
+### WasmMsg
+wasm message sent in a tx
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_type` | [WasmMsgType](#archway.gastracker.v1.WasmMsgType) |  |  |
+| `data` | [bytes](#bytes) |  |  |
 
 
 
@@ -188,6 +258,19 @@ Denotes which operation consumed this gas
 | CONTRACT_OPERATION_IBC | 5 | IBC operation |
 | CONTRACT_OPERATION_SUDO | 6 | Sudo operation |
 | CONTRACT_OPERATION_REPLY | 7 | Reply operation |
+
+
+
+<a name="archway.gastracker.v1.WasmMsgType"></a>
+
+### WasmMsgType
+Wasm message type
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| WASM_MSG_TYPE_UNSPECIFIED | 0 | Unknown wasm message. It is not used. |
+| WASM_MSG_TYPE_EXECUTE | 1 | Execute wasm message |
+| WASM_MSG_TYPE_MIGRATE | 2 | Migrate wasm message |
 
 
  <!-- end enums -->

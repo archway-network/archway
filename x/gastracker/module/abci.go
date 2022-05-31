@@ -1,16 +1,14 @@
 package module
 
 import (
-	"time"
-
+	gstTypes "github.com/archway-network/archway/x/gastracker"
+	gstKeeper "github.com/archway-network/archway/x/gastracker/keeper"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	gstTypes "github.com/archway-network/archway/x/gastracker"
-	keeper "github.com/archway-network/archway/x/gastracker/keeper"
+	"time"
 )
 
 type RewardTransferKeeper interface {
@@ -36,22 +34,27 @@ func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPay
 	})
 }
 
-func EmitContractRewardCalculationEvent(context sdk.Context, contractAddress string, gasConsumed sdk.Dec, inflationReward sdk.DecCoin, contractRewards sdk.DecCoins, metadata *gstTypes.ContractInstanceMetadata) error {
-	rewards := make([]*sdk.DecCoin, len(contractRewards))
-	for i := range rewards {
-		rewards[i] = &contractRewards[i]
+func EmitContractRewardCalculationEvent(context sdk.Context, contractAddress string, gasConsumed sdk.Dec, inflationReward sdk.DecCoins, contractReward sdk.DecCoins, metadata *gstTypes.ContractInstanceMetadata) error {
+	contractRewardEventData := make([]*sdk.DecCoin, len(contractReward))
+	for i := range contractRewardEventData {
+		contractRewardEventData[i] = &contractReward[i]
+	}
+
+	inflationRewardEventData := make([]*sdk.DecCoin, len(inflationReward))
+	for i := range inflationReward {
+		inflationRewardEventData[i] = &inflationReward[i]
 	}
 
 	return context.EventManager().EmitTypedEvent(&gstTypes.ContractRewardCalculationEvent{
 		ContractAddress:  contractAddress,
 		GasConsumed:      gasConsumed.RoundInt().Uint64(),
-		InflationRewards: &inflationReward,
-		ContractRewards:  rewards,
+		InflationRewards: inflationRewardEventData,
+		ContractRewards:  contractRewardEventData,
 		Metadata:         metadata,
 	})
 }
 
-func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper keeper.GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
+func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper gstKeeper.GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
 	defer telemetry.ModuleMeasureSince(gstTypes.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	lastBlockGasTracking := resetBlockGasTracking(context, gasTrackingKeeper)
@@ -63,31 +66,49 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 
 	contractTotalInflationRewards := getContractInflationRewards(context, mintParamsKeeper) // 20% of the rewards distributed on every block
 
-	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
-
-	// We need to commit pending metadata before we return but after we calculated rewards.
-	commitPendingMetadata(context, gasTrackingKeeper)
+	contractRewardData := getContractRewards(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
+	totalGasRewardsPerBlock := contractRewardData.totalGasRewards
+	rewardAddresses := contractRewardData.rewardAddresses
+	gasRewardByAddress := contractRewardData.gasRewardByRewardAddress
+	totalInflationRewardsPerBlock := contractRewardData.totalInflationRewards
+	contractAddresses := contractRewardData.contractAddresses
+	inflationRewardByContractAddress := contractRewardData.inflationRewardByContractAddress
 
 	// Either the tx did not collect any fee or no contracts were executed
 	// So, no need to continue execution
-	if totalContractRewardsPerBlock == nil || totalContractRewardsPerBlock.IsZero() {
-		return
+	if totalGasRewardsPerBlock != nil && !totalGasRewardsPerBlock.IsZero() {
+		totalGasRewardToBeCollected := make(sdk.Coins, len(totalGasRewardsPerBlock))
+		for i := range totalGasRewardToBeCollected {
+			totalGasRewardToBeCollected[i] = sdk.NewCoin(totalGasRewardsPerBlock[i].Denom, totalGasRewardsPerBlock[i].Amount.Ceil().RoundInt())
+		}
+
+		err := rewardTransferKeeper.SendCoinsFromModuleToModule(context, authTypes.FeeCollectorName, gstTypes.GasRewardCollector, totalGasRewardToBeCollected)
+		if err != nil {
+			panic(err)
+		}
+
+		distributeGasRewards(context, rewardAddresses, gasRewardByAddress, gasTrackingKeeper, rewardTransferKeeper)
 	}
 
-	totalFeeToBeCollected := make(sdk.Coins, len(totalContractRewardsPerBlock))
-	for i := range totalFeeToBeCollected {
-		totalFeeToBeCollected[i] = sdk.NewCoin(totalContractRewardsPerBlock[i].Denom, totalContractRewardsPerBlock[i].Amount.Ceil().RoundInt())
+	if totalInflationRewardsPerBlock != nil && !totalInflationRewardsPerBlock.IsZero() {
+		totalInflationRewardToBeCollected := make(sdk.Coins, len(totalInflationRewardsPerBlock))
+		for i := range totalInflationRewardToBeCollected {
+			totalInflationRewardToBeCollected[i] = sdk.NewCoin(totalInflationRewardsPerBlock[i].Denom, totalInflationRewardsPerBlock[i].Amount.Ceil().RoundInt())
+		}
+
+		err := rewardTransferKeeper.SendCoinsFromModuleToModule(context, authTypes.FeeCollectorName, gstTypes.InflationRewardAccumulator, totalInflationRewardToBeCollected)
+		if err != nil {
+			panic(err)
+		}
+
+		recordInflationRewards(context, gasTrackingKeeper, contractAddresses, inflationRewardByContractAddress)
 	}
 
-	err := rewardTransferKeeper.SendCoinsFromModuleToModule(context, authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, totalFeeToBeCollected)
-	if err != nil {
-		panic(err)
-	}
-
-	distributeRewards(context, rewardAddresses, rewardsByAddress, gasTrackingKeeper, rewardTransferKeeper)
+	// We need to commit pending metadata before we return but after we calculated rewards.
+	commitPendingMetadata(context, gasTrackingKeeper)
 }
 
-func commitPendingMetadata(context sdk.Context, gasTrackingKeeper keeper.GasTrackingKeeper) {
+func commitPendingMetadata(context sdk.Context, gasTrackingKeeper gstKeeper.GasTrackingKeeper) {
 	numberOfEntriesCommitted, err := gasTrackingKeeper.CommitPendingContractMetadata(context)
 	if err != nil {
 		panic(err)
@@ -96,7 +117,7 @@ func commitPendingMetadata(context sdk.Context, gasTrackingKeeper keeper.GasTrac
 }
 
 // resetBlockGasTracking resets the current status and returns the last blockGasTracking
-func resetBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.GasTrackingKeeper) gstTypes.BlockGasTracking {
+func resetBlockGasTracking(context sdk.Context, gasTrackingKeeper gstKeeper.GasTrackingKeeper) gstTypes.BlockGasTracking {
 	lastBlockGasTracking := getCurrentBlockGasTracking(context, gasTrackingKeeper)
 
 	if err := gasTrackingKeeper.TrackNewBlock(context); err != nil {
@@ -106,7 +127,7 @@ func resetBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.GasTrac
 }
 
 // getCurrentBlockGasTracking returns the actual block gas tracking, panics if empty and block height is bigger than one.
-func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.GasTrackingKeeper) gstTypes.BlockGasTracking {
+func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper gstKeeper.GasTrackingKeeper) gstTypes.BlockGasTracking {
 	currentBlockTrackingInfo, err := gasTrackingKeeper.GetCurrentBlockTracking(context)
 	if err != nil {
 		switch err {
@@ -123,8 +144,43 @@ func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.Ga
 	return currentBlockTrackingInfo
 }
 
-// distributeRewards distributes the calculated rewards to all the contracts owners.
-func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByAddress map[string]sdk.DecCoins, gasTrackingKeeper keeper.GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper) {
+func recordInflationRewards(context sdk.Context, gasTrackingKeeper gstKeeper.GasTrackingKeeper, contractAddresses []string, inflationRewardByContractAddress map[string]sdk.DecCoins) {
+	for _, contractAddress := range contractAddresses {
+		contractAddr, err := sdk.AccAddressFromBech32(contractAddress)
+		if err != nil {
+			panic(err)
+		}
+		systemMetadata, err := gasTrackingKeeper.GetContractSystemMetadata(context, contractAddr)
+		if err != nil {
+			panic(err)
+		}
+
+		currentBalance := make(sdk.DecCoins, len(systemMetadata.InflationBalance))
+		for i := range currentBalance {
+			currentBalance[i] = *systemMetadata.InflationBalance[i]
+		}
+
+		updatedBalance := currentBalance.Add(inflationRewardByContractAddress[contractAddress]...)
+		toStoreBalance := make([]*sdk.DecCoin, len(updatedBalance))
+		for i := range toStoreBalance {
+			toStoreBalance[i] = &updatedBalance[i]
+		}
+		systemMetadata.InflationBalance = toStoreBalance
+
+		context.Logger().
+			Debug("Added balance for contract in inflation reward pool",
+				"contract", contractAddress,
+				"balanceAdded", inflationRewardByContractAddress[contractAddress],
+				"totalBalance", updatedBalance)
+
+		if err := gasTrackingKeeper.SetContractSystemMetadata(context, contractAddr, systemMetadata); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// distributeGasRewards distributes the calculated rewards to all the contracts owners.
+func distributeGasRewards(context sdk.Context, rewardAddresses []string, rewardsByAddress map[string]sdk.DecCoins, gasTrackingKeeper gstKeeper.GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper) {
 	for _, rewardAddressStr := range rewardAddresses {
 		rewardAddress, err := sdk.AccAddressFromBech32(rewardAddressStr)
 		if err != nil {
@@ -138,7 +194,7 @@ func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByA
 			panic(err)
 		}
 
-		err = rewardTransferKeeper.SendCoinsFromModuleToAccount(context, gstTypes.ContractRewardCollector, rewardAddress, rewardsToBePayed)
+		err = rewardTransferKeeper.SendCoinsFromModuleToAccount(context, gstTypes.GasRewardCollector, rewardAddress, rewardsToBePayed)
 		if err != nil {
 			panic(err)
 		}
@@ -157,23 +213,38 @@ func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByA
 	}
 }
 
+type contractRewardData struct {
+	totalGasRewards          sdk.DecCoins
+	rewardAddresses          []string
+	gasRewardByRewardAddress map[string]sdk.DecCoins
+
+	totalInflationRewards            sdk.DecCoins
+	contractAddresses                []string
+	inflationRewardByContractAddress map[string]sdk.DecCoins
+}
+
 // getContractRewards returns the total rewards and the rewards per contract based on the calculations.
-func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper keeper.GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin) (sdk.DecCoins, []string, map[string]sdk.DecCoins) {
+func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper gstKeeper.GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin) contractRewardData {
 	// To enforce a map iteration order. This isn't strictly necessary but is only
 	// done to make this code more deterministic.
 	rewardAddresses := make([]string, 0)
-	rewardsByAddress := make(map[string]sdk.DecCoins)
+	contractAddresses := make([]string, 0)
 
-	totalContractRewardsPerBlock := make(sdk.DecCoins, 0)
+	gasRewardByRewardAddress := make(map[string]sdk.DecCoins)
+	inflationRewardByContractAddress := make(map[string]sdk.DecCoins)
+
+	totalGasRewardsPerBlock := make(sdk.DecCoins, 0)
+	totalInflationRewardsPerBlock := make(sdk.DecCoins, 0)
 	for _, txTrackingInfo := range blockGasTracking.TxTrackingInfos {
-		// We generate empty coins based on the fees coins.
-		totalContractRewardsInTx := make(sdk.DecCoins, len(txTrackingInfo.MaxContractRewards))
-		for i, _ := range totalContractRewardsInTx {
-			totalContractRewardsInTx[i] = sdk.NewDecCoin(txTrackingInfo.MaxContractRewards[i].Denom, sdk.NewInt(0))
+		if !txTrackingInfo.IsEligibleForRewards {
+			continue
 		}
 
+		// We generate empty coins based on the fees coins.
+		totalGasRewardsInTx := make(sdk.DecCoins, 0)
+		totalInflationRewardsInTx := make(sdk.DecCoins, 0)
+
 		for _, contractTrackingInfo := range txTrackingInfo.ContractTrackingInfos {
-			var contractInflationReward sdk.DecCoin
 			contractAddress, err := sdk.AccAddressFromBech32(contractTrackingInfo.Address)
 			if err != nil {
 				panic(err)
@@ -185,15 +256,16 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 			}
 			context.Logger().Debug("Got the metadata for contract", "contract", contractAddress, "metadata", metadata)
 
-			contractRewards := make(sdk.DecCoins, 0, 0)
+			gasRewards := make(sdk.DecCoins, 0, 0)
+			inflationRewards := make(sdk.DecCoins, 0, 0)
 
 			gasConsumedInContract := sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(contractTrackingInfo.OriginalSdkGas + contractTrackingInfo.OriginalVmGas))
 
 			if gasTrackingKeeper.IsDappInflationRewardsEnabled(context) && context.BlockGasMeter().Limit() > 0 {
 				blockGasLimit := sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(context.BlockGasMeter().Limit()))
-				contractInflationReward = sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasConsumedInContract).Quo(blockGasLimit))
+				contractInflationReward := sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasConsumedInContract).Quo(blockGasLimit))
 				context.Logger().Debug("Calculated contract inflation rewards:", "contractAddress", contractAddress, "contractInflationReward", contractInflationReward)
-				contractRewards = contractRewards.Add(contractInflationReward)
+				inflationRewards = inflationRewards.Add(contractInflationReward)
 			}
 
 			if !gasTrackingKeeper.IsGasRebateToUserEnabled(context) || !metadata.GasRebateToUser {
@@ -217,32 +289,48 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 					context.Logger().
 						Debug("Calculated contract gas rebate rewards:",
 							"contractAddress", contractAddress, "contractGasReward", gasRebateRewards)
-					contractRewards = contractRewards.Add(gasRebateRewards...)
+					gasRewards = gasRewards.Add(gasRebateRewards...)
 				}
 			} else {
 				context.Logger().Debug("Contract is not eligible for gas rewards, skipping calculation.", "contractAddress", contractAddress)
 			}
 
-			if _, ok := rewardsByAddress[metadata.RewardAddress]; !ok {
-				rewardAddresses = append(rewardAddresses, metadata.RewardAddress)
-				rewardsByAddress[metadata.RewardAddress] = contractRewards
+			if _, ok := inflationRewardByContractAddress[contractAddress.String()]; !ok {
+				contractAddresses = append(contractAddresses, contractAddress.String())
+				inflationRewardByContractAddress[contractAddress.String()] = inflationRewards
 			} else {
-				rewardsByAddress[metadata.RewardAddress] = rewardsByAddress[metadata.RewardAddress].Add(contractRewards...)
+				inflationRewardByContractAddress[contractAddress.String()] = inflationRewardByContractAddress[contractAddress.String()].Add(inflationRewards...)
 			}
 
-			totalContractRewardsInTx = totalContractRewardsInTx.Add(contractRewards...)
+			if _, ok := gasRewardByRewardAddress[metadata.RewardAddress]; !ok {
+				rewardAddresses = append(rewardAddresses, metadata.RewardAddress)
+				gasRewardByRewardAddress[metadata.RewardAddress] = gasRewards
+			} else {
+				gasRewardByRewardAddress[metadata.RewardAddress] = gasRewardByRewardAddress[metadata.RewardAddress].Add(gasRewards...)
+			}
 
-			if err = EmitContractRewardCalculationEvent(context, contractAddress.String(), gasConsumedInContract, contractInflationReward, contractRewards, &metadata); err != nil {
+			totalGasRewardsInTx = totalGasRewardsInTx.Add(gasRewards...)
+			totalInflationRewardsInTx = totalInflationRewardsInTx.Add(inflationRewards...)
+
+			if err = EmitContractRewardCalculationEvent(context, contractAddress.String(), gasConsumedInContract, inflationRewards, gasRewards, &metadata); err != nil {
 				panic(err)
 			}
 
-			context.Logger().Debug("Calculated Contract rewards:", "contractAddress", contractAddress, "contractRewards", contractRewards)
+			context.Logger().Debug("Calculated Contract rewards:", "contractAddress", contractAddress, "gasRewards", gasRewards, "inflationRewards", inflationRewards)
 		}
 
-		totalContractRewardsPerBlock = totalContractRewardsPerBlock.Add(totalContractRewardsInTx...)
+		totalGasRewardsPerBlock = totalGasRewardsPerBlock.Add(totalGasRewardsInTx...)
+		totalInflationRewardsPerBlock = totalInflationRewardsPerBlock.Add(totalInflationRewardsInTx...)
 	}
 
-	return totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress
+	return contractRewardData{
+		gasRewardByRewardAddress:         gasRewardByRewardAddress,
+		inflationRewardByContractAddress: inflationRewardByContractAddress,
+		totalGasRewards:                  totalGasRewardsPerBlock,
+		totalInflationRewards:            totalInflationRewardsPerBlock,
+		rewardAddresses:                  rewardAddresses,
+		contractAddresses:                contractAddresses,
+	}
 }
 
 // getContractInflationRewards returns the percentage of the block rewards that are dedicated to contracts

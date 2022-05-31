@@ -4,7 +4,7 @@ const (
 	// ModuleName is the name of the contract module
 	ModuleName = "gastracker"
 
-	ContractRewardCollector = ModuleName
+	GasRewardCollector = ModuleName
 
 	// StoreKey is the string store representation
 	StoreKey = ModuleName
@@ -24,7 +24,13 @@ const (
 
 	ContractInstanceMetadataKeyPrefix = "c_inst_md"
 
+	ContractInstanceSystemMetadataKeyPrefix = "c_inst_smd"
+
 	RewardEntryKeyPrefix = "reward_entry"
+
+	GlobalTxCounterKey = "gtc"
+
+	InflationRewardAccumulator = ModuleName + "_accumulator"
 )
 
 func GetPendingContractInstanceMetadataKey(address string) []byte {
@@ -41,4 +47,8 @@ func GetContractInstanceMetadataKey(address string) []byte {
 
 func GetRewardEntryKey(rewardAddress string) []byte {
 	return []byte(RewardEntryKeyPrefix + "/" + rewardAddress)
+}
+
+func GetContractInstanceSystemMetadataKey(address string) []byte {
+	return []byte(ContractInstanceSystemMetadataKeyPrefix + "/" + address)
 }

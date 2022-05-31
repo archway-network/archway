@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	proxyfeeGrant "github.com/archway-network/archway/x/gastracker/proxy"
+
 	wasmdKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	cosmwasm "github.com/CosmWasm/wasmvm"
@@ -204,15 +206,16 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		gastracker.ContractRewardCollector: nil,
-		authtypes.FeeCollectorName:         nil,
-		distrtypes.ModuleName:              nil,
-		minttypes.ModuleName:               {authtypes.Minter},
-		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                {authtypes.Burner},
-		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
-		wasm.ModuleName:                    {authtypes.Burner},
+		gastracker.GasRewardCollector:         nil,
+		gastracker.InflationRewardAccumulator: nil,
+		authtypes.FeeCollectorName:            nil,
+		distrtypes.ModuleName:                 nil,
+		minttypes.ModuleName:                  {authtypes.Minter},
+		stakingtypes.BondedPoolName:           {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:        {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                   {authtypes.Burner},
+		ibctransfertypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
+		wasm.ModuleName:                       {authtypes.Burner},
 	}
 )
 
@@ -663,7 +666,7 @@ func NewArchwayApp(
 			HandlerOptions: ante.HandlerOptions{
 				AccountKeeper:   app.accountKeeper,
 				BankKeeper:      app.bankKeeper,
-				FeegrantKeeper:  app.FeeGrantKeeper,
+				FeegrantKeeper:  proxyfeeGrant.NewProxyFeeGrantKeeper(app.FeeGrantKeeper, app.wasmKeeper, app.gastrackingKeeper, app.accountKeeper, keys[gastracker.StoreKey]),
 				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},

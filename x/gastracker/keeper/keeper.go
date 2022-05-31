@@ -30,6 +30,10 @@ type GasTrackingKeeper interface {
 	AddPendingChangeForContractMetadata(ctx sdk.Context, sender sdk.AccAddress, address sdk.AccAddress, newMetadata gastracker.ContractInstanceMetadata) error
 	CommitPendingContractMetadata(ctx sdk.Context) (int, error)
 
+	GetContractSystemMetadata(ctx sdk.Context, address sdk.AccAddress) (gastracker.ContractInstanceSystemMetadata, error)
+	SetContractSystemMetadata(ctx sdk.Context, address sdk.AccAddress, metadata gastracker.ContractInstanceSystemMetadata) error
+	MarkCurrentTxNonEligibleForReward(ctx sdk.Context) error
+
 	CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error)
 	GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress) (gastracker.LeftOverRewardEntry, error)
 
@@ -49,6 +53,10 @@ type GasTrackingKeeper interface {
 
 	// IsContractPremiumEnabled gives a flag which describes whether contract premium is enabled or not
 	IsContractPremiumEnabled(ctx sdk.Context) bool
+
+	GetMaxGasForGlobalFeeGrant(ctx sdk.Context) uint64
+
+	GetMaxGasForContractFeeGrant(ctx sdk.Context) uint64
 }
 
 type Keeper struct {
@@ -70,6 +78,14 @@ func NewGasTrackingKeeper(
 		paramSpace = paramSpace.WithKeyTable(gastracker.ParamKeyTable())
 	}
 	return &Keeper{key: key, appCodec: appCodec, paramSpace: paramSpace, contractInfoView: contractInfoView, wasmGasRegister: gasRegister}
+}
+
+func (k *Keeper) StoreKey() sdk.StoreKey {
+	return k.key
+}
+
+func (k *Keeper) AppCodec() codec.Codec {
+	return k.appCodec
 }
 
 func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error {
@@ -452,6 +468,7 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 	var currentTxGasTracking gastracker.TransactionTracking
 	currentTxGasTracking.MaxContractRewards = fee
 	currentTxGasTracking.MaxGasAllowed = gasLimit
+	currentTxGasTracking.IsEligibleForRewards = false
 	bz, err := k.appCodec.Marshal(&currentTxGasTracking)
 	if err != nil {
 		return err
@@ -503,6 +520,67 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccA
 		return err
 	}
 
+	gstKvStore.Set([]byte(gastracker.CurrentBlockTrackingKey), bz)
+	return nil
+}
+
+func (k Keeper) GetContractSystemMetadata(ctx sdk.Context, address sdk.AccAddress) (gastracker.ContractInstanceSystemMetadata, error) {
+	systemMetadata := gastracker.ContractInstanceSystemMetadata{
+		InflationBalance: make([]*sdk.DecCoin, 0),
+	}
+	store := ctx.KVStore(k.key)
+	bz := store.Get(gastracker.GetContractInstanceSystemMetadataKey(address.String()))
+
+	// Give default value in case no system metadata exists
+	if bz == nil {
+		return systemMetadata, nil
+	}
+
+	err := k.appCodec.Unmarshal(bz, &systemMetadata)
+	if err != nil {
+		return systemMetadata, err
+	}
+
+	return systemMetadata, nil
+}
+
+func (k Keeper) SetContractSystemMetadata(ctx sdk.Context, address sdk.AccAddress, metadata gastracker.ContractInstanceSystemMetadata) error {
+	store := ctx.KVStore(k.key)
+
+	bz, err := k.appCodec.Marshal(&metadata)
+	if err != nil {
+		return err
+	}
+
+	store.Set(gastracker.GetContractInstanceSystemMetadataKey(address.String()), bz)
+	return nil
+}
+
+func (k Keeper) MarkCurrentTxNonEligibleForReward(ctx sdk.Context) error {
+	gstKvStore := ctx.KVStore(k.key)
+
+	bz := gstKvStore.Get([]byte(gastracker.CurrentBlockTrackingKey))
+	if bz == nil {
+		return gastracker.ErrBlockTrackingDataNotFound
+	}
+	var currentBlockGasTracking gastracker.BlockGasTracking
+	err := k.appCodec.Unmarshal(bz, &currentBlockGasTracking)
+	if err != nil {
+		return err
+	}
+
+	txsLen := len(currentBlockGasTracking.TxTrackingInfos)
+	if txsLen == 0 {
+		return gastracker.ErrTxTrackingDataNotFound
+	}
+
+	currentTxTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
+	currentTxTracking.IsEligibleForRewards = false
+
+	bz, err = k.appCodec.Marshal(&currentBlockGasTracking)
+	if err != nil {
+		return err
+	}
 	gstKvStore.Set([]byte(gastracker.CurrentBlockTrackingKey), bz)
 	return nil
 }
