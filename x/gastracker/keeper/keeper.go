@@ -52,7 +52,6 @@ type GasTrackingKeeper interface {
 }
 
 type Keeper struct {
-	GasTrackingKeeper
 	key              sdk.StoreKey
 	appCodec         codec.Codec
 	paramSpace       gastracker.Subspace
