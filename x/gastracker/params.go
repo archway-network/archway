@@ -12,38 +12,53 @@ const (
 )
 
 var (
-	ParamsKeyGasTrackingSwitch     = []byte("GasTrackingSwitch")
-	ParamsKeyDappInflationRewards  = []byte("DappInflationRewards")
-	ParamsKeyGasRebateSwitch       = []byte("GasRebateSwitch")
-	ParamsKeyGasRebateToUserSwitch = []byte("GasRebateToUserSwitch")
-	ParamsKeyContractPremiumSwitch = []byte("ContractPremiumSwitch")
+	ParamsKeyGasTrackingSwitch              = []byte("GasTrackingSwitch")
+	ParamsKeyDappInflationRewardsSwitch     = []byte("DefaultDappInflationRewardsSwitch")
+	ParamsKeyGasRebateSwitch                = []byte("GasRebateSwitch")
+	ParamsKeyGasRebateToUserSwitch          = []byte("GasRebateToUserSwitch")
+	ParamsKeyContractPremiumSwitch          = []byte("ContractPremiumSwitch")
+	ParamsKeyInflationRewardQuotaPercentage = []byte("InflationRewardQuotaPercentage")
+	ParamsKeyInflationRewardCapSwitch       = []byte("InflationRewardCapSwitch")
+	ParamsKeyInflationRewardCapPercentage   = []byte("InflationRewardCapPercentage")
 )
 
 type Params struct {
-	GasTrackingSwitch             bool
-	GasDappInflationRewardsSwitch bool
-	GasRebateSwitch               bool
-	GasRebateToUserSwitch         bool
-	ContractPremiumSwitch         bool
+	GasTrackingSwitch          bool
+	DappInflationRewardsSwitch bool
+	GasRebateSwitch            bool
+	GasRebateToUserSwitch      bool
+	ContractPremiumSwitch      bool
+
+	InflationRewardQuotaPercentage uint64
+	InflationRewardCapSwitch       bool
+	InflationRewardCapPercentage   uint64
 }
 
-var (
-	DefaultGasTrackingSwitch      = true
-	GasDappInflationRewardsSwitch = true
-	DefaultGasRebateSwitch        = true
-	DefaultGasRebateToUserSwitch  = true
-	DefaultContractPremiumSwitch  = true
+const (
+	DefaultGasTrackingSwitch          = true
+	DefaultDappInflationRewardsSwitch = true
+	DefaultGasRebateSwitch            = true
+	DefaultGasRebateToUserSwitch      = true
+	DefaultContractPremiumSwitch      = true
+
+	DefaultInflationRewardQuotaPercentage uint64 = 20
+	DefaultInflationRewardCapSwitch              = false
+	DefaultInflationRewardCapPercentage   uint64 = 0
 )
 
 var _ paramstypes.ParamSet = &Params{}
 
 func DefaultParams() Params {
 	return Params{
-		GasTrackingSwitch:             DefaultGasTrackingSwitch,
-		GasDappInflationRewardsSwitch: GasDappInflationRewardsSwitch,
-		GasRebateSwitch:               DefaultGasRebateSwitch,
-		GasRebateToUserSwitch:         DefaultGasRebateToUserSwitch,
-		ContractPremiumSwitch:         DefaultContractPremiumSwitch,
+		GasTrackingSwitch:          DefaultGasTrackingSwitch,
+		DappInflationRewardsSwitch: DefaultDappInflationRewardsSwitch,
+		GasRebateSwitch:            DefaultGasRebateSwitch,
+		GasRebateToUserSwitch:      DefaultGasRebateToUserSwitch,
+		ContractPremiumSwitch:      DefaultContractPremiumSwitch,
+
+		InflationRewardQuotaPercentage: DefaultInflationRewardQuotaPercentage,
+		InflationRewardCapSwitch:       DefaultInflationRewardCapSwitch,
+		InflationRewardCapPercentage:   DefaultInflationRewardCapPercentage,
 	}
 }
 
@@ -59,16 +74,31 @@ func (p Params) String() string {
 func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(ParamsKeyGasTrackingSwitch, &p.GasTrackingSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(ParamsKeyDappInflationRewards, &p.GasDappInflationRewardsSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyDappInflationRewardsSwitch, &p.DappInflationRewardsSwitch, validateSwitch),
 		paramstypes.NewParamSetPair(ParamsKeyGasRebateSwitch, &p.GasRebateSwitch, validateSwitch),
 		paramstypes.NewParamSetPair(ParamsKeyGasRebateToUserSwitch, &p.GasRebateToUserSwitch, validateSwitch),
 		paramstypes.NewParamSetPair(ParamsKeyContractPremiumSwitch, &p.ContractPremiumSwitch, validateSwitch),
+
+		paramstypes.NewParamSetPair(ParamsKeyInflationRewardQuotaPercentage, &p.InflationRewardQuotaPercentage, validateUint64Percentage),
+		paramstypes.NewParamSetPair(ParamsKeyInflationRewardCapSwitch, &p.InflationRewardCapSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyInflationRewardCapPercentage, &p.InflationRewardCapPercentage, validateUint64Percentage),
 	}
+}
+
+func validateUint64Percentage(i interface{}) error {
+	if val, ok := i.(uint64); !ok {
+		return fmt.Errorf("invalid parameter type %T", i)
+	} else {
+		if val > 100 {
+			return fmt.Errorf("percentage cannot be greater than 100, found: %d", val)
+		}
+	}
+	return nil
 }
 
 func validateSwitch(i interface{}) error {
 	if _, ok := i.(bool); !ok {
-		return fmt.Errorf("Invalid parameter type %T", i)
+		return fmt.Errorf("invalid parameter type %T", i)
 	}
 	return nil
 }

@@ -21,7 +21,7 @@ type ContractInfoView interface {
 type GasTrackingKeeper interface {
 	wasmTypes.ContractGasProcessor
 
-	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error
+	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, remainingFeeCoins []*sdk.DecCoin, gasLimit uint64) error
 	GetCurrentBlockTracking(ctx sdk.Context) (gastracker.BlockGasTracking, error)
 	GetCurrentTxTracking(ctx sdk.Context) (gastracker.TransactionTracking, error)
 	TrackNewBlock(ctx sdk.Context) error
@@ -49,6 +49,12 @@ type GasTrackingKeeper interface {
 
 	// IsContractPremiumEnabled gives a flag which describes whether contract premium is enabled or not
 	IsContractPremiumEnabled(ctx sdk.Context) bool
+
+	IsInflationRewardCapped(ctx sdk.Context) bool
+
+	InflationRewardQuotaPercentage(ctx sdk.Context) uint64
+
+	InflationRewardCapPercentage(ctx sdk.Context) uint64
 }
 
 type Keeper struct {
@@ -446,12 +452,13 @@ func (k *Keeper) GetCurrentBlockTracking(ctx sdk.Context) (gastracker.BlockGasTr
 	return currentBlockTracking, err
 }
 
-func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error {
+func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, remainingFeeCoins []*sdk.DecCoin, gasLimit uint64) error {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var currentTxGasTracking gastracker.TransactionTracking
 	currentTxGasTracking.MaxContractRewards = fee
 	currentTxGasTracking.MaxGasAllowed = gasLimit
+	currentTxGasTracking.RemainingFee = remainingFeeCoins
 	bz, err := k.appCodec.Marshal(&currentTxGasTracking)
 	if err != nil {
 		return err

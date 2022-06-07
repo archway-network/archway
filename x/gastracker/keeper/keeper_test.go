@@ -50,7 +50,8 @@ func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string,
 var _ ContractInfoView = &TestContractInfoView{}
 
 type subspace struct {
-	space map[string]bool
+	boolFlagMaps   map[string]bool
+	uint64FlagMaps map[string]uint64
 }
 
 func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
@@ -58,19 +59,28 @@ func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
 	if !ok {
 		panic("[mock subspace]: invalid params type")
 	}
-	s.space[string(gastracker.ParamsKeyGasTrackingSwitch)] = params.GasTrackingSwitch
-	s.space[string(gastracker.ParamsKeyDappInflationRewards)] = params.GasDappInflationRewardsSwitch
-	s.space[string(gastracker.ParamsKeyGasRebateSwitch)] = params.GasRebateSwitch
-	s.space[string(gastracker.ParamsKeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
-	s.space[string(gastracker.ParamsKeyContractPremiumSwitch)] = params.ContractPremiumSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyGasTrackingSwitch)] = params.GasTrackingSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyDappInflationRewardsSwitch)] = params.DappInflationRewardsSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyGasRebateSwitch)] = params.GasRebateSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyContractPremiumSwitch)] = params.ContractPremiumSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyInflationRewardCapSwitch)] = params.InflationRewardCapSwitch
 
+	s.uint64FlagMaps[string(gastracker.ParamsKeyInflationRewardQuotaPercentage)] = params.InflationRewardQuotaPercentage
+	s.uint64FlagMaps[string(gastracker.ParamsKeyInflationRewardCapPercentage)] = params.InflationRewardCapPercentage
 }
 func (s *subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
-	x, ok := ptr.(*bool)
-	if !ok {
+	x, boolOk := ptr.(*bool)
+	y, uint64Ok := ptr.(*uint64)
+	if !boolOk && !uint64Ok {
 		panic("[mock subspace]: ptr is invalid type")
 	}
-	*x = s.space[string(key)]
+
+	if boolOk {
+		*x = s.boolFlagMaps[string(key)]
+	} else {
+		*y = s.uint64FlagMaps[string(key)]
+	}
 }
 
 func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *Keeper) {
@@ -83,7 +93,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 	encodingConfig := simapp.MakeTestEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 
-	subspace := subspace{space: make(map[string]bool)}
+	subspace := subspace{boolFlagMaps: make(map[string]bool), uint64FlagMaps: make(map[string]uint64)}
 
 	keeper := Keeper{
 		key:              storeKey,
