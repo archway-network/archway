@@ -537,8 +537,8 @@ func TestCalculateUpdatedGas(t *testing.T) {
 	}
 	updatedGas, err = keeper.CalculateUpdatedGas(ctx, gasRecord)
 	require.NoError(t, err, "Calculation of updated gas should be succeed")
-	require.Equal(t, (gasRecord.OriginalGas.VMGas)/2, updatedGas.VMGas)
-	require.Equal(t, (gasRecord.OriginalGas.SDKGas)/2, updatedGas.SDKGas)
+	require.Equal(t, gasRecord.OriginalGas.VMGas-(gasRecord.OriginalGas.VMGas)/2, updatedGas.VMGas)
+	require.Equal(t, gasRecord.OriginalGas.SDKGas-(gasRecord.OriginalGas.SDKGas)/2, updatedGas.SDKGas)
 
 	// Checking premium percentage calculation
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gastracker.ContractInstanceMetadata{

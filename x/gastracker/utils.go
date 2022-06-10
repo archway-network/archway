@@ -18,9 +18,9 @@ func AddPremiumGasInConsumption(metadata ContractInstanceMetadata, gasConsumptio
 	}
 }
 
-func DeductGasRebateFromConsumption(metadata ContractInstanceMetadata, gasConsumptionInfo types.GasConsumptionInfo, percentage uint64) types.GasConsumptionInfo {
+func DeductGasRebateFromConsumption(metadata ContractInstanceMetadata, gasConsumptionInfo types.GasConsumptionInfo, gasRebatePercentage uint64) types.GasConsumptionInfo {
 	return types.GasConsumptionInfo{
-		SDKGas: (gasConsumptionInfo.SDKGas * percentage) / 100,
-		VMGas:  (gasConsumptionInfo.VMGas * percentage) / 100,
+		SDKGas: gasConsumptionInfo.SDKGas - (gasConsumptionInfo.SDKGas*gasRebatePercentage)/100,
+		VMGas:  gasConsumptionInfo.VMGas - (gasConsumptionInfo.VMGas*gasRebatePercentage)/100,
 	}
 }

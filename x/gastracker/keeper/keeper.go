@@ -187,9 +187,9 @@ func (k *Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (f
 		}
 
 		if isGasRebateToUserEnabled && contractMetadata.GasRebateToUser {
-			return gastracker.AddPremiumGasInConsumption(contractMetadata, gasConsumptionInfo)
-		} else if isContractPremiumEnabled && contractMetadata.CollectPremium {
 			return gastracker.DeductGasRebateFromConsumption(contractMetadata, gasConsumptionInfo, 50)
+		} else if isContractPremiumEnabled && contractMetadata.CollectPremium {
+			return gastracker.AddPremiumGasInConsumption(contractMetadata, gasConsumptionInfo)
 		} else {
 			return gasConsumptionInfo
 		}
