@@ -580,7 +580,7 @@ func TestIngestionOfGasRecords(t *testing.T) {
 	err := keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
+	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, []*sdk.DecCoin{}, 5)
 	require.NoError(t, err, "We should be able to track new tx")
 
 	// Ingest gas record should be successful, but should skip the entry
@@ -695,12 +695,22 @@ func TestAddContractGasUsage(t *testing.T) {
 	require.EqualError(t, err, gastracker.ErrTxTrackingDataNotFound.Error(), "We cannot track contract gas since tx tracking does not exists")
 
 	// Let's track one tx with one contract gas usage
-	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
+	err = keeper.TrackNewTx(
+		ctx,
+		[]*sdk.DecCoin{{Denom: "test1", Amount: sdk.NewDec(14)}, {Denom: "test3", Amount: sdk.NewDec(140)}},
+		[]*sdk.DecCoin{{Denom: "test2", Amount: sdk.NewDec(13)}, {Denom: "test4", Amount: sdk.NewDec(16)}},
+		5,
+	)
 	require.NoError(t, err, "We should be able to track new transaction")
 	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 2}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
 
-	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 6)
+	err = keeper.TrackNewTx(
+		ctx,
+		[]*sdk.DecCoin{{Denom: "2", Amount: sdk.NewDec(4)}, {Denom: "20", Amount: sdk.NewDec(40)}},
+		[]*sdk.DecCoin{{Denom: "1", Amount: sdk.NewDec(3)}, {Denom: "5", Amount: sdk.NewDec(6)}},
+		6,
+	)
 	require.NoError(t, err, "We should be able to track new transaction")
 	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], wasmTypes.GasConsumptionInfo{SDKGas: 2, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_REPLY)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
@@ -712,7 +722,8 @@ func TestAddContractGasUsage(t *testing.T) {
 	require.Equal(t, 2, len(blockTrackingObj.TxTrackingInfos))
 	require.Equal(t, gastracker.TransactionTracking{
 		MaxGasAllowed:      5,
-		MaxContractRewards: nil,
+		MaxContractRewards: []*sdk.DecCoin{{Denom: "test1", Amount: sdk.NewDec(14)}, {Denom: "test3", Amount: sdk.NewDec(140)}},
+		RemainingFee:       []*sdk.DecCoin{{Denom: "test2", Amount: sdk.NewDec(13)}, {Denom: "test4", Amount: sdk.NewDec(16)}},
 		ContractTrackingInfos: []*gastracker.ContractGasTracking{
 			{
 				Address:        spareAddress[1].String(),
@@ -724,7 +735,8 @@ func TestAddContractGasUsage(t *testing.T) {
 	}, *blockTrackingObj.TxTrackingInfos[0])
 	require.Equal(t, gastracker.TransactionTracking{
 		MaxGasAllowed:      6,
-		MaxContractRewards: nil,
+		MaxContractRewards: []*sdk.DecCoin{{Denom: "2", Amount: sdk.NewDec(4)}, {Denom: "20", Amount: sdk.NewDec(40)}},
+		RemainingFee:       []*sdk.DecCoin{{Denom: "1", Amount: sdk.NewDec(3)}, {Denom: "5", Amount: sdk.NewDec(6)}},
 		ContractTrackingInfos: []*gastracker.ContractGasTracking{
 			{
 				Address:        spareAddress[2].String(),

@@ -242,35 +242,35 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 // Inflation reward cap for a block is hardcoded at 20% of total inflation reward
 // So, for per block inflation of 765 (76500/100), we need to take 20% of it which is
 // 153.
-// Total gas across block is 10 (2+4+1+2+1)
+// Total gas across block is 24 (4+8+4+4+4)
 // So, inflation reward for
-// Contract "1" is: 0.00153 (153 * 2 / 200000)
+// Contract "1" is: 0.00306 (153 * 4 / 200000)
+// Contract "2" is: 0.00612 (153 * 8 / 200000)
+// Contract "3" is: 0.00306 (153 * 4 / 200000)
 // Contract "2" is: 0.00306 (153 * 4 / 200000)
-// Contract "3" is: 0.000765 (153 * 1 / 200000)
-// Contract "2" is: 0.00153 (153 * 2 / 200000)
-// Contract "4" is: 0.000765 (153 * 1 / 200000)
+// Contract "4" is: 0.00306 (153 * 4 / 200000)
 // All above is in "test" denomination, since that is the denomination minter is minting
 // Now, coming to gas reward calculations:
 // For First tx entry:
-//    Gas Used = 10
-//    "1" Contract's reward is: 1 * (2 / 10) = 0.2test and 0.33333 * (2 / 10) = 0.0666666test1
-//    "2" Contract's reward is: 1 * (4 / 10) = 0.4test and 0.33333 * (4 / 10) = 0.1333333test1
-//    "3" Contract's reward is: 1 * (1 / 10) = 0.15test (0.1test + 0.05test (Premium)) and 0.33333 * (1 / 10) = 0.04999995test1 (0.0333333test1 + 0.01666665test1 (premium))
+//    Gas Used = 20
+//    "1" Contract's reward is: 1 * (4 / 20) = 0.2test and 0.33333 * (4 / 20) = 0.0666666test1
+//    "2" Contract's reward is: 1 * (8 / 20) = 0.4test and 0.33333 * (8 / 20) = 0.1333333test1
+//    "3" Contract's reward is: 1 * (4 / 20) = 0.3test (0.2test + 0.1test (Premium)) and 0.33333 * (4 / 20) = 0.09999test1 (0.06666test1 + 0.03333test1 (premium))
 // For Second tx entry:
-//   Gas Used = 2
-//   "2" Contract's reward is: 2 * (2 / 2) = 2test and 0.5 * (2 / 2) = 0.5test1
+//   Gas Used = 4
+//   "2" Contract's reward is: 2 * (4 / 2) = 2test and 0.5 * (4 / 2) = 0.5test1
 // Total rewards:
 // For Contract "1": 0.20153test (0.00153 + 0.2) and 0.0666666test1
 // For Contract "2": 2.40459test (0.00306 + 0.00153 + 0.4 + 2) and 0.6333333test1 (0.1333333 + 0.5)
-// For Contract "3": 0.150765test (0.000765 + 0.15) and 0.04999995test1
-// For Contract "4": 0.000765test (0.000706)
+// For Contract "3": 0.30153test (0.00153 + 0.3) and 0.09999test1
+// For Contract "4": 0.00153test (0.00153)
 // Reward distribution per address:
-// (for contract "1" and "4") "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt": 0.20153test + 0.000765test (0.202295test) and 0.0666666test1
-// (for contract "2" and "3") "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk": 2.555355test  and 0.6666666test1
-// So, we should be fetching 3test (0.202295 + 2.555296 = 2.757591 rounded to 3) and 1test1 (0.6333333 + 0.04999995 =  0.68333325 rounded to 1)
+// (for contract "1" and "4") "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt": 0.20153test + 0.00153test (0.20306test) and 0.0666666test1
+// (for contract "2" and "3") "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk": 2.70612test (2.40459test + 0.30153test)  and 0.7333233test1 (0.6333333test1 + 0.09999test1)
+// So, we should be fetching 3test (0.20306 + 2.70612 = 2.90918 rounded to 3) and 1test1 (0.7333233 + 0.0666666 =  0.7999899 rounded to 1)
 // from the fee collector
 // Since, left over threshold is hard coded to 1, we should be transferring 0test to "archway16w95tw2ueqdy0nvknkjv07zc287earxhwlykpt" and
-// 2test to "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk" and left over rewards should be 0.202295test,0.0666666test1 and 0.555355test and 0.68333325test1
+// 2test to "archway1j08452mqwadp8xu25kn9rleyl2gufgfjls8ekk" and left over rewards should be 0.20306test,0.0666666test1 and 0.70612test and 0.7333233test1
 // respectively.
 func TestRewardCalculation(t *testing.T) {
 	config := sdk.GetConfig()
@@ -289,12 +289,12 @@ func TestRewardCalculation(t *testing.T) {
 	params := gstTypes.DefaultParams()
 	expected := expect{
 		rewardsA: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.202295")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.20306")),
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.066666666666666667")),
 		},
 		rewardsB: []sdk.DecCoin{
-			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.555355")),
-			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
+			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.70612")),
+			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.7333233")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
 			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
@@ -360,43 +360,43 @@ func TestRewardCalculation(t *testing.T) {
 
 	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
 		{
-			MaxGasAllowed:      10,
+			MaxGasAllowed:      20,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
-					OriginalVmGas:  1,
-					OriginalSdkGas: 1,
+					OriginalVmGas:  2,
+					OriginalSdkGas: 2,
 					Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
 					Address:        spareAddress[2].String(),
-					OriginalVmGas:  1,
-					OriginalSdkGas: 3,
+					OriginalVmGas:  2,
+					OriginalSdkGas: 6,
 					Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
 					Address:        spareAddress[3].String(),
-					OriginalSdkGas: 1,
-					OriginalVmGas:  0,
+					OriginalSdkGas: 2,
+					OriginalVmGas:  2,
 					Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 				{
 					Address:        spareAddress[4].String(),
-					OriginalVmGas:  1,
-					OriginalSdkGas: 0,
+					OriginalVmGas:  2,
+					OriginalSdkGas: 2,
 					Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 				},
 			},
 		},
 		{
-			MaxGasAllowed:      2,
+			MaxGasAllowed:      4,
 			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
-					OriginalSdkGas: 1,
-					OriginalVmGas:  1,
+					OriginalSdkGas: 2,
+					OriginalVmGas:  2,
 					Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_SUDO,
 				},
 			},

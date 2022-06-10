@@ -187,17 +187,9 @@ func (k *Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (f
 		}
 
 		if isGasRebateToUserEnabled && contractMetadata.GasRebateToUser {
-			updatedGas := wasmTypes.GasConsumptionInfo{
-				SDKGas: (gasConsumptionInfo.SDKGas * 50) / 100,
-				VMGas:  (gasConsumptionInfo.VMGas * 50) / 100,
-			}
-			return updatedGas
+			return gastracker.AddPremiumGasInConsumption(contractMetadata, gasConsumptionInfo)
 		} else if isContractPremiumEnabled && contractMetadata.CollectPremium {
-			updatedGas := wasmTypes.GasConsumptionInfo{
-				SDKGas: gasConsumptionInfo.SDKGas + (gasConsumptionInfo.SDKGas*contractMetadata.PremiumPercentageCharged)/100,
-				VMGas:  gasConsumptionInfo.VMGas + (gasConsumptionInfo.VMGas*contractMetadata.PremiumPercentageCharged)/100,
-			}
-			return updatedGas
+			return gastracker.DeductGasRebateFromConsumption(contractMetadata, gasConsumptionInfo, 50)
 		} else {
 			return gasConsumptionInfo
 		}

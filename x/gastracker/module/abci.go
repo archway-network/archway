@@ -1,6 +1,7 @@
 package module
 
 import (
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -157,6 +158,14 @@ func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByA
 	}
 }
 
+func calculateGasUsageWithPremium(metadata gstTypes.ContractInstanceMetadata, sdkGas uint64, vmGas uint64) uint64 {
+	updatedInfo := gstTypes.AddPremiumGasInConsumption(metadata, types.GasConsumptionInfo{
+		SDKGas: sdkGas,
+		VMGas:  vmGas,
+	})
+	return updatedInfo.SDKGas + updatedInfo.VMGas
+}
+
 // getContractRewards returns the total rewards and the rewards per contract based on the calculations.
 func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper keeper.GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin) (sdk.DecCoins, []string, map[string]sdk.DecCoins) {
 	// To enforce a map iteration order. This isn't strictly necessary but is only
@@ -193,44 +202,29 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 
 			contractRewards := make(sdk.DecCoins, 0, 0)
 
-			gasConsumedInContract := sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(contractTrackingInfo.OriginalSdkGas + contractTrackingInfo.OriginalVmGas))
-
-			contractInflationReward := calculateInflationReward(context, gasTrackingKeeper, contractTotalInflationRewards, gasConsumedInContract, totalGasUsedByContractsDec, txTrackingInfo.RemainingFee)
+			contractInflationReward := calculateInflationReward(
+				context,
+				gasTrackingKeeper,
+				contractTotalInflationRewards,
+				sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(contractTrackingInfo.OriginalSdkGas+contractTrackingInfo.OriginalVmGas)),
+				totalGasUsedByContractsDec,
+				txTrackingInfo.RemainingFee,
+			)
 			context.Logger().Debug("Calculated contract inflation rewards:", "contractAddress", contractAddress, "contractInflationReward", contractInflationReward)
 			contractRewards = contractRewards.Add(contractInflationReward)
 
-			// It will go into if branch if:
-			// 1. Gas rebate to user is not enabled
-			// OR
-			// 2. Metadata has gas rebate to user is false
-			// So, it will not go into branch if:
-			// Gas rebate to user is enabled AND metadata gas rebate to user is true
-			if !gasTrackingKeeper.IsGasRebateToUserEnabled(context) || !metadata.GasRebateToUser {
-				maxGasAllowedInTx := sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(txTrackingInfo.MaxGasAllowed))
-
-				// Calc premium fees
-				var gasUsageForUsageRewards = gasConsumedInContract
-				if metadata.CollectPremium && gasTrackingKeeper.IsContractPremiumEnabled(context) {
-					premiumGas := gasConsumedInContract.
-						Mul(sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(metadata.PremiumPercentageCharged))).
-						QuoInt64(100)
-					gasUsageForUsageRewards = gasUsageForUsageRewards.Add(premiumGas)
-				}
-
-				if gasTrackingKeeper.IsGasRebateToContractEnabled(context) {
-					gasRebateRewards := make(sdk.DecCoins, 0)
-					for _, rewardCoin := range txTrackingInfo.MaxContractRewards {
-						gasRebateRewards = gasRebateRewards.Add(sdk.NewDecCoinFromDec(
-							rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(maxGasAllowedInTx)))
-					}
-					context.Logger().
-						Debug("Calculated contract gas rebate rewards:",
-							"contractAddress", contractAddress, "contractGasReward", gasRebateRewards)
-					contractRewards = contractRewards.Add(gasRebateRewards...)
-				}
-			} else {
-				context.Logger().Debug("Contract is not eligible for gas rewards, skipping calculation.", "contractAddress", contractAddress)
+			isEligible, gasRebateRewards := calculateGasRebateReward(
+				context,
+				gasTrackingKeeper,
+				metadata,
+				contractTrackingInfo,
+				sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(txTrackingInfo.MaxGasAllowed)),
+				txTrackingInfo.MaxContractRewards,
+			)
+			if !isEligible {
+				context.Logger().Debug("Contract is not eligible for gas rewards, skipped calculation.", "contractAddress", contractAddress)
 			}
+			contractRewards = contractRewards.Add(gasRebateRewards...)
 
 			if _, ok := rewardsByAddress[metadata.RewardAddress]; !ok {
 				rewardAddresses = append(rewardAddresses, metadata.RewardAddress)
@@ -241,7 +235,14 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 
 			totalContractRewardsInTx = totalContractRewardsInTx.Add(contractRewards...)
 
-			if err = EmitContractRewardCalculationEvent(context, contractAddress.String(), gasConsumedInContract, contractInflationReward, contractRewards, &metadata); err != nil {
+			if err = EmitContractRewardCalculationEvent(
+				context,
+				contractAddress.String(),
+				sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(contractTrackingInfo.OriginalSdkGas+contractTrackingInfo.OriginalVmGas)),
+				contractInflationReward,
+				contractRewards,
+				&metadata,
+			); err != nil {
 				panic(err)
 			}
 
@@ -287,8 +288,33 @@ func calculateInflationReward(context sdk.Context, gasTrackingKeeper keeper.GasT
 	return contractInflationReward
 }
 
+func calculateGasRebateReward(context sdk.Context, gasTrackingKeeper keeper.GasTrackingKeeper, metadata gstTypes.ContractInstanceMetadata, contractTrackingInfo *gstTypes.ContractGasTracking, maxGasAllowedInTx sdk.Dec, maxContractRewards []*sdk.DecCoin) (bool, sdk.DecCoins) {
+	gasRebateRewards := make(sdk.DecCoins, 0)
+
+	// It will go into if branch if following is satisfied:
+	// 1. Gas rebate to user is enabled and 2. Metadata has gas rebate to user is true
+	// OR
+	// 2. Gas rebate to contract is not enabled
+	if (gasTrackingKeeper.IsGasRebateToUserEnabled(context) && metadata.GasRebateToUser) || !gasTrackingKeeper.IsGasRebateToContractEnabled(context) {
+		return false, gasRebateRewards
+	}
+
+	var gasUsageForUsageRewards sdk.Dec
+	if metadata.CollectPremium && gasTrackingKeeper.IsContractPremiumEnabled(context) {
+		gasUsageForUsageRewards = sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(calculateGasUsageWithPremium(metadata, contractTrackingInfo.OriginalSdkGas, contractTrackingInfo.OriginalVmGas)))
+	} else {
+		gasUsageForUsageRewards = sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(contractTrackingInfo.OriginalSdkGas + contractTrackingInfo.OriginalVmGas))
+	}
+
+	for _, rewardCoin := range maxContractRewards {
+		gasRebateRewards = gasRebateRewards.Add(sdk.NewDecCoinFromDec(
+			rewardCoin.Denom, rewardCoin.Amount.Mul(gasUsageForUsageRewards).Quo(maxGasAllowedInTx)))
+	}
+
+	return true, gasRebateRewards
+}
+
 // getContractInflationRewardQuota returns the percentage of the block rewards that are dedicated to contracts
-// TODO now is 20% of the block rewards hardcoded.
 func getContractInflationRewardQuota(context sdk.Context, gastrackingKeeper keeper.GasTrackingKeeper, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
 	totalInflationRatePerBlock := getInflationFeeForLastBlock(context, mintParamsKeeper)
 
