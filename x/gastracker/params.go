@@ -43,7 +43,7 @@ const (
 
 	DefaultInflationRewardQuotaPercentage uint64 = 20
 	DefaultInflationRewardCapSwitch              = false
-	DefaultInflationRewardCapPercentage   uint64 = 0
+	DefaultInflationRewardCapPercentage   uint64 = 100
 )
 
 var _ paramstypes.ParamSet = &Params{}

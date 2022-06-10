@@ -255,13 +255,21 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 	return totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress
 }
 
-func findDenomInDecCoins(decCoins []*sdk.DecCoin, denom string) *sdk.DecCoin {
-	for _, coin := range decCoins {
-		if coin.Denom == denom {
-			return coin
+func determineTxFeePortionForInflation(capPercentage uint64, remainingFee []*sdk.DecCoin, inflationTokenDenom string) *sdk.DecCoin {
+	var inflationTokenComponentOfFee *sdk.DecCoin = nil
+	for _, coin := range remainingFee {
+		if coin.Denom == inflationTokenDenom {
+			inflationTokenComponentOfFee = coin
 		}
 	}
-	return nil
+
+	if inflationTokenComponentOfFee == nil || capPercentage == 0 {
+		return nil
+	}
+
+	capPercentageInDec := sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(capPercentage))
+	cappedInflationRewardPortion := sdk.NewDecCoinFromDec(inflationTokenDenom, inflationTokenComponentOfFee.Amount.Mul(capPercentageInDec).QuoInt64(100))
+	return &cappedInflationRewardPortion
 }
 
 func calculateInflationReward(context sdk.Context, gasTrackingKeeper keeper.GasTrackingKeeper, inflationRewardQuota sdk.DecCoin, gasConsumedInContract sdk.Dec, totalGasUsedByContracts sdk.Dec, remainingTxFee []*sdk.DecCoin) sdk.DecCoin {
@@ -269,23 +277,26 @@ func calculateInflationReward(context sdk.Context, gasTrackingKeeper keeper.GasT
 		return sdk.NewDecCoin(inflationRewardQuota.Denom, sdk.NewInt(0))
 	}
 	blockGasLimit := sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(context.BlockGasMeter().Limit()))
-	contractInflationReward := sdk.NewDecCoinFromDec(inflationRewardQuota.Denom, inflationRewardQuota.Amount.Mul(gasConsumedInContract).Quo(blockGasLimit))
+	uncappedContractInflationReward := sdk.NewDecCoinFromDec(inflationRewardQuota.Denom, inflationRewardQuota.Amount.Mul(gasConsumedInContract).Quo(blockGasLimit))
+
+	calculatedInflationReward := uncappedContractInflationReward
+
 	if gasTrackingKeeper.IsInflationRewardCapped(context) {
 		// totalGas -> contractGas
 		// totalfee ->
 		// (totalFee * contractGas) / totalGas
-		cappedInflationReward := sdk.NewDecCoin(contractInflationReward.Denom, sdk.NewInt(0))
+		cappedInflationReward := sdk.NewDecCoin(uncappedContractInflationReward.Denom, sdk.NewInt(0))
 
-		txFeeInInflationToken := findDenomInDecCoins(remainingTxFee, contractInflationReward.Denom)
-		if txFeeInInflationToken != nil {
-			cappedInflationReward = sdk.NewDecCoinFromDec(inflationRewardQuota.Denom, txFeeInInflationToken.Amount.Mul(gasConsumedInContract).Quo(totalGasUsedByContracts))
+		txFeePortionForInflation := determineTxFeePortionForInflation(gasTrackingKeeper.InflationRewardCapPercentage(context), remainingTxFee, uncappedContractInflationReward.Denom)
+		if txFeePortionForInflation != nil {
+			cappedInflationReward = sdk.NewDecCoinFromDec(inflationRewardQuota.Denom, txFeePortionForInflation.Amount.Mul(gasConsumedInContract).Quo(totalGasUsedByContracts))
 		}
 
-		if cappedInflationReward.IsLT(contractInflationReward) {
-			contractInflationReward = cappedInflationReward
+		if cappedInflationReward.IsLT(calculatedInflationReward) {
+			calculatedInflationReward = cappedInflationReward
 		}
 	}
-	return contractInflationReward
+	return calculatedInflationReward
 }
 
 func calculateGasRebateReward(context sdk.Context, gasTrackingKeeper keeper.GasTrackingKeeper, metadata gstTypes.ContractInstanceMetadata, contractTrackingInfo *gstTypes.ContractGasTracking, maxGasAllowedInTx sdk.Dec, maxContractRewards []*sdk.DecCoin) (bool, sdk.DecCoins) {
