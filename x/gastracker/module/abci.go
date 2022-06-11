@@ -1,6 +1,7 @@
 package module
 
 import (
+	"fmt"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"time"
 
@@ -224,6 +225,7 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 			if !isEligible {
 				context.Logger().Debug("Contract is not eligible for gas rewards, skipped calculation.", "contractAddress", contractAddress)
 			}
+			fmt.Println("==========Gas rebate rewards", gasRebateRewards)
 			contractRewards = contractRewards.Add(gasRebateRewards...)
 
 			if _, ok := rewardsByAddress[metadata.RewardAddress]; !ok {
@@ -282,19 +284,21 @@ func calculateInflationReward(context sdk.Context, gasTrackingKeeper keeper.GasT
 	calculatedInflationReward := uncappedContractInflationReward
 
 	if gasTrackingKeeper.IsInflationRewardCapped(context) {
-		// totalGas -> contractGas
-		// totalfee ->
-		// (totalFee * contractGas) / totalGas
 		cappedInflationReward := sdk.NewDecCoin(uncappedContractInflationReward.Denom, sdk.NewInt(0))
 
 		txFeePortionForInflation := determineTxFeePortionForInflation(gasTrackingKeeper.InflationRewardCapPercentage(context), remainingTxFee, uncappedContractInflationReward.Denom)
 		if txFeePortionForInflation != nil {
+			// totalGas -> contractGas
+			// feePortion -> ?
+			// S, ? = (feePortion * contractGas) / totalGas
 			cappedInflationReward = sdk.NewDecCoinFromDec(inflationRewardQuota.Denom, txFeePortionForInflation.Amount.Mul(gasConsumedInContract).Quo(totalGasUsedByContracts))
 		}
 
 		if cappedInflationReward.IsLT(calculatedInflationReward) {
 			calculatedInflationReward = cappedInflationReward
 		}
+
+		fmt.Println(uncappedContractInflationReward, cappedInflationReward, "selected:", calculatedInflationReward)
 	}
 	return calculatedInflationReward
 }
