@@ -1,7 +1,6 @@
 package module
 
 import (
-	"fmt"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"time"
 
@@ -225,7 +224,6 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 			if !isEligible {
 				context.Logger().Debug("Contract is not eligible for gas rewards, skipped calculation.", "contractAddress", contractAddress)
 			}
-			fmt.Println("==========Gas rebate rewards", gasRebateRewards)
 			contractRewards = contractRewards.Add(gasRebateRewards...)
 
 			if _, ok := rewardsByAddress[metadata.RewardAddress]; !ok {
@@ -297,8 +295,6 @@ func calculateInflationReward(context sdk.Context, gasTrackingKeeper keeper.GasT
 		if cappedInflationReward.IsLT(calculatedInflationReward) {
 			calculatedInflationReward = cappedInflationReward
 		}
-
-		fmt.Println(uncappedContractInflationReward, cappedInflationReward, "selected:", calculatedInflationReward)
 	}
 	return calculatedInflationReward
 }
