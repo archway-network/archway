@@ -2,6 +2,7 @@ package module
 
 import (
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"math/rand"
 	"os"
 	"testing"
@@ -924,6 +925,41 @@ func TestContractRewardsWithDappInflationCapMoreThanUncapped(t *testing.T) {
 	}
 }
 
+func ConvertToProtoDecCoin(decCoin sdk.DecCoin) *sdk.DecCoin {
+	return &decCoin
+}
+
+func ConvertToProtoDecCoins(coins sdk.DecCoins) []*sdk.DecCoin {
+	pt := make([]*sdk.DecCoin, len(coins))
+	for i, coin := range coins {
+		coinCopy := sdk.NewDecCoinFromDec(coin.Denom, coin.Amount)
+		pt[i] = &coinCopy
+	}
+	return pt
+}
+
+func FindAttributeFromEvent(event sdk.Event, attributeName string) ([]byte, error) {
+	for _, attr := range event.Attributes {
+		if string(attr.Key) == attributeName {
+			return attr.Value, nil
+		}
+	}
+
+	return nil, fmt.Errorf("attribute not found")
+}
+
+func CalculateTotalRewardFromEvents(events []gstTypes.ContractRewardCalculationEvent) sdk.DecCoins {
+	var totalRewards sdk.DecCoins
+	for _, event := range events {
+		eventReward := make(sdk.DecCoins, len(event.ContractRewards))
+		for i, reward := range event.ContractRewards {
+			eventReward[i] = *reward
+		}
+		totalRewards = totalRewards.Add(eventReward...)
+	}
+	return totalRewards
+}
+
 // Inflation reward cap for a block is at 20% of total inflation reward
 // So, for per block inflation of 765 (76500/100), we need to take 20% of it which is
 // 153.
@@ -992,6 +1028,48 @@ func TestContractRewardsWithDappInflationCapLessThanUncapped(t *testing.T) {
 		},
 	}
 
+	expectedRewardCalculationEventFromFirstTx := []gstTypes.ContractRewardCalculationEvent{
+		{
+			ContractAddress:  spareAddress[1].String(),
+			GasConsumed:      4,
+			InflationRewards: ConvertToProtoDecCoin(sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.45"))),
+			ContractRewards:  ConvertToProtoDecCoins(sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.65")), sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.066666666666666667")))),
+		},
+		{
+			ContractAddress:  spareAddress[2].String(),
+			GasConsumed:      8,
+			InflationRewards: ConvertToProtoDecCoin(sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.9"))),
+			ContractRewards:  ConvertToProtoDecCoins(sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("1.3")), sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.133333333333333333")))),
+		},
+		{
+			ContractAddress:  spareAddress[3].String(),
+			GasConsumed:      2,
+			InflationRewards: ConvertToProtoDecCoin(sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.225"))),
+			ContractRewards:  ConvertToProtoDecCoins(sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.375")), sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.05")))),
+		},
+		{
+			ContractAddress:  spareAddress[4].String(),
+			GasConsumed:      2,
+			InflationRewards: ConvertToProtoDecCoin(sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.225"))),
+			ContractRewards:  ConvertToProtoDecCoins(sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.225")))),
+		},
+	}
+
+	firstTxTotalRewards := CalculateTotalRewardFromEvents(expectedRewardCalculationEventFromFirstTx)
+
+	expectedRewardCalculationEventsFromSecondTx := []gstTypes.ContractRewardCalculationEvent{
+		{
+			ContractAddress:  spareAddress[2].String(),
+			GasConsumed:      2,
+			InflationRewards: ConvertToProtoDecCoin(sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("3.06"))),
+			ContractRewards:  ConvertToProtoDecCoins(sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("5.06")), sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.5")))),
+		},
+	}
+
+	secondTxTotalRewards := CalculateTotalRewardFromEvents(expectedRewardCalculationEventsFromSecondTx)
+
+	expectedRewardCalculationEvents := append(expectedRewardCalculationEventFromFirstTx, expectedRewardCalculationEventsFromSecondTx...)
+
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200))
 
@@ -1000,8 +1078,11 @@ func TestContractRewardsWithDappInflationCapLessThanUncapped(t *testing.T) {
 	firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 
-	remainingFeeFirstContract := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(4).QuoInt64(3)))
-	remainingFeeSecondContract := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(4)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(4).QuoInt64(3)))
+	remainingFeeFirstTx := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(4).QuoInt64(3)))
+	remainingFeeSecondTx := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(4)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(4).QuoInt64(3)))
+
+	totalFeeFirstTx := firstTxMaxContractReward.Add(remainingFeeFirstTx...)
+	totalFeeSecondTx := secondTxMaxContractReward.Add(remainingFeeSecondTx...)
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
 	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
@@ -1054,7 +1135,7 @@ func TestContractRewardsWithDappInflationCapLessThanUncapped(t *testing.T) {
 		{
 			MaxGasAllowed:      20,
 			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
-			RemainingFee:       []*sdk.DecCoin{&remainingFeeFirstContract[0], &remainingFeeFirstContract[1]},
+			RemainingFee:       []*sdk.DecCoin{&remainingFeeFirstTx[0], &remainingFeeFirstTx[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
@@ -1085,7 +1166,7 @@ func TestContractRewardsWithDappInflationCapLessThanUncapped(t *testing.T) {
 		{
 			MaxGasAllowed:      4,
 			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
-			RemainingFee:       []*sdk.DecCoin{&remainingFeeSecondContract[0], &remainingFeeSecondContract[1]},
+			RemainingFee:       []*sdk.DecCoin{&remainingFeeSecondTx[0], &remainingFeeSecondTx[1]},
 			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
@@ -1118,6 +1199,33 @@ func TestContractRewardsWithDappInflationCapLessThanUncapped(t *testing.T) {
 	for i := 0; i < len(expected.rewardsB); i++ {
 		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
 	}
+
+	beginBlockEvents := ctx.EventManager().Events()
+	eventType := proto.MessageName(&gstTypes.ContractRewardCalculationEvent{})
+	currentIndexToValidate := 0
+	for _, event := range beginBlockEvents {
+		if event.Type == eventType {
+			generatedEvent, err := sdk.TypedEventToEvent(&expectedRewardCalculationEvents[currentIndexToValidate])
+			require.NoError(t, err, "should not be an error in event generation")
+			currentIndexToValidate += 1
+
+			generatedAttributeValue, err := FindAttributeFromEvent(generatedEvent, "contract_rewards")
+			require.NoError(t, err, "should not be an error in finding attribute")
+
+			actualAttributeValue, err := FindAttributeFromEvent(event, "contract_rewards")
+			require.NoError(t, err, "should not be an error in finding attribute")
+
+			require.Equal(t, generatedAttributeValue, actualAttributeValue, "generated attribute and actual attribute of event should be equal")
+		}
+	}
+	require.Equal(t, currentIndexToValidate, len(expectedRewardCalculationEvents), "BeginBlock should have generated all events")
+
+	// Now that we have verified that events are as expected, we can check the total reward per tx is less than the fee paid
+	rewardDiff, isNegative := totalFeeFirstTx.SafeSub(firstTxTotalRewards)
+	require.True(t, rewardDiff.IsAllPositive() && !isNegative, "reward difference must be positive")
+
+	rewardDiff, isNegative = totalFeeSecondTx.SafeSub(secondTxTotalRewards)
+	require.True(t, rewardDiff.IsAllPositive() && !isNegative, "reward difference must be positive")
 }
 
 func TestContractRewardsWithoutDappInflation(t *testing.T) {
