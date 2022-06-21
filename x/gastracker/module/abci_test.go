@@ -120,7 +120,7 @@ func (t *TestMintParamsKeeper) GetMinter(_ sdk.Context) (minter mintTypes.Minter
 		AnnualProvisions: sdk.NewDec(76500),
 	}
 
-	if !t.AnnualProvisions.IsZero() {
+	if !t.AnnualProvisions.IsNil() {
 		m.AnnualProvisions = t.AnnualProvisions
 	}
 
