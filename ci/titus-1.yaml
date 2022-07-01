@@ -2,7 +2,7 @@ apiVersion: apps.starport.cloud/v1
 kind: NodeSet
 metadata:
   name: titus-1
-  namespace: archway
+  namespace: testnets
 spec:
   config:
     resetDataOnImageUpgrade: true
@@ -54,17 +54,22 @@ spec:
     p2p: true
   image:
     name: docker.io/archwaynetwork/archwayd
-    version: sha-8e3e5be
+    version: NODE_VERSION
     imagePullPolicy: Always
   init:
     assets:
       - 10000000000000000000utitus
-    accounts:
-      - address: archway1zsetek833g3upk2dgc56nqskm8tg804y6vvw0l
-        coins:
-          - 100000000000000000utitus
     bondDenom: utitus
     chainID: titus-1
+    faucet:
+      creditAmount: 10000000
+      denoms:
+        - utitus
+      domain: faucet.titus-1.archway.tech
+      funds: 100000000000000000utitus
+      legacySend: false
+      maxCredit: 100000000
+      replicas: 1
   moniker: archway
   persistence:
     autoResize:

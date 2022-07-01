@@ -2,14 +2,14 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: constantine-big-dipper
-  namespace: archway
+  name: titus-1-bigdipper
+  namespace: explorers
 data:
   settings.json: |-
     {
       "public":{
-        "chainName":"Constantine",
-        "chainId":"constantine-1",
+        "chainName":"Titus",
+        "chainId":"titus-1",
         "gtm":"{Add your Google Tag Manager ID here}",
         "slashingWindow":10000,
         "uptimeWindow":250,
@@ -21,12 +21,12 @@ data:
         "bech32PrefixValPub":"archwayvaloperpub",
         "bech32PrefixConsAddr":"archwayvalcons",
         "bech32PrefixConsPub":"archwayvalconspub",
-        "bondDenom":"uconst",
+        "bondDenom":"utitus",
         "powerReduction":1000000,
         "coins":[
           {
-            "denom":"uconst",
-            "displayName":"CONST",
+            "denom":"utitus",
+            "displayName":"TITUS",
             "fraction":1000000
           }
         ],
@@ -48,8 +48,8 @@ data:
         "banners":false
       },
       "remote":{
-        "rpc":"http://constantine-1:26657",
-        "api":"http://constantine-1:1317"
+        "rpc":"http://titus-1.testnets:26657",
+        "api":"http://titus-1.testnets:1317"
       },
       "debug":{
         "startTimer":true
@@ -76,35 +76,35 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: constantine-big-dipper
-  namespace: archway
+  name: titus-1-bigdipper
+  namespace: explorers
 spec:
   ports:  
   - port: 3000
     name: http
     targetPort: 3000
   selector:    
-    app.kubernetes.io/name: constantine-big-dipper
+    app.kubernetes.io/name: titus-1-bigdipper
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: constantine-big-dipper
-  namespace: archway
+  name: titus-1-bigdipper
+  namespace: explorers
   labels:    
-    app.kubernetes.io/name: constantine-big-dipper
+    app.kubernetes.io/name: titus-1-bigdipper
 spec:
   selector:
     matchLabels:      
-      app.kubernetes.io/name: constantine-big-dipper
+      app.kubernetes.io/name: titus-1-bigdipper
   replicas: 1
   template:
     metadata:
       labels:        
-        app.kubernetes.io/name: constantine-big-dipper
+        app.kubernetes.io/name: titus-1-bigdipper
     spec:
       containers:
-        - name: constantine-big-dipper
+        - name: titus-1-bigdipper
           image: drewstaylor/bigdipper:1.0.0-archway
           imagePullPolicy: Always
           ports:        
@@ -112,15 +112,15 @@ spec:
             name: http
           env:
             - name: ROOT_URL
-              value: https://explorer.constantine-1.archway.tech
+              value: https://explorer.titus-1.archway.tech
             - name: MONGO_URL
-              value: mongodb://mongodb:27017/meteor-constantine
+              value: mongodb://mongodb:27017/meteor-titus
             - name: PORT
               value: "3000"
             - name: METEOR_SETTINGS
               valueFrom:
                 configMapKeyRef:
-                  name: constantine-big-dipper
+                  name: titus-1-bigdipper
                   key: settings.json
           resources:
             {}
@@ -129,27 +129,27 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: constantine-big-dipper
-  namespace: archway
+  name: titus-1-bigdipper
+  namespace: explorers
   labels:    
-    app.kubernetes.io/name: constantine-big-dipper
+    app.kubernetes.io/name: titus-1-bigdipper
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     kubernetes.io/ingress.class: nginx
 spec:
   rules:
-  - host: explorer.constantine-1.archway.tech
+  - host: explorer.titus-1.archway.tech
     http:
       paths:
       - backend:
           service:
-            name: constantine-big-dipper
+            name: titus-1-bigdipper
             port:
               number: 3000
         path: /
         pathType: ImplementationSpecific
   tls:
   - hosts:
-    - explorer.constantine-1.archway.tech
-    secretName: constantine-big-dipper-cert
+    - explorer.titus-1.archway.tech
+    secretName: titus-1-bigdipper-cert
 

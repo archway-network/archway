@@ -2,14 +2,14 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: augusta-big-dipper
-  namespace: archway
+  name: constantine-1-bigdipper
+  namespace: explorers
 data:
   settings.json: |-
     {
       "public":{
-        "chainName":"augusta",
-        "chainId":"augusta-1",
+        "chainName":"Constantine",
+        "chainId":"constantine-1",
         "gtm":"{Add your Google Tag Manager ID here}",
         "slashingWindow":10000,
         "uptimeWindow":250,
@@ -21,12 +21,12 @@ data:
         "bech32PrefixValPub":"archwayvaloperpub",
         "bech32PrefixConsAddr":"archwayvalcons",
         "bech32PrefixConsPub":"archwayvalconspub",
-        "bondDenom":"uaugust",
+        "bondDenom":"uconst",
         "powerReduction":1000000,
         "coins":[
           {
-            "denom":"uaugust",
-            "displayName":"AUGUST",
+            "denom":"uconst",
+            "displayName":"CONST",
             "fraction":1000000
           }
         ],
@@ -48,8 +48,8 @@ data:
         "banners":false
       },
       "remote":{
-        "rpc":"http://augusta-1-faucet-node:26657",
-        "api":"http://augusta-1-faucet-node:1317"
+        "rpc":"http://constantine-1.testnets:26657",
+        "api":"http://constantine-1.testnets:1317"
       },
       "debug":{
         "startTimer":true
@@ -76,35 +76,35 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: augusta-big-dipper
-  namespace: archway
+  name: constantine-1-bigdipper
+  namespace: explorers
 spec:
   ports:  
   - port: 3000
     name: http
     targetPort: 3000
   selector:    
-    app.kubernetes.io/name: augusta-big-dipper
+    app.kubernetes.io/name: constantine-1-bigdipper
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: augusta-big-dipper
-  namespace: archway
+  name: constantine-1-bigdipper
+  namespace: explorers
   labels:    
-    app.kubernetes.io/name: augusta-big-dipper
+    app.kubernetes.io/name: constantine-1-bigdipper
 spec:
   selector:
     matchLabels:      
-      app.kubernetes.io/name: augusta-big-dipper
+      app.kubernetes.io/name: constantine-1-bigdipper
   replicas: 1
   template:
     metadata:
       labels:        
-        app.kubernetes.io/name: augusta-big-dipper
+        app.kubernetes.io/name: constantine-1-bigdipper
     spec:
       containers:
-        - name: augusta-big-dipper
+        - name: constantine-1-bigdipper
           image: drewstaylor/bigdipper:1.0.0-archway
           imagePullPolicy: Always
           ports:        
@@ -112,15 +112,15 @@ spec:
             name: http
           env:
             - name: ROOT_URL
-              value: https://explorer.augusta-1.archway.tech
+              value: https://explorer.constantine-1.archway.tech
             - name: MONGO_URL
-              value: mongodb://mongodb:27017/meteor-augusta
+              value: mongodb://mongodb:27017/meteor-constantine
             - name: PORT
               value: "3000"
             - name: METEOR_SETTINGS
               valueFrom:
                 configMapKeyRef:
-                  name: augusta-big-dipper
+                  name: constantine-1-bigdipper
                   key: settings.json
           resources:
             {}
@@ -129,27 +129,26 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: augusta-big-dipper
-  namespace: archway
+  name: constantine-1-bigdipper
+  namespace: explorers
   labels:    
-    app.kubernetes.io/name: augusta-big-dipper
+    app.kubernetes.io/name: constantine-1-bigdipper
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     kubernetes.io/ingress.class: nginx
 spec:
   rules:
-  - host: explorer.augusta-1.archway.tech
+  - host: explorer.constantine-1.archway.tech
     http:
       paths:
       - backend:
           service:
-            name: augusta-big-dipper
+            name: constantine-1-bigdipper
             port:
               number: 3000
         path: /
         pathType: ImplementationSpecific
   tls:
   - hosts:
-    - explorer.augusta-1.archway.tech
-    secretName: augusta-big-dipper-cert
-
+    - explorer.constantine-1.archway.tech
+    secretName: constantine-1-bigdipper-cert
