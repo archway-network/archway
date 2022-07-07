@@ -16,7 +16,7 @@ func (k Keeper) IsGasTrackingEnabled(ctx sdk.Context) (res bool) {
 }
 
 func (k Keeper) IsDappInflationRewardsEnabled(ctx sdk.Context) (res bool) {
-	k.paramSpace.Get(ctx, gstTypes.ParamsKeyDappInflationRewards, &res)
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyDappInflationRewardsSwitch, &res)
 	return
 }
 func (k Keeper) IsGasRebateToContractEnabled(ctx sdk.Context) (res bool) {
@@ -29,5 +29,17 @@ func (k Keeper) IsGasRebateToUserEnabled(ctx sdk.Context) (res bool) {
 }
 func (k Keeper) IsContractPremiumEnabled(ctx sdk.Context) (res bool) {
 	k.paramSpace.Get(ctx, gstTypes.ParamsKeyContractPremiumSwitch, &res)
+	return
+}
+func (k Keeper) IsInflationRewardCapped(ctx sdk.Context) (res bool) {
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyInflationRewardCapSwitch, &res)
+	return
+}
+func (k Keeper) InflationRewardQuotaPercentage(ctx sdk.Context) (res uint64) {
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyInflationRewardQuotaPercentage, &res)
+	return
+}
+func (k Keeper) InflationRewardCapPercentage(ctx sdk.Context) (res uint64) {
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyInflationRewardCapPercentage, &res)
 	return
 }

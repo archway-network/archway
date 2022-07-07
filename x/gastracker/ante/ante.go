@@ -25,14 +25,18 @@ func (t TxGasTrackingDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 
 	feeCoins = feeCoins.Sort()
 	rewardCoins := make([]*sdk.DecCoin, len(feeCoins))
+	remainingFeeCoins := make([]*sdk.DecCoin, len(feeCoins))
 
 	for i, coin := range feeCoins {
 		decCoin := sdk.NewDecCoinFromCoin(coin)
 		reward := decCoin.Sub(sdk.NewDecCoinFromDec(coin.Denom, decCoin.Amount.Quo(sdk.NewDec(2))))
 		rewardCoins[i] = &reward
+
+		remainingFeeCoin := decCoin.Sub(reward)
+		remainingFeeCoins[i] = &remainingFeeCoin
 	}
 
-	err = t.gasTrackingKeeper.TrackNewTx(ctx, rewardCoins, feeTx.GetGas())
+	err = t.gasTrackingKeeper.TrackNewTx(ctx, rewardCoins, remainingFeeCoins, feeTx.GetGas())
 	if err != nil {
 		return ctx, err
 	}

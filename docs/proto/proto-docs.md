@@ -165,6 +165,7 @@ Tracking contract gas usage and total gas consumption per transaction
 | `max_gas_allowed` | [uint64](#uint64) |  |  |
 | `max_contract_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
 | `contract_tracking_infos` | [ContractGasTracking](#archway.gastracker.v1.ContractGasTracking) | repeated |  |
+| `remaining_fee` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
 
 
 

@@ -50,7 +50,8 @@ func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string,
 var _ ContractInfoView = &TestContractInfoView{}
 
 type subspace struct {
-	space map[string]bool
+	boolFlagMaps   map[string]bool
+	uint64FlagMaps map[string]uint64
 }
 
 func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
@@ -58,19 +59,28 @@ func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
 	if !ok {
 		panic("[mock subspace]: invalid params type")
 	}
-	s.space[string(gastracker.ParamsKeyGasTrackingSwitch)] = params.GasTrackingSwitch
-	s.space[string(gastracker.ParamsKeyDappInflationRewards)] = params.GasDappInflationRewardsSwitch
-	s.space[string(gastracker.ParamsKeyGasRebateSwitch)] = params.GasRebateSwitch
-	s.space[string(gastracker.ParamsKeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
-	s.space[string(gastracker.ParamsKeyContractPremiumSwitch)] = params.ContractPremiumSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyGasTrackingSwitch)] = params.GasTrackingSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyDappInflationRewardsSwitch)] = params.DappInflationRewardsSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyGasRebateSwitch)] = params.GasRebateSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyContractPremiumSwitch)] = params.ContractPremiumSwitch
+	s.boolFlagMaps[string(gastracker.ParamsKeyInflationRewardCapSwitch)] = params.InflationRewardCapSwitch
 
+	s.uint64FlagMaps[string(gastracker.ParamsKeyInflationRewardQuotaPercentage)] = params.InflationRewardQuotaPercentage
+	s.uint64FlagMaps[string(gastracker.ParamsKeyInflationRewardCapPercentage)] = params.InflationRewardCapPercentage
 }
 func (s *subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
-	x, ok := ptr.(*bool)
-	if !ok {
+	x, boolOk := ptr.(*bool)
+	y, uint64Ok := ptr.(*uint64)
+	if !boolOk && !uint64Ok {
 		panic("[mock subspace]: ptr is invalid type")
 	}
-	*x = s.space[string(key)]
+
+	if boolOk {
+		*x = s.boolFlagMaps[string(key)]
+	} else {
+		*y = s.uint64FlagMaps[string(key)]
+	}
 }
 
 func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *Keeper) {
@@ -83,7 +93,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 	encodingConfig := simapp.MakeTestEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 
-	subspace := subspace{space: make(map[string]bool)}
+	subspace := subspace{boolFlagMaps: make(map[string]bool), uint64FlagMaps: make(map[string]uint64)}
 
 	keeper := Keeper{
 		key:              storeKey,
@@ -527,8 +537,8 @@ func TestCalculateUpdatedGas(t *testing.T) {
 	}
 	updatedGas, err = keeper.CalculateUpdatedGas(ctx, gasRecord)
 	require.NoError(t, err, "Calculation of updated gas should be succeed")
-	require.Equal(t, (gasRecord.OriginalGas.VMGas)/2, updatedGas.VMGas)
-	require.Equal(t, (gasRecord.OriginalGas.SDKGas)/2, updatedGas.SDKGas)
+	require.Equal(t, gasRecord.OriginalGas.VMGas-(gasRecord.OriginalGas.VMGas)/2, updatedGas.VMGas)
+	require.Equal(t, gasRecord.OriginalGas.SDKGas-(gasRecord.OriginalGas.SDKGas)/2, updatedGas.SDKGas)
 
 	// Checking premium percentage calculation
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gastracker.ContractInstanceMetadata{
@@ -570,7 +580,7 @@ func TestIngestionOfGasRecords(t *testing.T) {
 	err := keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
+	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, []*sdk.DecCoin{}, 5)
 	require.NoError(t, err, "We should be able to track new tx")
 
 	// Ingest gas record should be successful, but should skip the entry
@@ -685,12 +695,22 @@ func TestAddContractGasUsage(t *testing.T) {
 	require.EqualError(t, err, gastracker.ErrTxTrackingDataNotFound.Error(), "We cannot track contract gas since tx tracking does not exists")
 
 	// Let's track one tx with one contract gas usage
-	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
+	err = keeper.TrackNewTx(
+		ctx,
+		[]*sdk.DecCoin{{Denom: "test1", Amount: sdk.NewDec(14)}, {Denom: "test3", Amount: sdk.NewDec(140)}},
+		[]*sdk.DecCoin{{Denom: "test2", Amount: sdk.NewDec(13)}, {Denom: "test4", Amount: sdk.NewDec(16)}},
+		5,
+	)
 	require.NoError(t, err, "We should be able to track new transaction")
 	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 2}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
 
-	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 6)
+	err = keeper.TrackNewTx(
+		ctx,
+		[]*sdk.DecCoin{{Denom: "2", Amount: sdk.NewDec(4)}, {Denom: "20", Amount: sdk.NewDec(40)}},
+		[]*sdk.DecCoin{{Denom: "1", Amount: sdk.NewDec(3)}, {Denom: "5", Amount: sdk.NewDec(6)}},
+		6,
+	)
 	require.NoError(t, err, "We should be able to track new transaction")
 	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], wasmTypes.GasConsumptionInfo{SDKGas: 2, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_REPLY)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
@@ -702,7 +722,8 @@ func TestAddContractGasUsage(t *testing.T) {
 	require.Equal(t, 2, len(blockTrackingObj.TxTrackingInfos))
 	require.Equal(t, gastracker.TransactionTracking{
 		MaxGasAllowed:      5,
-		MaxContractRewards: nil,
+		MaxContractRewards: []*sdk.DecCoin{{Denom: "test1", Amount: sdk.NewDec(14)}, {Denom: "test3", Amount: sdk.NewDec(140)}},
+		RemainingFee:       []*sdk.DecCoin{{Denom: "test2", Amount: sdk.NewDec(13)}, {Denom: "test4", Amount: sdk.NewDec(16)}},
 		ContractTrackingInfos: []*gastracker.ContractGasTracking{
 			{
 				Address:        spareAddress[1].String(),
@@ -714,7 +735,8 @@ func TestAddContractGasUsage(t *testing.T) {
 	}, *blockTrackingObj.TxTrackingInfos[0])
 	require.Equal(t, gastracker.TransactionTracking{
 		MaxGasAllowed:      6,
-		MaxContractRewards: nil,
+		MaxContractRewards: []*sdk.DecCoin{{Denom: "2", Amount: sdk.NewDec(4)}, {Denom: "20", Amount: sdk.NewDec(40)}},
+		RemainingFee:       []*sdk.DecCoin{{Denom: "1", Amount: sdk.NewDec(3)}, {Denom: "5", Amount: sdk.NewDec(6)}},
 		ContractTrackingInfos: []*gastracker.ContractGasTracking{
 			{
 				Address:        spareAddress[2].String(),
