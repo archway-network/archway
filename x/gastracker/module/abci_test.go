@@ -3,7 +3,6 @@ package module
 import (
 	"fmt"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 
@@ -424,10 +423,103 @@ func TestRewardCalculation(t *testing.T) {
 	for i := 0; i < len(expected.rewardsB); i++ {
 		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
 	}
+
 }
 
-//func TestRewardCalculation(t *testing.T) {
-//}
+func BenchmarkRewards(b *testing.B) {
+	benchmarks := []struct {
+		name      string
+		noOfDapps int
+	}{
+		{"1000 dappp", 1000},
+		{"1500 dapps", 1500},
+		{"3500 dapps", 3500},
+	}
+	for _, benchmark := range benchmarks {
+		// run each benchmark up to 5 times
+		for k := 1; k <= 11; k++ {
+			b.Run(fmt.Sprintf("%s with: %d contract tx info", benchmark.name, k), func(b *testing.B) {
+				config := sdk.GetConfig()
+				params := gstTypes.DefaultParams()
+				config.SetBech32PrefixForAccount("archway", "archway")
+
+				suAddr := GenerateRandomAccAddress()
+				var dappAddresses = make([]sdk.AccAddress, benchmark.noOfDapps)
+				var rewardAdresses = make([]sdk.AccAddress, benchmark.noOfDapps)
+				// separate dapps from possible rewards
+				for i := 0; i < benchmark.noOfDapps; i++ {
+					dappAddresses[i] = GenerateRandomAccAddress()
+					rewardAdresses[i] = GenerateRandomAccAddress()
+				}
+				rewardAdresses = append(rewardAdresses, rewardAdresses...)
+
+				for i := 0; i < b.N; i++ {
+					b.StopTimer()
+					ctx, keeper := createBenchBaseKeeperAndContext(b, suAddr)
+					ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
+
+					keeper.SetParams(ctx, params)
+
+					testRewardKeeper := &TestRewardTransferKeeper{B: Log}
+					testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
+
+					ctx = ctx.WithBlockHeight(2)
+					for i := range dappAddresses {
+						developer, reward := dappAddresses[i], rewardAdresses[i]
+						err := keeper.AddPendingChangeForContractMetadata(ctx, suAddr, reward, gstTypes.ContractInstanceMetadata{
+							RewardAddress:    reward.String(),
+							GasRebateToUser:  false,
+							DeveloperAddress: developer.String(),
+						})
+						if err != nil {
+							fmt.Printf(" metadata attempt no: %d\n", i+1)
+							panic(err)
+						}
+					}
+
+					_, _ = keeper.CommitPendingContractMetadata(ctx)
+					CreateTestBlockEntry(ctx, generateBlockTracking(k, dappAddresses, rewardAdresses))
+
+					b.ResetTimer() // Make sure it goes to 0
+					b.StartTimer()
+
+					BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+				}
+			})
+		}
+	}
+}
+
+func generateBlockTracking(contractTxs int, dapps, addrs []sdk.AccAddress) gstTypes.BlockGasTracking {
+	txTrackingInfos := []*gstTypes.TransactionTracking{}
+	for i := range dapps {
+		txTrackingInfos = append(txTrackingInfos, generateTxTrackingInfos(addrs[i:i+contractTxs]))
+	}
+	return gstTypes.BlockGasTracking{
+		TxTrackingInfos: txTrackingInfos,
+	}
+}
+func generateTxTrackingInfos(addrs []sdk.AccAddress) *gstTypes.TransactionTracking {
+	TxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(1)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(3)))
+	contractTrackingInfo := generateContractTrackingInfos(addrs)
+	return &gstTypes.TransactionTracking{
+		MaxGasAllowed:         uint64(2 * len(addrs)),
+		MaxContractRewards:    []*sdk.DecCoin{&TxMaxContractReward[0], &TxMaxContractReward[1]},
+		ContractTrackingInfos: contractTrackingInfo,
+	}
+}
+func generateContractTrackingInfos(addrs []sdk.AccAddress) []*gstTypes.ContractGasTracking {
+	contractGasTracking := []*gstTypes.ContractGasTracking{}
+	for _, addr := range addrs {
+		contractGasTracking = append(contractGasTracking, &gstTypes.ContractGasTracking{
+			Address:        addr.String(),
+			OriginalVmGas:  1,
+			OriginalSdkGas: 1,
+			Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+		})
+	}
+	return contractGasTracking
+}
 
 func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	config := sdk.GetConfig()
@@ -1347,7 +1439,47 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 
 	ctx := sdk.NewContext(ms, tmproto.Header{
 		Time: time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
-	}, false, tmLog.NewTMLogger(os.Stdout))
+	}, false, tmLog.NewNopLogger())
+
+	params := gstTypes.DefaultParams()
+	subspace.SetParamSet(ctx, &params)
+	return ctx, keeper
+}
+func createBenchBaseKeeperAndContext(b *testing.B, contractAdmin sdk.AccAddress) (sdk.Context, *keeper.Keeper) {
+	encodingConfig := simapp.MakeTestEncodingConfig()
+	appCodec := encodingConfig.Marshaler
+
+	memDB := db.NewMemDB()
+	ms := store.NewCommitMultiStore(memDB)
+
+	mkey := sdk.NewKVStoreKey("test")
+	tkey := sdk.NewTransientStoreKey("transient_test")
+	tstoreKey := sdk.NewTransientStoreKey(gastracker.TStoreKey)
+
+	ms.MountStoreWithDB(mkey, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(tkey, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, memDB)
+	ms.MountStoreWithDB(tstoreKey, sdk.StoreTypeTransient, memDB)
+
+	err := ms.LoadLatestVersion()
+	if err != nil {
+		panic("Loading latest version should not fail")
+	}
+
+	pkeeper := paramskeeper.NewKeeper(appCodec, encodingConfig.Amino, mkey, tkey)
+	subspace := pkeeper.Subspace(gstTypes.ModuleName)
+
+	keeper := keeper.NewGasTrackingKeeper(
+		storeKey,
+		appCodec,
+		subspace,
+		NewTestContractInfoView(contractAdmin.String()),
+		wasmkeeper.NewDefaultWasmGasRegister(),
+	)
+
+	ctx := sdk.NewContext(ms, tmproto.Header{
+		Time: time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
+	}, false, tmLog.NewNopLogger())
 
 	params := gstTypes.DefaultParams()
 	subspace.SetParamSet(ctx, &params)
@@ -1365,6 +1497,13 @@ func CreateTestBlockEntry(ctx sdk.Context, blockTracking gstTypes.BlockGasTracki
 		panic(err)
 	}
 	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
+}
+
+// satisfy io.Writer write to null
+type devNull struct{}
+
+func (d devNull) Write(p []byte) (n int, err error) {
+	return len(p), nil
 }
 
 type TestContractInfoView struct {
