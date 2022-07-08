@@ -427,63 +427,73 @@ func TestRewardCalculation(t *testing.T) {
 }
 
 func BenchmarkRewards(b *testing.B) {
-	// Weights that modify benchmark
-	noOfDapps := 1000
-	contractTrackingInfos := 3
-
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount("archway", "archway")
-
-	suAddr := GenerateRandomAccAddress()
-	var dappAddress = make([]sdk.AccAddress, noOfDapps)
-	var spareAddress = make([]sdk.AccAddress, noOfDapps)
-	// separate dapps from possible rewards
-	for i := 0; i < noOfDapps; i++ {
-		dappAddress[i] = GenerateRandomAccAddress()
-		spareAddress[i] = GenerateRandomAccAddress()
+	benchmarks := []struct {
+		name      string
+		noOfDapps int
+	}{
+		{"1000 dappp", 1000},
+		{"1500 dapps", 1500},
+		{"3500 dapps", 3500},
 	}
-	params := gstTypes.DefaultParams()
+	for _, benchmark := range benchmarks {
+		// run each benchmark up to 5 times
+		for k := 1; k <= 11; k++ {
+			b.Run(fmt.Sprintf("%s with: %d contract tx info", benchmark.name, k), func(b *testing.B) {
+				config := sdk.GetConfig()
+				params := gstTypes.DefaultParams()
+				config.SetBech32PrefixForAccount("archway", "archway")
 
-	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-		ctx, keeper := createBenchBaseKeeperAndContext(b, suAddr)
-		ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
+				suAddr := GenerateRandomAccAddress()
+				var dappAddresses = make([]sdk.AccAddress, benchmark.noOfDapps)
+				var rewardAdresses = make([]sdk.AccAddress, benchmark.noOfDapps)
+				// separate dapps from possible rewards
+				for i := 0; i < benchmark.noOfDapps; i++ {
+					dappAddresses[i] = GenerateRandomAccAddress()
+					rewardAdresses[i] = GenerateRandomAccAddress()
+				}
+				rewardAdresses = append(rewardAdresses, rewardAdresses...)
 
-		keeper.SetParams(ctx, params)
+				for i := 0; i < b.N; i++ {
+					b.StopTimer()
+					ctx, keeper := createBenchBaseKeeperAndContext(b, suAddr)
+					ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
 
-		testRewardKeeper := &TestRewardTransferKeeper{B: Log}
-		testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
+					keeper.SetParams(ctx, params)
 
-		ctx = ctx.WithBlockHeight(2)
-		for i := range dappAddress {
-			developer := dappAddress[i]
-			reward := spareAddress[i]
-			err := keeper.AddPendingChangeForContractMetadata(ctx, suAddr, reward, gstTypes.ContractInstanceMetadata{
-				RewardAddress:    reward.String(),
-				GasRebateToUser:  false,
-				DeveloperAddress: developer.String(),
+					testRewardKeeper := &TestRewardTransferKeeper{B: Log}
+					testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
+
+					ctx = ctx.WithBlockHeight(2)
+					for i := range dappAddresses {
+						developer, reward := dappAddresses[i], rewardAdresses[i]
+						err := keeper.AddPendingChangeForContractMetadata(ctx, suAddr, reward, gstTypes.ContractInstanceMetadata{
+							RewardAddress:    reward.String(),
+							GasRebateToUser:  false,
+							DeveloperAddress: developer.String(),
+						})
+						if err != nil {
+							fmt.Printf(" metadata attempt no: %d\n", i+1)
+							panic(err)
+						}
+					}
+
+					_, _ = keeper.CommitPendingContractMetadata(ctx)
+					CreateTestBlockEntry(ctx, generateBlockTracking(k, dappAddresses, rewardAdresses))
+
+					b.ResetTimer() // Make sure it goes to 0
+					b.StartTimer()
+
+					BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+				}
 			})
-			if err != nil {
-				fmt.Printf(" metadata attempt no: %d\n", i+1)
-				panic(err)
-			}
 		}
-
-		_, _ = keeper.CommitPendingContractMetadata(ctx)
-		CreateTestBlockEntry(ctx, generateBlockTracking(contractTrackingInfos, dappAddress, spareAddress))
-
-		b.ResetTimer() // Make sure it goes to 0
-		b.StartTimer()
-
-		BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
 	}
 }
 
 func generateBlockTracking(contractTxs int, dapps, addrs []sdk.AccAddress) gstTypes.BlockGasTracking {
-	rand.Seed(10)
 	txTrackingInfos := []*gstTypes.TransactionTracking{}
 	for i := range dapps {
-		txTrackingInfos = append(txTrackingInfos, generateTxTrackingInfos(addrs[i:i+rand.Intn(contractTxs)]))
+		txTrackingInfos = append(txTrackingInfos, generateTxTrackingInfos(addrs[i:i+contractTxs]))
 	}
 	return gstTypes.BlockGasTracking{
 		TxTrackingInfos: txTrackingInfos,
