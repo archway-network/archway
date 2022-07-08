@@ -3,7 +3,6 @@ package module
 import (
 	"fmt"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 
@@ -1430,7 +1429,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 
 	ctx := sdk.NewContext(ms, tmproto.Header{
 		Time: time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
-	}, false, tmLog.NewTMLogger(os.Stdout))
+	}, false, tmLog.NewNopLogger())
 
 	params := gstTypes.DefaultParams()
 	subspace.SetParamSet(ctx, &params)
