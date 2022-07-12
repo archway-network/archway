@@ -53,6 +53,11 @@ type subspace struct {
 	space map[string]bool
 }
 
+func (s *subspace) GetParamSet(ctx sdk.Context, ps paramsTypes.ParamSet) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
 	params, ok := paramset.(*gastracker.Params)
 	if !ok {
