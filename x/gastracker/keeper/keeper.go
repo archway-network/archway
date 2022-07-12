@@ -442,17 +442,13 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 	var currentTxGasTracking gastracker.TransactionTracking
 	currentTxGasTracking.MaxContractRewards = fee
 	currentTxGasTracking.MaxGasAllowed = gasLimit
-	bz, err := k.appCodec.Marshal(&currentTxGasTracking)
-	if err != nil {
-		return err
-	}
 
-	bz = gstKvStore.Get([]byte(gastracker.CurrentBlockTrackingKey))
+	bz := gstKvStore.Get([]byte(gastracker.CurrentBlockTrackingKey))
 	if bz == nil {
 		return gastracker.ErrBlockTrackingDataNotFound
 	}
 	var currentBlockTracking gastracker.BlockGasTracking
-	err = k.appCodec.Unmarshal(bz, &currentBlockTracking)
+	err := k.appCodec.Unmarshal(bz, &currentBlockTracking)
 	if err != nil {
 		return err
 	}
