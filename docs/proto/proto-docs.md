@@ -11,6 +11,7 @@
     - [ContractRewardCalculationEvent](#archway.gastracker.v1.ContractRewardCalculationEvent)
     - [GenesisState](#archway.gastracker.v1.GenesisState)
     - [LeftOverRewardEntry](#archway.gastracker.v1.LeftOverRewardEntry)
+    - [Params](#archway.gastracker.v1.Params)
     - [RewardDistributionEvent](#archway.gastracker.v1.RewardDistributionEvent)
     - [TransactionTracking](#archway.gastracker.v1.TransactionTracking)
   
@@ -131,6 +132,27 @@ Reward entry per beneficiary address
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `contract_rewards` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) | repeated |  |
+
+
+
+
+
+
+<a name="archway.gastracker.v1.Params"></a>
+
+### Params
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `gas_tracking_switch` | [bool](#bool) |  |  |
+| `gas_dapp_inflation_rewards_switch` | [bool](#bool) |  |  |
+| `gas_rebate_switch` | [bool](#bool) |  |  |
+| `gas_rebate_to_user_switch` | [bool](#bool) |  |  |
+| `contract_premium_switch` | [bool](#bool) |  |  |
+| `dapp_inflation_rewards_ratio` | [string](#string) |  |  |
+| `dapp_tx_fee_rebate_ratio` | [string](#string) |  |  |
 
 
 

@@ -2,9 +2,10 @@ package gastracker
 
 import (
 	fmt "fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -12,38 +13,26 @@ const (
 )
 
 var (
-	ParamsKeyGasTrackingSwitch     = []byte("GasTrackingSwitch")
-	ParamsKeyDappInflationRewards  = []byte("DappInflationRewards")
-	ParamsKeyGasRebateSwitch       = []byte("GasRebateSwitch")
-	ParamsKeyGasRebateToUserSwitch = []byte("GasRebateToUserSwitch")
-	ParamsKeyContractPremiumSwitch = []byte("ContractPremiumSwitch")
-)
-
-type Params struct {
-	GasTrackingSwitch             bool
-	GasDappInflationRewardsSwitch bool
-	GasRebateSwitch               bool
-	GasRebateToUserSwitch         bool
-	ContractPremiumSwitch         bool
-}
-
-var (
-	DefaultGasTrackingSwitch      = true
-	GasDappInflationRewardsSwitch = true
-	DefaultGasRebateSwitch        = true
-	DefaultGasRebateToUserSwitch  = true
-	DefaultContractPremiumSwitch  = true
+	ParamsKeyGasTrackingSwitch         = []byte("GasTrackingSwitch")
+	ParamsKeyDappInflationRewards      = []byte("DappInflationRewards")
+	ParamsKeyGasRebateSwitch           = []byte("GasRebateSwitch")
+	ParamsKeyGasRebateToUserSwitch     = []byte("GasRebateToUserSwitch")
+	ParamsKeyContractPremiumSwitch     = []byte("ContractPremiumSwitch")
+	ParamsKeyDappInflationRewardsRatio = []byte("ParamsKeyDappInflationRewardsRatio")
+	ParamsKeyDappTxFeeRebateRatio      = []byte("ParamsKeyDappTxFeeRebateRatio")
 )
 
 var _ paramstypes.ParamSet = &Params{}
 
 func DefaultParams() Params {
 	return Params{
-		GasTrackingSwitch:             DefaultGasTrackingSwitch,
-		GasDappInflationRewardsSwitch: GasDappInflationRewardsSwitch,
-		GasRebateSwitch:               DefaultGasRebateSwitch,
-		GasRebateToUserSwitch:         DefaultGasRebateToUserSwitch,
-		ContractPremiumSwitch:         DefaultContractPremiumSwitch,
+		GasTrackingSwitch:             true,
+		GasDappInflationRewardsSwitch: true,
+		GasRebateSwitch:               true,
+		GasRebateToUserSwitch:         true,
+		ContractPremiumSwitch:         true,
+		DappInflationRewardsRatio:     sdk.MustNewDecFromStr("0.25"), // 25%
+		DappTxFeeRebateRatio:          sdk.MustNewDecFromStr("0.5"),  // 50%
 	}
 }
 
@@ -51,18 +40,37 @@ func ParamKeyTable() paramstypes.KeyTable {
 	return paramstypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
-}
-
-func (p *Params) ParamSetPairs() paramstypes.ParamSetPairs {
+func (m *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
-		paramstypes.NewParamSetPair(ParamsKeyGasTrackingSwitch, &p.GasTrackingSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(ParamsKeyDappInflationRewards, &p.GasDappInflationRewardsSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(ParamsKeyGasRebateSwitch, &p.GasRebateSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(ParamsKeyGasRebateToUserSwitch, &p.GasRebateToUserSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(ParamsKeyContractPremiumSwitch, &p.ContractPremiumSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyGasTrackingSwitch, &m.GasTrackingSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyDappInflationRewards, &m.GasDappInflationRewardsSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyGasRebateSwitch, &m.GasRebateSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyGasRebateToUserSwitch, &m.GasRebateToUserSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyContractPremiumSwitch, &m.ContractPremiumSwitch, validateSwitch),
+		paramstypes.NewParamSetPair(ParamsKeyDappInflationRewardsRatio, &m.DappInflationRewardsRatio, func(value interface{}) error {
+			ratio, ok := value.(sdk.Dec)
+			if !ok {
+				return fmt.Errorf("invalid param field type in %s.dapp_inflation_rewards_ratio: %T, expected sdk.Dec", proto.MessageName(m), value)
+			}
+
+			if !ratio.LT(sdk.ZeroDec()) || ratio.GT(sdk.OneDec()) {
+				return fmt.Errorf("invalid param value in %s.dapp_inflation_rewards_ratio, 0 <= value <= 1, got: %s", proto.MessageName(m), ratio)
+			}
+
+			return nil
+		}),
+		paramstypes.NewParamSetPair(ParamsKeyDappTxFeeRebateRatio, &m.DappTxFeeRebateRatio, func(value interface{}) error {
+			ratio, ok := value.(sdk.Dec)
+			if !ok {
+				return fmt.Errorf("invalid param field type in %s.dapp_tx_fee_rebate_ratio: %T, expected sdk.Dec", proto.MessageName(m), value)
+			}
+
+			if !ratio.LT(sdk.ZeroDec()) || ratio.GTE(sdk.OneDec()) {
+				return fmt.Errorf("invalid param value in %s.dapp_tx_fee_rebate_ratio, 0 <= value < 1, got: %s", proto.MessageName(m), ratio)
+			}
+
+			return nil
+		}),
 	}
 }
 
