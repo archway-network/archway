@@ -31,3 +31,11 @@ func (k Keeper) IsContractPremiumEnabled(ctx sdk.Context) (res bool) {
 	k.paramSpace.Get(ctx, gstTypes.ParamsKeyContractPremiumSwitch, &res)
 	return
 }
+func (k Keeper) InflationRewardQuotaPercentage(ctx sdk.Context) (res uint64) {
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyInflationRewardQuotaPercentage, &res)
+	return
+}
+func (k Keeper) GasRebatePercentage(ctx sdk.Context) (res uint64) {
+	k.paramSpace.Get(ctx, gstTypes.ParamsKeyGasRebatePercentage, &res)
+	return
+}

@@ -49,6 +49,9 @@ type GasTrackingKeeper interface {
 
 	// IsContractPremiumEnabled gives a flag which describes whether contract premium is enabled or not
 	IsContractPremiumEnabled(ctx sdk.Context) bool
+
+	InflationRewardQuotaPercentage(ctx sdk.Context) uint64
+	GasRebatePercentage(ctx sdk.Context) uint64
 }
 
 type Keeper struct {
