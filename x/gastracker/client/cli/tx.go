@@ -32,6 +32,9 @@ func SetContractMetadataCmd() *cobra.Command {
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
 			msg, err := parseSetContractMetadataArg(clientCtx.GetFromAddress(), args[0], args[1])
 			if err != nil {
 				return err
