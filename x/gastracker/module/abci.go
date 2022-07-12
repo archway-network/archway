@@ -23,13 +23,13 @@ type MintParamsKeeper interface {
 	GetMinter(ctx sdk.Context) (minter mintTypes.Minter)
 }
 
-func EmitRewardPayingEvent(context sdk.Context, rewardAddress string, rewardsPayed sdk.Coins, leftOverRewards []*sdk.DecCoin) error {
+func EmitRewardPayingEvent(ctx sdk.Context, rewardAddress string, rewardsPayed sdk.Coins, leftOverRewards []*sdk.DecCoin) error {
 	rewards := make([]*sdk.Coin, len(rewardsPayed))
 	for i := range rewards {
 		rewards[i] = &rewardsPayed[i]
 	}
 
-	return context.EventManager().EmitTypedEvent(&gstTypes.RewardDistributionEvent{
+	return ctx.EventManager().EmitTypedEvent(&gstTypes.RewardDistributionEvent{
 		RewardAddress:   rewardAddress,
 		ContractRewards: rewards,
 		LeftoverRewards: leftOverRewards,
