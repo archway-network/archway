@@ -170,7 +170,7 @@ func getContractRewards(context sdk.Context, params gstTypes.Params, blockGasTra
 	for _, txTrackingInfo := range blockGasTracking.TxTrackingInfos {
 		// We generate empty coins based on the fees coins.
 		totalContractRewardsInTx := make(sdk.DecCoins, len(txTrackingInfo.MaxContractRewards))
-		for i, _ := range totalContractRewardsInTx {
+		for i := range totalContractRewardsInTx {
 			totalContractRewardsInTx[i] = sdk.NewDecCoin(txTrackingInfo.MaxContractRewards[i].Denom, sdk.NewInt(0))
 		}
 

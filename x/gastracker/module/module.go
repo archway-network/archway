@@ -57,7 +57,7 @@ func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.R
 }
 
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, serveMux *runtime.ServeMux) {
-	gstTypes.RegisterQueryHandlerClient(context.Background(), serveMux, gstTypes.NewQueryClient(clientCtx))
+	_ = gstTypes.RegisterQueryHandlerClient(context.Background(), serveMux, gstTypes.NewQueryClient(clientCtx))
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
