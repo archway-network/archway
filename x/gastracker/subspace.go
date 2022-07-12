@@ -6,7 +6,6 @@ import (
 )
 
 type Subspace interface {
-	Get(ctx sdk.Context, key []byte, ptr interface{})
 	SetParamSet(ctx sdk.Context, params paramsTypes.ParamSet)
 	GetParamSet(ctx sdk.Context, ps paramsTypes.ParamSet)
 }

@@ -50,32 +50,15 @@ func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string,
 var _ ContractInfoView = &TestContractInfoView{}
 
 type subspace struct {
-	space map[string]bool
+	params gstTypes.Params
 }
 
-func (s *subspace) GetParamSet(ctx sdk.Context, ps paramsTypes.ParamSet) {
-	//TODO implement me
-	panic("implement me")
+func (s *subspace) GetParamSet(_ sdk.Context, ps paramsTypes.ParamSet) {
+	*ps.(*gstTypes.Params) = s.params
 }
 
-func (s *subspace) SetParamSet(ctx sdk.Context, paramset paramsTypes.ParamSet) {
-	params, ok := paramset.(*gastracker.Params)
-	if !ok {
-		panic("[mock subspace]: invalid params type")
-	}
-	s.space[string(gastracker.ParamsKeyGasTrackingSwitch)] = params.GasTrackingSwitch
-	s.space[string(gastracker.ParamsKeyDappInflationRewards)] = params.GasDappInflationRewardsSwitch
-	s.space[string(gastracker.ParamsKeyGasRebateSwitch)] = params.GasRebateSwitch
-	s.space[string(gastracker.ParamsKeyGasRebateToUserSwitch)] = params.GasRebateToUserSwitch
-	s.space[string(gastracker.ParamsKeyContractPremiumSwitch)] = params.ContractPremiumSwitch
-
-}
-func (s *subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
-	x, ok := ptr.(*bool)
-	if !ok {
-		panic("[mock subspace]: ptr is invalid type")
-	}
-	*x = s.space[string(key)]
+func (s *subspace) SetParamSet(_ sdk.Context, paramset paramsTypes.ParamSet) {
+	s.params = *paramset.(*gastracker.Params)
 }
 
 func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *Keeper) {
@@ -88,7 +71,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 	encodingConfig := simapp.MakeTestEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 
-	subspace := subspace{space: make(map[string]bool)}
+	subspace := subspace{}
 
 	keeper := Keeper{
 		key:              storeKey,
