@@ -49,6 +49,9 @@ type GasTrackingKeeper interface {
 
 	// IsContractPremiumEnabled gives a flag which describes whether contract premium is enabled or not
 	IsContractPremiumEnabled(ctx sdk.Context) bool
+
+	// GetParams returns the parameters.
+	GetParams(ctx sdk.Context) gastracker.Params
 }
 
 type Keeper struct {

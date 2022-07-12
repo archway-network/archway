@@ -61,7 +61,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	}
 	context.Logger().Debug("Got the tracking for block", "BlockTxDetails", lastBlockGasTracking)
 
-	contractTotalInflationRewards := getContractInflationRewards(context, mintParamsKeeper) // 20% of the rewards distributed on every block
+	contractTotalInflationRewards := getContractInflationRewards(context, gasTrackingKeeper, mintParamsKeeper) // 20% of the rewards distributed on every block
 
 	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
 
@@ -246,12 +246,14 @@ func getContractRewards(context sdk.Context, blockGasTracking gstTypes.BlockGasT
 }
 
 // getContractInflationRewards returns the percentage of the block rewards that are dedicated to contracts
-// TODO now is 20% of the block rewards hardcoded.
-func getContractInflationRewards(context sdk.Context, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
-	totalInflationRatePerBlock := getInflationFeeForLastBlock(context, mintParamsKeeper)
+func getContractInflationRewards(ctx sdk.Context, k keeper.GasTrackingKeeper, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
+	totalInflationRatePerBlock := getInflationFeeForLastBlock(ctx, mintParamsKeeper)
 
-	// TODO: Take the percentage value from governance
-	contractTotalInflationRewards := sdk.NewDecCoinFromDec(totalInflationRatePerBlock.Denom, totalInflationRatePerBlock.Amount.MulInt64(20).QuoInt64(100))
+	dappInflationRatio := k.GetParams(ctx).DappInflationRewardsRatio
+	contractTotalInflationRewards := sdk.NewDecCoinFromDec(
+		totalInflationRatePerBlock.Denom,
+		totalInflationRatePerBlock.Amount.Mul(dappInflationRatio),
+	)
 
 	return contractTotalInflationRewards
 }
