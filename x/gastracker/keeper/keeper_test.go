@@ -61,7 +61,7 @@ func (s *subspace) SetParamSet(_ sdk.Context, paramset paramsTypes.ParamSet) {
 	s.params = *paramset.(*gastracker.Params)
 }
 
-func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *Keeper) {
+func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, Keeper) {
 	memDB := db.NewMemDB()
 	ms := store.NewCommitMultiStore(memDB)
 	storeKey := sdk.NewKVStoreKey("TestStore")
@@ -88,9 +88,9 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 
 	params := gastracker.DefaultParams()
 	subspace.SetParamSet(ctx, &params)
-	return ctx, &keeper
+	return ctx, keeper
 }
-func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, GasTrackingKeeper) {
+func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, Keeper) {
 	return createTestBaseKeeperAndContext(t, contractAdmin)
 }
 

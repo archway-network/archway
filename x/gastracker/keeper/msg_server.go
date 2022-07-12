@@ -10,14 +10,14 @@ import (
 
 var _ gstTypes.MsgServer = &msgServer{}
 
-func NewMsgServer(keeper GasTrackingKeeper) gstTypes.MsgServer {
+func NewMsgServer(keeper Keeper) gstTypes.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
 type msgServer struct {
-	keeper GasTrackingKeeper
+	keeper Keeper
 }
 
 func (m *msgServer) SetContractMetadata(goCtx context.Context, msg *gstTypes.MsgSetContractMetadata) (*gstTypes.MsgSetContractMetadataResponse, error) {

@@ -51,7 +51,7 @@ func EmitContractRewardCalculationEvent(context sdk.Context, contractAddress str
 	})
 }
 
-func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper keeper.GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
+func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper keeper.Keeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
 	defer telemetry.ModuleMeasureSince(gstTypes.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	lastBlockGasTracking := resetBlockGasTracking(context, gasTrackingKeeper)
@@ -89,7 +89,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	distributeRewards(context, rewardAddresses, rewardsByAddress, gasTrackingKeeper, rewardTransferKeeper)
 }
 
-func commitPendingMetadata(context sdk.Context, gasTrackingKeeper keeper.GasTrackingKeeper) {
+func commitPendingMetadata(context sdk.Context, gasTrackingKeeper keeper.Keeper) {
 	numberOfEntriesCommitted, err := gasTrackingKeeper.CommitPendingContractMetadata(context)
 	if err != nil {
 		panic(err)
@@ -98,7 +98,7 @@ func commitPendingMetadata(context sdk.Context, gasTrackingKeeper keeper.GasTrac
 }
 
 // resetBlockGasTracking resets the current status and returns the last blockGasTracking
-func resetBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.GasTrackingKeeper) gstTypes.BlockGasTracking {
+func resetBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.Keeper) gstTypes.BlockGasTracking {
 	lastBlockGasTracking := getCurrentBlockGasTracking(context, gasTrackingKeeper)
 
 	if err := gasTrackingKeeper.TrackNewBlock(context); err != nil {
@@ -108,7 +108,7 @@ func resetBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.GasTrac
 }
 
 // getCurrentBlockGasTracking returns the actual block gas tracking, panics if empty and block height is bigger than one.
-func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.GasTrackingKeeper) gstTypes.BlockGasTracking {
+func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.Keeper) gstTypes.BlockGasTracking {
 	currentBlockTrackingInfo, err := gasTrackingKeeper.GetCurrentBlockTracking(context)
 	if err != nil {
 		switch err {
@@ -126,7 +126,7 @@ func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.Ga
 }
 
 // distributeRewards distributes the calculated rewards to all the contracts owners.
-func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByAddress map[string]sdk.DecCoins, gasTrackingKeeper keeper.GasTrackingKeeper, rewardTransferKeeper RewardTransferKeeper) {
+func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByAddress map[string]sdk.DecCoins, gasTrackingKeeper keeper.Keeper, rewardTransferKeeper RewardTransferKeeper) {
 	for _, rewardAddressStr := range rewardAddresses {
 		rewardAddress, err := sdk.AccAddressFromBech32(rewardAddressStr)
 		if err != nil {
@@ -160,7 +160,7 @@ func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByA
 }
 
 // getContractRewards returns the total rewards and the rewards per contract based on the calculations.
-func getContractRewards(context sdk.Context, params gstTypes.Params, blockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper keeper.GasTrackingKeeper, contractTotalInflationRewards sdk.DecCoin) (sdk.DecCoins, []string, map[string]sdk.DecCoins) {
+func getContractRewards(context sdk.Context, params gstTypes.Params, blockGasTracking gstTypes.BlockGasTracking, gasTrackingKeeper keeper.Keeper, contractTotalInflationRewards sdk.DecCoin) (sdk.DecCoins, []string, map[string]sdk.DecCoins) {
 	// To enforce a map iteration order. This isn't strictly necessary but is only
 	// done to make this code more deterministic.
 	rewardAddresses := make([]string, 0)
@@ -248,7 +248,7 @@ func getContractRewards(context sdk.Context, params gstTypes.Params, blockGasTra
 }
 
 // getContractInflationRewards returns the percentage of the block rewards that are dedicated to contracts
-func getContractInflationRewards(ctx sdk.Context, params gstTypes.Params, k keeper.GasTrackingKeeper, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
+func getContractInflationRewards(ctx sdk.Context, params gstTypes.Params, k keeper.Keeper, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
 	totalInflationRatePerBlock := getInflationFeeForLastBlock(ctx, mintParamsKeeper)
 
 	dappInflationRatio := params.DappInflationRewardsRatio

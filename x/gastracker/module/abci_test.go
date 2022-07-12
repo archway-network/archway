@@ -1315,7 +1315,7 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 
 // TODO: this is shared test util, that is copied
 // from /keeper/keeper_test, refactor
-func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *keeper.Keeper) {
+func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.Keeper) {
 	encodingConfig := simapp.MakeTestEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 
@@ -1354,7 +1354,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 	return ctx, keeper
 }
 
-func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.GasTrackingKeeper) {
+func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.Keeper) {
 	return createTestBaseKeeperAndContext(t, contractAdmin)
 }
 

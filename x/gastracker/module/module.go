@@ -73,7 +73,7 @@ type AppModule struct {
 
 	cdc        codec.Codec
 	bankKeeper bankkeeper.Keeper
-	keeper     keeper.GasTrackingKeeper
+	keeper     keeper.Keeper
 	mintKeeper mintkeeper.Keeper
 }
 
@@ -101,7 +101,7 @@ func (a AppModule) ConsensusVersion() uint64 {
 	return 1
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.GasTrackingKeeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
 	return AppModule{cdc: cdc, keeper: keeper, bankKeeper: bk, mintKeeper: mk}
 }
 

@@ -12,7 +12,6 @@ import (
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	gastrackerante "github.com/archway-network/archway/x/gastracker/ante"
-	keeper "github.com/archway-network/archway/x/gastracker/keeper"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
@@ -25,7 +24,7 @@ type HandlerOptions struct {
 
 	TXCounterStoreKey sdk.StoreKey
 
-	GasTrackingKeeper keeper.GasTrackingKeeper
+	GasTrackingKeeper gastrackerante.GasTrackingKeeper
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {

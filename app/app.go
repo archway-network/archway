@@ -267,7 +267,7 @@ type ArchwayApp struct {
 	// module configurator
 	configurator module.Configurator
 
-	gastrackingKeeper gastrackerkeeper.GasTrackingKeeper
+	gastrackingKeeper gastrackerkeeper.Keeper
 }
 
 // NewArchwayApp returns a reference to an initialized ArchwayApp.

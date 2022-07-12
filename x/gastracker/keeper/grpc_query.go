@@ -13,10 +13,10 @@ import (
 var _ gstTypes.QueryServer = &grpcQuerier{}
 
 type grpcQuerier struct {
-	keeper GasTrackingKeeper
+	keeper Keeper
 }
 
-func NewGRPCQuerier(keeper GasTrackingKeeper) gstTypes.QueryServer {
+func NewGRPCQuerier(keeper Keeper) gstTypes.QueryServer {
 	return &grpcQuerier{
 		keeper: keeper,
 	}
