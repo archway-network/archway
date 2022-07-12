@@ -31,7 +31,7 @@ func DefaultParams() Params {
 		GasRebateSwitch:               true,
 		GasRebateToUserSwitch:         true,
 		ContractPremiumSwitch:         true,
-		DappInflationRewardsRatio:     sdk.MustNewDecFromStr("0.25"), // 25%
+		DappInflationRewardsRatio:     sdk.MustNewDecFromStr("0.20"), // 20%
 		DappTxFeeRebateRatio:          sdk.MustNewDecFromStr("0.5"),  // 50%
 	}
 }
