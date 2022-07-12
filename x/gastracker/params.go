@@ -53,7 +53,7 @@ func (m *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 				return fmt.Errorf("invalid param field type in %s.dapp_inflation_rewards_ratio: %T, expected sdk.Dec", proto.MessageName(m), value)
 			}
 
-			if !ratio.LT(sdk.ZeroDec()) || ratio.GT(sdk.OneDec()) {
+			if ratio.LT(sdk.ZeroDec()) || ratio.GT(sdk.OneDec()) {
 				return fmt.Errorf("invalid param value in %s.dapp_inflation_rewards_ratio, 0 <= value <= 1, got: %s", proto.MessageName(m), ratio)
 			}
 
@@ -65,7 +65,7 @@ func (m *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 				return fmt.Errorf("invalid param field type in %s.dapp_tx_fee_rebate_ratio: %T, expected sdk.Dec", proto.MessageName(m), value)
 			}
 
-			if !ratio.LT(sdk.ZeroDec()) || ratio.GTE(sdk.OneDec()) {
+			if ratio.LT(sdk.ZeroDec()) || ratio.GTE(sdk.OneDec()) {
 				return fmt.Errorf("invalid param value in %s.dapp_tx_fee_rebate_ratio, 0 <= value < 1, got: %s", proto.MessageName(m), ratio)
 			}
 
