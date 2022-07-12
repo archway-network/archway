@@ -35,21 +35,6 @@ type GasTrackingKeeper interface {
 
 	SetParams(ctx sdk.Context, params gastracker.Params)
 
-	// IsGasTrackingEnabled gives a flag which describes whether gas tracking functionality is enabled or not
-	IsGasTrackingEnabled(ctx sdk.Context) bool
-
-	// IsDappInflationRewardsEnabled gives a flag which describes whether inflation reward is enabled or not
-	IsDappInflationRewardsEnabled(ctx sdk.Context) bool
-
-	// IsGasRebateToContractEnabled gives a flag which describes whether gas reward to contract is enabled or not
-	IsGasRebateToContractEnabled(ctx sdk.Context) bool
-
-	// IsGasRebateToUserEnabled gives a flag which describes whether gas reward to user is enabled or not
-	IsGasRebateToUserEnabled(ctx sdk.Context) bool
-
-	// IsContractPremiumEnabled gives a flag which describes whether contract premium is enabled or not
-	IsContractPremiumEnabled(ctx sdk.Context) bool
-
 	// GetParams returns the parameters.
 	GetParams(ctx sdk.Context) gastracker.Params
 }
@@ -76,7 +61,7 @@ func NewGasTrackingKeeper(
 }
 
 func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error {
-	if !k.IsGasTrackingEnabled(ctx) {
+	if !k.GetParams(ctx).GasTrackingSwitch {
 		return nil
 	}
 
@@ -142,6 +127,7 @@ func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGa
 	return nil
 }
 
+// todo: unused?
 func (k *Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (func(operationId uint64, gasInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo, error) {
 	var contractMetadataExists bool
 
@@ -174,9 +160,10 @@ func (k *Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (f
 
 	// We are pre-fetching the configuration so that
 	// gas usage is similar across all conditions.
-	isGasRebateToUserEnabled := k.IsGasRebateToUserEnabled(ctx)
-	isContractPremiumEnabled := k.IsContractPremiumEnabled(ctx)
-	isGasTrackingEnabled := k.IsGasTrackingEnabled(ctx)
+	params := k.GetParams(ctx)
+	isGasRebateToUserEnabled := params.GasRebateToUserSwitch
+	isContractPremiumEnabled := params.ContractPremiumSwitch
+	isGasTrackingEnabled := params.GasTrackingSwitch
 
 	return func(operationId uint64, gasConsumptionInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
 		if !isGasTrackingEnabled {
