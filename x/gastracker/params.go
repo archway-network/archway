@@ -26,13 +26,11 @@ var _ paramstypes.ParamSet = &Params{}
 
 func DefaultParams() Params {
 	return Params{
-		GasTrackingSwitch:             true,
-		GasDappInflationRewardsSwitch: true,
-		GasRebateSwitch:               true,
-		GasRebateToUserSwitch:         true,
-		ContractPremiumSwitch:         true,
-		DappInflationRewardsRatio:     sdk.MustNewDecFromStr("0.20"), // 20%
-		DappTxFeeRebateRatio:          sdk.MustNewDecFromStr("0.5"),  // 50%
+		GasTrackingSwitch:         true,
+		GasRebateToUserSwitch:     true,
+		ContractPremiumSwitch:     true,
+		DappInflationRewardsRatio: sdk.MustNewDecFromStr("0.20"), // 20%
+		DappTxFeeRebateRatio:      sdk.MustNewDecFromStr("0.5"),  // 50%
 	}
 }
 
@@ -43,8 +41,6 @@ func ParamKeyTable() paramstypes.KeyTable {
 func (m *Params) ParamSetPairs() paramstypes.ParamSetPairs {
 	return paramstypes.ParamSetPairs{
 		paramstypes.NewParamSetPair(ParamsKeyGasTrackingSwitch, &m.GasTrackingSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(ParamsKeyDappInflationRewards, &m.GasDappInflationRewardsSwitch, validateSwitch),
-		paramstypes.NewParamSetPair(ParamsKeyGasRebateSwitch, &m.GasRebateSwitch, validateSwitch),
 		paramstypes.NewParamSetPair(ParamsKeyGasRebateToUserSwitch, &m.GasRebateToUserSwitch, validateSwitch),
 		paramstypes.NewParamSetPair(ParamsKeyContractPremiumSwitch, &m.ContractPremiumSwitch, validateSwitch),
 		paramstypes.NewParamSetPair(ParamsKeyDappInflationRewardsRatio, &m.DappInflationRewardsRatio, func(value interface{}) error {

@@ -147,8 +147,6 @@ Reward entry per beneficiary address
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gas_tracking_switch` | [bool](#bool) |  |  |
-| `gas_dapp_inflation_rewards_switch` | [bool](#bool) |  |  |
-| `gas_rebate_switch` | [bool](#bool) |  |  |
 | `gas_rebate_to_user_switch` | [bool](#bool) |  |  |
 | `contract_premium_switch` | [bool](#bool) |  |  |
 | `dapp_inflation_rewards_ratio` | [string](#string) |  |  |

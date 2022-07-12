@@ -84,15 +84,13 @@ message GenesisState {}
 
 message Params {
   bool gas_tracking_switch = 1;
-  bool gas_dapp_inflation_rewards_switch = 2;
-  bool gas_rebate_switch = 3;
-  bool gas_rebate_to_user_switch = 4;
-  bool contract_premium_switch = 5;
-  string dapp_inflation_rewards_ratio = 6 [
+  bool gas_rebate_to_user_switch = 2;
+  bool contract_premium_switch = 3;
+  string dapp_inflation_rewards_ratio = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  string dapp_tx_fee_rebate_ratio = 7 [
+  string dapp_tx_fee_rebate_ratio = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];

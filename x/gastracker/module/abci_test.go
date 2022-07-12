@@ -136,11 +136,11 @@ func disableContractPremium(params gstTypes.Params) gstTypes.Params {
 }
 
 func disableDappInflation(params gstTypes.Params) gstTypes.Params {
-	params.GasDappInflationRewardsSwitch = false
+	params.DappInflationRewardsRatio = sdk.ZeroDec()
 	return params
 }
 func disableGasRebate(params gstTypes.Params) gstTypes.Params {
-	params.GasRebateSwitch = false
+	params.DappTxFeeRebateRatio = sdk.ZeroDec()
 	return params
 }
 func disableGasRebateToUser(params gstTypes.Params) gstTypes.Params {

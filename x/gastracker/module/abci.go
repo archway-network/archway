@@ -191,7 +191,7 @@ func getContractRewards(context sdk.Context, params gstTypes.Params, blockGasTra
 
 			gasConsumedInContract := sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(contractTrackingInfo.OriginalSdkGas + contractTrackingInfo.OriginalVmGas))
 
-			if params.GasDappInflationRewardsSwitch && context.BlockGasMeter().Limit() > 0 {
+			if !params.DappInflationRewardsRatio.IsZero() && context.BlockGasMeter().Limit() > 0 {
 				blockGasLimit := sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(context.BlockGasMeter().Limit()))
 				contractInflationReward = sdk.NewDecCoinFromDec(contractTotalInflationRewards.Denom, contractTotalInflationRewards.Amount.Mul(gasConsumedInContract).Quo(blockGasLimit))
 				context.Logger().Debug("Calculated contract inflation rewards:", "contractAddress", contractAddress, "contractInflationReward", contractInflationReward)
@@ -210,7 +210,7 @@ func getContractRewards(context sdk.Context, params gstTypes.Params, blockGasTra
 					gasUsageForUsageRewards = gasUsageForUsageRewards.Add(premiumGas)
 				}
 
-				if params.GasRebateSwitch {
+				if !params.DappTxFeeRebateRatio.IsZero() {
 					gasRebateRewards := make(sdk.DecCoins, 0)
 					for _, rewardCoin := range txTrackingInfo.MaxContractRewards {
 						gasRebateRewards = gasRebateRewards.Add(sdk.NewDecCoinFromDec(
