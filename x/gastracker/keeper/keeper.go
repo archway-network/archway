@@ -261,3 +261,15 @@ func (k Keeper) UpdateDappInflationaryRewards(ctx sdk.Context, params gastracker
 
 	return dappInflationaryRewards
 }
+
+// GetDappInflationaryRewards returns the dApp inflationary rewards at the given height.
+func (k Keeper) GetDappInflationaryRewards(ctx sdk.Context, height int64) (rewards sdk.DecCoin, err error) {
+	store := prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixDappBlockInflationaryRewards)
+	bytes := store.Get(sdk.Uint64ToBigEndian(uint64(height)))
+	if bytes == nil {
+		return rewards, gastracker.ErrDappInflationaryRewardRecordNotFound.Wrapf("height %d", height)
+	}
+
+	k.cdc.MustUnmarshal(bytes, &rewards)
+	return rewards, nil
+}
