@@ -502,6 +502,7 @@ func NewArchwayApp(
 		app.getSubspace(gastracker.DefaultParamSpace),
 		app.wasmKeeper,
 		defaultGasRegister,
+		app.mintKeeper,
 	)
 
 	// Setting gas recorder here to avoid cyclic loop

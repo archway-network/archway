@@ -1343,6 +1343,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 		subspace,
 		NewTestContractInfoView(contractAdmin.String()),
 		wasmkeeper.NewDefaultWasmGasRegister(),
+		&TestMintParamsKeeper{B: Log},
 	)
 
 	ctx := sdk.NewContext(ms, tmproto.Header{

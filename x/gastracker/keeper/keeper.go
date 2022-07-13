@@ -3,6 +3,8 @@ package keeper
 import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,12 +17,19 @@ type ContractInfoView interface {
 	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
 }
 
+type MintKeeper interface {
+	GetMinter(ctx sdk.Context) minttypes.Minter
+	GetParams(ctx sdk.Context) minttypes.Params
+}
+
 type Keeper struct {
 	key              sdk.StoreKey
 	cdc              codec.Codec
 	paramSpace       gastracker.Subspace
 	contractInfoView ContractInfoView
 	wasmGasRegister  wasmkeeper.GasRegister
+
+	mintKeeper MintKeeper
 }
 
 func NewGasTrackingKeeper(
@@ -29,6 +38,7 @@ func NewGasTrackingKeeper(
 	paramSpace paramsTypes.Subspace,
 	contractInfoView ContractInfoView,
 	gasRegister wasmkeeper.GasRegister,
+	mintKeeper MintKeeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(gastracker.ParamKeyTable())
@@ -220,4 +230,27 @@ func (k Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAd
 
 	gstKvStore.Set([]byte(gastracker.CurrentBlockTrackingKey), bz)
 	return nil
+}
+
+// UpdateDappInflationaryRewards sets the current block inflationary rewards.
+// Returns the inflationary rewards to be distributed.
+func (k Keeper) UpdateDappInflationaryRewards(ctx sdk.Context, params gastracker.Params) (rewards sdk.DecCoin) {
+	store := prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixDappBlockInflationaryRewards)
+
+	// gets total inflationary rewards
+	totalInflationaryRewards := k.mintKeeper.
+		GetMinter(ctx).
+		BlockProvision(k.mintKeeper.GetParams(ctx))
+
+	dappInflationaryRewards := sdk.NewDecCoinFromDec(
+		totalInflationaryRewards.Denom,
+		totalInflationaryRewards.Amount.ToDec().Mul(params.DappInflationRewardsRatio),
+	)
+
+	store.Set(
+		sdk.Uint64ToBigEndian(uint64(ctx.BlockHeight())),
+		k.cdc.MustMarshal(&dappInflationaryRewards),
+	)
+
+	return dappInflationaryRewards
 }
