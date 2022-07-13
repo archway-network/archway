@@ -35,7 +35,7 @@ func NewTestContractInfoView(defaultAdmin string) *TestContractInfoView {
 	}
 }
 
-func (t *TestContractInfoView) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
+func (t *TestContractInfoView) GetContractInfo(_ sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
 	if admin, ok := t.adminMap[contractAddress.String()]; ok {
 		return &wasmTypes.ContractInfo{Admin: admin}
 	} else {
@@ -61,7 +61,7 @@ func (s *subspace) SetParamSet(_ sdk.Context, paramset paramsTypes.ParamSet) {
 	s.params = *paramset.(*gastracker.Params)
 }
 
-func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *Keeper) {
+func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, Keeper) {
 	memDB := db.NewMemDB()
 	ms := store.NewCommitMultiStore(memDB)
 	storeKey := sdk.NewKVStoreKey("TestStore")
@@ -75,7 +75,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 
 	keeper := Keeper{
 		key:              storeKey,
-		appCodec:         appCodec,
+		cdc:              appCodec,
 		paramSpace:       &subspace,
 		contractInfoView: NewTestContractInfoView(contractAdmin.String()),
 		wasmGasRegister:  wasmKeeper.NewDefaultWasmGasRegister(),
@@ -88,9 +88,9 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 
 	params := gastracker.DefaultParams()
 	subspace.SetParamSet(ctx, &params)
-	return ctx, &keeper
+	return ctx, keeper
 }
-func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, GasTrackingKeeper) {
+func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, Keeper) {
 	return createTestBaseKeeperAndContext(t, contractAdmin)
 }
 
@@ -744,7 +744,7 @@ func TestBlockTrackingReadWrite(t *testing.T) {
 	err := keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gastracker.BlockGasTracking{TxTrackingInfos: []*gastracker.TransactionTracking{&dummyTxTracking1}})
+	CreateTestBlockEntry(ctx, keeper.key, keeper.cdc, gastracker.BlockGasTracking{TxTrackingInfos: []*gastracker.TransactionTracking{&dummyTxTracking1}})
 
 	// We should be able to retrieve the block tracking info
 	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTracking(ctx)
@@ -755,7 +755,7 @@ func TestBlockTrackingReadWrite(t *testing.T) {
 	err = keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block in any case")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.appCodec, gastracker.BlockGasTracking{TxTrackingInfos: []*gastracker.TransactionTracking{&dummyTxTracking2}})
+	CreateTestBlockEntry(ctx, keeper.key, keeper.cdc, gastracker.BlockGasTracking{TxTrackingInfos: []*gastracker.TransactionTracking{&dummyTxTracking2}})
 
 	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTracking(ctx)
 	require.NoError(t, err, "We should be able to get current block")

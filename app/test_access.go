@@ -23,10 +23,6 @@ type TestSupport struct {
 	app *ArchwayApp
 }
 
-func NewTestSupport(t testing.TB, app *ArchwayApp) *TestSupport {
-	return &TestSupport{t: t, app: app}
-}
-
 func (s TestSupport) IBCKeeper() *ibckeeper.Keeper {
 	return s.app.ibcKeeper
 }

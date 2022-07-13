@@ -1,7 +1,6 @@
 package ante
 
 import (
-	"crypto/rand"
 	"os"
 	"testing"
 	"time"
@@ -153,7 +152,7 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 
 // TODO: this is shared test util, that is copied
 // from /keeper/keeper_test, refactor
-func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *keeper.Keeper) {
+func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.Keeper) {
 	encodingConfig := simapp.MakeTestEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 
@@ -193,17 +192,8 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 	return ctx, keeper
 }
 
-func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.GasTrackingKeeper) {
+func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.Keeper) {
 	return createTestBaseKeeperAndContext(t, contractAdmin)
-}
-
-func CreateTestBlockEntry(ctx sdk.Context, blockTracking gstTypes.BlockGasTracking) {
-	kvStore := ctx.KVStore(storeKey)
-	bz, err := simapp.MakeTestEncodingConfig().Marshaler.Marshal(&blockTracking)
-	if err != nil {
-		panic(err)
-	}
-	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
 }
 
 type TestContractInfoView struct {
@@ -219,7 +209,7 @@ func NewTestContractInfoView(defaultAdmin string) *TestContractInfoView {
 	}
 }
 
-func (t *TestContractInfoView) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
+func (t *TestContractInfoView) GetContractInfo(_ sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
 	if admin, ok := t.adminMap[contractAddress.String()]; ok {
 		return &wasmTypes.ContractInfo{Admin: admin}
 	} else {
@@ -232,12 +222,3 @@ func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string,
 }
 
 var _ keeper.ContractInfoView = &TestContractInfoView{}
-
-func GenerateRandomAccAddress() sdk.AccAddress {
-	var address sdk.AccAddress = make([]byte, 20)
-	_, err := rand.Read(address)
-	if err != nil {
-		panic(err)
-	}
-	return address
-}

@@ -1,14 +1,18 @@
 package ante
 
 import (
+	"github.com/archway-network/archway/x/gastracker"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/archway-network/archway/x/gastracker/keeper"
 )
 
+type GasTrackingKeeper interface {
+	GetParams(ctx sdk.Context) gastracker.Params
+	TrackNewTx(ctx sdk.Context, rewardCoins []*sdk.DecCoin, gas uint64) error
+}
+
 type TxGasTrackingDecorator struct {
-	gasTrackingKeeper keeper.GasTrackingKeeper
+	gasTrackingKeeper GasTrackingKeeper
 }
 
 func (t TxGasTrackingDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -41,6 +45,6 @@ func (t TxGasTrackingDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	return next(ctx, tx, simulate)
 }
 
-func NewTxGasTrackingDecorator(gasTrackingKeeper keeper.GasTrackingKeeper) TxGasTrackingDecorator {
+func NewTxGasTrackingDecorator(gasTrackingKeeper GasTrackingKeeper) TxGasTrackingDecorator {
 	return TxGasTrackingDecorator{gasTrackingKeeper: gasTrackingKeeper}
 }

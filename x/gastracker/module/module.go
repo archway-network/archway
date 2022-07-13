@@ -48,11 +48,11 @@ func (a AppModuleBasic) DefaultGenesis(marshaler codec.JSONCodec) json.RawMessag
 	return marshaler.MustMarshalJSON(&gstTypes.GenesisState{})
 }
 
-func (a AppModuleBasic) ValidateGenesis(marshaler codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
+func (a AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, _ json.RawMessage) error {
 	return nil
 }
 
-func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.Router) {
+func (a AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {
 
 }
 
@@ -73,7 +73,7 @@ type AppModule struct {
 
 	cdc        codec.Codec
 	bankKeeper bankkeeper.Keeper
-	keeper     keeper.GasTrackingKeeper
+	keeper     keeper.Keeper
 	mintKeeper mintkeeper.Keeper
 }
 
@@ -81,7 +81,7 @@ func (a AppModule) GenerateGenesisState(input *module.SimulationState) {
 	simulation.RandomizedGenState(input)
 }
 
-func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (a AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{}
 }
 
@@ -89,11 +89,11 @@ func (a AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return simulation.ParamChanges(r, a.cdc)
 }
 
-func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
+func (a AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 
 }
 
-func (a AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+func (a AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return []simtypes.WeightedOperation{}
 }
 
@@ -101,21 +101,21 @@ func (a AppModule) ConsensusVersion() uint64 {
 	return 1
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.GasTrackingKeeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
 	return AppModule{cdc: cdc, keeper: keeper, bankKeeper: bk, mintKeeper: mk}
 }
 
-func (a AppModule) InitGenesis(context sdk.Context, marshaler codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
+func (a AppModule) InitGenesis(context sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
 	keeper.InitParams(context, a.keeper)
 
 	return []abci.ValidatorUpdate{}
 }
 
-func (a AppModule) ExportGenesis(context sdk.Context, marshaler codec.JSONCodec) json.RawMessage {
+func (a AppModule) ExportGenesis(_ sdk.Context, marshaler codec.JSONCodec) json.RawMessage {
 	return marshaler.MustMarshalJSON(&gstTypes.GenesisState{})
 }
 
-func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {}
+func (a AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 func (AppModule) Route() sdk.Route { return sdk.Route{} }
 
@@ -123,19 +123,19 @@ func (a AppModule) QuerierRoute() string {
 	return gstTypes.QuerierRoute
 }
 
-func (a AppModule) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
+func (a AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	gstTypes.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(a.keeper))
-	gstTypes.RegisterQueryServer(cfg.QueryServer(), keeper.NewGRPCQuerier(a.keeper))
+	gstTypes.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(a.keeper))
 }
 
 func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock) {
 	BeginBlock(context, block, a.keeper, a.bankKeeper, a.mintKeeper)
 }
 
-func (a AppModule) EndBlock(context sdk.Context, block abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (a AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }

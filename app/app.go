@@ -267,7 +267,7 @@ type ArchwayApp struct {
 	// module configurator
 	configurator module.Configurator
 
-	gastrackingKeeper gastrackerkeeper.GasTrackingKeeper
+	gastrackingKeeper gastrackerkeeper.Keeper
 }
 
 // NewArchwayApp returns a reference to an initialized ArchwayApp.
@@ -703,7 +703,7 @@ func NewArchwayApp(
 // Name returns the name of the App
 func (app *ArchwayApp) Name() string { return app.BaseApp.Name() }
 
-// application updates every begin block
+// BeginBlocker processes application updates every begin block
 func (app *ArchwayApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }

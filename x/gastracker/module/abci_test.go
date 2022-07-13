@@ -54,7 +54,7 @@ type TestRewardTransferKeeper struct {
 	B    Behaviour
 }
 
-func (t *TestRewardTransferKeeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error {
+func (t *TestRewardTransferKeeper) SendCoinsFromModuleToAccount(_ sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error {
 	switch t.B {
 	case Log:
 		t.Logs = append(t.Logs, &RewardTransferKeeperCallLogs{
@@ -71,7 +71,7 @@ func (t *TestRewardTransferKeeper) SendCoinsFromModuleToAccount(ctx sdk.Context,
 	return nil
 }
 
-func (t *TestRewardTransferKeeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
+func (t *TestRewardTransferKeeper) SendCoinsFromModuleToModule(_ sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
 	switch t.B {
 	case Log:
 		t.Logs = append(t.Logs, &RewardTransferKeeperCallLogs{
@@ -1315,7 +1315,7 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 
 // TODO: this is shared test util, that is copied
 // from /keeper/keeper_test, refactor
-func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, *keeper.Keeper) {
+func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.Keeper) {
 	encodingConfig := simapp.MakeTestEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 
@@ -1354,7 +1354,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 	return ctx, keeper
 }
 
-func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.GasTrackingKeeper) {
+func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.Keeper) {
 	return createTestBaseKeeperAndContext(t, contractAdmin)
 }
 
@@ -1380,7 +1380,7 @@ func NewTestContractInfoView(defaultAdmin string) *TestContractInfoView {
 	}
 }
 
-func (t *TestContractInfoView) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
+func (t *TestContractInfoView) GetContractInfo(_ sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
 	if admin, ok := t.adminMap[contractAddress.String()]; ok {
 		return &wasmTypes.ContractInfo{Admin: admin}
 	} else {

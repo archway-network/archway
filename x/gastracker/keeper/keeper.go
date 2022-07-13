@@ -11,37 +11,15 @@ import (
 	gastracker "github.com/archway-network/archway/x/gastracker"
 )
 
-var _ GasTrackingKeeper = &Keeper{}
 var _ wasmTypes.ContractGasProcessor = &Keeper{}
 
 type ContractInfoView interface {
 	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
 }
 
-type GasTrackingKeeper interface {
-	wasmTypes.ContractGasProcessor
-
-	TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error
-	GetCurrentBlockTracking(ctx sdk.Context) (gastracker.BlockGasTracking, error)
-	GetCurrentTxTracking(ctx sdk.Context) (gastracker.TransactionTracking, error)
-	TrackNewBlock(ctx sdk.Context) error
-
-	GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gastracker.ContractInstanceMetadata, error)
-	AddPendingChangeForContractMetadata(ctx sdk.Context, sender sdk.AccAddress, address sdk.AccAddress, newMetadata gastracker.ContractInstanceMetadata) error
-	CommitPendingContractMetadata(ctx sdk.Context) (int, error)
-
-	CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error)
-	GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress) (gastracker.LeftOverRewardEntry, error)
-
-	SetParams(ctx sdk.Context, params gastracker.Params)
-
-	// GetParams returns the parameters.
-	GetParams(ctx sdk.Context) gastracker.Params
-}
-
 type Keeper struct {
 	key              sdk.StoreKey
-	appCodec         codec.Codec
+	cdc              codec.Codec
 	paramSpace       gastracker.Subspace
 	contractInfoView ContractInfoView
 	wasmGasRegister  wasmkeeper.GasRegister
@@ -53,14 +31,14 @@ func NewGasTrackingKeeper(
 	paramSpace paramsTypes.Subspace,
 	contractInfoView ContractInfoView,
 	gasRegister wasmkeeper.GasRegister,
-) *Keeper {
+) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(gastracker.ParamKeyTable())
 	}
-	return &Keeper{key: key, appCodec: appCodec, paramSpace: paramSpace, contractInfoView: contractInfoView, wasmGasRegister: gasRegister}
+	return Keeper{key: key, cdc: appCodec, paramSpace: paramSpace, contractInfoView: contractInfoView, wasmGasRegister: gasRegister}
 }
 
-func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error {
+func (k Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error {
 	if !k.GetParams(ctx).GasTrackingSwitch {
 		return nil
 	}
@@ -128,7 +106,7 @@ func (k *Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGa
 }
 
 // todo: unused?
-func (k *Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (func(operationId uint64, gasInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo, error) {
+func (k Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (func(operationId uint64, gasInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo, error) {
 	var contractMetadataExists bool
 
 	passthroughFn := func(operationId uint64, gasConsumptionInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
@@ -188,7 +166,7 @@ func (k *Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (f
 	}, nil
 }
 
-func (k *Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractGasRecord) (wasmTypes.GasConsumptionInfo, error) {
+func (k Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractGasRecord) (wasmTypes.GasConsumptionInfo, error) {
 	gasCalcFn, err := k.GetGasCalculationFn(ctx, record.ContractAddress)
 	if err != nil {
 		return wasmTypes.GasConsumptionInfo{}, nil
@@ -197,30 +175,7 @@ func (k *Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractG
 	return gasCalcFn(record.OperationId, record.OriginalGas), nil
 }
 
-func (k *Keeper) GetCurrentTxTracking(ctx sdk.Context) (gastracker.TransactionTracking, error) {
-	var txTrackingInfo gastracker.TransactionTracking
-
-	gstKvStore := ctx.KVStore(k.key)
-	bz := gstKvStore.Get([]byte(gastracker.CurrentBlockTrackingKey))
-	if bz == nil {
-		return txTrackingInfo, gastracker.ErrBlockTrackingDataNotFound
-	}
-	var currentBlockGasTracking gastracker.BlockGasTracking
-	err := k.appCodec.Unmarshal(bz, &currentBlockGasTracking)
-	if err != nil {
-		return txTrackingInfo, err
-	}
-
-	txsLen := len(currentBlockGasTracking.TxTrackingInfos)
-	if txsLen == 0 {
-		return txTrackingInfo, gastracker.ErrTxTrackingDataNotFound
-	}
-
-	txTrackingInfo = *currentBlockGasTracking.TxTrackingInfos[len(currentBlockGasTracking.TxTrackingInfos)-1]
-	return txTrackingInfo, nil
-}
-
-func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {
+func (k Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {
 	contractRewards = contractRewards.Sort()
 
 	gstKvStore := ctx.KVStore(k.key)
@@ -231,7 +186,7 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 
 	bz := gstKvStore.Get(gastracker.GetRewardEntryKey(rewardAddress.String()))
 	if bz != nil {
-		err := k.appCodec.Unmarshal(bz, &rewardEntry)
+		err := k.cdc.Unmarshal(bz, &rewardEntry)
 		if err != nil {
 			return rewardsToBeDistributed, err
 		}
@@ -276,7 +231,7 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 		rewardEntry.ContractRewards[i] = &leftOverContractRewards[i]
 	}
 
-	bz, err := k.appCodec.Marshal(&rewardEntry)
+	bz, err := k.cdc.Marshal(&rewardEntry)
 	if err != nil {
 		return rewardsToBeDistributed, err
 	}
@@ -290,7 +245,7 @@ func (k *Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress
 // we accumulate all the rewards and once it reaches to
 // an integer number, we pay the integer part and
 // keep the 0.x amount as left over to be paid later
-func (k *Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress) (gastracker.LeftOverRewardEntry, error) {
+func (k Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress) (gastracker.LeftOverRewardEntry, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var rewardEntry gastracker.LeftOverRewardEntry
@@ -300,7 +255,7 @@ func (k *Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAd
 		return rewardEntry, gastracker.ErrRewardEntryNotFound
 	}
 
-	err := k.appCodec.Unmarshal(bz, &rewardEntry)
+	err := k.cdc.Unmarshal(bz, &rewardEntry)
 	if err != nil {
 		return rewardEntry, err
 	}
@@ -308,7 +263,7 @@ func (k *Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAd
 	return rewardEntry, nil
 }
 
-func (k *Keeper) GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gastracker.ContractInstanceMetadata, error) {
+func (k Keeper) GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gastracker.ContractInstanceMetadata, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var contractInstanceMetadata gastracker.ContractInstanceMetadata
@@ -318,11 +273,11 @@ func (k *Keeper) GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (g
 		return contractInstanceMetadata, gastracker.ErrContractInstanceMetadataNotFound
 	}
 
-	err := k.appCodec.Unmarshal(bz, &contractInstanceMetadata)
+	err := k.cdc.Unmarshal(bz, &contractInstanceMetadata)
 	return contractInstanceMetadata, err
 }
 
-func (k *Keeper) GetPendingContractMetadataChange(ctx sdk.Context, address sdk.AccAddress) (gastracker.ContractInstanceMetadata, error) {
+func (k Keeper) GetPendingContractMetadataChange(ctx sdk.Context, address sdk.AccAddress) (gastracker.ContractInstanceMetadata, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var contractInstanceMetadata gastracker.ContractInstanceMetadata
@@ -332,11 +287,11 @@ func (k *Keeper) GetPendingContractMetadataChange(ctx sdk.Context, address sdk.A
 		return contractInstanceMetadata, gastracker.ErrContractInstanceMetadataNotFound
 	}
 
-	err := k.appCodec.Unmarshal(bz, &contractInstanceMetadata)
+	err := k.cdc.Unmarshal(bz, &contractInstanceMetadata)
 	return contractInstanceMetadata, err
 }
 
-func (k *Keeper) AddPendingChangeForContractMetadata(ctx sdk.Context, sender sdk.AccAddress, address sdk.AccAddress, newMetadata gastracker.ContractInstanceMetadata) error {
+func (k Keeper) AddPendingChangeForContractMetadata(ctx sdk.Context, sender sdk.AccAddress, address sdk.AccAddress, newMetadata gastracker.ContractInstanceMetadata) error {
 	gstKvStore := ctx.KVStore(k.key)
 
 	contractInfo := k.contractInfoView.GetContractInfo(ctx, address)
@@ -380,7 +335,7 @@ func (k *Keeper) AddPendingChangeForContractMetadata(ctx sdk.Context, sender sdk
 		}
 	}
 
-	bz, err := k.appCodec.Marshal(&newMetadata)
+	bz, err := k.cdc.Marshal(&newMetadata)
 	if err != nil {
 		return err
 	}
@@ -389,7 +344,7 @@ func (k *Keeper) AddPendingChangeForContractMetadata(ctx sdk.Context, sender sdk
 	return nil
 }
 
-func (k *Keeper) CommitPendingContractMetadata(ctx sdk.Context) (int, error) {
+func (k Keeper) CommitPendingContractMetadata(ctx sdk.Context) (int, error) {
 	gstKvStore := ctx.KVStore(k.key)
 	keysToBeDeleted := make([][]byte, 0)
 
@@ -414,9 +369,9 @@ func (k *Keeper) CommitPendingContractMetadata(ctx sdk.Context) (int, error) {
 	return len(keysToBeDeleted), nil
 }
 
-func (k *Keeper) TrackNewBlock(ctx sdk.Context) error {
+func (k Keeper) TrackNewBlock(ctx sdk.Context) error {
 	gstKvStore := ctx.KVStore(k.key)
-	bz, err := k.appCodec.Marshal(&gastracker.BlockGasTracking{})
+	bz, err := k.cdc.Marshal(&gastracker.BlockGasTracking{})
 	if err != nil {
 		return err
 	}
@@ -424,7 +379,7 @@ func (k *Keeper) TrackNewBlock(ctx sdk.Context) error {
 	return nil
 }
 
-func (k *Keeper) GetCurrentBlockTracking(ctx sdk.Context) (gastracker.BlockGasTracking, error) {
+func (k Keeper) GetCurrentBlockTracking(ctx sdk.Context) (gastracker.BlockGasTracking, error) {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var currentBlockTracking gastracker.BlockGasTracking
@@ -432,11 +387,11 @@ func (k *Keeper) GetCurrentBlockTracking(ctx sdk.Context) (gastracker.BlockGasTr
 	if bz == nil {
 		return currentBlockTracking, gastracker.ErrBlockTrackingDataNotFound
 	}
-	err := k.appCodec.Unmarshal(bz, &currentBlockTracking)
+	err := k.cdc.Unmarshal(bz, &currentBlockTracking)
 	return currentBlockTracking, err
 }
 
-func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error {
+func (k Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var currentTxGasTracking gastracker.TransactionTracking
@@ -448,12 +403,12 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 		return gastracker.ErrBlockTrackingDataNotFound
 	}
 	var currentBlockTracking gastracker.BlockGasTracking
-	err := k.appCodec.Unmarshal(bz, &currentBlockTracking)
+	err := k.cdc.Unmarshal(bz, &currentBlockTracking)
 	if err != nil {
 		return err
 	}
 	currentBlockTracking.TxTrackingInfos = append(currentBlockTracking.TxTrackingInfos, &currentTxGasTracking)
-	bz, err = k.appCodec.Marshal(&currentBlockTracking)
+	bz, err = k.cdc.Marshal(&currentBlockTracking)
 	if err != nil {
 		return err
 	}
@@ -461,14 +416,15 @@ func (k *Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64
 	return nil
 }
 
-func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, originalGas wasmTypes.GasConsumptionInfo, operation gastracker.ContractOperation) error {
+func (k Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, originalGas wasmTypes.GasConsumptionInfo, operation gastracker.ContractOperation) error {
+
 	gstKvStore := ctx.KVStore(k.key)
 	bz := gstKvStore.Get([]byte(gastracker.CurrentBlockTrackingKey))
 	if bz == nil {
 		return gastracker.ErrBlockTrackingDataNotFound
 	}
 	var currentBlockGasTracking gastracker.BlockGasTracking
-	err := k.appCodec.Unmarshal(bz, &currentBlockGasTracking)
+	err := k.cdc.Unmarshal(bz, &currentBlockGasTracking)
 	if err != nil {
 		return err
 	}
@@ -484,7 +440,7 @@ func (k *Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccA
 		OriginalSdkGas: originalGas.SDKGas,
 		Operation:      operation,
 	})
-	bz, err = k.appCodec.Marshal(&currentBlockGasTracking)
+	bz, err = k.cdc.Marshal(&currentBlockGasTracking)
 	if err != nil {
 		return err
 	}
