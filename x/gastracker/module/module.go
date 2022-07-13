@@ -129,7 +129,7 @@ func (a AppModule) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
 
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	gstTypes.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(a.keeper))
-	gstTypes.RegisterQueryServer(cfg.QueryServer(), keeper.NewGRPCQuerier(a.keeper))
+	gstTypes.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(a.keeper))
 }
 
 func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock) {

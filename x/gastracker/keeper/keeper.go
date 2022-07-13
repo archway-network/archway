@@ -440,6 +440,7 @@ func (k Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64)
 }
 
 func (k Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, originalGas wasmTypes.GasConsumptionInfo, operation gastracker.ContractOperation) error {
+
 	gstKvStore := ctx.KVStore(k.key)
 	bz := gstKvStore.Get([]byte(gastracker.CurrentBlockTrackingKey))
 	if bz == nil {

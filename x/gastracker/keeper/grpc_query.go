@@ -10,19 +10,19 @@ import (
 	gstTypes "github.com/archway-network/archway/x/gastracker"
 )
 
-var _ gstTypes.QueryServer = &grpcQuerier{}
+var _ gstTypes.QueryServer = &queryServer{}
 
-type grpcQuerier struct {
+type queryServer struct {
 	keeper Keeper
 }
 
-func NewGRPCQuerier(keeper Keeper) gstTypes.QueryServer {
-	return &grpcQuerier{
+func NewQueryServer(keeper Keeper) gstTypes.QueryServer {
+	return &queryServer{
 		keeper: keeper,
 	}
 }
 
-func (g *grpcQuerier) ContractMetadata(ctx context.Context, request *gstTypes.QueryContractMetadataRequest) (*gstTypes.QueryContractMetadataResponse, error) {
+func (g *queryServer) ContractMetadata(ctx context.Context, request *gstTypes.QueryContractMetadataRequest) (*gstTypes.QueryContractMetadataResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -42,7 +42,7 @@ func (g *grpcQuerier) ContractMetadata(ctx context.Context, request *gstTypes.Qu
 	}, nil
 }
 
-func (g *grpcQuerier) BlockGasTracking(ctx context.Context, request *gstTypes.QueryBlockGasTrackingRequest) (*gstTypes.QueryBlockGasTrackingResponse, error) {
+func (g *queryServer) BlockGasTracking(ctx context.Context, request *gstTypes.QueryBlockGasTrackingRequest) (*gstTypes.QueryBlockGasTrackingResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
