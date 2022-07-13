@@ -158,16 +158,15 @@ func TestABCIPanicBehaviour(t *testing.T) {
 	ctx = ctx.WithBlockHeight(0)
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
-	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
 	ctx = ctx.WithBlockHeight(2)
 	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func() {
-		BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+		BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	}, "BeginBlock should panic")
 
 	ctx = ctx.WithBlockHeight(1)
 
-	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// We should not have made any call to reward keeper
 	require.Zero(t, testRewardKeeper.Logs, "No logs should be there as no need to make new calls")
 	// We would have overwritten the TrackNewBlock obj
@@ -186,7 +185,6 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 	}
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
-	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 
@@ -224,7 +222,7 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(1)
 
-	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 
 	// Now all pending metadata should have been committed
 	for i := 1; i <= 4; i++ {
@@ -312,7 +310,6 @@ func TestRewardCalculation(t *testing.T) {
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
-	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
 	ctx = ctx.WithBlockHeight(2)
 
@@ -403,7 +400,7 @@ func TestRewardCalculation(t *testing.T) {
 		},
 	}})
 
-	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
 	for i := 0; i < len(expected.logs); i++ {
@@ -468,7 +465,6 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
-	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
 	ctx = ctx.WithBlockHeight(2)
 
@@ -559,7 +555,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 		},
 	}})
 
-	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
 	for i := 0; i < len(expected.logs); i++ {
@@ -621,7 +617,6 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
-	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
 	ctx = ctx.WithBlockHeight(2)
 
@@ -712,7 +707,7 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 		},
 	}})
 
-	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
 	for i := 0; i < len(expected.logs); i++ {
@@ -772,7 +767,6 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
-	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
 	ctx = ctx.WithBlockHeight(2)
 
@@ -863,7 +857,7 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 		},
 	}})
 
-	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
 	for i := 0; i < len(expected.logs); i++ {
@@ -916,7 +910,6 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
-	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
 	ctx = ctx.WithBlockHeight(2)
 
@@ -1007,7 +1000,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 		},
 	}})
 
-	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
 	for i := 0; i < len(expected.logs); i++ {
@@ -1052,7 +1045,6 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
-	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
 	ctx = ctx.WithBlockHeight(2)
 
@@ -1143,7 +1135,7 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 		},
 	}})
 
-	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
 	for i := 0; i < len(expected.logs); i++ {
@@ -1199,7 +1191,6 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 	secondTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDec(2)), sdk.NewDecCoinFromDec("test1", sdk.NewDec(1).QuoInt64(2)))
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
-	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
 
 	ctx = ctx.WithBlockHeight(2)
 
@@ -1290,7 +1281,7 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 		},
 	}})
 
-	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper, testMintParamsKeeper)
+	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
 	for i := 0; i < len(expected.logs); i++ {

@@ -43,7 +43,14 @@ func NewGasTrackingKeeper(
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(gastracker.ParamKeyTable())
 	}
-	return Keeper{key: key, cdc: appCodec, paramSpace: paramSpace, contractInfoView: contractInfoView, wasmGasRegister: gasRegister}
+	return Keeper{
+		key:              key,
+		cdc:              appCodec,
+		paramSpace:       paramSpace,
+		contractInfoView: contractInfoView,
+		wasmGasRegister:  gasRegister,
+		mintKeeper:       mintKeeper,
+	}
 }
 
 func (k Keeper) GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gastracker.ContractInstanceMetadata, error) {
