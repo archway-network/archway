@@ -387,8 +387,8 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	require.NoError(t, err, "Getting left over reward entry should not fail")
 	require.Equal(t, len(expectedLeftOverRewards), 2)
 	require.Equal(t, len(expectedLeftOverRewards), len(leftOverEntry.ContractRewards))
-	require.Equal(t, expectedLeftOverRewards[0], *leftOverEntry.ContractRewards[0])
-	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
+	require.Equal(t, expectedLeftOverRewards[0], leftOverEntry.ContractRewards[0])
+	require.Equal(t, expectedLeftOverRewards[1], leftOverEntry.ContractRewards[1])
 
 	// Test1 reward will be 0.5+0.5 = 1 which is greater than or equal to left over threshold
 	expectedWholeCoins = sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(1)))
@@ -402,7 +402,7 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	require.NoError(t, err, "Getting left over reward entry should not fail")
 	require.Equal(t, len(expectedLeftOverRewards), 1)
 	require.Equal(t, len(expectedLeftOverRewards), len(leftOverEntry.ContractRewards))
-	require.Equal(t, expectedLeftOverRewards[0], *leftOverEntry.ContractRewards[0])
+	require.Equal(t, expectedLeftOverRewards[0], leftOverEntry.ContractRewards[0])
 
 	rewardCoins = sdk.NewDecCoins(
 		sdk.NewDecCoinFromDec("test", sdk.NewDec(11).QuoInt64(2)),
@@ -424,9 +424,9 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[1])
 	require.NoError(t, err, "We should be able to get left over entry without an error")
 	require.Equal(t, len(expectedLeftOverRewards), len(leftOverEntry.ContractRewards))
-	require.Equal(t, expectedLeftOverRewards[0], *leftOverEntry.ContractRewards[0])
-	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
-	require.Equal(t, expectedLeftOverRewards[2], *leftOverEntry.ContractRewards[2])
+	require.Equal(t, expectedLeftOverRewards[0], leftOverEntry.ContractRewards[0])
+	require.Equal(t, expectedLeftOverRewards[1], leftOverEntry.ContractRewards[1])
+	require.Equal(t, expectedLeftOverRewards[2], leftOverEntry.ContractRewards[2])
 
 	// Now, let's change the leftOverThreshold to 2
 	// The wholecoin we would get is 3test2 (2.5 + 0.5 = 3 > 2)
@@ -445,8 +445,8 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[1])
 	require.NoError(t, err, "We should be able to get left over reward entry")
 	require.Equal(t, len(expectedLeftOverRewards), len(leftOverEntry.ContractRewards))
-	require.Equal(t, expectedLeftOverRewards[0], *leftOverEntry.ContractRewards[0])
-	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
+	require.Equal(t, expectedLeftOverRewards[0], leftOverEntry.ContractRewards[0])
+	require.Equal(t, expectedLeftOverRewards[1], leftOverEntry.ContractRewards[1])
 
 	// Now, changing back leftOverThreshold to 1 both test and test1 denomination will be released
 	expectedWholeCoins = sdk.NewCoins(
@@ -465,8 +465,8 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[1])
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expectedLeftOverRewards), len(leftOverEntry.ContractRewards))
-	require.Equal(t, expectedLeftOverRewards[0], *leftOverEntry.ContractRewards[0])
-	require.Equal(t, expectedLeftOverRewards[1], *leftOverEntry.ContractRewards[1])
+	require.Equal(t, expectedLeftOverRewards[0], leftOverEntry.ContractRewards[0])
+	require.Equal(t, expectedLeftOverRewards[1], leftOverEntry.ContractRewards[1])
 }
 
 func TestCalculateUpdatedGas(t *testing.T) {
@@ -558,7 +558,7 @@ func TestIngestionOfGasRecords(t *testing.T) {
 	err := keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
 
-	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
+	err = keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 5)
 	require.NoError(t, err, "We should be able to track new tx")
 
 	// Ingest gas record should be successful, but should skip the entry
@@ -638,14 +638,14 @@ func TestIngestionOfGasRecords(t *testing.T) {
 
 	require.Equal(t, 2, len(blockTracking.TxTrackingInfos[0].ContractTrackingInfos))
 
-	require.Equal(t, &gastracker.ContractGasTracking{
+	require.Equal(t, gastracker.ContractGasTracking{
 		Address:        spareAddress[3].String(),
 		OriginalVmGas:  3,
 		OriginalSdkGas: 4,
 		Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_MIGRATE,
 	}, blockTracking.TxTrackingInfos[0].ContractTrackingInfos[1])
 
-	require.Equal(t, &gastracker.ContractGasTracking{
+	require.Equal(t, gastracker.ContractGasTracking{
 		Address:        spareAddress[2].String(),
 		OriginalVmGas:  2,
 		OriginalSdkGas: 3,
@@ -673,12 +673,12 @@ func TestAddContractGasUsage(t *testing.T) {
 	require.EqualError(t, err, gastracker.ErrTxTrackingDataNotFound.Error(), "We cannot track contract gas since tx tracking does not exists")
 
 	// Let's track one tx with one contract gas usage
-	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 5)
+	err = keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 5)
 	require.NoError(t, err, "We should be able to track new transaction")
 	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 2}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
 
-	err = keeper.TrackNewTx(ctx, []*sdk.DecCoin{}, 6)
+	err = keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 6)
 	require.NoError(t, err, "We should be able to track new transaction")
 	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], wasmTypes.GasConsumptionInfo{SDKGas: 2, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_REPLY)
 	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
@@ -691,7 +691,7 @@ func TestAddContractGasUsage(t *testing.T) {
 	require.Equal(t, gastracker.TransactionTracking{
 		MaxGasAllowed:      5,
 		MaxContractRewards: nil,
-		ContractTrackingInfos: []*gastracker.ContractGasTracking{
+		ContractTrackingInfos: []gastracker.ContractGasTracking{
 			{
 				Address:        spareAddress[1].String(),
 				OriginalSdkGas: 1,
@@ -699,11 +699,11 @@ func TestAddContractGasUsage(t *testing.T) {
 				Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 			},
 		},
-	}, *blockTrackingObj.TxTrackingInfos[0])
+	}, blockTrackingObj.TxTrackingInfos[0])
 	require.Equal(t, gastracker.TransactionTracking{
 		MaxGasAllowed:      6,
 		MaxContractRewards: nil,
-		ContractTrackingInfos: []*gastracker.ContractGasTracking{
+		ContractTrackingInfos: []gastracker.ContractGasTracking{
 			{
 				Address:        spareAddress[2].String(),
 				OriginalSdkGas: 2,
@@ -717,7 +717,7 @@ func TestAddContractGasUsage(t *testing.T) {
 				Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_SUDO,
 			},
 		},
-	}, *blockTrackingObj.TxTrackingInfos[1])
+	}, blockTrackingObj.TxTrackingInfos[1])
 
 	err = keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
@@ -744,23 +744,23 @@ func TestBlockTrackingReadWrite(t *testing.T) {
 	err := keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.cdc, gastracker.BlockGasTracking{TxTrackingInfos: []*gastracker.TransactionTracking{&dummyTxTracking1}})
+	CreateTestBlockEntry(ctx, keeper.key, keeper.cdc, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{dummyTxTracking1}})
 
 	// We should be able to retrieve the block tracking info
 	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTracking(ctx)
 	require.NoError(t, err, "We should be able to get current block tracking")
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
-	require.Equal(t, dummyTxTracking1, *currentBlockTrackingInfo.TxTrackingInfos[0])
+	require.Equal(t, dummyTxTracking1, currentBlockTrackingInfo.TxTrackingInfos[0])
 
 	err = keeper.TrackNewBlock(ctx)
 	require.NoError(t, err, "We should be able to track new block in any case")
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.cdc, gastracker.BlockGasTracking{TxTrackingInfos: []*gastracker.TransactionTracking{&dummyTxTracking2}})
+	CreateTestBlockEntry(ctx, keeper.key, keeper.cdc, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{dummyTxTracking2}})
 
 	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTracking(ctx)
 	require.NoError(t, err, "We should be able to get current block")
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
-	require.Equal(t, dummyTxTracking2, *currentBlockTrackingInfo.TxTrackingInfos[0])
+	require.Equal(t, dummyTxTracking2, currentBlockTrackingInfo.TxTrackingInfos[0])
 }
 
 // TODO: this is shared test util, that is copied

@@ -192,7 +192,7 @@ func (k Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress 
 		}
 		previousRewards := make(sdk.DecCoins, len(rewardEntry.ContractRewards))
 		for i := range previousRewards {
-			previousRewards[i] = *rewardEntry.ContractRewards[i]
+			previousRewards[i] = rewardEntry.ContractRewards[i]
 		}
 		updatedRewards = previousRewards.Add(contractRewards...)
 	} else {
@@ -226,9 +226,9 @@ func (k Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress 
 	rewardsToBeDistributed = rewardsToBeDistributed[:distributionRewardIndex]
 	leftOverContractRewards = leftOverContractRewards[:leftOverRewardIndex]
 
-	rewardEntry.ContractRewards = make([]*sdk.DecCoin, len(leftOverContractRewards))
+	rewardEntry.ContractRewards = make([]sdk.DecCoin, len(leftOverContractRewards))
 	for i := range leftOverContractRewards {
-		rewardEntry.ContractRewards[i] = &leftOverContractRewards[i]
+		rewardEntry.ContractRewards[i] = leftOverContractRewards[i]
 	}
 
 	bz, err := k.cdc.Marshal(&rewardEntry)
@@ -391,7 +391,7 @@ func (k Keeper) GetCurrentBlockTracking(ctx sdk.Context) (gastracker.BlockGasTra
 	return currentBlockTracking, err
 }
 
-func (k Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error {
+func (k Keeper) TrackNewTx(ctx sdk.Context, fee []sdk.DecCoin, gasLimit uint64) error {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var currentTxGasTracking gastracker.TransactionTracking
@@ -407,7 +407,7 @@ func (k Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64)
 	if err != nil {
 		return err
 	}
-	currentBlockTracking.TxTrackingInfos = append(currentBlockTracking.TxTrackingInfos, &currentTxGasTracking)
+	currentBlockTracking.TxTrackingInfos = append(currentBlockTracking.TxTrackingInfos, currentTxGasTracking)
 	bz, err = k.cdc.Marshal(&currentBlockTracking)
 	if err != nil {
 		return err
@@ -434,7 +434,7 @@ func (k Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAd
 		return gastracker.ErrTxTrackingDataNotFound
 	}
 	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
-	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gastracker.ContractGasTracking{
+	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, gastracker.ContractGasTracking{
 		Address:        contractAddress.String(),
 		OriginalVmGas:  originalGas.VMGas,
 		OriginalSdkGas: originalGas.SDKGas,

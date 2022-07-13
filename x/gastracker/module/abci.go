@@ -203,7 +203,7 @@ func getContractRewards(context sdk.Context, params gstTypes.Params, blockGasTra
 
 			totalContractRewardsInTx = totalContractRewardsInTx.Add(contractRewards...)
 
-			gstTypes.EmitContractRewardCalculationEvent(context, contractAddress.String(), gasConsumedInContract, contractInflationReward, contractRewards, &metadata)
+			gstTypes.EmitContractRewardCalculationEvent(context, contractAddress.String(), gasConsumedInContract, contractInflationReward, contractRewards, metadata)
 
 			context.Logger().Debug("Calculated Contract rewards:", "contractAddress", contractAddress, "contractRewards", contractRewards)
 		}
