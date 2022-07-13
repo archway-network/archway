@@ -23,7 +23,7 @@ type MintParamsKeeper interface {
 	GetMinter(ctx sdk.Context) (minter mintTypes.Minter)
 }
 
-func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper keeper.Keeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
+func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper keeper.Keeper, rewardTransferKeeper RewardTransferKeeper) {
 	defer telemetry.ModuleMeasureSince(gstTypes.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	lastBlockGasTracking := resetBlockGasTracking(context, gasTrackingKeeper)
@@ -35,7 +35,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	}
 	context.Logger().Debug("Got the tracking for block", "BlockTxDetails", lastBlockGasTracking)
 
-	contractTotalInflationRewards := getContractInflationRewards(context, params, mintParamsKeeper)
+	contractTotalInflationRewards := gasTrackingKeeper.UpdateDappInflationaryRewards(context, params)
 
 	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, params, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
 
@@ -212,26 +212,4 @@ func getContractRewards(context sdk.Context, params gstTypes.Params, blockGasTra
 	}
 
 	return totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress
-}
-
-// getContractInflationRewards returns the percentage of the block rewards that are dedicated to contracts
-func getContractInflationRewards(ctx sdk.Context, params gstTypes.Params, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
-	totalInflationRatePerBlock := getInflationFeeForLastBlock(ctx, mintParamsKeeper)
-
-	dappInflationRatio := params.DappInflationRewardsRatio
-	contractTotalInflationRewards := sdk.NewDecCoinFromDec(
-		totalInflationRatePerBlock.Denom,
-		totalInflationRatePerBlock.Amount.Mul(dappInflationRatio),
-	)
-
-	return contractTotalInflationRewards
-}
-
-// getInflationFeeForLastBlock returns the inflation per block. (Annual Inflation / NumblocksPerYear)
-func getInflationFeeForLastBlock(context sdk.Context, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
-	minter := mintParamsKeeper.GetMinter(context)
-	params := mintParamsKeeper.GetParams(context)
-	totalInflationFee := sdk.NewDecCoinFromCoin(minter.BlockProvision(params))
-
-	return totalInflationFee
 }

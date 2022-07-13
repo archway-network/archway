@@ -27,6 +27,10 @@ const (
 	RewardEntryKeyPrefix = "reward_entry"
 )
 
+var (
+	PrefixDappBlockInflationaryRewards = []byte{0x10}
+)
+
 func GetPendingContractInstanceMetadataKey(address string) []byte {
 	return []byte(PendingContractInstanceMetadataKeyPrefix + "/" + address)
 }

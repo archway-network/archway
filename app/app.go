@@ -502,6 +502,7 @@ func NewArchwayApp(
 		app.getSubspace(gastracker.DefaultParamSpace),
 		app.wasmKeeper,
 		defaultGasRegister,
+		app.mintKeeper,
 	)
 
 	// Setting gas recorder here to avoid cyclic loop
@@ -555,7 +556,7 @@ func NewArchwayApp(
 		ibc.NewAppModule(app.ibcKeeper),
 		params.NewAppModule(app.paramsKeeper),
 		transferModule,
-		gastrackermodule.NewAppModule(app.appCodec, app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
+		gastrackermodule.NewAppModule(app.appCodec, app.gastrackingKeeper, app.bankKeeper),
 		crisis.NewAppModule(&app.crisisKeeper, skipGenesisInvariants), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -648,7 +649,7 @@ func NewArchwayApp(
 		wasm.NewAppModule(appCodec, &app.wasmKeeper, app.stakingKeeper),
 		ibc.NewAppModule(app.ibcKeeper),
 		transferModule,
-		gastrackermodule.NewAppModule(app.appCodec, app.gastrackingKeeper, app.bankKeeper, app.mintKeeper),
+		gastrackermodule.NewAppModule(app.appCodec, app.gastrackingKeeper, app.bankKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()

@@ -3,6 +3,8 @@ package keeper
 import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,10 +13,13 @@ import (
 	gastracker "github.com/archway-network/archway/x/gastracker"
 )
 
-var _ wasmTypes.ContractGasProcessor = &Keeper{}
-
 type ContractInfoView interface {
 	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
+}
+
+type MintKeeper interface {
+	GetMinter(ctx sdk.Context) minttypes.Minter
+	GetParams(ctx sdk.Context) minttypes.Params
 }
 
 type Keeper struct {
@@ -23,6 +28,8 @@ type Keeper struct {
 	paramSpace       gastracker.Subspace
 	contractInfoView ContractInfoView
 	wasmGasRegister  wasmkeeper.GasRegister
+
+	mintKeeper MintKeeper
 }
 
 func NewGasTrackingKeeper(
@@ -31,236 +38,19 @@ func NewGasTrackingKeeper(
 	paramSpace paramsTypes.Subspace,
 	contractInfoView ContractInfoView,
 	gasRegister wasmkeeper.GasRegister,
+	mintKeeper MintKeeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(gastracker.ParamKeyTable())
 	}
-	return Keeper{key: key, cdc: appCodec, paramSpace: paramSpace, contractInfoView: contractInfoView, wasmGasRegister: gasRegister}
-}
-
-func (k Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error {
-	if !k.GetParams(ctx).GasTrackingSwitch {
-		return nil
+	return Keeper{
+		key:              key,
+		cdc:              appCodec,
+		paramSpace:       paramSpace,
+		contractInfoView: contractInfoView,
+		wasmGasRegister:  gasRegister,
+		mintKeeper:       mintKeeper,
 	}
-
-	for _, record := range records {
-		contractAddress, err := sdk.AccAddressFromBech32(record.ContractAddress)
-		if err != nil {
-			return err
-		}
-
-		var contractMetadataExists bool
-		_, err = k.GetContractMetadata(ctx, contractAddress)
-		switch err {
-		case gastracker.ErrContractInstanceMetadataNotFound:
-			contractMetadataExists = false
-		case nil:
-			contractMetadataExists = true
-		default:
-			return err
-		}
-
-		if !contractMetadataExists {
-			continue
-		}
-
-		var operation gastracker.ContractOperation
-		switch record.OperationId {
-		case wasmTypes.ContractOperationQuery:
-			operation = gastracker.ContractOperation_CONTRACT_OPERATION_QUERY
-		case wasmTypes.ContractOperationInstantiate:
-			operation = gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION
-		case wasmTypes.ContractOperationExecute:
-			operation = gastracker.ContractOperation_CONTRACT_OPERATION_EXECUTION
-		case wasmTypes.ContractOperationMigrate:
-			operation = gastracker.ContractOperation_CONTRACT_OPERATION_MIGRATE
-		case wasmTypes.ContractOperationSudo:
-			operation = gastracker.ContractOperation_CONTRACT_OPERATION_SUDO
-		case wasmTypes.ContractOperationReply:
-			operation = gastracker.ContractOperation_CONTRACT_OPERATION_REPLY
-		case wasmTypes.ContractOperationIbcPacketTimeout:
-			fallthrough
-		case wasmTypes.ContractOperationIbcPacketAck:
-			fallthrough
-		case wasmTypes.ContractOperationIbcPacketReceive:
-			fallthrough
-		case wasmTypes.ContractOperationIbcChannelClose:
-			fallthrough
-		case wasmTypes.ContractOperationIbcChannelOpen:
-			fallthrough
-		case wasmTypes.ContractOperationIbcChannelConnect:
-			operation = gastracker.ContractOperation_CONTRACT_OPERATION_IBC
-		default:
-			operation = gastracker.ContractOperation_CONTRACT_OPERATION_UNSPECIFIED
-		}
-
-		if err := k.TrackContractGasUsage(ctx, contractAddress, wasmTypes.GasConsumptionInfo{
-			SDKGas: record.OriginalGas.SDKGas,
-			VMGas:  k.wasmGasRegister.FromWasmVMGas(record.OriginalGas.VMGas),
-		}, operation); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// todo: unused?
-func (k Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddress string) (func(operationId uint64, gasInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo, error) {
-	var contractMetadataExists bool
-
-	passthroughFn := func(operationId uint64, gasConsumptionInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
-		return gasConsumptionInfo
-	}
-
-	doNotUse := func(operationId uint64, _ wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
-		panic("do not use this function")
-	}
-
-	contractAddr, err := sdk.AccAddressFromBech32(contractAddress)
-	if err != nil {
-		return doNotUse, err
-	}
-
-	contractMetadata, err := k.GetContractMetadata(ctx, contractAddr)
-	switch err {
-	case gastracker.ErrContractInstanceMetadataNotFound:
-		contractMetadataExists = false
-	case nil:
-		contractMetadataExists = true
-	default:
-		return doNotUse, err
-	}
-
-	if !contractMetadataExists {
-		return passthroughFn, nil
-	}
-
-	// We are pre-fetching the configuration so that
-	// gas usage is similar across all conditions.
-	params := k.GetParams(ctx)
-	isGasRebateToUserEnabled := params.GasRebateToUserSwitch
-	isContractPremiumEnabled := params.ContractPremiumSwitch
-	isGasTrackingEnabled := params.GasTrackingSwitch
-
-	return func(operationId uint64, gasConsumptionInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
-		if !isGasTrackingEnabled {
-			return gasConsumptionInfo
-		}
-
-		if isGasRebateToUserEnabled && contractMetadata.GasRebateToUser {
-			updatedGas := wasmTypes.GasConsumptionInfo{
-				SDKGas: (gasConsumptionInfo.SDKGas * 50) / 100,
-				VMGas:  (gasConsumptionInfo.VMGas * 50) / 100,
-			}
-			return updatedGas
-		} else if isContractPremiumEnabled && contractMetadata.CollectPremium {
-			updatedGas := wasmTypes.GasConsumptionInfo{
-				SDKGas: gasConsumptionInfo.SDKGas + (gasConsumptionInfo.SDKGas*contractMetadata.PremiumPercentageCharged)/100,
-				VMGas:  gasConsumptionInfo.VMGas + (gasConsumptionInfo.VMGas*contractMetadata.PremiumPercentageCharged)/100,
-			}
-			return updatedGas
-		} else {
-			return gasConsumptionInfo
-		}
-	}, nil
-}
-
-func (k Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractGasRecord) (wasmTypes.GasConsumptionInfo, error) {
-	gasCalcFn, err := k.GetGasCalculationFn(ctx, record.ContractAddress)
-	if err != nil {
-		return wasmTypes.GasConsumptionInfo{}, nil
-	}
-
-	return gasCalcFn(record.OperationId, record.OriginalGas), nil
-}
-
-func (k Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {
-	contractRewards = contractRewards.Sort()
-
-	gstKvStore := ctx.KVStore(k.key)
-
-	var rewardEntry gastracker.LeftOverRewardEntry
-	var updatedRewards sdk.DecCoins
-	var rewardsToBeDistributed sdk.Coins
-
-	bz := gstKvStore.Get(gastracker.GetRewardEntryKey(rewardAddress.String()))
-	if bz != nil {
-		err := k.cdc.Unmarshal(bz, &rewardEntry)
-		if err != nil {
-			return rewardsToBeDistributed, err
-		}
-		previousRewards := make(sdk.DecCoins, len(rewardEntry.ContractRewards))
-		for i := range previousRewards {
-			previousRewards[i] = rewardEntry.ContractRewards[i]
-		}
-		updatedRewards = previousRewards.Add(contractRewards...)
-	} else {
-		updatedRewards = contractRewards
-	}
-
-	rewardsToBeDistributed = make(sdk.Coins, len(updatedRewards))
-	distributionRewardIndex := 0
-
-	leftOverContractRewards := make(sdk.DecCoins, len(updatedRewards))
-	leftOverRewardIndex := 0
-
-	leftOverDec := sdk.NewDecFromBigInt(gastracker.ConvertUint64ToBigInt(leftOverThreshold))
-
-	for i := range updatedRewards {
-		if updatedRewards[i].Amount.GTE(leftOverDec) {
-			distributionAmount := updatedRewards[i].Amount.TruncateInt()
-			leftOverAmount := updatedRewards[i].Amount.Sub(distributionAmount.ToDec())
-			if !leftOverAmount.IsZero() {
-				leftOverContractRewards[leftOverRewardIndex] = sdk.NewDecCoinFromDec(updatedRewards[i].Denom, leftOverAmount)
-				leftOverRewardIndex += 1
-			}
-			rewardsToBeDistributed[distributionRewardIndex] = sdk.NewCoin(updatedRewards[i].Denom, distributionAmount)
-			distributionRewardIndex += 1
-		} else {
-			leftOverContractRewards[leftOverRewardIndex] = updatedRewards[i]
-			leftOverRewardIndex += 1
-		}
-	}
-
-	rewardsToBeDistributed = rewardsToBeDistributed[:distributionRewardIndex]
-	leftOverContractRewards = leftOverContractRewards[:leftOverRewardIndex]
-
-	rewardEntry.ContractRewards = make([]sdk.DecCoin, len(leftOverContractRewards))
-	for i := range leftOverContractRewards {
-		rewardEntry.ContractRewards[i] = leftOverContractRewards[i]
-	}
-
-	bz, err := k.cdc.Marshal(&rewardEntry)
-	if err != nil {
-		return rewardsToBeDistributed, err
-	}
-
-	gstKvStore.Set(gastracker.GetRewardEntryKey(rewardAddress.String()), bz)
-	return rewardsToBeDistributed, nil
-}
-
-// Since we can only transfer integer numbers
-// and rewards can be floating point numbers,
-// we accumulate all the rewards and once it reaches to
-// an integer number, we pay the integer part and
-// keep the 0.x amount as left over to be paid later
-func (k Keeper) GetLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress) (gastracker.LeftOverRewardEntry, error) {
-	gstKvStore := ctx.KVStore(k.key)
-
-	var rewardEntry gastracker.LeftOverRewardEntry
-
-	bz := gstKvStore.Get(gastracker.GetRewardEntryKey(rewardAddress.String()))
-	if bz == nil {
-		return rewardEntry, gastracker.ErrRewardEntryNotFound
-	}
-
-	err := k.cdc.Unmarshal(bz, &rewardEntry)
-	if err != nil {
-		return rewardEntry, err
-	}
-
-	return rewardEntry, nil
 }
 
 func (k Keeper) GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gastracker.ContractInstanceMetadata, error) {
@@ -447,4 +237,39 @@ func (k Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAd
 
 	gstKvStore.Set([]byte(gastracker.CurrentBlockTrackingKey), bz)
 	return nil
+}
+
+// UpdateDappInflationaryRewards sets the current block inflationary rewards.
+// Returns the inflationary rewards to be distributed.
+func (k Keeper) UpdateDappInflationaryRewards(ctx sdk.Context, params gastracker.Params) (rewards sdk.DecCoin) {
+	store := prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixDappBlockInflationaryRewards)
+
+	// gets total inflationary rewards
+	totalInflationaryRewards := k.mintKeeper.
+		GetMinter(ctx).
+		BlockProvision(k.mintKeeper.GetParams(ctx))
+
+	dappInflationaryRewards := sdk.NewDecCoinFromDec(
+		totalInflationaryRewards.Denom,
+		totalInflationaryRewards.Amount.ToDec().Mul(params.DappInflationRewardsRatio),
+	)
+
+	store.Set(
+		sdk.Uint64ToBigEndian(uint64(ctx.BlockHeight())),
+		k.cdc.MustMarshal(&dappInflationaryRewards),
+	)
+
+	return dappInflationaryRewards
+}
+
+// GetDappInflationaryRewards returns the dApp inflationary rewards at the given height.
+func (k Keeper) GetDappInflationaryRewards(ctx sdk.Context, height int64) (rewards sdk.DecCoin, err error) {
+	store := prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixDappBlockInflationaryRewards)
+	bytes := store.Get(sdk.Uint64ToBigEndian(uint64(height)))
+	if bytes == nil {
+		return rewards, gastracker.ErrDappInflationaryRewardRecordNotFound.Wrapf("height %d", height)
+	}
+
+	k.cdc.MustUnmarshal(bytes, &rewards)
+	return rewards, nil
 }

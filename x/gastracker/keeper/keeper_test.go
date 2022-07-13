@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"crypto/rand"
+	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"os"
 	"testing"
 	"time"
@@ -61,6 +62,21 @@ func (s *subspace) SetParamSet(_ sdk.Context, paramset paramsTypes.ParamSet) {
 	s.params = *paramset.(*gastracker.Params)
 }
 
+type mockMinter struct{}
+
+func (t mockMinter) GetParams(_ sdk.Context) (params mintTypes.Params) {
+	return mintTypes.Params{
+		MintDenom:     "test",
+		BlocksPerYear: 100,
+	}
+}
+
+func (t mockMinter) GetMinter(_ sdk.Context) (minter mintTypes.Minter) {
+	return mintTypes.Minter{
+		AnnualProvisions: sdk.NewDec(76500),
+	}
+}
+
 func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, Keeper) {
 	memDB := db.NewMemDB()
 	ms := store.NewCommitMultiStore(memDB)
@@ -79,6 +95,7 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 		paramSpace:       &subspace,
 		contractInfoView: NewTestContractInfoView(contractAdmin.String()),
 		wasmGasRegister:  wasmKeeper.NewDefaultWasmGasRegister(),
+		mintKeeper:       mockMinter{},
 	}
 
 	ctx := sdk.NewContext(ms, tmproto.Header{
@@ -92,6 +109,22 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 }
 func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, Keeper) {
 	return createTestBaseKeeperAndContext(t, contractAdmin)
+}
+
+func TestKeeper_UpdateGetDappInflationaryRewards(t *testing.T) {
+	ctx, k := CreateTestKeeperAndContext(t, nil)
+	t.Run("success", func(t *testing.T) {
+		rewards := k.UpdateDappInflationaryRewards(ctx, k.GetParams(ctx))
+		gotRewards, err := k.GetDappInflationaryRewards(ctx, ctx.BlockHeight())
+		require.NoError(t, err)
+
+		require.Equal(t, rewards, gotRewards)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		_, err := k.GetDappInflationaryRewards(ctx, 1_000)
+		require.ErrorIs(t, err, gastracker.ErrDappInflationaryRewardRecordNotFound)
+	})
 }
 
 // Test various conditions in handling contract metadata

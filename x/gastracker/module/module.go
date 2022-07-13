@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -74,7 +73,6 @@ type AppModule struct {
 	cdc        codec.Codec
 	bankKeeper bankkeeper.Keeper
 	keeper     keeper.Keeper
-	mintKeeper mintkeeper.Keeper
 }
 
 func (a AppModule) GenerateGenesisState(input *module.SimulationState) {
@@ -101,8 +99,8 @@ func (a AppModule) ConsensusVersion() uint64 {
 	return 1
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, bk bankkeeper.Keeper, mk mintkeeper.Keeper) AppModule {
-	return AppModule{cdc: cdc, keeper: keeper, bankKeeper: bk, mintKeeper: mk}
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, bk bankkeeper.Keeper) AppModule {
+	return AppModule{cdc: cdc, keeper: keeper, bankKeeper: bk}
 }
 
 func (a AppModule) InitGenesis(context sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
@@ -133,7 +131,7 @@ func (a AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock) {
-	BeginBlock(context, block, a.keeper, a.bankKeeper, a.mintKeeper)
+	BeginBlock(context, block, a.keeper, a.bankKeeper)
 }
 
 func (a AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
