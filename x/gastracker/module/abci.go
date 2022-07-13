@@ -10,7 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	gstTypes "github.com/archway-network/archway/x/gastracker"
-	keeper "github.com/archway-network/archway/x/gastracker/keeper"
+	"github.com/archway-network/archway/x/gastracker/keeper"
 )
 
 type RewardTransferKeeper interface {
@@ -63,7 +63,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	}
 	context.Logger().Debug("Got the tracking for block", "BlockTxDetails", lastBlockGasTracking)
 
-	contractTotalInflationRewards := getContractInflationRewards(context, params, mintParamsKeeper) // 20% of the rewards distributed on every block
+	contractTotalInflationRewards := getContractInflationRewards(context, params, mintParamsKeeper)
 
 	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, params, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
 
