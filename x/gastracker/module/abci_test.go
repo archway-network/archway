@@ -358,11 +358,11 @@ func TestRewardCalculation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
 					OriginalVmGas:  1,
@@ -391,8 +391,8 @@ func TestRewardCalculation(t *testing.T) {
 		},
 		{
 			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{secondTxMaxContractReward[0], secondTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
 					OriginalSdkGas: 1,
@@ -415,14 +415,14 @@ func TestRewardCalculation(t *testing.T) {
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 	for i := 0; i < len(expected.rewardsA); i++ {
-		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
+		require.Equal(t, expected.rewardsA[i], leftOverEntry.ContractRewards[i])
 	}
 
 	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 	for i := 0; i < len(expected.rewardsB); i++ {
-		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
+		require.Equal(t, expected.rewardsB[i], leftOverEntry.ContractRewards[i])
 	}
 }
 
@@ -514,11 +514,11 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
 					OriginalVmGas:  1,
@@ -547,8 +547,8 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 		},
 		{
 			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{secondTxMaxContractReward[0], secondTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
 					OriginalSdkGas: 1,
@@ -571,14 +571,14 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 	for i := 0; i < len(expected.rewardsA); i++ {
-		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
+		require.Equal(t, expected.rewardsA[i], leftOverEntry.ContractRewards[i])
 	}
 
 	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 	for i := 0; i < len(expected.rewardsB); i++ {
-		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
+		require.Equal(t, expected.rewardsB[i], leftOverEntry.ContractRewards[i])
 	}
 }
 func TestContractRewardsWithoutDappInflation(t *testing.T) {
@@ -667,11 +667,11 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
 					OriginalVmGas:  1,
@@ -700,8 +700,8 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 		},
 		{
 			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{secondTxMaxContractReward[0], secondTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
 					OriginalSdkGas: 1,
@@ -724,14 +724,14 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 	for i := 0; i < len(expected.rewardsA); i++ {
-		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
+		require.Equal(t, expected.rewardsA[i], leftOverEntry.ContractRewards[i])
 	}
 
 	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 	for i := 0; i < len(expected.rewardsB); i++ {
-		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
+		require.Equal(t, expected.rewardsB[i], leftOverEntry.ContractRewards[i])
 	}
 }
 func TestContractRewardsWithoutGasRebate(t *testing.T) {
@@ -818,11 +818,11 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
 					OriginalVmGas:  1,
@@ -851,8 +851,8 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 		},
 		{
 			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{secondTxMaxContractReward[0], secondTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
 					OriginalSdkGas: 1,
@@ -875,14 +875,14 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 	for i := 0; i < len(expected.rewardsA); i++ {
-		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
+		require.Equal(t, expected.rewardsA[i], leftOverEntry.ContractRewards[i])
 	}
 
 	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 	for i := 0; i < len(expected.rewardsB); i++ {
-		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
+		require.Equal(t, expected.rewardsB[i], leftOverEntry.ContractRewards[i])
 	}
 }
 
@@ -962,11 +962,11 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
 					OriginalVmGas:  1,
@@ -995,8 +995,8 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 		},
 		{
 			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{secondTxMaxContractReward[0], secondTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
 					OriginalSdkGas: 1,
@@ -1098,11 +1098,11 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
 					OriginalVmGas:  1,
@@ -1131,8 +1131,8 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 		},
 		{
 			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{secondTxMaxContractReward[0], secondTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
 					OriginalSdkGas: 1,
@@ -1245,11 +1245,11 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 
 	require.NoError(t, err, "We should be able to track new block")
 
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
-			MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0], &firstTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[1].String(),
 					OriginalVmGas:  1,
@@ -1278,8 +1278,8 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 		},
 		{
 			MaxGasAllowed:      2,
-			MaxContractRewards: []*sdk.DecCoin{&secondTxMaxContractReward[0], &secondTxMaxContractReward[1]},
-			ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+			MaxContractRewards: []sdk.DecCoin{secondTxMaxContractReward[0], secondTxMaxContractReward[1]},
+			ContractTrackingInfos: []gstTypes.ContractGasTracking{
 				{
 					Address:        spareAddress[2].String(),
 					OriginalSdkGas: 1,
@@ -1302,14 +1302,14 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expected.rewardsA), len(leftOverEntry.ContractRewards))
 	for i := 0; i < len(expected.rewardsA); i++ {
-		require.Equal(t, expected.rewardsA[i], *leftOverEntry.ContractRewards[i])
+		require.Equal(t, expected.rewardsA[i], leftOverEntry.ContractRewards[i])
 	}
 
 	leftOverEntry, err = keeper.GetLeftOverRewardEntry(ctx, spareAddress[6])
 	require.NoError(t, err, "We should be able to get left over entry")
 	require.Equal(t, len(expected.rewardsB), len(leftOverEntry.ContractRewards))
 	for i := 0; i < len(expected.rewardsB); i++ {
-		require.Equal(t, expected.rewardsB[i], *leftOverEntry.ContractRewards[i])
+		require.Equal(t, expected.rewardsB[i], leftOverEntry.ContractRewards[i])
 	}
 }
 
