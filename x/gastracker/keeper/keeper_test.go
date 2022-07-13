@@ -35,7 +35,7 @@ func NewTestContractInfoView(defaultAdmin string) *TestContractInfoView {
 	}
 }
 
-func (t *TestContractInfoView) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
+func (t *TestContractInfoView) GetContractInfo(_ sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
 	if admin, ok := t.adminMap[contractAddress.String()]; ok {
 		return &wasmTypes.ContractInfo{Admin: admin}
 	} else {

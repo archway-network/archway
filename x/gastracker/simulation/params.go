@@ -11,7 +11,7 @@ import (
 	"github.com/archway-network/archway/x/gastracker"
 )
 
-func ParamChanges(r *rand.Rand, cdc codec.Codec) []simtypes.ParamChange {
+func ParamChanges(r *rand.Rand, _ codec.Codec) []simtypes.ParamChange {
 	params := RandomParams(r)
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(gastracker.ModuleName, string(gastracker.ParamsKeyContractPremiumSwitch),

@@ -1,7 +1,6 @@
 package ante
 
 import (
-	"crypto/rand"
 	"os"
 	"testing"
 	"time"
@@ -197,15 +196,6 @@ func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk
 	return createTestBaseKeeperAndContext(t, contractAdmin)
 }
 
-func CreateTestBlockEntry(ctx sdk.Context, blockTracking gstTypes.BlockGasTracking) {
-	kvStore := ctx.KVStore(storeKey)
-	bz, err := simapp.MakeTestEncodingConfig().Marshaler.Marshal(&blockTracking)
-	if err != nil {
-		panic(err)
-	}
-	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
-}
-
 type TestContractInfoView struct {
 	keeper.ContractInfoView
 	adminMap     map[string]string
@@ -219,7 +209,7 @@ func NewTestContractInfoView(defaultAdmin string) *TestContractInfoView {
 	}
 }
 
-func (t *TestContractInfoView) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
+func (t *TestContractInfoView) GetContractInfo(_ sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
 	if admin, ok := t.adminMap[contractAddress.String()]; ok {
 		return &wasmTypes.ContractInfo{Admin: admin}
 	} else {
@@ -232,12 +222,3 @@ func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string,
 }
 
 var _ keeper.ContractInfoView = &TestContractInfoView{}
-
-func GenerateRandomAccAddress() sdk.AccAddress {
-	var address sdk.AccAddress = make([]byte, 20)
-	_, err := rand.Read(address)
-	if err != nil {
-		panic(err)
-	}
-	return address
-}
