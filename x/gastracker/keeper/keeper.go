@@ -175,29 +175,6 @@ func (k Keeper) CalculateUpdatedGas(ctx sdk.Context, record wasmTypes.ContractGa
 	return gasCalcFn(record.OperationId, record.OriginalGas), nil
 }
 
-func (k Keeper) GetCurrentTxTracking(ctx sdk.Context) (gastracker.TransactionTracking, error) {
-	var txTrackingInfo gastracker.TransactionTracking
-
-	gstKvStore := ctx.KVStore(k.key)
-	bz := gstKvStore.Get([]byte(gastracker.CurrentBlockTrackingKey))
-	if bz == nil {
-		return txTrackingInfo, gastracker.ErrBlockTrackingDataNotFound
-	}
-	var currentBlockGasTracking gastracker.BlockGasTracking
-	err := k.cdc.Unmarshal(bz, &currentBlockGasTracking)
-	if err != nil {
-		return txTrackingInfo, err
-	}
-
-	txsLen := len(currentBlockGasTracking.TxTrackingInfos)
-	if txsLen == 0 {
-		return txTrackingInfo, gastracker.ErrTxTrackingDataNotFound
-	}
-
-	txTrackingInfo = *currentBlockGasTracking.TxTrackingInfos[len(currentBlockGasTracking.TxTrackingInfos)-1]
-	return txTrackingInfo, nil
-}
-
 func (k Keeper) CreateOrMergeLeftOverRewardEntry(ctx sdk.Context, rewardAddress sdk.AccAddress, contractRewards sdk.DecCoins, leftOverThreshold uint64) (sdk.Coins, error) {
 	contractRewards = contractRewards.Sort()
 
