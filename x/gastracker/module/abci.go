@@ -23,34 +23,6 @@ type MintParamsKeeper interface {
 	GetMinter(ctx sdk.Context) (minter mintTypes.Minter)
 }
 
-func EmitRewardPayingEvent(ctx sdk.Context, rewardAddress string, rewardsPayed sdk.Coins, leftOverRewards []*sdk.DecCoin) error {
-	rewards := make([]*sdk.Coin, len(rewardsPayed))
-	for i := range rewards {
-		rewards[i] = &rewardsPayed[i]
-	}
-
-	return ctx.EventManager().EmitTypedEvent(&gstTypes.RewardDistributionEvent{
-		RewardAddress:   rewardAddress,
-		ContractRewards: rewards,
-		LeftoverRewards: leftOverRewards,
-	})
-}
-
-func EmitContractRewardCalculationEvent(context sdk.Context, contractAddress string, gasConsumed sdk.Dec, inflationReward sdk.DecCoin, contractRewards sdk.DecCoins, metadata *gstTypes.ContractInstanceMetadata) error {
-	rewards := make([]*sdk.DecCoin, len(contractRewards))
-	for i := range rewards {
-		rewards[i] = &contractRewards[i]
-	}
-
-	return context.EventManager().EmitTypedEvent(&gstTypes.ContractRewardCalculationEvent{
-		ContractAddress:  contractAddress,
-		GasConsumed:      gasConsumed.RoundInt().Uint64(),
-		InflationRewards: &inflationReward,
-		ContractRewards:  rewards,
-		Metadata:         metadata,
-	})
-}
-
 func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper keeper.Keeper, rewardTransferKeeper RewardTransferKeeper, mintParamsKeeper MintParamsKeeper) {
 	defer telemetry.ModuleMeasureSince(gstTypes.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
@@ -150,10 +122,7 @@ func distributeRewards(context sdk.Context, rewardAddresses []string, rewardsByA
 			panic(err)
 		}
 
-		err = EmitRewardPayingEvent(context, rewardAddressStr, rewardsToBePayed, leftOverEntry.ContractRewards)
-		if err != nil {
-			panic(err)
-		}
+		gstTypes.EmitRewardPayingEvent(context, rewardAddressStr, rewardsToBePayed, leftOverEntry.ContractRewards)
 
 		context.Logger().Debug("Reward allocation details:", "rewardPayed", rewardsToBePayed, "leftOverEntry", leftOverEntry.ContractRewards)
 	}
@@ -234,9 +203,7 @@ func getContractRewards(context sdk.Context, params gstTypes.Params, blockGasTra
 
 			totalContractRewardsInTx = totalContractRewardsInTx.Add(contractRewards...)
 
-			if err = EmitContractRewardCalculationEvent(context, contractAddress.String(), gasConsumedInContract, contractInflationReward, contractRewards, &metadata); err != nil {
-				panic(err)
-			}
+			gstTypes.EmitContractRewardCalculationEvent(context, contractAddress.String(), gasConsumedInContract, contractInflationReward, contractRewards, &metadata)
 
 			context.Logger().Debug("Calculated Contract rewards:", "contractAddress", contractAddress, "contractRewards", contractRewards)
 		}
