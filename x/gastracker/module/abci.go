@@ -63,7 +63,7 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	}
 	context.Logger().Debug("Got the tracking for block", "BlockTxDetails", lastBlockGasTracking)
 
-	contractTotalInflationRewards := getContractInflationRewards(context, params, gasTrackingKeeper, mintParamsKeeper) // 20% of the rewards distributed on every block
+	contractTotalInflationRewards := getContractInflationRewards(context, params, mintParamsKeeper) // 20% of the rewards distributed on every block
 
 	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, params, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
 
@@ -248,7 +248,7 @@ func getContractRewards(context sdk.Context, params gstTypes.Params, blockGasTra
 }
 
 // getContractInflationRewards returns the percentage of the block rewards that are dedicated to contracts
-func getContractInflationRewards(ctx sdk.Context, params gstTypes.Params, k keeper.Keeper, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
+func getContractInflationRewards(ctx sdk.Context, params gstTypes.Params, mintParamsKeeper MintParamsKeeper) sdk.DecCoin {
 	totalInflationRatePerBlock := getInflationFeeForLastBlock(ctx, mintParamsKeeper)
 
 	dappInflationRatio := params.DappInflationRewardsRatio
