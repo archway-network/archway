@@ -111,6 +111,13 @@ func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk
 	return createTestBaseKeeperAndContext(t, contractAdmin)
 }
 
+func TestKeeper_GetAndIncreaseTxIdentifier_ResetTxIdentifier(t *testing.T) {
+	ctx, k := CreateTestKeeperAndContext(t, nil)
+	k.ResetTxIdentifier(ctx)
+	require.Equal(t, uint64(0), k.GetAndIncreaseTxIdentifier(ctx))
+	require.Equal(t, uint64(1), k.GetAndIncreaseTxIdentifier(ctx))
+}
+
 func TestKeeper_UpdateGetDappInflationaryRewards(t *testing.T) {
 	ctx, k := CreateTestKeeperAndContext(t, nil)
 	t.Run("success", func(t *testing.T) {

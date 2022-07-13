@@ -29,6 +29,16 @@ const (
 
 var (
 	PrefixDappBlockInflationaryRewards = []byte{0x10}
+	// PrefixGasTrackingTxIdentifier maps the current transaction being tracked identifier.
+	// This value is reset every block. And increased each time keeper.Keeper.TrackNewTx is called.
+	PrefixGasTrackingTxIdentifier = []byte{0x11}
+	// PrefixGasTrackingTxTracking is the kvstore namespace that contains TransactionTracking objects
+	// of the current block.
+	PrefixGasTrackingTxTracking = []byte{0x13}
+
+	// KeyTxIdentifier is the constant key used to get the Tx identifier
+	// in the current block.
+	KeyTxIdentifier = []byte{0x0}
 )
 
 func GetPendingContractInstanceMetadataKey(address string) []byte {

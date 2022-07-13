@@ -76,6 +76,8 @@ func resetBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.Keeper)
 	if err := gasTrackingKeeper.TrackNewBlock(context); err != nil {
 		panic(err)
 	}
+
+	gasTrackingKeeper.ResetTxIdentifier(context)
 	return lastBlockGasTracking
 }
 

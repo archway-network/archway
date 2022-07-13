@@ -206,6 +206,21 @@ func (k Keeper) TrackNewTx(ctx sdk.Context, fee []sdk.DecCoin, gasLimit uint64) 
 	return nil
 }
 
+// GetAndIncreaseTxIdentifier gets the current Tx identifier.
+// Then increases the current tx identifier by 1.
+// Assumes there is already a valid value saved in the store.
+func (k Keeper) GetAndIncreaseTxIdentifier(ctx sdk.Context) uint64 {
+	store := prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixGasTrackingTxIdentifier)
+	value := sdk.BigEndianToUint64(store.Get(gastracker.KeyTxIdentifier))
+	store.Set(gastracker.KeyTxIdentifier, sdk.Uint64ToBigEndian(value+1))
+	return value
+}
+
+// ResetTxIdentifier resets the current Tx identifier to 0.
+func (k Keeper) ResetTxIdentifier(ctx sdk.Context) {
+	prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixGasTrackingTxIdentifier).Set(gastracker.KeyTxIdentifier, sdk.Uint64ToBigEndian(0))
+}
+
 func (k Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, originalGas wasmTypes.GasConsumptionInfo, operation gastracker.ContractOperation) error {
 
 	gstKvStore := ctx.KVStore(k.key)
