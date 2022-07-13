@@ -31,8 +31,12 @@ enum ContractOperation {
 // Tracking contract gas usage and total gas consumption per transaction
 message TransactionTracking {
   uint64 max_gas_allowed = 1;
-  repeated cosmos.base.v1beta1.DecCoin max_contract_rewards = 3;
-  repeated ContractGasTracking contract_tracking_infos = 4;
+  repeated cosmos.base.v1beta1.DecCoin max_contract_rewards = 3 [
+    (gogoproto.nullable) = false
+  ];
+  repeated ContractGasTracking contract_tracking_infos = 4 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Tracking contract gas usage
@@ -44,7 +48,11 @@ message ContractGasTracking {
 }
 
 // Tracking gas consumption for all tx in a particular block
-message BlockGasTracking { repeated TransactionTracking tx_tracking_infos = 1; }
+message BlockGasTracking {
+  repeated TransactionTracking tx_tracking_infos = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
 
 // Contract instance metadata
 message ContractInstanceMetadata {
@@ -60,23 +68,35 @@ message ContractInstanceMetadata {
 
 // Reward entry per beneficiary address
 message LeftOverRewardEntry {
-  repeated cosmos.base.v1beta1.DecCoin contract_rewards = 1;
+  repeated cosmos.base.v1beta1.DecCoin contract_rewards = 1 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Event emitted when Reward is allocated
 message RewardDistributionEvent {
   string reward_address = 1;
-  repeated cosmos.base.v1beta1.Coin contract_rewards = 2;
-  repeated cosmos.base.v1beta1.DecCoin leftover_rewards = 3;
+  repeated cosmos.base.v1beta1.Coin contract_rewards = 2 [
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.DecCoin leftover_rewards = 3 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Event emitted when contract reward is calculated
 message ContractRewardCalculationEvent {
   string contract_address = 1;
   uint64 gas_consumed = 2;
-  cosmos.base.v1beta1.DecCoin inflation_rewards = 3;
-  repeated cosmos.base.v1beta1.DecCoin contract_rewards = 4;
-  ContractInstanceMetadata metadata = 5;
+  cosmos.base.v1beta1.DecCoin inflation_rewards = 3 [
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.DecCoin contract_rewards = 4 [
+    (gogoproto.nullable) = false
+  ];
+  ContractInstanceMetadata metadata = 5 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Genesis state of the Gastracker module

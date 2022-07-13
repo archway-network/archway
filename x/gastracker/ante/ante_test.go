@@ -93,10 +93,9 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 		Fee: sdk.NewCoins(sdk.NewInt64Coin("test", 10)),
 	}
 
-	expectedDecCoins := make([]*sdk.DecCoin, len(testTx.Fee))
+	expectedDecCoins := make([]sdk.DecCoin, len(testTx.Fee))
 	for i, coin := range testTx.Fee {
-		expectedDecCoins[i] = new(sdk.DecCoin)
-		*expectedDecCoins[i] = sdk.NewDecCoinFromCoin(sdk.NewCoin(coin.Denom, coin.Amount.QuoRaw(2)))
+		expectedDecCoins[i] = sdk.NewDecCoinFromCoin(sdk.NewCoin(coin.Denom, coin.Amount.QuoRaw(2)))
 	}
 
 	_, err = testTxGasTrackingDecorator.AnteHandle(ctx, testTx, false, dummyNextAnteHandler)
@@ -129,10 +128,9 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 		Fee: sdk.NewCoins(sdk.NewInt64Coin("test", 20)),
 	}
 
-	expectedDecCoins = make([]*sdk.DecCoin, len(testTx.Fee))
+	expectedDecCoins = make([]sdk.DecCoin, len(testTx.Fee))
 	for i, coin := range testTx.Fee {
-		expectedDecCoins[i] = new(sdk.DecCoin)
-		*expectedDecCoins[i] = sdk.NewDecCoinFromCoin(sdk.NewCoin(coin.Denom, coin.Amount.QuoRaw(2)))
+		expectedDecCoins[i] = sdk.NewDecCoinFromCoin(sdk.NewCoin(coin.Denom, coin.Amount.QuoRaw(2)))
 	}
 
 	_, err = testTxGasTrackingDecorator.AnteHandle(ctx, testTx, false, dummyNextAnteHandler)

@@ -164,7 +164,7 @@ func (k Keeper) GetCurrentBlockTracking(ctx sdk.Context) (gastracker.BlockGasTra
 	return currentBlockTracking, err
 }
 
-func (k Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64) error {
+func (k Keeper) TrackNewTx(ctx sdk.Context, fee []sdk.DecCoin, gasLimit uint64) error {
 	gstKvStore := ctx.KVStore(k.key)
 
 	var currentTxGasTracking gastracker.TransactionTracking
@@ -180,7 +180,7 @@ func (k Keeper) TrackNewTx(ctx sdk.Context, fee []*sdk.DecCoin, gasLimit uint64)
 	if err != nil {
 		return err
 	}
-	currentBlockTracking.TxTrackingInfos = append(currentBlockTracking.TxTrackingInfos, &currentTxGasTracking)
+	currentBlockTracking.TxTrackingInfos = append(currentBlockTracking.TxTrackingInfos, currentTxGasTracking)
 	bz, err = k.cdc.Marshal(&currentBlockTracking)
 	if err != nil {
 		return err
@@ -207,7 +207,7 @@ func (k Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAd
 		return gastracker.ErrTxTrackingDataNotFound
 	}
 	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
-	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, &gastracker.ContractGasTracking{
+	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, gastracker.ContractGasTracking{
 		Address:        contractAddress.String(),
 		OriginalVmGas:  originalGas.VMGas,
 		OriginalSdkGas: originalGas.SDKGas,
