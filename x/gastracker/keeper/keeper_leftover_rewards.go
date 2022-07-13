@@ -25,7 +25,7 @@ func (k Keeper) CreateOrMergeLeftOverRewardEntry(ctx types.Context, rewardAddres
 		}
 		previousRewards := make(types.DecCoins, len(rewardEntry.ContractRewards))
 		for i := range previousRewards {
-			previousRewards[i] = *rewardEntry.ContractRewards[i]
+			previousRewards[i] = rewardEntry.ContractRewards[i]
 		}
 		updatedRewards = previousRewards.Add(contractRewards...)
 	} else {
@@ -59,9 +59,9 @@ func (k Keeper) CreateOrMergeLeftOverRewardEntry(ctx types.Context, rewardAddres
 	rewardsToBeDistributed = rewardsToBeDistributed[:distributionRewardIndex]
 	leftOverContractRewards = leftOverContractRewards[:leftOverRewardIndex]
 
-	rewardEntry.ContractRewards = make([]*types.DecCoin, len(leftOverContractRewards))
+	rewardEntry.ContractRewards = make([]types.DecCoin, len(leftOverContractRewards))
 	for i := range leftOverContractRewards {
-		rewardEntry.ContractRewards[i] = &leftOverContractRewards[i]
+		rewardEntry.ContractRewards[i] = leftOverContractRewards[i]
 	}
 
 	bz, err := k.cdc.Marshal(&rewardEntry)
