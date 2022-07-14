@@ -211,6 +211,8 @@ func (k Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAd
 
 	bytes := store.Get(key)
 	if bytes == nil {
+		// panicking here since TrackNewTx must always be called before
+		// we start appending operations to contracts.
 		panic(fmt.Errorf("no gas tracking found for tx"))
 	}
 	var transactionTracking gastracker.TransactionTracking
