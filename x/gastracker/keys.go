@@ -18,8 +18,6 @@ const (
 	// RouterKey is the msg router key for the wasm module
 	RouterKey = ModuleName
 
-	CurrentBlockTrackingKey = "current_blk"
-
 	PendingContractInstanceMetadataKeyPrefix = "p_c_inst_md"
 
 	ContractInstanceMetadataKeyPrefix = "c_inst_md"
