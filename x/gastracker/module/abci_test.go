@@ -2,7 +2,6 @@ package module
 
 import (
 	"fmt"
-	gastracker "github.com/archway-network/archway/x/gastracker"
 	gstTypes "github.com/archway-network/archway/x/gastracker"
 	"github.com/archway-network/archway/x/gastracker/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,11 +18,6 @@ const (
 	Log Behaviour = iota
 	Error
 	Panic
-)
-
-// NOTE: this is needed to allow the keeper to set BlockGasTracking
-var (
-	storeKey = sdk.NewKVStoreKey(gastracker.StoreKey)
 )
 
 type RewardTransferKeeperCallLogs struct {
