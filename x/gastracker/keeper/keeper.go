@@ -25,13 +25,13 @@ type MintKeeper interface {
 }
 
 type Keeper struct {
+	WasmGasRegister wasmkeeper.GasRegister // can safely be exported since it's readonly.
+
 	key              sdk.StoreKey
 	cdc              codec.Codec
 	paramSpace       gastracker.Subspace
 	contractInfoView ContractInfoView
-	wasmGasRegister  wasmkeeper.GasRegister
-
-	mintKeeper MintKeeper
+	mintKeeper       MintKeeper
 }
 
 func NewGasTrackingKeeper(
@@ -50,7 +50,7 @@ func NewGasTrackingKeeper(
 		cdc:              appCodec,
 		paramSpace:       paramSpace,
 		contractInfoView: contractInfoView,
-		wasmGasRegister:  gasRegister,
+		WasmGasRegister:  gasRegister,
 		mintKeeper:       mintKeeper,
 	}
 }
