@@ -98,16 +98,7 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 		expectedDecCoins[i] = sdk.NewDecCoinFromCoin(sdk.NewCoin(coin.Denom, coin.Amount.QuoRaw(2)))
 	}
 
-	_, err = testTxGasTrackingDecorator.AnteHandle(ctx, testTx, false, dummyNextAnteHandler)
-	assert.EqualError(
-		t,
-		err,
-		gstTypes.ErrBlockTrackingDataNotFound.Error(),
-		"Gastracking ante handler should return expected error",
-	)
-
-	err = keeper.TrackNewBlock(ctx)
-	assert.NoError(t, err, "New block gas tracking should succeed")
+	keeper.TrackNewBlock(ctx)
 
 	_, err = testTxGasTrackingDecorator.AnteHandle(ctx, testTx, false, dummyNextAnteHandler)
 	assert.NoError(
@@ -116,7 +107,7 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 		"Gastracking ante handler should not return an error",
 	)
 
-	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTracking(ctx)
+	currentBlockTrackingInfo := keeper.GetCurrentBlockTracking(ctx)
 	assert.NoError(t, err, "Current block tracking info should exists")
 
 	assert.Equal(t, 1, len(currentBlockTrackingInfo.TxTrackingInfos), "Only 1 txtracking info should be there")
@@ -140,8 +131,7 @@ func TestGasTrackingAnteHandler(t *testing.T) {
 		"Gastracking ante handler should not return an error",
 	)
 
-	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTracking(ctx)
-	assert.NoError(t, err, "Current block tracking info should exists")
+	currentBlockTrackingInfo = keeper.GetCurrentBlockTracking(ctx)
 
 	assert.Equal(t, 2, len(currentBlockTrackingInfo.TxTrackingInfos), "Only 1 txtracking info should be there")
 	assert.Equal(t, testTx.Gas, currentBlockTrackingInfo.TxTrackingInfos[1].MaxGasAllowed, "MaxGasAllowed must match the Gas field of tx")

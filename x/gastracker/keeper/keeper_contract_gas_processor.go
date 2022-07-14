@@ -64,12 +64,10 @@ func (k Keeper) IngestGasRecord(ctx types.Context, records []wasmTypes.ContractG
 			operation = gastracker.ContractOperation_CONTRACT_OPERATION_UNSPECIFIED
 		}
 
-		if err := k.TrackContractGasUsage(ctx, contractAddress, wasmTypes.GasConsumptionInfo{
+		k.TrackContractGasUsage(ctx, contractAddress, wasmTypes.GasConsumptionInfo{
 			SDKGas: record.OriginalGas.SDKGas,
 			VMGas:  k.wasmGasRegister.FromWasmVMGas(record.OriginalGas.VMGas),
-		}, operation); err != nil {
-			return err
-		}
+		}, operation)
 	}
 
 	return nil

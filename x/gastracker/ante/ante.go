@@ -8,7 +8,7 @@ import (
 
 type GasTrackingKeeper interface {
 	GetParams(ctx sdk.Context) gastracker.Params
-	TrackNewTx(ctx sdk.Context, rewardCoins []sdk.DecCoin, gas uint64) error
+	TrackNewTx(ctx sdk.Context, rewardCoins []sdk.DecCoin, gas uint64)
 }
 
 type TxGasTrackingDecorator struct {
@@ -37,10 +37,7 @@ func (t TxGasTrackingDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		rewardCoins[i] = reward
 	}
 
-	err = t.gasTrackingKeeper.TrackNewTx(ctx, rewardCoins, feeTx.GetGas())
-	if err != nil {
-		return ctx, err
-	}
+	t.gasTrackingKeeper.TrackNewTx(ctx, rewardCoins, feeTx.GetGas())
 
 	return next(ctx, tx, simulate)
 }

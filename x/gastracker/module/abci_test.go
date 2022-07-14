@@ -159,19 +159,13 @@ func TestABCIPanicBehaviour(t *testing.T) {
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
 
-	ctx = ctx.WithBlockHeight(2)
-	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func() {
-		BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
-	}, "BeginBlock should panic")
-
 	ctx = ctx.WithBlockHeight(1)
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// We should not have made any call to reward keeper
 	require.Zero(t, testRewardKeeper.Logs, "No logs should be there as no need to make new calls")
 	// We would have overwritten the TrackNewBlock obj
-	blockGasTracking, err := keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get new block gas tracking")
+	blockGasTracking := keeper.GetCurrentBlockTracking(ctx)
 	require.Equal(t, gstTypes.BlockGasTracking{}, blockGasTracking, "We should have overwritten block gas tracking obj")
 }
 
@@ -351,11 +345,9 @@ func TestRewardCalculation(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -506,11 +498,9 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -658,11 +648,9 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -808,11 +796,9 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -951,11 +937,9 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -1086,11 +1070,9 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -1232,11 +1214,9 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -1350,13 +1330,18 @@ func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk
 	return createTestBaseKeeperAndContext(t, contractAdmin)
 }
 
-func CreateTestBlockEntry(ctx sdk.Context, blockTracking gstTypes.BlockGasTracking) {
-	kvStore := ctx.KVStore(storeKey)
-	bz, err := simapp.MakeTestEncodingConfig().Marshaler.Marshal(&blockTracking)
-	if err != nil {
-		panic(err)
+func CreateTestBlockEntry(ctx sdk.Context, k keeper.Keeper, blockTracking gstTypes.BlockGasTracking) {
+	k.TrackNewBlock(ctx)
+	for _, tx := range blockTracking.TxTrackingInfos {
+		k.TrackNewTx(ctx, tx.MaxContractRewards, tx.MaxGasAllowed)
+		for _, op := range tx.ContractTrackingInfos {
+			addr, _ := sdk.AccAddressFromBech32(op.Address)
+			k.TrackContractGasUsage(ctx, addr, wasmTypes.GasConsumptionInfo{
+				VMGas:  op.OriginalVmGas,
+				SDKGas: op.OriginalSdkGas,
+			}, op.Operation)
+		}
 	}
-	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
 }
 
 type TestContractInfoView struct {

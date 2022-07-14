@@ -10,7 +10,6 @@ import (
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -111,11 +110,34 @@ func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk
 	return createTestBaseKeeperAndContext(t, contractAdmin)
 }
 
+func TestKeeper_Tracking(t *testing.T) {
+	ctx, k := CreateTestKeeperAndContext(t, nil)
+	k.TrackNewBlock(ctx)
+	k.TrackNewTx(ctx, sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(10))), 100_000)
+	k.TrackContractGasUsage(ctx, sdk.AccAddress("exec"), wasmTypes.GasConsumptionInfo{
+		VMGas:  100,
+		SDKGas: 200,
+	}, gastracker.ContractOperation_CONTRACT_OPERATION_EXECUTION)
+	k.TrackContractGasUsage(ctx, sdk.AccAddress("query"), wasmTypes.GasConsumptionInfo{
+		VMGas:  200,
+		SDKGas: 300,
+	}, gastracker.ContractOperation_CONTRACT_OPERATION_QUERY)
+
+	k.TrackNewTx(ctx, sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(20))), 200_000) // tx that does nothing with contracts
+
+	tracking := k.GetCurrentBlockTracking(ctx)
+	t.Logf("%#v", &tracking)
+	require.Equal(t, nil, nil)
+
+	// TODO test panic case
+}
+
 func TestKeeper_GetAndIncreaseTxIdentifier_ResetTxIdentifier(t *testing.T) {
 	ctx, k := CreateTestKeeperAndContext(t, nil)
 	k.ResetTxIdentifier(ctx)
 	require.Equal(t, uint64(0), k.GetAndIncreaseTxIdentifier(ctx))
 	require.Equal(t, uint64(1), k.GetAndIncreaseTxIdentifier(ctx))
+	require.Equal(t, uint64(1), k.GetCurrentTxIdentifier(ctx))
 }
 
 func TestKeeper_UpdateGetDappInflationaryRewards(t *testing.T) {
@@ -595,15 +617,13 @@ func TestIngestionOfGasRecords(t *testing.T) {
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 
-	err := keeper.TrackNewBlock(ctx)
-	require.NoError(t, err, "We should be able to track new block")
+	keeper.TrackNewBlock(ctx)
 
-	err = keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 5)
-	require.NoError(t, err, "We should be able to track new tx")
+	keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 5)
 
 	// Ingest gas record should be successful, but should skip the entry
 	// since there is no contract metadata
-	err = keeper.IngestGasRecord(ctx, []wasmTypes.ContractGasRecord{
+	err := keeper.IngestGasRecord(ctx, []wasmTypes.ContractGasRecord{
 		{
 			OperationId:     wasmTypes.ContractOperationInstantiate,
 			ContractAddress: spareAddress[1].String(),
@@ -615,9 +635,7 @@ func TestIngestionOfGasRecords(t *testing.T) {
 	})
 	require.NoError(t, err, "IngestGasRecord should be successful")
 
-	blockTracking, err := keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get Current block tracking info")
-
+	blockTracking := keeper.GetCurrentBlockTracking(ctx)
 	require.Equal(t, 1, len(blockTracking.TxTrackingInfos))
 
 	require.Equal(t, 0, len(blockTracking.TxTrackingInfos[0].ContractTrackingInfos))
@@ -671,8 +689,7 @@ func TestIngestionOfGasRecords(t *testing.T) {
 	})
 	require.NoError(t, err, "IngestGasRecord should be successful")
 
-	blockTracking, err = keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get Current block tracking info")
+	blockTracking = keeper.GetCurrentBlockTracking(ctx)
 
 	require.Equal(t, 1, len(blockTracking.TxTrackingInfos))
 
@@ -703,30 +720,17 @@ func TestAddContractGasUsage(t *testing.T) {
 
 	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
 
-	err := keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 0}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
-	require.EqualError(t, err, gastracker.ErrBlockTrackingDataNotFound.Error(), "We cannot track contract gas since block tracking does not exists")
-
-	err = keeper.TrackNewBlock(ctx)
-	require.NoError(t, err, "We should be able to track new block")
-
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 8}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
-	require.EqualError(t, err, gastracker.ErrTxTrackingDataNotFound.Error(), "We cannot track contract gas since tx tracking does not exists")
+	keeper.TrackNewBlock(ctx)
 
 	// Let's track one tx with one contract gas usage
-	err = keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 5)
-	require.NoError(t, err, "We should be able to track new transaction")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 2}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
-	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
+	keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 5)
+	keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 2}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 
-	err = keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 6)
-	require.NoError(t, err, "We should be able to track new transaction")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], wasmTypes.GasConsumptionInfo{SDKGas: 2, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_REPLY)
-	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[3], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_SUDO)
-	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
+	keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 6)
+	keeper.TrackContractGasUsage(ctx, spareAddress[2], wasmTypes.GasConsumptionInfo{SDKGas: 2, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_REPLY)
+	keeper.TrackContractGasUsage(ctx, spareAddress[3], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_SUDO)
 
-	blockTrackingObj, err := keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get block tracking object")
+	blockTrackingObj := keeper.GetCurrentBlockTracking(ctx)
 	require.Equal(t, 2, len(blockTrackingObj.TxTrackingInfos))
 	require.Equal(t, gastracker.TransactionTracking{
 		MaxGasAllowed:      5,
@@ -759,11 +763,8 @@ func TestAddContractGasUsage(t *testing.T) {
 		},
 	}, blockTrackingObj.TxTrackingInfos[1])
 
-	err = keeper.TrackNewBlock(ctx)
-	require.NoError(t, err, "We should be able to track new block")
-
-	blockTrackingObj, err = keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get the block tracking obj")
+	keeper.TrackNewBlock(ctx)
+	blockTrackingObj = keeper.GetCurrentBlockTracking(ctx)
 	// It should be empty
 	require.Equal(t, gastracker.BlockGasTracking{}, blockTrackingObj)
 }
@@ -781,24 +782,20 @@ func TestBlockTrackingReadWrite(t *testing.T) {
 		MaxGasAllowed: 1000,
 	}
 
-	err := keeper.TrackNewBlock(ctx)
-	require.NoError(t, err, "We should be able to track new block")
+	keeper.TrackNewBlock(ctx)
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.cdc, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{dummyTxTracking1}})
+	CreateTestBlockEntry(ctx, keeper, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{dummyTxTracking1}})
 
 	// We should be able to retrieve the block tracking info
-	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get current block tracking")
+	currentBlockTrackingInfo := keeper.GetCurrentBlockTracking(ctx)
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
 	require.Equal(t, dummyTxTracking1, currentBlockTrackingInfo.TxTrackingInfos[0])
 
-	err = keeper.TrackNewBlock(ctx)
-	require.NoError(t, err, "We should be able to track new block in any case")
+	keeper.TrackNewBlock(ctx)
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.cdc, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{dummyTxTracking2}})
+	CreateTestBlockEntry(ctx, keeper, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{dummyTxTracking2}})
 
-	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get current block")
+	currentBlockTrackingInfo = keeper.GetCurrentBlockTracking(ctx)
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
 	require.Equal(t, dummyTxTracking2, currentBlockTrackingInfo.TxTrackingInfos[0])
 }
@@ -816,11 +813,16 @@ func GenerateRandomAccAddress() sdk.AccAddress {
 
 // TODO: this is shared test util, that is copied
 // from /module/abci_test, refactor
-func CreateTestBlockEntry(ctx sdk.Context, key store.Key, appCodec codec.Codec, blockTracking gstTypes.BlockGasTracking) {
-	kvStore := ctx.KVStore(key)
-	bz, err := appCodec.Marshal(&blockTracking)
-	if err != nil {
-		panic(err)
+func CreateTestBlockEntry(ctx sdk.Context, k Keeper, blockTracking gstTypes.BlockGasTracking) {
+	k.TrackNewBlock(ctx)
+	for _, tx := range blockTracking.TxTrackingInfos {
+		k.TrackNewTx(ctx, tx.MaxContractRewards, tx.MaxGasAllowed)
+		for _, op := range tx.ContractTrackingInfos {
+			addr, _ := sdk.AccAddressFromBech32(op.Address)
+			k.TrackContractGasUsage(ctx, addr, wasmTypes.GasConsumptionInfo{
+				VMGas:  op.OriginalVmGas,
+				SDKGas: op.OriginalSdkGas,
+			}, op.Operation)
+		}
 	}
-	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
 }

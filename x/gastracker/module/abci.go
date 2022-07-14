@@ -71,32 +71,11 @@ func commitPendingMetadata(context sdk.Context, gasTrackingKeeper keeper.Keeper)
 
 // resetBlockGasTracking resets the current status and returns the last blockGasTracking
 func resetBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.Keeper) gstTypes.BlockGasTracking {
-	lastBlockGasTracking := getCurrentBlockGasTracking(context, gasTrackingKeeper)
+	lastBlockGasTracking := gasTrackingKeeper.GetCurrentBlockTracking(context)
 
-	if err := gasTrackingKeeper.TrackNewBlock(context); err != nil {
-		panic(err)
-	}
+	gasTrackingKeeper.TrackNewBlock(context)
 
-	gasTrackingKeeper.ResetTxIdentifier(context)
 	return lastBlockGasTracking
-}
-
-// getCurrentBlockGasTracking returns the actual block gas tracking, panics if empty and block height is bigger than one.
-func getCurrentBlockGasTracking(context sdk.Context, gasTrackingKeeper keeper.Keeper) gstTypes.BlockGasTracking {
-	currentBlockTrackingInfo, err := gasTrackingKeeper.GetCurrentBlockTracking(context)
-	if err != nil {
-		switch err {
-		case gstTypes.ErrBlockTrackingDataNotFound:
-			// Only panic when there was a previous block
-			if context.BlockHeight() > 1 {
-				panic(err)
-			}
-		default:
-			panic(err)
-		}
-	}
-
-	return currentBlockTrackingInfo
 }
 
 // distributeRewards distributes the calculated rewards to all the contracts owners.
