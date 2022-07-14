@@ -1,13 +1,13 @@
 package keeper
 
 import (
+	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	gastracker "github.com/archway-network/archway/x/gastracker"
@@ -23,13 +23,13 @@ type MintKeeper interface {
 }
 
 type Keeper struct {
+	WasmGasRegister wasmkeeper.GasRegister // can safely be exported since it's readonly.
+
 	key              sdk.StoreKey
 	cdc              codec.Codec
 	paramSpace       gastracker.Subspace
 	contractInfoView ContractInfoView
-	wasmGasRegister  wasmkeeper.GasRegister
-
-	mintKeeper MintKeeper
+	mintKeeper       MintKeeper
 }
 
 func NewGasTrackingKeeper(
@@ -48,7 +48,7 @@ func NewGasTrackingKeeper(
 		cdc:              appCodec,
 		paramSpace:       paramSpace,
 		contractInfoView: contractInfoView,
-		wasmGasRegister:  gasRegister,
+		WasmGasRegister:  gasRegister,
 		mintKeeper:       mintKeeper,
 	}
 }
@@ -159,84 +159,94 @@ func (k Keeper) CommitPendingContractMetadata(ctx sdk.Context) (int, error) {
 	return len(keysToBeDeleted), nil
 }
 
-func (k Keeper) TrackNewBlock(ctx sdk.Context) error {
-	gstKvStore := ctx.KVStore(k.key)
-	bz, err := k.cdc.Marshal(&gastracker.BlockGasTracking{})
-	if err != nil {
-		return err
+func (k Keeper) TrackNewBlock(ctx sdk.Context) {
+	// reset tx identifier
+	k.ResetTxIdentifier(ctx)
+	// delete tx tracking information
+	store := prefix.NewStore(ctx.KVStore(k.key), append(gastracker.PrefixGasTrackingTxTracking, sdk.Uint64ToBigEndian(uint64(ctx.BlockHeight()))...))
+	iter := store.Iterator(nil, nil)
+	var keys [][]byte
+	for ; iter.Valid(); iter.Next() {
+		keys = append(keys, iter.Key())
 	}
-	gstKvStore.Set([]byte(gastracker.CurrentBlockTrackingKey), bz)
-	return nil
+
+	for _, key := range keys {
+		store.Delete(key)
+	}
 }
 
-func (k Keeper) GetCurrentBlockTracking(ctx sdk.Context) (gastracker.BlockGasTracking, error) {
-	gstKvStore := ctx.KVStore(k.key)
-
+func (k Keeper) GetCurrentBlockTracking(ctx sdk.Context) gastracker.BlockGasTracking {
+	store := prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixGasTrackingTxTracking)
+	// we prefix over current block height
+	iter := prefix.NewStore(store, sdk.Uint64ToBigEndian(uint64(ctx.BlockHeight()))).Iterator(nil, nil)
+	defer iter.Close()
 	var currentBlockTracking gastracker.BlockGasTracking
-	bz := gstKvStore.Get([]byte(gastracker.CurrentBlockTrackingKey))
-	if bz == nil {
-		return currentBlockTracking, gastracker.ErrBlockTrackingDataNotFound
+
+	for ; iter.Valid(); iter.Next() {
+		v := gastracker.TransactionTracking{}
+		k.cdc.MustUnmarshal(iter.Value(), &v)
+		currentBlockTracking.TxTrackingInfos = append(currentBlockTracking.TxTrackingInfos, v)
 	}
-	err := k.cdc.Unmarshal(bz, &currentBlockTracking)
-	return currentBlockTracking, err
+
+	return currentBlockTracking
 }
 
-func (k Keeper) TrackNewTx(ctx sdk.Context, fee []sdk.DecCoin, gasLimit uint64) error {
-	gstKvStore := ctx.KVStore(k.key)
+func (k Keeper) TrackNewTx(ctx sdk.Context, fee []sdk.DecCoin, gasLimit uint64) {
+	txIdentifier := k.GetAndIncreaseTxIdentifier(ctx)
+	store := prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixGasTrackingTxTracking)
 
 	var currentTxGasTracking gastracker.TransactionTracking
 	currentTxGasTracking.MaxContractRewards = fee
 	currentTxGasTracking.MaxGasAllowed = gasLimit
 
-	bz := gstKvStore.Get([]byte(gastracker.CurrentBlockTrackingKey))
-	if bz == nil {
-		return gastracker.ErrBlockTrackingDataNotFound
-	}
-	var currentBlockTracking gastracker.BlockGasTracking
-	err := k.cdc.Unmarshal(bz, &currentBlockTracking)
-	if err != nil {
-		return err
-	}
-	currentBlockTracking.TxTrackingInfos = append(currentBlockTracking.TxTrackingInfos, currentTxGasTracking)
-	bz, err = k.cdc.Marshal(&currentBlockTracking)
-	if err != nil {
-		return err
-	}
-	gstKvStore.Set([]byte(gastracker.CurrentBlockTrackingKey), bz)
-	return nil
+	store.Set(
+		append(sdk.Uint64ToBigEndian(uint64(ctx.BlockHeight())), sdk.Uint64ToBigEndian(txIdentifier)...),
+		k.cdc.MustMarshal(&currentTxGasTracking),
+	)
 }
 
-func (k Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, originalGas wasmTypes.GasConsumptionInfo, operation gastracker.ContractOperation) error {
+func (k Keeper) TrackContractGasUsage(ctx sdk.Context, contractAddress sdk.AccAddress, originalGas wasmTypes.GasConsumptionInfo, operation gastracker.ContractOperation) {
+	store := prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixGasTrackingTxTracking)
+	key := append(sdk.Uint64ToBigEndian(uint64(ctx.BlockHeight())), sdk.Uint64ToBigEndian(k.GetCurrentTxIdentifier(ctx))...)
 
-	gstKvStore := ctx.KVStore(k.key)
-	bz := gstKvStore.Get([]byte(gastracker.CurrentBlockTrackingKey))
-	if bz == nil {
-		return gastracker.ErrBlockTrackingDataNotFound
+	bytes := store.Get(key)
+	if bytes == nil {
+		// panicking here since TrackNewTx must always be called before
+		// we start appending operations to contracts.
+		panic(fmt.Errorf("no gas tracking found for tx"))
 	}
-	var currentBlockGasTracking gastracker.BlockGasTracking
-	err := k.cdc.Unmarshal(bz, &currentBlockGasTracking)
-	if err != nil {
-		return err
-	}
+	var transactionTracking gastracker.TransactionTracking
+	k.cdc.MustUnmarshal(bytes, &transactionTracking)
 
-	txsLen := len(currentBlockGasTracking.TxTrackingInfos)
-	if txsLen == 0 {
-		return gastracker.ErrTxTrackingDataNotFound
-	}
-	currentTxGasTracking := currentBlockGasTracking.TxTrackingInfos[txsLen-1]
-	currentBlockGasTracking.TxTrackingInfos[txsLen-1].ContractTrackingInfos = append(currentTxGasTracking.ContractTrackingInfos, gastracker.ContractGasTracking{
+	transactionTracking.ContractTrackingInfos = append(transactionTracking.ContractTrackingInfos, gastracker.ContractGasTracking{
 		Address:        contractAddress.String(),
 		OriginalVmGas:  originalGas.VMGas,
 		OriginalSdkGas: originalGas.SDKGas,
 		Operation:      operation,
 	})
-	bz, err = k.cdc.Marshal(&currentBlockGasTracking)
-	if err != nil {
-		return err
-	}
+	store.Set(key, k.cdc.MustMarshal(&transactionTracking))
+}
 
-	gstKvStore.Set([]byte(gastracker.CurrentBlockTrackingKey), bz)
-	return nil
+// GetAndIncreaseTxIdentifier gets the current Tx identifier.
+// Then increases the current tx identifier by 1.
+// Assumes there is already a valid value saved in the store.
+func (k Keeper) GetAndIncreaseTxIdentifier(ctx sdk.Context) uint64 {
+	store := prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixGasTrackingTxIdentifier)
+	value := sdk.BigEndianToUint64(store.Get(gastracker.KeyTxIdentifier))
+	store.Set(gastracker.KeyTxIdentifier, sdk.Uint64ToBigEndian(value+1))
+	return value
+}
+
+// GetCurrentTxIdentifier gets the current Tx identifier.
+// Contract: assumes GetAndIncreaseTxIdentifier was called
+// at least once in this block.
+func (k Keeper) GetCurrentTxIdentifier(ctx sdk.Context) uint64 {
+	return sdk.BigEndianToUint64(prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixGasTrackingTxIdentifier).Get(gastracker.KeyTxIdentifier)) - 1
+}
+
+// ResetTxIdentifier resets the current Tx identifier to 0.
+func (k Keeper) ResetTxIdentifier(ctx sdk.Context) {
+	prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixGasTrackingTxIdentifier).Set(gastracker.KeyTxIdentifier, sdk.Uint64ToBigEndian(0))
 }
 
 // UpdateDappInflationaryRewards sets the current block inflationary rewards.

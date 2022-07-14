@@ -47,10 +47,7 @@ func (g *queryServer) BlockGasTracking(ctx context.Context, request *gstTypes.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	blockGasTracking, err := g.keeper.GetCurrentBlockTracking(sdk.UnwrapSDKContext(ctx))
-	if err != nil {
-		return nil, err
-	}
+	blockGasTracking := g.keeper.GetCurrentBlockTracking(sdk.UnwrapSDKContext(ctx))
 
 	return &gstTypes.QueryBlockGasTrackingResponse{
 		BlockGasTracking: &blockGasTracking,

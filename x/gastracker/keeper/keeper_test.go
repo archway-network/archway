@@ -1,118 +1,78 @@
-package keeper
+package keeper_test
 
 import (
-	"crypto/rand"
-	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"os"
+	"github.com/archway-network/archway/x/gastracker/testutil"
 	"testing"
-	"time"
 
-	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
-	tmLog "github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	db "github.com/tendermint/tm-db"
 
 	"github.com/archway-network/archway/x/gastracker"
-	gstTypes "github.com/archway-network/archway/x/gastracker"
 )
 
-type TestContractInfoView struct {
-	adminMap     map[string]string
-	defaultAdmin string
+func TestKeeper_Tracking(t *testing.T) {
+	ctx, k := testutil.CreateTestKeeperAndContext(t, nil)
+	t.Run("success", func(t *testing.T) {
+		ctx, _ := ctx.CacheContext()
+		k.TrackNewBlock(ctx)
+		k.TrackNewTx(ctx, sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(10))), 100_000)
+		k.TrackContractGasUsage(ctx, sdk.AccAddress("exec"), wasmTypes.GasConsumptionInfo{
+			VMGas:  100,
+			SDKGas: 200,
+		}, gastracker.ContractOperation_CONTRACT_OPERATION_EXECUTION)
+		k.TrackContractGasUsage(ctx, sdk.AccAddress("query"), wasmTypes.GasConsumptionInfo{
+			VMGas:  200,
+			SDKGas: 300,
+		}, gastracker.ContractOperation_CONTRACT_OPERATION_QUERY)
+
+		k.TrackNewTx(ctx, sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(20))), 200_000) // tx that does nothing with contracts
+
+		tracking := k.GetCurrentBlockTracking(ctx)
+		require.Equal(t, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{
+			{
+				MaxGasAllowed:      100_000,
+				MaxContractRewards: sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(10))),
+				ContractTrackingInfos: []gastracker.ContractGasTracking{
+					{
+						Address:        sdk.AccAddress("exec").String(),
+						OriginalVmGas:  100,
+						OriginalSdkGas: 200,
+						Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_EXECUTION,
+					},
+					{
+						Address:        sdk.AccAddress("query").String(),
+						OriginalVmGas:  200,
+						OriginalSdkGas: 300,
+						Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_QUERY,
+					},
+				},
+			},
+			{
+				MaxGasAllowed:         200_000,
+				MaxContractRewards:    sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(20))),
+				ContractTrackingInfos: nil,
+			},
+		}}, tracking)
+	})
+	t.Run("panic", func(t *testing.T) {
+		require.Panics(t, func() {
+			k.TrackContractGasUsage(ctx, sdk.AccAddress("fail"), wasmTypes.GasConsumptionInfo{}, 0)
+		})
+	})
 }
 
-func NewTestContractInfoView(defaultAdmin string) *TestContractInfoView {
-	return &TestContractInfoView{
-		adminMap:     make(map[string]string),
-		defaultAdmin: defaultAdmin,
-	}
-}
-
-func (t *TestContractInfoView) GetContractInfo(_ sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
-	if admin, ok := t.adminMap[contractAddress.String()]; ok {
-		return &wasmTypes.ContractInfo{Admin: admin}
-	} else {
-		return &wasmTypes.ContractInfo{Admin: t.defaultAdmin}
-	}
-}
-
-func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string, admin string) {
-	t.adminMap[contractAddress] = admin
-}
-
-var _ ContractInfoView = &TestContractInfoView{}
-
-type subspace struct {
-	params gstTypes.Params
-}
-
-func (s *subspace) GetParamSet(_ sdk.Context, ps paramsTypes.ParamSet) {
-	*ps.(*gstTypes.Params) = s.params
-}
-
-func (s *subspace) SetParamSet(_ sdk.Context, paramset paramsTypes.ParamSet) {
-	s.params = *paramset.(*gastracker.Params)
-}
-
-type mockMinter struct{}
-
-func (t mockMinter) GetParams(_ sdk.Context) (params mintTypes.Params) {
-	return mintTypes.Params{
-		MintDenom:     "test",
-		BlocksPerYear: 100,
-	}
-}
-
-func (t mockMinter) GetMinter(_ sdk.Context) (minter mintTypes.Minter) {
-	return mintTypes.Minter{
-		AnnualProvisions: sdk.NewDec(76500),
-	}
-}
-
-func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, Keeper) {
-	memDB := db.NewMemDB()
-	ms := store.NewCommitMultiStore(memDB)
-	storeKey := sdk.NewKVStoreKey("TestStore")
-	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, memDB)
-	err := ms.LoadLatestVersion()
-	require.NoError(t, err, "Loading latest version should not fail")
-	encodingConfig := simapp.MakeTestEncodingConfig()
-	appCodec := encodingConfig.Marshaler
-
-	subspace := subspace{}
-
-	keeper := Keeper{
-		key:              storeKey,
-		cdc:              appCodec,
-		paramSpace:       &subspace,
-		contractInfoView: NewTestContractInfoView(contractAdmin.String()),
-		wasmGasRegister:  wasmKeeper.NewDefaultWasmGasRegister(),
-		mintKeeper:       mockMinter{},
-	}
-
-	ctx := sdk.NewContext(ms, tmproto.Header{
-		Height: 1234567,
-		Time:   time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
-	}, false, tmLog.NewTMLogger(os.Stdout))
-
-	params := gastracker.DefaultParams()
-	subspace.SetParamSet(ctx, &params)
-	return ctx, keeper
-}
-func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, Keeper) {
-	return createTestBaseKeeperAndContext(t, contractAdmin)
+func TestKeeper_GetAndIncreaseTxIdentifier_ResetTxIdentifier(t *testing.T) {
+	ctx, k := testutil.CreateTestKeeperAndContext(t, nil)
+	k.ResetTxIdentifier(ctx)
+	require.Equal(t, uint64(0), k.GetAndIncreaseTxIdentifier(ctx))
+	require.Equal(t, uint64(1), k.GetAndIncreaseTxIdentifier(ctx))
+	require.Equal(t, uint64(1), k.GetCurrentTxIdentifier(ctx))
 }
 
 func TestKeeper_UpdateGetDappInflationaryRewards(t *testing.T) {
-	ctx, k := CreateTestKeeperAndContext(t, nil)
+	ctx, k := testutil.CreateTestKeeperAndContext(t, nil)
 	t.Run("success", func(t *testing.T) {
 		rewards := k.UpdateDappInflationaryRewards(ctx, k.GetParams(ctx))
 		gotRewards, err := k.GetDappInflationaryRewards(ctx, ctx.BlockHeight())
@@ -131,10 +91,10 @@ func TestKeeper_UpdateGetDappInflationaryRewards(t *testing.T) {
 func TestContractMetadataHandling(t *testing.T) {
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 	// Should return appropriate error when contract metadata is not found
 	_, err := keeper.GetContractMetadata(ctx, spareAddress[1])
 	require.EqualError(
@@ -398,10 +358,10 @@ func TestContractMetadataHandling(t *testing.T) {
 func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
-	ctx, keeper := CreateTestKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 
 	_, err := keeper.GetLeftOverRewardEntry(ctx, spareAddress[1])
 	require.EqualError(t, err, gastracker.ErrRewardEntryNotFound.Error(), "Getting left over reward entry should fail")
@@ -505,10 +465,10 @@ func TestCreateOrMergeLeftOverRewardEntry(t *testing.T) {
 func TestCalculateUpdatedGas(t *testing.T) {
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
-	ctx, keeper := CreateTestKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 
 	// No change in updated gas when contract's metadata does not exists
 	gasRecord := wasmTypes.ContractGasRecord{
@@ -583,34 +543,30 @@ func TestCalculateUpdatedGas(t *testing.T) {
 func TestIngestionOfGasRecords(t *testing.T) {
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 
-	err := keeper.TrackNewBlock(ctx)
-	require.NoError(t, err, "We should be able to track new block")
+	keeper.TrackNewBlock(ctx)
 
-	err = keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 5)
-	require.NoError(t, err, "We should be able to track new tx")
+	keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 5)
 
 	// Ingest gas record should be successful, but should skip the entry
 	// since there is no contract metadata
-	err = keeper.IngestGasRecord(ctx, []wasmTypes.ContractGasRecord{
+	err := keeper.IngestGasRecord(ctx, []wasmTypes.ContractGasRecord{
 		{
 			OperationId:     wasmTypes.ContractOperationInstantiate,
 			ContractAddress: spareAddress[1].String(),
 			OriginalGas: wasmTypes.GasConsumptionInfo{
 				SDKGas: 4,
-				VMGas:  keeper.wasmGasRegister.ToWasmVMGas(2),
+				VMGas:  keeper.WasmGasRegister.ToWasmVMGas(2),
 			},
 		},
 	})
 	require.NoError(t, err, "IngestGasRecord should be successful")
 
-	blockTracking, err := keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get Current block tracking info")
-
+	blockTracking := keeper.GetCurrentBlockTracking(ctx)
 	require.Equal(t, 1, len(blockTracking.TxTrackingInfos))
 
 	require.Equal(t, 0, len(blockTracking.TxTrackingInfos[0].ContractTrackingInfos))
@@ -642,7 +598,7 @@ func TestIngestionOfGasRecords(t *testing.T) {
 			ContractAddress: spareAddress[1].String(),
 			OriginalGas: wasmTypes.GasConsumptionInfo{
 				SDKGas: 2,
-				VMGas:  keeper.wasmGasRegister.ToWasmVMGas(1),
+				VMGas:  keeper.WasmGasRegister.ToWasmVMGas(1),
 			},
 		},
 		{
@@ -650,7 +606,7 @@ func TestIngestionOfGasRecords(t *testing.T) {
 			ContractAddress: spareAddress[2].String(),
 			OriginalGas: wasmTypes.GasConsumptionInfo{
 				SDKGas: 3,
-				VMGas:  keeper.wasmGasRegister.ToWasmVMGas(2),
+				VMGas:  keeper.WasmGasRegister.ToWasmVMGas(2),
 			},
 		},
 		{
@@ -658,14 +614,13 @@ func TestIngestionOfGasRecords(t *testing.T) {
 			ContractAddress: spareAddress[3].String(),
 			OriginalGas: wasmTypes.GasConsumptionInfo{
 				SDKGas: 4,
-				VMGas:  keeper.wasmGasRegister.ToWasmVMGas(3),
+				VMGas:  keeper.WasmGasRegister.ToWasmVMGas(3),
 			},
 		},
 	})
 	require.NoError(t, err, "IngestGasRecord should be successful")
 
-	blockTracking, err = keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get Current block tracking info")
+	blockTracking = keeper.GetCurrentBlockTracking(ctx)
 
 	require.Equal(t, 1, len(blockTracking.TxTrackingInfos))
 
@@ -691,35 +646,22 @@ func TestIngestionOfGasRecords(t *testing.T) {
 func TestAddContractGasUsage(t *testing.T) {
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 
-	err := keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 0}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
-	require.EqualError(t, err, gastracker.ErrBlockTrackingDataNotFound.Error(), "We cannot track contract gas since block tracking does not exists")
-
-	err = keeper.TrackNewBlock(ctx)
-	require.NoError(t, err, "We should be able to track new block")
-
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 8}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
-	require.EqualError(t, err, gastracker.ErrTxTrackingDataNotFound.Error(), "We cannot track contract gas since tx tracking does not exists")
+	keeper.TrackNewBlock(ctx)
 
 	// Let's track one tx with one contract gas usage
-	err = keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 5)
-	require.NoError(t, err, "We should be able to track new transaction")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 2}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
-	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
+	keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 5)
+	keeper.TrackContractGasUsage(ctx, spareAddress[1], wasmTypes.GasConsumptionInfo{SDKGas: 1, VMGas: 2}, gastracker.ContractOperation_CONTRACT_OPERATION_INSTANTIATION)
 
-	err = keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 6)
-	require.NoError(t, err, "We should be able to track new transaction")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[2], wasmTypes.GasConsumptionInfo{SDKGas: 2, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_REPLY)
-	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
-	err = keeper.TrackContractGasUsage(ctx, spareAddress[3], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_SUDO)
-	require.NoError(t, err, "We should be able to track contract gas since block tracking obj and tx tracking obj exists")
+	keeper.TrackNewTx(ctx, []sdk.DecCoin{}, 6)
+	keeper.TrackContractGasUsage(ctx, spareAddress[2], wasmTypes.GasConsumptionInfo{SDKGas: 2, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_REPLY)
+	keeper.TrackContractGasUsage(ctx, spareAddress[3], wasmTypes.GasConsumptionInfo{SDKGas: 4, VMGas: 3}, gastracker.ContractOperation_CONTRACT_OPERATION_SUDO)
 
-	blockTrackingObj, err := keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get block tracking object")
+	blockTrackingObj := keeper.GetCurrentBlockTracking(ctx)
 	require.Equal(t, 2, len(blockTrackingObj.TxTrackingInfos))
 	require.Equal(t, gastracker.TransactionTracking{
 		MaxGasAllowed:      5,
@@ -752,11 +694,8 @@ func TestAddContractGasUsage(t *testing.T) {
 		},
 	}, blockTrackingObj.TxTrackingInfos[1])
 
-	err = keeper.TrackNewBlock(ctx)
-	require.NoError(t, err, "We should be able to track new block")
-
-	blockTrackingObj, err = keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get the block tracking obj")
+	keeper.TrackNewBlock(ctx)
+	blockTrackingObj = keeper.GetCurrentBlockTracking(ctx)
 	// It should be empty
 	require.Equal(t, gastracker.BlockGasTracking{}, blockTrackingObj)
 }
@@ -764,7 +703,7 @@ func TestAddContractGasUsage(t *testing.T) {
 // Test initialization of block tracking data for new block as well as marking end of the block for current block tracking
 // data
 func TestBlockTrackingReadWrite(t *testing.T) {
-	ctx, keeper := createTestBaseKeeperAndContext(t, sdk.AccAddress{})
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, sdk.AccAddress{})
 
 	dummyTxTracking1 := gastracker.TransactionTracking{
 		MaxGasAllowed: 500,
@@ -774,46 +713,20 @@ func TestBlockTrackingReadWrite(t *testing.T) {
 		MaxGasAllowed: 1000,
 	}
 
-	err := keeper.TrackNewBlock(ctx)
-	require.NoError(t, err, "We should be able to track new block")
+	keeper.TrackNewBlock(ctx)
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.cdc, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{dummyTxTracking1}})
+	testutil.CreateTestBlockEntry(ctx, keeper, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{dummyTxTracking1}})
 
 	// We should be able to retrieve the block tracking info
-	currentBlockTrackingInfo, err := keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get current block tracking")
+	currentBlockTrackingInfo := keeper.GetCurrentBlockTracking(ctx)
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
 	require.Equal(t, dummyTxTracking1, currentBlockTrackingInfo.TxTrackingInfos[0])
 
-	err = keeper.TrackNewBlock(ctx)
-	require.NoError(t, err, "We should be able to track new block in any case")
+	keeper.TrackNewBlock(ctx)
 
-	CreateTestBlockEntry(ctx, keeper.key, keeper.cdc, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{dummyTxTracking2}})
+	testutil.CreateTestBlockEntry(ctx, keeper, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{dummyTxTracking2}})
 
-	currentBlockTrackingInfo, err = keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get current block")
+	currentBlockTrackingInfo = keeper.GetCurrentBlockTracking(ctx)
 	require.Equal(t, len(currentBlockTrackingInfo.TxTrackingInfos), 1)
 	require.Equal(t, dummyTxTracking2, currentBlockTrackingInfo.TxTrackingInfos[0])
-}
-
-// TODO: this is shared test util, that is copied
-// from /module/abci_test, refactor
-func GenerateRandomAccAddress() sdk.AccAddress {
-	var address sdk.AccAddress = make([]byte, 20)
-	_, err := rand.Read(address)
-	if err != nil {
-		panic(err)
-	}
-	return address
-}
-
-// TODO: this is shared test util, that is copied
-// from /module/abci_test, refactor
-func CreateTestBlockEntry(ctx sdk.Context, key store.Key, appCodec codec.Codec, blockTracking gstTypes.BlockGasTracking) {
-	kvStore := ctx.KVStore(key)
-	bz, err := appCodec.Marshal(&blockTracking)
-	if err != nil {
-		panic(err)
-	}
-	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
 }

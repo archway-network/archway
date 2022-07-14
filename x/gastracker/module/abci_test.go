@@ -2,30 +2,14 @@ package module
 
 import (
 	"fmt"
-	"math/rand"
-	"os"
-	"testing"
-	"time"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/store"
-
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	gstTypes "github.com/archway-network/archway/x/gastracker"
+	"github.com/archway-network/archway/x/gastracker/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/abci/types"
-	tmLog "github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	db "github.com/tendermint/tm-db"
-
-	gastracker "github.com/archway-network/archway/x/gastracker"
-	gstTypes "github.com/archway-network/archway/x/gastracker"
-	keeper "github.com/archway-network/archway/x/gastracker/keeper"
+	"testing"
 )
 
 type Behaviour int
@@ -34,11 +18,6 @@ const (
 	Log Behaviour = iota
 	Error
 	Panic
-)
-
-// NOTE: this is needed to allow the keeper to set BlockGasTracking
-var (
-	storeKey = sdk.NewKVStoreKey(gastracker.StoreKey)
 )
 
 type RewardTransferKeeperCallLogs struct {
@@ -150,7 +129,7 @@ func disableGasRebateToUser(params gstTypes.Params) gstTypes.Params {
 
 // Test the conditions under which BeginBlocker and EndBlocker should panic or not panic
 func TestABCIPanicBehaviour(t *testing.T) {
-	ctx, keeper := CreateTestKeeperAndContext(t, sdk.AccAddress{})
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, sdk.AccAddress{})
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount("archway", "archway")
@@ -159,19 +138,13 @@ func TestABCIPanicBehaviour(t *testing.T) {
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
 
-	ctx = ctx.WithBlockHeight(2)
-	require.PanicsWithError(t, gstTypes.ErrBlockTrackingDataNotFound.Error(), func() {
-		BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
-	}, "BeginBlock should panic")
-
 	ctx = ctx.WithBlockHeight(1)
 
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// We should not have made any call to reward keeper
 	require.Zero(t, testRewardKeeper.Logs, "No logs should be there as no need to make new calls")
 	// We would have overwritten the TrackNewBlock obj
-	blockGasTracking, err := keeper.GetCurrentBlockTracking(ctx)
-	require.NoError(t, err, "We should be able to get new block gas tracking")
+	blockGasTracking := keeper.GetCurrentBlockTracking(ctx)
 	require.Equal(t, gstTypes.BlockGasTracking{}, blockGasTracking, "We should have overwritten block gas tracking obj")
 }
 
@@ -181,12 +154,12 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
 	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 
 	contractMetadatas := []gstTypes.ContractInstanceMetadata{
 		{
@@ -276,7 +249,7 @@ func TestRewardCalculation(t *testing.T) {
 
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
 	type expect struct {
@@ -301,7 +274,7 @@ func TestRewardCalculation(t *testing.T) {
 		},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
 
 	keeper.SetParams(ctx, params)
@@ -351,11 +324,9 @@ func TestRewardCalculation(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	testutil.CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -432,7 +403,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
 	type expect struct {
@@ -457,7 +428,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 		},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
 	keeper.SetParams(ctx, params)
 
@@ -506,11 +477,9 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	testutil.CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -583,7 +552,7 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
 	type expect struct {
@@ -608,7 +577,7 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 		},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
 
 	keeper.SetParams(ctx, params)
@@ -658,11 +627,9 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	testutil.CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -735,7 +702,7 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
 	type expect struct {
@@ -758,7 +725,7 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 		},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
 
 	keeper.SetParams(ctx, params)
@@ -808,11 +775,9 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	testutil.CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -886,7 +851,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
 	type expect struct {
@@ -901,7 +866,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 		logs:     []*RewardTransferKeeperCallLogs{},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
 
 	keeper.SetParams(ctx, params)
@@ -951,11 +916,9 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	testutil.CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -1021,7 +984,7 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
 	type expect struct {
@@ -1036,7 +999,7 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 		logs:     []*RewardTransferKeeperCallLogs{},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
 
 	keeper.SetParams(ctx, params)
@@ -1086,11 +1049,9 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	testutil.CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -1157,7 +1118,7 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 
 	var spareAddress = make([]sdk.AccAddress, 10)
 	for i := 0; i < 10; i++ {
-		spareAddress[i] = GenerateRandomAccAddress()
+		spareAddress[i] = testutil.GenerateRandomAccAddress()
 	}
 
 	type expect struct {
@@ -1182,7 +1143,7 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 		},
 	}
 
-	ctx, keeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, spareAddress[0])
 	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(200000))
 
 	keeper.SetParams(ctx, params)
@@ -1232,11 +1193,9 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 	require.Equal(t, 4, numberOfMetadataCommitted, "Number of metadata commits should match")
 
 	// Tracking new block with multiple tx tracking obj
-	err = keeper.TrackNewBlock(ctx)
+	keeper.TrackNewBlock(ctx)
 
-	require.NoError(t, err, "We should be able to track new block")
-
-	CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
+	testutil.CreateTestBlockEntry(ctx, keeper, gstTypes.BlockGasTracking{TxTrackingInfos: []gstTypes.TransactionTracking{
 		{
 			MaxGasAllowed:      10,
 			MaxContractRewards: []sdk.DecCoin{firstTxMaxContractReward[0], firstTxMaxContractReward[1]},
@@ -1302,95 +1261,4 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 	for i := 0; i < len(expected.rewardsB); i++ {
 		require.Equal(t, expected.rewardsB[i], leftOverEntry.ContractRewards[i])
 	}
-}
-
-// TODO: this is shared test util, that is copied
-// from /keeper/keeper_test, refactor
-func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.Keeper) {
-	encodingConfig := simapp.MakeTestEncodingConfig()
-	appCodec := encodingConfig.Marshaler
-
-	memDB := db.NewMemDB()
-	ms := store.NewCommitMultiStore(memDB)
-
-	mkey := sdk.NewKVStoreKey("test")
-	tkey := sdk.NewTransientStoreKey("transient_test")
-	tstoreKey := sdk.NewTransientStoreKey(gastracker.TStoreKey)
-
-	ms.MountStoreWithDB(mkey, sdk.StoreTypeIAVL, memDB)
-	ms.MountStoreWithDB(tkey, sdk.StoreTypeIAVL, memDB)
-	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, memDB)
-	ms.MountStoreWithDB(tstoreKey, sdk.StoreTypeTransient, memDB)
-
-	err := ms.LoadLatestVersion()
-	require.NoError(t, err, "Loading latest version should not fail")
-
-	pkeeper := paramskeeper.NewKeeper(appCodec, encodingConfig.Amino, mkey, tkey)
-	subspace := pkeeper.Subspace(gstTypes.ModuleName)
-
-	keeper := keeper.NewGasTrackingKeeper(
-		storeKey,
-		appCodec,
-		subspace,
-		NewTestContractInfoView(contractAdmin.String()),
-		wasmkeeper.NewDefaultWasmGasRegister(),
-		&TestMintParamsKeeper{B: Log},
-	)
-
-	ctx := sdk.NewContext(ms, tmproto.Header{
-		Time: time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
-	}, false, tmLog.NewTMLogger(os.Stdout))
-
-	params := gstTypes.DefaultParams()
-	subspace.SetParamSet(ctx, &params)
-	return ctx, keeper
-}
-
-func CreateTestKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) (sdk.Context, keeper.Keeper) {
-	return createTestBaseKeeperAndContext(t, contractAdmin)
-}
-
-func CreateTestBlockEntry(ctx sdk.Context, blockTracking gstTypes.BlockGasTracking) {
-	kvStore := ctx.KVStore(storeKey)
-	bz, err := simapp.MakeTestEncodingConfig().Marshaler.Marshal(&blockTracking)
-	if err != nil {
-		panic(err)
-	}
-	kvStore.Set([]byte(gstTypes.CurrentBlockTrackingKey), bz)
-}
-
-type TestContractInfoView struct {
-	keeper.ContractInfoView
-	adminMap     map[string]string
-	defaultAdmin string
-}
-
-func NewTestContractInfoView(defaultAdmin string) *TestContractInfoView {
-	return &TestContractInfoView{
-		adminMap:     make(map[string]string),
-		defaultAdmin: defaultAdmin,
-	}
-}
-
-func (t *TestContractInfoView) GetContractInfo(_ sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo {
-	if admin, ok := t.adminMap[contractAddress.String()]; ok {
-		return &wasmTypes.ContractInfo{Admin: admin}
-	} else {
-		return &wasmTypes.ContractInfo{Admin: t.defaultAdmin}
-	}
-}
-
-func (t *TestContractInfoView) AddContractToAdminMapping(contractAddress string, admin string) {
-	t.adminMap[contractAddress] = admin
-}
-
-var _ keeper.ContractInfoView = &TestContractInfoView{}
-
-func GenerateRandomAccAddress() sdk.AccAddress {
-	var address sdk.AccAddress = make([]byte, 20)
-	_, err := rand.Read(address)
-	if err != nil {
-		panic(err)
-	}
-	return address
 }
