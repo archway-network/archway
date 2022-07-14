@@ -14,24 +14,53 @@ import (
 
 func TestKeeper_Tracking(t *testing.T) {
 	ctx, k := testutil.CreateTestKeeperAndContext(t, nil)
-	k.TrackNewBlock(ctx)
-	k.TrackNewTx(ctx, sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(10))), 100_000)
-	k.TrackContractGasUsage(ctx, sdk.AccAddress("exec"), wasmTypes.GasConsumptionInfo{
-		VMGas:  100,
-		SDKGas: 200,
-	}, gastracker.ContractOperation_CONTRACT_OPERATION_EXECUTION)
-	k.TrackContractGasUsage(ctx, sdk.AccAddress("query"), wasmTypes.GasConsumptionInfo{
-		VMGas:  200,
-		SDKGas: 300,
-	}, gastracker.ContractOperation_CONTRACT_OPERATION_QUERY)
+	t.Run("success", func(t *testing.T) {
+		ctx, _ := ctx.CacheContext()
+		k.TrackNewBlock(ctx)
+		k.TrackNewTx(ctx, sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(10))), 100_000)
+		k.TrackContractGasUsage(ctx, sdk.AccAddress("exec"), wasmTypes.GasConsumptionInfo{
+			VMGas:  100,
+			SDKGas: 200,
+		}, gastracker.ContractOperation_CONTRACT_OPERATION_EXECUTION)
+		k.TrackContractGasUsage(ctx, sdk.AccAddress("query"), wasmTypes.GasConsumptionInfo{
+			VMGas:  200,
+			SDKGas: 300,
+		}, gastracker.ContractOperation_CONTRACT_OPERATION_QUERY)
 
-	k.TrackNewTx(ctx, sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(20))), 200_000) // tx that does nothing with contracts
+		k.TrackNewTx(ctx, sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(20))), 200_000) // tx that does nothing with contracts
 
-	tracking := k.GetCurrentBlockTracking(ctx)
-	t.Logf("%#v", &tracking)
-	require.Equal(t, nil, nil)
-
-	// TODO test panic case
+		tracking := k.GetCurrentBlockTracking(ctx)
+		require.Equal(t, gastracker.BlockGasTracking{TxTrackingInfos: []gastracker.TransactionTracking{
+			{
+				MaxGasAllowed:      100_000,
+				MaxContractRewards: sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(10))),
+				ContractTrackingInfos: []gastracker.ContractGasTracking{
+					{
+						Address:        sdk.AccAddress("exec").String(),
+						OriginalVmGas:  100,
+						OriginalSdkGas: 200,
+						Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_EXECUTION,
+					},
+					{
+						Address:        sdk.AccAddress("query").String(),
+						OriginalVmGas:  200,
+						OriginalSdkGas: 300,
+						Operation:      gastracker.ContractOperation_CONTRACT_OPERATION_QUERY,
+					},
+				},
+			},
+			{
+				MaxGasAllowed:         200_000,
+				MaxContractRewards:    sdk.NewDecCoins(sdk.NewDecCoin("test", sdk.NewInt(20))),
+				ContractTrackingInfos: nil,
+			},
+		}}, tracking)
+	})
+	t.Run("panic", func(t *testing.T) {
+		require.Panics(t, func() {
+			k.TrackContractGasUsage(ctx, sdk.AccAddress("fail"), wasmTypes.GasConsumptionInfo{}, 0)
+		})
+	})
 }
 
 func TestKeeper_GetAndIncreaseTxIdentifier_ResetTxIdentifier(t *testing.T) {
