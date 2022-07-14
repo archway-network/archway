@@ -4,12 +4,10 @@ import (
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	gastracker "github.com/archway-network/archway/x/gastracker"
@@ -187,7 +185,6 @@ func (k Keeper) GetCurrentBlockTracking(ctx sdk.Context) gastracker.BlockGasTrac
 	for ; iter.Valid(); iter.Next() {
 		v := gastracker.TransactionTracking{}
 		k.cdc.MustUnmarshal(iter.Value(), &v)
-		log.Printf("%s", &v)
 		currentBlockTracking.TxTrackingInfos = append(currentBlockTracking.TxTrackingInfos, v)
 	}
 
