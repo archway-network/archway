@@ -5,7 +5,6 @@ import (
 	gstTypes "github.com/archway-network/archway/x/gastracker"
 	"github.com/archway-network/archway/x/gastracker/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/abci/types"
@@ -268,7 +267,6 @@ func TestRewardCalculation(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
@@ -394,9 +392,6 @@ func TestRewardCalculation(t *testing.T) {
 	}
 }
 
-//func TestRewardCalculation(t *testing.T) {
-//}
-
 func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount("archway", "archway")
@@ -422,7 +417,6 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.666666666666666666")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
@@ -571,7 +565,6 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
@@ -719,7 +712,6 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.005355")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins()),
 		},
@@ -1137,7 +1129,6 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
