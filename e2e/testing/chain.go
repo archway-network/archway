@@ -255,9 +255,29 @@ func (chain *TestChain) NextBlock(skipTime time.Duration) {
 	chain.beginBlock()
 }
 
+type SendMsgOption func(opt *sendMsgOptions)
+
+type sendMsgOptions struct {
+	fees     sdk.Coins
+	gasLimit uint64
+}
+
+func SendMsgWithFees(coins sdk.Coins) SendMsgOption {
+	return func(opt *sendMsgOptions) {
+		opt.fees = coins
+	}
+}
+
 // SendMsgs sends a series of messages.
-func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs ...sdk.Msg) (sdk.GasInfo, *sdk.Result, error) {
-	const defGas = 10000000
+func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, error) {
+	options := &sendMsgOptions{
+		fees:     sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)),
+		gasLimit: 10_000_000,
+	}
+
+	for _, o := range opts {
+		o(options)
+	}
 
 	t := chain.t
 
@@ -269,8 +289,8 @@ func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs ...sdk.Ms
 	tx, err := helpers.GenTx(
 		chain.txConfig,
 		msgs,
-		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-		defGas,
+		options.fees,
+		options.gasLimit,
 		chain.GetChainID(),
 		[]uint64{senderAccI.GetAccountNumber()},
 		[]uint64{senderAccI.GetSequence()},
