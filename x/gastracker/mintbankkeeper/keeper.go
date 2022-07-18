@@ -1,6 +1,7 @@
 package mintbankkeeper
 
 import (
+	"fmt"
 	"github.com/archway-network/archway/x/gastracker"
 	"github.com/archway-network/archway/x/gastracker/common"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +15,7 @@ var (
 
 type GasTrackingKeeper interface {
 	GetParams(ctx sdk.Context) gastracker.Params
+	UpdateDappInflationaryRewards(ctx sdk.Context, rewards sdk.Coin)
 }
 
 func NewKeeper(bk minttypes.BankKeeper, gtk GasTrackingKeeper) Keeper {
@@ -53,6 +55,11 @@ func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recip
 	if err != nil {
 		return err
 	}
+
+	if len(dappRewards) != 1 {
+		panic(fmt.Errorf("unexpected dapp rewards: %s", dappRewards))
+	}
+	k.gtk.UpdateDappInflationaryRewards(ctx, dappRewards[0]) // note the minted coin is only and always one
 
 	return nil
 }

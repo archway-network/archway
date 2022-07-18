@@ -492,7 +492,6 @@ func NewArchwayApp(
 		app.getSubspace(gastracker.DefaultParamSpace),
 		app.WASMKeeper,
 		defaultGasRegister,
-		app.MintKeeper,
 	)
 
 	// note we set up mint keeper after gastracking keeper

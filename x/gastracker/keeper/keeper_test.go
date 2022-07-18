@@ -74,11 +74,12 @@ func TestKeeper_GetAndIncreaseTxIdentifier_ResetTxIdentifier(t *testing.T) {
 func TestKeeper_UpdateGetDappInflationaryRewards(t *testing.T) {
 	ctx, k := testutil.CreateTestKeeperAndContext(t, nil)
 	t.Run("success", func(t *testing.T) {
-		rewards := k.UpdateDappInflationaryRewards(ctx, k.GetParams(ctx))
+		rewards := sdk.NewCoin("test", sdk.NewInt(100))
+		k.UpdateDappInflationaryRewards(ctx, rewards)
 		gotRewards, err := k.GetDappInflationaryRewards(ctx, ctx.BlockHeight())
 		require.NoError(t, err)
 
-		require.Equal(t, rewards, gotRewards)
+		require.Equal(t, sdk.NewDecCoinFromCoin(rewards), gotRewards)
 	})
 
 	t.Run("not found", func(t *testing.T) {

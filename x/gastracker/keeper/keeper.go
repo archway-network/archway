@@ -4,22 +4,15 @@ import (
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	gastracker "github.com/archway-network/archway/x/gastracker"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	gastracker "github.com/archway-network/archway/x/gastracker"
 )
 
 type ContractInfoView interface {
 	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
-}
-
-type MintKeeper interface {
-	GetMinter(ctx sdk.Context) minttypes.Minter
-	GetParams(ctx sdk.Context) minttypes.Params
 }
 
 type Keeper struct {
@@ -29,7 +22,6 @@ type Keeper struct {
 	cdc              codec.Codec
 	paramSpace       gastracker.Subspace
 	contractInfoView ContractInfoView
-	mintKeeper       MintKeeper
 }
 
 func NewGasTrackingKeeper(
@@ -38,7 +30,6 @@ func NewGasTrackingKeeper(
 	paramSpace paramsTypes.Subspace,
 	contractInfoView ContractInfoView,
 	gasRegister wasmkeeper.GasRegister,
-	mintKeeper MintKeeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(gastracker.ParamKeyTable())
@@ -49,7 +40,6 @@ func NewGasTrackingKeeper(
 		paramSpace:       paramSpace,
 		contractInfoView: contractInfoView,
 		WasmGasRegister:  gasRegister,
-		mintKeeper:       mintKeeper,
 	}
 }
 
@@ -251,25 +241,13 @@ func (k Keeper) ResetTxIdentifier(ctx sdk.Context) {
 
 // UpdateDappInflationaryRewards sets the current block inflationary rewards.
 // Returns the inflationary rewards to be distributed.
-func (k Keeper) UpdateDappInflationaryRewards(ctx sdk.Context, params gastracker.Params) (rewards sdk.DecCoin) {
+func (k Keeper) UpdateDappInflationaryRewards(ctx sdk.Context, rewards sdk.Coin) {
 	store := prefix.NewStore(ctx.KVStore(k.key), gastracker.PrefixDappBlockInflationaryRewards)
-
-	// gets total inflationary rewards
-	totalInflationaryRewards := k.mintKeeper.
-		GetMinter(ctx).
-		BlockProvision(k.mintKeeper.GetParams(ctx))
-
-	dappInflationaryRewards := sdk.NewDecCoinFromDec(
-		totalInflationaryRewards.Denom,
-		totalInflationaryRewards.Amount.ToDec().Mul(params.DappInflationRewardsRatio),
-	)
 
 	store.Set(
 		sdk.Uint64ToBigEndian(uint64(ctx.BlockHeight())),
-		k.cdc.MustMarshal(&dappInflationaryRewards),
+		k.cdc.MustMarshal(&rewards),
 	)
-
-	return dappInflationaryRewards
 }
 
 // GetDappInflationaryRewards returns the dApp inflationary rewards at the given height.
@@ -280,6 +258,12 @@ func (k Keeper) GetDappInflationaryRewards(ctx sdk.Context, height int64) (rewar
 		return rewards, gastracker.ErrDappInflationaryRewardRecordNotFound.Wrapf("height %d", height)
 	}
 
-	k.cdc.MustUnmarshal(bytes, &rewards)
-	return rewards, nil
+	coin := sdk.Coin{}
+	k.cdc.MustUnmarshal(bytes, &coin)
+	return sdk.NewDecCoinFromCoin(coin), nil
+}
+
+// GetCurrentBlockDappInflationaryRewards returns the current block inflationary rewards.
+func (k Keeper) GetCurrentBlockDappInflationaryRewards(ctx sdk.Context) (sdk.DecCoin, error) {
+	return k.GetDappInflationaryRewards(ctx, ctx.BlockHeight())
 }

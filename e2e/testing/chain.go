@@ -60,7 +60,7 @@ func NewTestChain(t *testing.T, chainIdx int) *TestChain {
 	encCfg := app.MakeEncodingConfig()
 
 	//logger := log.TestingLogger()
-	logger := log.NewNopLogger()
+	logger := log.TestingLogger()
 
 	archApp := app.NewArchwayApp(
 		logger,
@@ -196,7 +196,6 @@ func NewTestChain(t *testing.T, chainIdx int) *TestChain {
 
 	// Start a new block
 	chain.beginBlock()
-
 	return &chain
 }
 

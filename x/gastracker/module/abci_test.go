@@ -88,6 +88,7 @@ func (t *TestMintParamsKeeper) GetMinter(_ sdk.Context) (minter mintTypes.Minter
 		AnnualProvisions: sdk.NewDec(76500),
 	}
 }
+
 func createLogModule(module string, mod string, coins sdk.Coins) *RewardTransferKeeperCallLogs {
 	return &RewardTransferKeeperCallLogs{
 		Method:          "SendCoinsFromModuleToModule",
@@ -96,6 +97,7 @@ func createLogModule(module string, mod string, coins sdk.Coins) *RewardTransfer
 		amt:             coins,
 	}
 }
+
 func createLogAddr(module string, addr string, coins sdk.Coins) *RewardTransferKeeperCallLogs {
 	return &RewardTransferKeeperCallLogs{
 		Method:        "SendCoinsFromModuleToAccount",
@@ -139,6 +141,7 @@ func TestABCIPanicBehaviour(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(1)
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// We should not have made any call to reward keeper
 	require.Zero(t, testRewardKeeper.Logs, "No logs should be there as no need to make new calls")
@@ -194,6 +197,8 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(1)
 
+	// simulate execution of the transfer of rewards
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewCoin("test", sdk.NewInt(100)))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 
 	// Now all pending metadata should have been committed
@@ -369,6 +374,7 @@ func TestRewardCalculation(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153)) // updates dapps inflationary rewards
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -518,6 +524,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -667,6 +674,7 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -814,6 +822,7 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -955,6 +964,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -1088,6 +1098,7 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -1231,6 +1242,7 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))

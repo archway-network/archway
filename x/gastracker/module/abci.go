@@ -33,9 +33,12 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	}
 	context.Logger().Debug("Got the tracking for block", "BlockTxDetails", lastBlockGasTracking)
 
-	contractTotalInflationRewards := gasTrackingKeeper.UpdateDappInflationaryRewards(context, params)
+	contractInflationaryRewards, err := gasTrackingKeeper.GetCurrentBlockDappInflationaryRewards(context)
+	if err != nil {
+		panic(err)
+	}
 
-	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, params, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
+	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, params, lastBlockGasTracking, gasTrackingKeeper, contractInflationaryRewards)
 
 	// We need to commit pending metadata before we return but after we calculated rewards.
 	commitPendingMetadata(context, gasTrackingKeeper)
