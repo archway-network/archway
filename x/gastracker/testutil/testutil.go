@@ -50,7 +50,6 @@ func createTestBaseKeeperAndContext(t *testing.T, contractAdmin sdk.AccAddress) 
 		subspace,
 		NewTestContractInfoView(contractAdmin.String()),
 		wasmkeeper.NewDefaultWasmGasRegister(),
-		mockMinter{},
 	)
 
 	ctx := sdk.NewContext(ms, tmproto.Header{

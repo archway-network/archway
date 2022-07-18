@@ -2,6 +2,7 @@ package e2eTesting
 
 import (
 	"bytes"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 	"time"
 
@@ -206,7 +207,7 @@ func (e *IBCEndpoint) sendPacketReceive(packet channelTypes.Packet) {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	e.dstEndpoint.updateIBCClient()
 }
@@ -227,7 +228,7 @@ func (e *IBCEndpoint) sendPacketAck(packet channelTypes.Packet, ack []byte) {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 }
 
 // sendPacketTimeout sends a MsgTimeout to the channel associated with the source chain.
@@ -255,7 +256,7 @@ func (e *IBCEndpoint) sendPacketTimeout(packet channelTypes.Packet) {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 }
 
 // createIBCClient creates a new IBC TM client.
@@ -296,7 +297,7 @@ func (e *IBCEndpoint) createIBCClient() {
 	)
 	require.NoError(t, err)
 
-	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	clientID := GetStringEventAttribute(res.Events, clientTypes.EventTypeCreateClient, clientTypes.AttributeKeyClientID)
 	require.NotEmpty(t, clientID)
@@ -320,7 +321,7 @@ func (e *IBCEndpoint) updateIBCClient() {
 	)
 	require.NoError(t, err)
 
-	srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 }
 
 // sendConnectionOpenInit sends a ConnectionOpenInit message to the source chain.
@@ -345,7 +346,7 @@ func (e *IBCEndpoint) sendConnectionOpenInit() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	e.connectionID = GetStringEventAttribute(res.Events, connectionTypes.EventTypeConnectionOpenInit, connectionTypes.AttributeKeyConnectionID)
 	require.NotEmpty(t, e.connectionID)
@@ -385,7 +386,7 @@ func (e *IBCEndpoint) sendConnectionOpenTry() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	if srcChainConnectionID == "" {
 		e.connectionID = GetStringEventAttribute(res.Events, connectionTypes.EventTypeConnectionOpenTry, connectionTypes.AttributeKeyConnectionID)
@@ -420,7 +421,7 @@ func (e *IBCEndpoint) sendConnectionOpenAck() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 }
 
 // sendConnectionOpenConfirm sends a ConnectionOpenConfirm message to the source chain.
@@ -441,7 +442,7 @@ func (e *IBCEndpoint) sendConnectionOpenConfirm() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 }
 
 // sendChannelOpenInit sends a ChannelOpenInit message to the source chain.
@@ -459,7 +460,7 @@ func (e *IBCEndpoint) sendChannelOpenInit() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	e.channelID = GetStringEventAttribute(res.Events, channelTypes.EventTypeChannelOpenInit, channelTypes.AttributeKeyChannelID)
 	require.NotEmpty(t, e.channelID)
@@ -490,7 +491,7 @@ func (e *IBCEndpoint) sendChannelOpenTry() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	if e.channelID == "" {
 		e.channelID = GetStringEventAttribute(res.Events, channelTypes.EventTypeChannelOpenTry, channelTypes.AttributeKeyChannelID)
@@ -519,7 +520,7 @@ func (e *IBCEndpoint) sendChannelOpenAck() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 }
 
 // sendChannelOpenConfirm sends a ChannelOpenConfirm message to the source chain.
@@ -541,7 +542,7 @@ func (e *IBCEndpoint) sendChannelOpenConfirm() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	srcChain.SendMsgs(srcChainSenderAcc, true, msg)
+	srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 }
 
 // getConnectionHandshakeProof returns all the proofs necessary to execute OpenTry or OpenAck during the handshake

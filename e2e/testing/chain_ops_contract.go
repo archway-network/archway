@@ -22,7 +22,7 @@ func (chain *TestChain) UploadContract(sender Account, wasmPath string, instanti
 		InstantiatePermission: &instantiatePerms,
 	}
 
-	_, res, err := chain.SendMsgs(sender, true, &txMsg)
+	_, res, err := chain.SendMsgs(sender, true, []sdk.Msg{&txMsg})
 	require.NoError(t, err)
 
 	txRes := chain.ParseSDKResultData(res)
@@ -55,7 +55,7 @@ func (chain *TestChain) InstantiateContract(sender Account, codeID uint64, admin
 		Funds:  funds,
 	}
 
-	_, res, err := chain.SendMsgs(sender, true, &txMsg)
+	_, res, err := chain.SendMsgs(sender, true, []sdk.Msg{&txMsg})
 	require.NoError(t, err)
 
 	txRes := chain.ParseSDKResultData(res)

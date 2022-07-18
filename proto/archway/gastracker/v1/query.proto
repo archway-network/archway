@@ -11,11 +11,15 @@ option (gogoproto.equal_all) = false;
 
 // Query service for Gas tracker
 service Query {
+  // Params returns parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/archway/gastracker/v1/params";
+  }
   // ContractMetadata returns gastracker metadata of contract
   rpc ContractMetadata(QueryContractMetadataRequest)
       returns (QueryContractMetadataResponse) {
     option (google.api.http).get =
-        "/archway/gastracker/v1/contract/metadata/{address}";
+        "/archway/gastracker/v1/contract_metadata/{address}";
   }
 
   // BlockGasTracking returns block gas tracking for the latest block
@@ -38,3 +42,11 @@ message QueryContractMetadataRequest { string address = 1; }
 
 // Response to the contract metadata query
 message QueryContractMetadataResponse { ContractInstanceMetadata metadata = 1; }
+
+message QueryParamsRequest {
+
+}
+
+message QueryParamsResponse {
+  archway.gastracker.v1.Params params = 1;
+}

@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/archway-network/archway/x/gastracker/mintbankkeeper"
 	"io"
 	"net/http"
 	"os"
@@ -366,15 +367,6 @@ func NewArchwayApp(
 		app.BankKeeper,
 		app.getSubspace(stakingtypes.ModuleName),
 	)
-	app.MintKeeper = mintkeeper.NewKeeper(
-		appCodec,
-		keys[minttypes.StoreKey],
-		app.getSubspace(minttypes.ModuleName),
-		&stakingKeeper,
-		app.AccountKeeper,
-		app.BankKeeper,
-		authtypes.FeeCollectorName,
-	)
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
 		keys[distrtypes.StoreKey],
@@ -500,7 +492,17 @@ func NewArchwayApp(
 		app.getSubspace(gastracker.DefaultParamSpace),
 		app.WASMKeeper,
 		defaultGasRegister,
-		app.MintKeeper,
+	)
+
+	// note we set up mint keeper after gastracking keeper
+	app.MintKeeper = mintkeeper.NewKeeper(
+		appCodec,
+		keys[minttypes.StoreKey],
+		app.getSubspace(minttypes.ModuleName),
+		&stakingKeeper,
+		app.AccountKeeper,
+		mintbankkeeper.NewKeeper(app.BankKeeper, app.GasTrackingKeeper),
+		authtypes.FeeCollectorName,
 	)
 
 	// Setting gas recorder here to avoid cyclic loop

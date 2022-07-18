@@ -5,7 +5,6 @@ import (
 	gstTypes "github.com/archway-network/archway/x/gastracker"
 	"github.com/archway-network/archway/x/gastracker/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/abci/types"
@@ -89,6 +88,7 @@ func (t *TestMintParamsKeeper) GetMinter(_ sdk.Context) (minter mintTypes.Minter
 		AnnualProvisions: sdk.NewDec(76500),
 	}
 }
+
 func createLogModule(module string, mod string, coins sdk.Coins) *RewardTransferKeeperCallLogs {
 	return &RewardTransferKeeperCallLogs{
 		Method:          "SendCoinsFromModuleToModule",
@@ -97,6 +97,7 @@ func createLogModule(module string, mod string, coins sdk.Coins) *RewardTransfer
 		amt:             coins,
 	}
 }
+
 func createLogAddr(module string, addr string, coins sdk.Coins) *RewardTransferKeeperCallLogs {
 	return &RewardTransferKeeperCallLogs{
 		Method:        "SendCoinsFromModuleToAccount",
@@ -140,6 +141,7 @@ func TestABCIPanicBehaviour(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(1)
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// We should not have made any call to reward keeper
 	require.Zero(t, testRewardKeeper.Logs, "No logs should be there as no need to make new calls")
@@ -195,6 +197,8 @@ func TestABCIContractMetadataCommit(t *testing.T) {
 
 	ctx = ctx.WithBlockHeight(1)
 
+	// simulate execution of the transfer of rewards
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewCoin("test", sdk.NewInt(100)))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 
 	// Now all pending metadata should have been committed
@@ -268,7 +272,6 @@ func TestRewardCalculation(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
@@ -371,6 +374,7 @@ func TestRewardCalculation(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153)) // updates dapps inflationary rewards
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -393,9 +397,6 @@ func TestRewardCalculation(t *testing.T) {
 		require.Equal(t, expected.rewardsB[i], leftOverEntry.ContractRewards[i])
 	}
 }
-
-//func TestRewardCalculation(t *testing.T) {
-//}
 
 func TestContractRewardsWithoutContractPremium(t *testing.T) {
 	config := sdk.GetConfig()
@@ -422,7 +423,6 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.666666666666666666")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
@@ -524,6 +524,7 @@ func TestContractRewardsWithoutContractPremium(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -571,7 +572,6 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
@@ -674,6 +674,7 @@ func TestContractRewardsWithoutDappInflation(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -719,7 +720,6 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 			sdk.NewDecCoinFromDec("test", sdk.MustNewDecFromStr("0.005355")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins()),
 		},
@@ -822,6 +822,7 @@ func TestContractRewardsWithoutGasRebate(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -963,6 +964,7 @@ func TestContractRewardWithoutGasRebateAndDappInflation(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -1096,6 +1098,7 @@ func TestContractRewardsWithoutGasTracking(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))
@@ -1137,7 +1140,6 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 			sdk.NewDecCoinFromDec("test1", sdk.MustNewDecFromStr("0.683333333333333333")),
 		},
 		logs: []*RewardTransferKeeperCallLogs{
-			createLogModule(authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3)), sdk.NewCoin("test1", sdk.NewInt(1)))),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[5].String(), sdk.NewCoins()),
 			createLogAddr(gstTypes.ContractRewardCollector, spareAddress[6].String(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(2)))),
 		},
@@ -1240,6 +1242,7 @@ func TestContractRewardsWithoutGasRebateToUser(t *testing.T) {
 		},
 	}})
 
+	keeper.UpdateDappInflationaryRewards(ctx, sdk.NewInt64Coin("test", 153))
 	BeginBlock(ctx, types.RequestBeginBlock{}, keeper, testRewardKeeper)
 	// Let's check reward keeper call logs first
 	require.Equal(t, len(expected.logs), len(testRewardKeeper.Logs))

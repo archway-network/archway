@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -15,7 +14,6 @@ import (
 
 type RewardTransferKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 }
 
 type MintParamsKeeper interface {
@@ -35,9 +33,12 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	}
 	context.Logger().Debug("Got the tracking for block", "BlockTxDetails", lastBlockGasTracking)
 
-	contractTotalInflationRewards := gasTrackingKeeper.UpdateDappInflationaryRewards(context, params)
+	contractInflationaryRewards, err := gasTrackingKeeper.GetCurrentBlockDappInflationaryRewards(context)
+	if err != nil {
+		panic(err)
+	}
 
-	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, params, lastBlockGasTracking, gasTrackingKeeper, contractTotalInflationRewards)
+	totalContractRewardsPerBlock, rewardAddresses, rewardsByAddress := getContractRewards(context, params, lastBlockGasTracking, gasTrackingKeeper, contractInflationaryRewards)
 
 	// We need to commit pending metadata before we return but after we calculated rewards.
 	commitPendingMetadata(context, gasTrackingKeeper)
@@ -46,16 +47,6 @@ func BeginBlock(context sdk.Context, _ abci.RequestBeginBlock, gasTrackingKeeper
 	// So, no need to continue execution
 	if totalContractRewardsPerBlock == nil || totalContractRewardsPerBlock.IsZero() {
 		return
-	}
-
-	totalFeeToBeCollected := make(sdk.Coins, len(totalContractRewardsPerBlock))
-	for i := range totalFeeToBeCollected {
-		totalFeeToBeCollected[i] = sdk.NewCoin(totalContractRewardsPerBlock[i].Denom, totalContractRewardsPerBlock[i].Amount.Ceil().RoundInt())
-	}
-
-	err := rewardTransferKeeper.SendCoinsFromModuleToModule(context, authTypes.FeeCollectorName, gstTypes.ContractRewardCollector, totalFeeToBeCollected)
-	if err != nil {
-		panic(err)
 	}
 
 	distributeRewards(context, rewardAddresses, rewardsByAddress, gasTrackingKeeper, rewardTransferKeeper)

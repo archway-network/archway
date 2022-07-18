@@ -22,6 +22,8 @@
     - [QueryBlockGasTrackingResponse](#archway.gastracker.v1.QueryBlockGasTrackingResponse)
     - [QueryContractMetadataRequest](#archway.gastracker.v1.QueryContractMetadataRequest)
     - [QueryContractMetadataResponse](#archway.gastracker.v1.QueryContractMetadataResponse)
+    - [QueryParamsRequest](#archway.gastracker.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#archway.gastracker.v1.QueryParamsResponse)
   
     - [Query](#archway.gastracker.v1.Query)
   
@@ -279,6 +281,31 @@ Response to the contract metadata query
 
 
 
+
+<a name="archway.gastracker.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+
+
+
+
+
+
+
+<a name="archway.gastracker.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#archway.gastracker.v1.Params) |  |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -293,7 +320,8 @@ Query service for Gas tracker
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `ContractMetadata` | [QueryContractMetadataRequest](#archway.gastracker.v1.QueryContractMetadataRequest) | [QueryContractMetadataResponse](#archway.gastracker.v1.QueryContractMetadataResponse) | ContractMetadata returns gastracker metadata of contract | GET|/archway/gastracker/v1/contract/metadata/{address}|
+| `Params` | [QueryParamsRequest](#archway.gastracker.v1.QueryParamsRequest) | [QueryParamsResponse](#archway.gastracker.v1.QueryParamsResponse) | Params returns parameters. | GET|/archway/gastracker/v1/params|
+| `ContractMetadata` | [QueryContractMetadataRequest](#archway.gastracker.v1.QueryContractMetadataRequest) | [QueryContractMetadataResponse](#archway.gastracker.v1.QueryContractMetadataResponse) | ContractMetadata returns gastracker metadata of contract | GET|/archway/gastracker/v1/contract_metadata/{address}|
 | `BlockGasTracking` | [QueryBlockGasTrackingRequest](#archway.gastracker.v1.QueryBlockGasTrackingRequest) | [QueryBlockGasTrackingResponse](#archway.gastracker.v1.QueryBlockGasTrackingResponse) | BlockGasTracking returns block gas tracking for the latest block | GET|/archway/gastracker/v1/block_gas_tracking|
 
  <!-- end services -->

@@ -1,6 +1,7 @@
 package e2eTesting
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +21,7 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 	msg, err := govTypes.NewMsgSubmitProposal(proposalContent, depositCoin, proposerAcc.Address)
 	require.NoError(t, err)
 
-	_, res, _ := chain.SendMsgs(proposerAcc, true, msg)
+	_, res, _ := chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
 	txRes := chain.ParseSDKResultData(res)
 	require.Len(t, txRes.Data, 1)
 
@@ -33,7 +34,7 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 		delegatorAcc := chain.GetAccount(i)
 
 		msg := govTypes.NewMsgVote(delegatorAcc.Address, proposalID, govTypes.OptionYes)
-		chain.SendMsgs(proposerAcc, true, msg)
+		chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
 	}
 
 	// Wait for voting to end
