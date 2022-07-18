@@ -1,39 +1,29 @@
 package integration
 
 import (
-	voterTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/types"
-	cwMath "github.com/CosmWasm/cosmwasm-go/std/math"
-	cwSdkTypes "github.com/CosmWasm/cosmwasm-go/std/types"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/gastracker"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestRewardsCollection(t *testing.T) {
 	chain := e2eTesting.NewTestChain(t, 1)
-	owner := chain.GetAccount(0)
-	addr := owner.Address.String()
-	id := chain.UploadContract(owner, "../../../e2e/contracts/voter.wasm", wasmtypes.DefaultUploadAccess)
-	chain.InstantiateContract(owner, id, "", "voter", nil, voterTypes.MsgInstantiate{Params: voterTypes.Params{
-		OwnerAddr: addr,
-		NewVotingCost: cwSdkTypes.Coin{
-			Denom:  sdk.DefaultBondDenom,
-			Amount: cwMath.NewUint128FromUint64(100),
-		}.String(),
-		VoteCost: cwSdkTypes.Coin{
-			Denom:  sdk.DefaultBondDenom,
-			Amount: cwMath.NewUint128FromUint64(100),
-		}.String(),
-		IBCSendTimeout: 30000000000, // 30s‰
-	}})
+	// TODO: this test can be done better but for the sake of simplicity lets keep it like this for now
+	const blocks int64 = 2
+	var inflation = sdk.NewInt64Coin("stake", 103)
 
-	chain.NextBlock(0)
+	params, err := gastracker.NewQueryClient(chain.Client()).Params(chain.GetContext().Context(), &gastracker.QueryParamsRequest{})
+	require.NoError(t, err)
 
-	// now what we do next is that
-	// we check the balance of gastracker
-	balance := chain.GetBalance(authtypes.NewEmptyModuleAccount(gastracker.ModuleName).GetAddress())
-	t.Logf("%s", balance)
+	totalInflation := sdk.NewCoin(
+		inflation.Denom, (inflation.Amount.ToDec().Mul(params.Params.DappInflationRewardsRatio)).MulInt64(blocks).TruncateInt().SubRaw(1)) // we're subbing a meaningless residual due to loss of precision
+
+	gasTrackerBalance := chain.GetBalance(authtypes.NewModuleAddress(gastracker.ModuleName))
+	require.Equal(t,
+		gasTrackerBalance.String(),
+		sdk.NewCoins(totalInflation).String(),
+	)
 }

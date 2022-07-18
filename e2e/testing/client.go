@@ -10,14 +10,14 @@ import (
 )
 
 var (
-	_ grpc.ClientConnInterface = (*client)(nil)
+	_ grpc.ClientConnInterface = (*grpcClient)(nil)
 )
 
-type client struct {
+type grpcClient struct {
 	app *app.ArchwayApp
 }
 
-func (c client) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+func (c grpcClient) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
 	req := args.(codec.ProtoMarshaler)
 	resp := c.app.Query(abci.RequestQuery{
 		Data:   c.app.AppCodec().MustMarshal(req),
@@ -35,10 +35,10 @@ func (c client) Invoke(ctx context.Context, method string, args interface{}, rep
 	return nil
 }
 
-func (c client) NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+func (c grpcClient) NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
 	panic("not supported")
 }
 
 func (chain *TestChain) Client() grpc.ClientConnInterface {
-	return client{app: chain.app}
+	return grpcClient{app: chain.app}
 }

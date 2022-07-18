@@ -3,13 +3,13 @@ package e2eTesting
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/client"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/archway-network/archway/app"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptoCodec "github.com/cosmos/cosmos-sdk/crypto/codec"
