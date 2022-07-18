@@ -69,7 +69,7 @@ func (s *E2ETestSuite) VoterNewVoting(chain *e2eTesting.TestChain, contractAddr 
 		}),
 	}
 
-	_, res, _ := chain.SendMsgs(acc, true, &msg)
+	_, res, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 	s.Require().NoError(err)
 
 	txRes := chain.ParseSDKResultData(res)
@@ -113,7 +113,7 @@ func (s *E2ETestSuite) VoterVote(chain *e2eTesting.TestChain, contractAddr sdk.A
 		}),
 	}
 
-	chain.SendMsgs(acc, true, &msg)
+	chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 }
 
 // VoterIBCVote adds a vote for an existing voting over IBC.
@@ -146,7 +146,7 @@ func (s *E2ETestSuite) VoterIBCVote(chain *e2eTesting.TestChain, contractAddr sd
 		}),
 	}
 
-	_, res, _ := chain.SendMsgs(acc, true, &msg)
+	_, res, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 
 	// Assemble the IBC packet from the response
 	var packet channelTypes.Packet
@@ -208,7 +208,7 @@ func (s *E2ETestSuite) VoterRelease(chain *e2eTesting.TestChain, contractAddr sd
 		Msg:      reqBz,
 	}
 
-	_, res, _ := chain.SendMsgs(acc, true, &msg)
+	_, res, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 
 	txRes := chain.ParseSDKResultData(res)
 	s.Require().Len(txRes.Data, 1)
