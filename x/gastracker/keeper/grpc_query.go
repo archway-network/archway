@@ -53,3 +53,10 @@ func (g *queryServer) BlockGasTracking(ctx context.Context, request *gstTypes.Qu
 		BlockGasTracking: &blockGasTracking,
 	}, nil
 }
+
+func (g *queryServer) Params(ctx context.Context, _ *gstTypes.QueryParamsRequest) (*gstTypes.QueryParamsResponse, error) {
+	params := g.keeper.GetParams(sdk.UnwrapSDKContext(ctx))
+	return &gstTypes.QueryParamsResponse{
+		Params: &params,
+	}, nil
+}
