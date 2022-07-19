@@ -1,10 +1,12 @@
 package keeper_test
 
 import (
-	"github.com/archway-network/archway/x/gastracker/testutil"
 	"testing"
 
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/archway-network/archway/x/gastracker/testutil"
+	wasmBindingTypes "github.com/archway-network/archway/x/gastracker/wasmbinding/types"
+	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -353,6 +355,107 @@ func TestContractMetadataHandling(t *testing.T) {
 	// Current developer should be able to set the metadata
 	err = keeper.AddPendingChangeForContractMetadata(ctx, spareAddress[8], spareAddress[2], metadata)
 	require.NoError(t, err, "We should be able to set metadata")
+}
+
+func TestContractMetadataHandlingByContract(t *testing.T) {
+	contractAddr, initOwnerAddr, newOwnerAddr := testutil.GenerateRandomAccAddress(), testutil.GenerateRandomAccAddress(), testutil.GenerateRandomAccAddress()
+	ctx, keeper := testutil.CreateTestKeeperAndContext(t, initOwnerAddr)
+
+	metaExpected := gastracker.ContractInstanceMetadata{
+		DeveloperAddress: initOwnerAddr.String(),
+		RewardAddress:    initOwnerAddr.String(),
+	}
+
+	t.Run("Fail: meta not found", func(t *testing.T) {
+		req := wasmBindingTypes.UpdateMetadataRequest{
+			RewardAddress: newOwnerAddr.String(),
+		}
+		err := keeper.AddPendingChangeForContractMetadataByContract(ctx, contractAddr, req)
+		require.Error(t, err)
+		assert.ErrorIs(t, err, gastracker.ErrContractInstanceMetadataNotFound)
+	})
+
+	t.Run("Set initial meta", func(t *testing.T) {
+		err := keeper.AddPendingChangeForContractMetadata(ctx, initOwnerAddr, contractAddr, metaExpected)
+		require.NoError(t, err)
+		_, err = keeper.CommitPendingContractMetadata(ctx)
+		require.NoError(t, err)
+
+		metaRcv, err := keeper.GetContractMetadata(ctx, contractAddr)
+		require.NoError(t, err)
+		require.Equal(t, metaExpected, metaRcv)
+	})
+
+	t.Run("Fail: unauthorized", func(t *testing.T) {
+		req := wasmBindingTypes.UpdateMetadataRequest{
+			RewardAddress: newOwnerAddr.String(),
+		}
+		err := keeper.AddPendingChangeForContractMetadataByContract(ctx, contractAddr, req)
+		require.Error(t, err)
+		assert.ErrorIs(t, err, gastracker.ErrNoPermissionToSetMetadata)
+	})
+
+	t.Run("Update meta (contractAddr is the new owner)", func(t *testing.T) {
+		metaExpected.DeveloperAddress = contractAddr.String()
+
+		err := keeper.AddPendingChangeForContractMetadata(ctx, initOwnerAddr, contractAddr, metaExpected)
+		require.NoError(t, err)
+		_, err = keeper.CommitPendingContractMetadata(ctx)
+		require.NoError(t, err)
+	})
+
+	t.Run("OK: update RewardAddress", func(t *testing.T) {
+		metaExpected.RewardAddress = newOwnerAddr.String()
+
+		req := wasmBindingTypes.UpdateMetadataRequest{
+			RewardAddress: newOwnerAddr.String(),
+		}
+		err := keeper.AddPendingChangeForContractMetadataByContract(ctx, contractAddr, req)
+		require.NoError(t, err)
+
+		_, err = keeper.CommitPendingContractMetadata(ctx)
+		require.NoError(t, err)
+
+		metaRcv, err := keeper.GetContractMetadata(ctx, contractAddr)
+		require.NoError(t, err)
+
+		assert.Equal(t, metaExpected, metaRcv)
+	})
+
+	t.Run("OK: update DeveloperAddress", func(t *testing.T) {
+		metaExpected.DeveloperAddress = newOwnerAddr.String()
+
+		req := wasmBindingTypes.UpdateMetadataRequest{
+			DeveloperAddress: newOwnerAddr.String(),
+		}
+		err := keeper.AddPendingChangeForContractMetadataByContract(ctx, contractAddr, req)
+		require.NoError(t, err)
+
+		_, err = keeper.CommitPendingContractMetadata(ctx)
+		require.NoError(t, err)
+
+		metaRcv, err := keeper.GetContractMetadata(ctx, contractAddr)
+		require.NoError(t, err)
+
+		assert.Equal(t, metaExpected, metaRcv)
+	})
+
+	t.Run("Ensure old owner can not update meta", func(t *testing.T) {
+		// 1st method
+		req := wasmBindingTypes.UpdateMetadataRequest{
+			DeveloperAddress: initOwnerAddr.String(),
+		}
+		err := keeper.AddPendingChangeForContractMetadataByContract(ctx, contractAddr, req)
+		require.Error(t, err)
+		assert.ErrorIs(t, err, gastracker.ErrNoPermissionToSetMetadata)
+
+		// 2nd method
+		meta := metaExpected
+		meta.DeveloperAddress = initOwnerAddr.String()
+		err = keeper.AddPendingChangeForContractMetadata(ctx, initOwnerAddr, contractAddr, metaExpected)
+		require.Error(t, err)
+		assert.ErrorIs(t, err, gastracker.ErrNoPermissionToSetMetadata)
+	})
 }
 
 // Extensive testing of keeper function that merges incoming rewards and stores left over reward

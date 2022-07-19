@@ -73,8 +73,8 @@ github.com/BurntSushi/toml v1.0.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbi
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d h1:nalkkPQcITbvhmL4+C4cKA87NW0tfm3Kl9VXRoPywFg=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d/go.mod h1:URdX5+vg25ts3aCh8H5IFZybJYKWhJHYMTnf+ULtoC4=
-github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220712094612-e3ceffcec18c h1:tToMWcVNFYdCHCt8ghFaKuo4HyztfmDUrfFisrRl8O4=
-github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220712094612-e3ceffcec18c/go.mod h1:k+HV1r6H6xKbH21D5hiv3bUaW5wEwCm5oqHP6GuFjYU=
+github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220719123407-a0448ffb23f6 h1:aNPZ+lxgtnsDPuDld0y+/1YKOfqPIEWEOoJ9Yfxnr58=
+github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220719123407-a0448ffb23f6/go.mod h1:qCTzr8cQYwoYdA9AT4azEVbiYGjULS1nrUgw6YScXks=
 github.com/CosmWasm/tinyjson v0.9.0 h1:sPjgikATp5W0vD/v/Qz99uQ6G/lh/SuK0Wfskqua4Co=
 github.com/CosmWasm/tinyjson v0.9.0/go.mod h1:5+7QnSKrkIWnpIdhUT2t2EYzXnII3/3MlM0oDsBSbc8=
 github.com/CosmWasm/wasmvm v1.0.0-beta10/go.mod h1:y+yd9piV8KlrB7ISRZz1sDwH4UVm4Q9rEX9501dBNog=
@@ -424,7 +424,6 @@ github.com/google/go-cmp v0.5.4/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.7 h1:81/ik6ipDQS2aGcBfIN5dHDB36BwrStyeAQquSYCV4o=
-github.com/google/go-cmp v0.5.7/go.mod h1:n+brtR0CgQNWTVd5ZUFpTBC8YFBDLK/h/bpaJ8/DtOE=
 github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf/go.mod h1:HP5RmnzzSNb993RKQDq4+1A4ia9nllfqcQFTQJedwGI=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/gofuzz v1.1.1-0.20200604201612-c04b05f3adfa/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=

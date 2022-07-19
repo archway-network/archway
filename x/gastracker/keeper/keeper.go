@@ -2,12 +2,15 @@ package keeper
 
 import (
 	"fmt"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	gastracker "github.com/archway-network/archway/x/gastracker"
+	wasmBindingTypes "github.com/archway-network/archway/x/gastracker/wasmbinding/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -41,6 +44,10 @@ func NewGasTrackingKeeper(
 		contractInfoView: contractInfoView,
 		WasmGasRegister:  gasRegister,
 	}
+}
+
+func (k *Keeper) SetContractInfoView(viewer ContractInfoView) {
+	k.contractInfoView = viewer
 }
 
 func (k Keeper) GetContractMetadata(ctx sdk.Context, address sdk.AccAddress) (gastracker.ContractInstanceMetadata, error) {
@@ -121,6 +128,41 @@ func (k Keeper) AddPendingChangeForContractMetadata(ctx sdk.Context, sender sdk.
 	}
 
 	gstKvStore.Set(gastracker.GetPendingContractInstanceMetadataKey(address.String()), bz)
+	return nil
+}
+
+// AddPendingChangeForContractMetadataByContract is called by the contract via custom WASM binding to add a pending change for the contract's metadata.
+func (k Keeper) AddPendingChangeForContractMetadataByContract(ctx sdk.Context, contractAddr sdk.AccAddress, req wasmBindingTypes.UpdateMetadataRequest) error {
+	// Input checks
+	metadata, err := k.GetContractMetadata(ctx, contractAddr)
+	if err != nil {
+		// ErrContractInstanceMetadataNotFound is OK here, since we can't update a non-existing metadata
+		return err
+	}
+
+	if metadata.DeveloperAddress != contractAddr.String() {
+		return gastracker.ErrNoPermissionToSetMetadata
+	}
+
+	// Update
+	if newAddr, isSet := req.GetDeveloperAddress(); isSet {
+		metadata.DeveloperAddress = newAddr
+	}
+
+	if newAddr, isSet := req.GetRewardAddress(); isSet {
+		metadata.RewardAddress = newAddr
+	}
+
+	// Set
+	metadataBz, err := k.cdc.Marshal(&metadata)
+	if err != nil {
+		return sdkErrors.Wrapf(gastracker.ErrInternal, "metadata marshal: %v", err)
+	}
+
+	store := ctx.KVStore(k.key)
+	metadataKey := gastracker.GetPendingContractInstanceMetadataKey(contractAddr.String())
+	store.Set(metadataKey, metadataBz)
+
 	return nil
 }
 

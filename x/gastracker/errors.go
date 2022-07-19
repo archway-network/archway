@@ -6,6 +6,7 @@ import (
 
 var (
 	DefaultCodespace                         = ModuleName
+	ErrInternal                              = sdkErrors.Register(DefaultCodespace, 0, "internal error")
 	ErrBlockTrackingDataNotFound             = sdkErrors.Register(DefaultCodespace, 1, "block tracking data not found")
 	ErrTxTrackingDataNotFound                = sdkErrors.Register(DefaultCodespace, 2, "tx tracking data not found")
 	ErrContractInstanceMetadataNotFound      = sdkErrors.Register(DefaultCodespace, 3, "contract instance metadata not found")
@@ -17,4 +18,5 @@ var (
 	ErrNoPermissionToSetMetadata             = sdkErrors.Register(DefaultCodespace, 9, "sender does not have permission to set metadata")
 	ErrInvalidSetContractMetadataRequest     = sdkErrors.Register(DefaultCodespace, 10, "invalid request to set metadata")
 	ErrDappInflationaryRewardRecordNotFound  = sdkErrors.Register(DefaultCodespace, 11, "inflationary rewards record not found")
+	ErrInvalidRequest                        = sdkErrors.Register(DefaultCodespace, 12, "invalid request")
 )
