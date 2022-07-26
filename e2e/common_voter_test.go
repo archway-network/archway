@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	voterCustomTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/pkg/archway/custom"
 	voterState "github.com/CosmWasm/cosmwasm-go/example/voter/src/state"
 	voterTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/types"
 	cwMath "github.com/CosmWasm/cosmwasm-go/std/math"
@@ -26,7 +27,7 @@ func (s *E2ETestSuite) VoterUploadAndInstantiate(chain *e2eTesting.TestChain, ac
 		Params: s.VoterDefaultParams(acc),
 	}
 
-	contractAddr, _ = chain.InstantiateContract(acc, codeID, "", "voter", nil, instMsg)
+	contractAddr, _ = chain.InstantiateContract(acc, codeID, acc.Address.String(), "voter", nil, instMsg)
 
 	return
 }
@@ -298,4 +299,42 @@ func (s *E2ETestSuite) VoterGetIBCStats(chain *e2eTesting.TestChain, contractAdd
 	s.Require().NoError(resp.UnmarshalJSON(res))
 
 	return resp.Stats
+}
+
+// VoterGetMetadata returns the contract metadata queried via Custom querier plugin.
+func (s *E2ETestSuite) VoterGetMetadata(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, useStargate, expPass bool) voterCustomTypes.ContractMetadataResponse {
+	req := voterTypes.MsgQuery{
+		CustomMetadata: &voterTypes.CustomMetadataRequest{
+			UseStargateQuery: useStargate,
+		},
+	}
+
+	res, _ := chain.SmartQueryContract(contractAddr, expPass, req)
+	if !expPass {
+		return voterCustomTypes.ContractMetadataResponse{}
+	}
+
+	var resp voterTypes.CustomMetadataResponse
+	s.Require().NoError(resp.UnmarshalJSON(res))
+
+	return resp.ContractMetadataResponse
+}
+
+// VoterUpdateMetadata sends the contract metadata update request.
+func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, metaReq voterCustomTypes.UpdateMetadataRequest, expPass bool) error {
+	req := voterTypes.MsgExecute{
+		UpdateMetadata: &metaReq,
+	}
+	reqBz, err := req.MarshalJSON()
+	s.Require().NoError(err)
+
+	msg := wasmdTypes.MsgExecuteContract{
+		Sender:   acc.Address.String(),
+		Contract: contractAddr.String(),
+		Msg:      reqBz,
+	}
+
+	_, _, err = chain.SendMsgs(acc, expPass, []sdk.Msg{&msg})
+
+	return err
 }

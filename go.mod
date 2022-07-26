@@ -3,7 +3,7 @@ module github.com/archway-network/archway
 go 1.18
 
 require (
-	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220712094612-e3ceffcec18c
+	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220719123407-a0448ffb23f6
 	github.com/CosmWasm/wasmd v0.25.0
 	github.com/CosmWasm/wasmvm v1.0.0-rc.0
 	github.com/cosmos/cosmos-sdk v0.45.1
@@ -63,7 +63,6 @@ require (
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/btree v1.0.0 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect

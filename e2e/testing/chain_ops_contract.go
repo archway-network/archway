@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/archway-network/archway/x/gastracker"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
@@ -97,4 +98,28 @@ func (chain *TestChain) GetContractInfo(contractAddr sdk.AccAddress) wasmdTypes.
 	require.NotNil(t, info)
 
 	return *info
+}
+
+// GetContractMetadata returns a contract metadata.
+func (chain *TestChain) GetContractMetadata(contractAddr sdk.AccAddress) gastracker.ContractInstanceMetadata {
+	t := chain.t
+
+	metadata, err := chain.app.GasTrackingKeeper.GetContractMetadata(chain.GetContext(), contractAddr)
+	require.NoError(t, err)
+
+	return metadata
+}
+
+// SetContractMetadata sets a contract metadata.
+func (chain *TestChain) SetContractMetadata(sender Account, contractAddr sdk.AccAddress, metadata gastracker.ContractInstanceMetadata) {
+	t := chain.t
+
+	txMsg := gastracker.MsgSetContractMetadata{
+		Sender:          sender.Address.String(),
+		ContractAddress: contractAddr.String(),
+		Metadata:        &metadata,
+	}
+
+	_, _, err := chain.SendMsgs(sender, true, []sdk.Msg{&txMsg})
+	require.NoError(t, err)
 }

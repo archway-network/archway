@@ -9,6 +9,10 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+var (
+	NilStruct = struct{}{}
+)
+
 type E2ETestSuite struct {
 	suite.Suite
 

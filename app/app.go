@@ -2,16 +2,18 @@ package app
 
 import (
 	"fmt"
-	"github.com/archway-network/archway/x/gastracker/mintbankkeeper"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/archway-network/archway/x/gastracker/mintbankkeeper"
+
 	wasmdKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	cosmwasm "github.com/CosmWasm/wasmvm"
+	"github.com/archway-network/archway/x/gastracker/wasmbinding"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -447,6 +449,16 @@ func NewArchwayApp(
 	)
 	app.EvidenceKeeper = *evidenceKeeper
 
+	defaultGasRegister := wasmdKeeper.NewDefaultWasmGasRegister()
+
+	app.GasTrackingKeeper = gastrackerkeeper.NewGasTrackingKeeper(
+		keys[gastracker.StoreKey],
+		app.appCodec,
+		app.getSubspace(gastracker.DefaultParamSpace),
+		nil,
+		defaultGasRegister,
+	)
+
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
@@ -463,8 +475,8 @@ func NewArchwayApp(
 	}
 	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
 
-	defaultGasRegister := wasmdKeeper.NewDefaultWasmGasRegister()
 	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
+	wasmOpts = append(wasmOpts, wasmbinding.GetCustomWasmOptions(&app.GasTrackingKeeper)...)
 
 	app.WASMKeeper = wasm.NewKeeper(
 		appCodec,
@@ -485,14 +497,7 @@ func NewArchwayApp(
 		supportedFeatures,
 		wasmOpts...,
 	)
-
-	app.GasTrackingKeeper = gastrackerkeeper.NewGasTrackingKeeper(
-		keys[gastracker.StoreKey],
-		app.appCodec,
-		app.getSubspace(gastracker.DefaultParamSpace),
-		app.WASMKeeper,
-		defaultGasRegister,
-	)
+	app.GasTrackingKeeper.SetContractInfoView(app.WASMKeeper) // post initialization
 
 	// note we set up mint keeper after gastracking keeper
 	app.MintKeeper = mintkeeper.NewKeeper(

@@ -3,10 +3,11 @@ package e2eTesting
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/client"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/archway-network/archway/app"
@@ -311,7 +312,7 @@ func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg
 	chain.endBlock()
 	chain.beginBlock()
 
-	return gasInfo, res, nil
+	return gasInfo, res, err
 }
 
 // ParseSDKResultData converts TX result data into a slice of Msgs.

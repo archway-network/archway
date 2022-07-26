@@ -7,12 +7,14 @@ import (
 	"time"
 
 	voterPkg "github.com/CosmWasm/cosmwasm-go/example/voter/src/pkg"
+	voterCustomTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/pkg/archway/custom"
 	voterState "github.com/CosmWasm/cosmwasm-go/example/voter/src/state"
 	voterTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/types"
 	cwStd "github.com/CosmWasm/cosmwasm-go/std"
 	cwTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/x/gastracker"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -750,4 +752,128 @@ func (s *E2ETestSuite) TestVoter_APIVerifyEd25519Signatures() {
 			s.Assert().Equal(tc.resExpected, resp.Valid)
 		})
 	}
+}
+
+// TestVoter_WASMBindingsMetadataQuery tests querying contract metadata via WASM bindings (Custom plugin & Stargate query).
+func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataQuery() {
+	chain := s.chainA
+
+	acc1, acc2 := chain.GetAccount(0), chain.GetAccount(1)
+	contractAddr := s.VoterUploadAndInstantiate(chain, acc1)
+
+	cmpMetas := func(metaExp gastracker.ContractInstanceMetadata, metaRcv voterCustomTypes.ContractMetadataResponse) {
+		s.Assert().EqualValues(metaExp.DeveloperAddress, metaRcv.DeveloperAddress)
+		s.Assert().EqualValues(metaExp.RewardAddress, metaRcv.RewardAddress)
+		s.Assert().EqualValues(metaExp.GasRebateToUser, metaRcv.GasRebateToUserEnabled)
+		s.Assert().EqualValues(metaExp.CollectPremium, metaRcv.PremiumEnabled)
+		s.Assert().EqualValues(metaExp.PremiumPercentageCharged, metaRcv.PremiumPercentage)
+	}
+
+	getAndCmpMetas := func(metaExp gastracker.ContractInstanceMetadata) {
+		metaRcvStargate := s.VoterGetMetadata(chain, contractAddr, true, true)
+		cmpMetas(metaExp, metaRcvStargate)
+
+		metaRcvCustom := s.VoterGetMetadata(chain, contractAddr, false, true)
+		cmpMetas(metaExp, metaRcvCustom)
+	}
+
+	var metaExp gastracker.ContractInstanceMetadata
+
+	s.Run("No metadata", func() {
+		s.VoterGetMetadata(chain, contractAddr, true, false)
+	})
+
+	s.Run("Set initial meta", func() {
+		metaExp.DeveloperAddress = acc1.Address.String()
+		metaExp.RewardAddress = acc1.Address.String()
+		chain.SetContractMetadata(acc1, contractAddr, metaExp)
+
+		getAndCmpMetas(metaExp)
+	})
+
+	s.Run("Change RewardAddress", func() {
+		metaExp.RewardAddress = acc2.Address.String()
+		chain.SetContractMetadata(acc1, contractAddr, metaExp)
+
+		getAndCmpMetas(metaExp)
+	})
+
+	s.Run("Set GasRebateToUser", func() {
+		metaExp.GasRebateToUser = true
+		chain.SetContractMetadata(acc1, contractAddr, metaExp)
+
+		getAndCmpMetas(metaExp)
+	})
+
+	s.Run("Set Premium", func() {
+		metaExp.GasRebateToUser = false
+		metaExp.CollectPremium = true
+		metaExp.PremiumPercentageCharged = 50
+		chain.SetContractMetadata(acc1, contractAddr, metaExp)
+
+		getAndCmpMetas(metaExp)
+	})
+}
+
+// TestVoter_WASMBindingsMetadataUpdate tests updating contract metadata via WASM bindings (Custom message).
+func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
+	chain := s.chainA
+
+	acc1, acc2 := chain.GetAccount(0), chain.GetAccount(1)
+	contractAddr := s.VoterUploadAndInstantiate(chain, acc1)
+
+	s.Run("Fail: no metadata", func() {
+		req := voterCustomTypes.UpdateMetadataRequest{
+			DeveloperAddress: acc2.Address.String(),
+		}
+		err := s.VoterUpdateMetadata(chain, contractAddr, acc1, req, false)
+		s.Assert().Contains(err.Error(), "not found")
+	})
+
+	// Set initial meta (admin as the DeveloperAddress)
+	{
+		meta := gastracker.ContractInstanceMetadata{
+			DeveloperAddress: acc1.Address.String(),
+			RewardAddress:    acc1.Address.String(),
+		}
+		chain.SetContractMetadata(acc1, contractAddr, meta)
+	}
+
+	s.Run("Fail: update DeveloperAddress: unauthorized", func() {
+		req := voterCustomTypes.UpdateMetadataRequest{
+			DeveloperAddress: acc2.Address.String(),
+		}
+		err := s.VoterUpdateMetadata(chain, contractAddr, acc1, req, false)
+		s.Assert().Contains(err.Error(), "does not have permission")
+	})
+
+	// Update meta (set ContractAddress as the DeveloperAddress)
+	{
+		meta := gastracker.ContractInstanceMetadata{
+			DeveloperAddress: contractAddr.String(),
+		}
+		chain.SetContractMetadata(acc1, contractAddr, meta)
+	}
+
+	s.Run("OK: update RewardAddress", func() {
+		req := voterCustomTypes.UpdateMetadataRequest{
+			RewardAddress: acc2.Address.String(),
+		}
+		s.VoterUpdateMetadata(chain, contractAddr, acc1, req, true)
+
+		meta := chain.GetContractMetadata(contractAddr)
+		s.Assert().Equal(contractAddr.String(), meta.DeveloperAddress)
+		s.Assert().Equal(acc2.Address.String(), meta.RewardAddress)
+	})
+
+	s.Run("OK: update DeveloperAddress (change ownership)", func() {
+		req := voterCustomTypes.UpdateMetadataRequest{
+			DeveloperAddress: acc1.Address.String(),
+		}
+		s.VoterUpdateMetadata(chain, contractAddr, acc1, req, true)
+
+		meta := chain.GetContractMetadata(contractAddr)
+		s.Assert().Equal(acc1.Address.String(), meta.DeveloperAddress)
+		s.Assert().Equal(acc2.Address.String(), meta.RewardAddress)
+	})
 }
