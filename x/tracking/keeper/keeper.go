@@ -61,3 +61,25 @@ func (k Keeper) FinalizeBlockTxTracking(ctx sdk.Context) {
 		txState.SetTxInfo(txInfo)
 	}
 }
+
+// GetBlockTrackingInfo returns block gas tracking info containing all transactions and contract operations.
+func (k Keeper) GetBlockTrackingInfo(ctx sdk.Context, height int64) types.BlockTracking {
+	txState := k.state.TxInfoState(ctx)
+	contractOpState := k.state.ContractOpInfoState(ctx)
+
+	var resp types.BlockTracking
+
+	txInfos := txState.GetTxInfosByBlock(height)
+	resp.Txs = make([]types.TxTracking, 0, len(txInfos))
+	for _, txInfo := range txInfos {
+		contractOps := contractOpState.GetContractOpInfoByTxID(txInfo.Id)
+		resp.Txs = append(
+			resp.Txs, types.TxTracking{
+				Info:               txInfo,
+				ContractOperations: contractOps,
+			},
+		)
+	}
+
+	return resp
+}

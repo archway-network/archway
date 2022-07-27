@@ -1,5 +1,5 @@
 syntax = "proto3";
-package archway.tracking.v1;
+package archway.tracking.v1beta1;
 
 option go_package = "github.com/archway-network/archway/x/tracking/types";
 
@@ -54,12 +54,32 @@ message ContractOperationInfo {
   ContractOperation operation_type = 4;
   // vm_gas is the gas consumption reported by the WASM VM.
   // Value is adjusted by this module (CalculateUpdatedGas func).
-  uint64 vm_gas = 5 [
-    (gogoproto.moretags) = "yaml:\"vm_gas\""
-  ];
+  uint64 vm_gas = 5;
   // sdk_gas is the gas consumption reported by the SDK gas meter and the WASM GasRegister (cost of Execute/Query/etc).
   // Value is adjusted by this module (CalculateUpdatedGas func).
-  uint64 sdk_gas = 6 [
-    (gogoproto.moretags) = "yaml:\"sdk_gas\""
+  uint64 sdk_gas = 6;
+}
+
+// BlockTracking is the tracking information for a block.
+message BlockTracking {
+  option (gogoproto.goproto_stringer) = false;
+
+  // txs defines the list of transactions tracked in the block.
+  repeated TxTracking txs = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// TxTracking is the tracking information for a single transaction.
+message TxTracking {
+  option (gogoproto.goproto_stringer) = false;
+
+  // info defines the transaction details.
+  TxInfo info = 1 [
+    (gogoproto.nullable) = false
+  ];
+  // contract_operations defines the list of contract operations consumed by the transaction.
+  repeated ContractOperationInfo contract_operations = 2 [
+    (gogoproto.nullable) = false
   ];
 }

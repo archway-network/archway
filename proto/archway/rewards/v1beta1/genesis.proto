@@ -1,0 +1,29 @@
+syntax = "proto3";
+package archway.rewards.v1beta1;
+
+option go_package = "github.com/archway-network/archway/x/rewards/types";
+
+import "gogoproto/gogo.proto";
+import "archway/rewards/v1beta1/rewards.proto";
+
+// GenesisState defines the initial state of the tracking module.
+message GenesisState {
+  // params defines all the module parameters.
+  Params params = 1 [
+    (gogoproto.nullable) = false
+  ];
+  // contracts_metadata defines a list of all contracts metadata.
+  repeated GenesisContractMetadata contracts_metadata = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// GenesisContractMetadata is used init ContractMetadata state via module genesis.
+message GenesisContractMetadata {
+  // contract_address defines the contract address.
+  string contract_address = 1;
+  // metadata defines the contract metadata.
+  ContractMetadata metadata = 2 [
+    (gogoproto.nullable) = false
+  ];
+}

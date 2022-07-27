@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"github.com/archway-network/archway/x/tracking/types"
+	"github.com/archway-network/archway/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -35,16 +35,26 @@ func (s *QueryServer) Params(c context.Context, request *types.QueryParamsReques
 	}, nil
 }
 
-// BlockGasTracking implements the types.QueryServer interface.
-func (s *QueryServer) BlockGasTracking(c context.Context, request *types.QueryBlockGasTrackingRequest) (*types.QueryBlockGasTrackingResponse, error) {
+// ContractMetadata implements the types.QueryServer interface.
+func (s *QueryServer) ContractMetadata(c context.Context, request *types.QueryContractMetadataRequest) (*types.QueryContractMetadataResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
-	blockInfo := s.keeper.GetBlockTrackingInfo(ctx, ctx.BlockHeight())
+	contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid contract address")
+	}
 
-	return &types.QueryBlockGasTrackingResponse{
-		Block: blockInfo,
+	ctx := sdk.UnwrapSDKContext(c)
+	metaState := s.keeper.state.ContractMetadataState(ctx)
+
+	meta, found := metaState.GetContractMetadata(contractAddr)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "metadata for the contract: not found")
+	}
+
+	return &types.QueryContractMetadataResponse{
+		Metadata: meta,
 	}, nil
 }

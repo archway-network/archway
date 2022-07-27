@@ -33,24 +33,47 @@
   
     - [Msg](#archway.gastracker.v1.Msg)
   
-- [archway/tracking/v1/tracking.proto](#archway/tracking/v1/tracking.proto)
-    - [ContractOperationInfo](#archway.tracking.v1.ContractOperationInfo)
-    - [Params](#archway.tracking.v1.Params)
-    - [TxInfo](#archway.tracking.v1.TxInfo)
+- [archway/rewards/v1beta1/rewards.proto](#archway/rewards/v1beta1/rewards.proto)
+    - [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata)
+    - [Params](#archway.rewards.v1beta1.Params)
   
-    - [ContractOperation](#archway.tracking.v1.ContractOperation)
+- [archway/rewards/v1beta1/genesis.proto](#archway/rewards/v1beta1/genesis.proto)
+    - [GenesisContractMetadata](#archway.rewards.v1beta1.GenesisContractMetadata)
+    - [GenesisState](#archway.rewards.v1beta1.GenesisState)
   
-- [archway/tracking/v1/genesis.proto](#archway/tracking/v1/genesis.proto)
-    - [GenesisState](#archway.tracking.v1.GenesisState)
+- [archway/rewards/v1beta1/query.proto](#archway/rewards/v1beta1/query.proto)
+    - [QueryContractMetadataRequest](#archway.rewards.v1beta1.QueryContractMetadataRequest)
+    - [QueryContractMetadataResponse](#archway.rewards.v1beta1.QueryContractMetadataResponse)
+    - [QueryParamsRequest](#archway.rewards.v1beta1.QueryParamsRequest)
+    - [QueryParamsResponse](#archway.rewards.v1beta1.QueryParamsResponse)
   
-- [archway/tracking/v1/query.proto](#archway/tracking/v1/query.proto)
-    - [QueryBlockGasTrackingRequest](#archway.tracking.v1.QueryBlockGasTrackingRequest)
-    - [QueryBlockGasTrackingResponse](#archway.tracking.v1.QueryBlockGasTrackingResponse)
-    - [QueryParamsRequest](#archway.tracking.v1.QueryParamsRequest)
-    - [QueryParamsResponse](#archway.tracking.v1.QueryParamsResponse)
-    - [TxTracking](#archway.tracking.v1.TxTracking)
+    - [Query](#archway.rewards.v1beta1.Query)
   
-    - [Query](#archway.tracking.v1.Query)
+- [archway/rewards/v1beta1/tx.proto](#archway/rewards/v1beta1/tx.proto)
+    - [MsgSetContractMetadata](#archway.rewards.v1beta1.MsgSetContractMetadata)
+    - [MsgSetContractMetadataResponse](#archway.rewards.v1beta1.MsgSetContractMetadataResponse)
+  
+    - [Msg](#archway.rewards.v1beta1.Msg)
+  
+- [archway/tracking/v1beta1/tracking.proto](#archway/tracking/v1beta1/tracking.proto)
+    - [BlockTracking](#archway.tracking.v1beta1.BlockTracking)
+    - [ContractOperationInfo](#archway.tracking.v1beta1.ContractOperationInfo)
+    - [Params](#archway.tracking.v1beta1.Params)
+    - [TxInfo](#archway.tracking.v1beta1.TxInfo)
+    - [TxTracking](#archway.tracking.v1beta1.TxTracking)
+  
+    - [ContractOperation](#archway.tracking.v1beta1.ContractOperation)
+  
+- [archway/tracking/v1beta1/genesis.proto](#archway/tracking/v1beta1/genesis.proto)
+    - [GenesisState](#archway.tracking.v1beta1.GenesisState)
+  
+- [archway/tracking/v1beta1/query.proto](#archway/tracking/v1beta1/query.proto)
+    - [QueryBlockGasTrackingRequest](#archway.tracking.v1beta1.QueryBlockGasTrackingRequest)
+    - [QueryBlockGasTrackingResponse](#archway.tracking.v1beta1.QueryBlockGasTrackingResponse)
+    - [QueryParamsRequest](#archway.tracking.v1beta1.QueryParamsRequest)
+    - [QueryParamsResponse](#archway.tracking.v1beta1.QueryParamsResponse)
+  
+    - [Query](#archway.tracking.v1beta1.Query)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -400,14 +423,261 @@ Msg defines the gastracker msg service
 
 
 
-<a name="archway/tracking/v1/tracking.proto"></a>
+<a name="archway/rewards/v1beta1/rewards.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## archway/tracking/v1/tracking.proto
+## archway/rewards/v1beta1/rewards.proto
 
 
 
-<a name="archway.tracking.v1.ContractOperationInfo"></a>
+<a name="archway.rewards.v1beta1.ContractMetadata"></a>
+
+### ContractMetadata
+ContractMetadata defines the contract rewards distribution options.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner_address` | [string](#string) |  | owner_address is the contract owner address that can modify contract reward options (bech32 encoded). |
+| `rewards_address` | [string](#string) |  | rewards_address is an address to distribute rewards to (bech32 encoded). |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.Params"></a>
+
+### Params
+Params defines the module parameters.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `rewards_enabled` | [bool](#bool) |  | rewards_enabled flag indicates whether rewards calculation and distribution is enabled. |
+| `inflation_rewards_ratio` | [string](#string) |  |  |
+| `tx_fee_rebate_ratio` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="archway/rewards/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/rewards/v1beta1/genesis.proto
+
+
+
+<a name="archway.rewards.v1beta1.GenesisContractMetadata"></a>
+
+### GenesisContractMetadata
+GenesisContractMetadata is used init ContractMetadata state via module genesis.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_address` | [string](#string) |  | contract_address defines the contract address. |
+| `metadata` | [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata) |  | metadata defines the contract metadata. |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the initial state of the tracking module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#archway.rewards.v1beta1.Params) |  | params defines all the module parameters. |
+| `contracts_metadata` | [GenesisContractMetadata](#archway.rewards.v1beta1.GenesisContractMetadata) | repeated | contracts_metadata defines a list of all contracts metadata. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="archway/rewards/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/rewards/v1beta1/query.proto
+
+
+
+<a name="archway.rewards.v1beta1.QueryContractMetadataRequest"></a>
+
+### QueryContractMetadataRequest
+QueryContractMetadataRequest is the request for Query.ContractMetadata.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_address` | [string](#string) |  | contract_address is the contract address (bech32 encoded). |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.QueryContractMetadataResponse"></a>
+
+### QueryContractMetadataResponse
+QueryContractMetadataResponse is the response for Query.ContractMetadata.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `metadata` | [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata) |  |  |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request for Query.Params.
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response for Query.Params.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#archway.rewards.v1beta1.Params) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="archway.rewards.v1beta1.Query"></a>
+
+### Query
+Query service for the tracking module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#archway.rewards.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#archway.rewards.v1beta1.QueryParamsResponse) | Params returns module parameters. | GET|/archway/rewards/v1/params|
+| `ContractMetadata` | [QueryContractMetadataRequest](#archway.rewards.v1beta1.QueryContractMetadataRequest) | [QueryContractMetadataResponse](#archway.rewards.v1beta1.QueryContractMetadataResponse) | ContractMetadata returns the contract rewards parameters (metadata). | GET|/archway/rewards/v1/contract_metadata|
+
+ <!-- end services -->
+
+
+
+<a name="archway/rewards/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/rewards/v1beta1/tx.proto
+
+
+
+<a name="archway.rewards.v1beta1.MsgSetContractMetadata"></a>
+
+### MsgSetContractMetadata
+MsgSetContractMetadata is the request for Msg.SetContractMetadata.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender_address` | [string](#string) |  | sender_address is the msg sender address (bech32 encoded). |
+| `contract_address` | [string](#string) |  | contract_address is the target contract address (bech32 encoded). |
+| `metadata` | [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata) |  | metadata is the contract metadata to set / update. |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.MsgSetContractMetadataResponse"></a>
+
+### MsgSetContractMetadataResponse
+MsgSetContractMetadataResponse is the response for Msg.SetContractMetadata.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="archway.rewards.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the module messaging service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `SetContractMetadata` | [MsgSetContractMetadata](#archway.rewards.v1beta1.MsgSetContractMetadata) | [MsgSetContractMetadataResponse](#archway.rewards.v1beta1.MsgSetContractMetadataResponse) | SetContractMetadata creates or updates an existing contract metadata. Method is authorized to the contract owner (admin if no metadata exists). | |
+
+ <!-- end services -->
+
+
+
+<a name="archway/tracking/v1beta1/tracking.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/tracking/v1beta1/tracking.proto
+
+
+
+<a name="archway.tracking.v1beta1.BlockTracking"></a>
+
+### BlockTracking
+BlockTracking is the tracking information for a block.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `txs` | [TxTracking](#archway.tracking.v1beta1.TxTracking) | repeated | txs defines the list of transactions tracked in the block. |
+
+
+
+
+
+
+<a name="archway.tracking.v1beta1.ContractOperationInfo"></a>
 
 ### ContractOperationInfo
 ContractOperationInfo keeps a single contract operation gas consumption data.
@@ -419,7 +689,7 @@ Object is being created by the IngestGasRecord call from the wasmd.
 | `id` | [uint64](#uint64) |  | id defines the unique operation ID. |
 | `tx_id` | [uint64](#uint64) |  | tx_id defines a transaction ID operation relates to (TxInfo.id). |
 | `contract_address` | [string](#string) |  | contract_address defines the contract address operation relates to. |
-| `operation_type` | [ContractOperation](#archway.tracking.v1.ContractOperation) |  | operation_type defines the gas consumption type. |
+| `operation_type` | [ContractOperation](#archway.tracking.v1beta1.ContractOperation) |  | operation_type defines the gas consumption type. |
 | `vm_gas` | [uint64](#uint64) |  | vm_gas is the gas consumption reported by the WASM VM. Value is adjusted by this module (CalculateUpdatedGas func). |
 | `sdk_gas` | [uint64](#uint64) |  | sdk_gas is the gas consumption reported by the SDK gas meter and the WASM GasRegister (cost of Execute/Query/etc). Value is adjusted by this module (CalculateUpdatedGas func). |
 
@@ -428,7 +698,7 @@ Object is being created by the IngestGasRecord call from the wasmd.
 
 
 
-<a name="archway.tracking.v1.Params"></a>
+<a name="archway.tracking.v1beta1.Params"></a>
 
 ### Params
 Params defines the module parameters.
@@ -443,7 +713,7 @@ Params defines the module parameters.
 
 
 
-<a name="archway.tracking.v1.TxInfo"></a>
+<a name="archway.tracking.v1beta1.TxInfo"></a>
 
 ### TxInfo
 TxInfo keeps a transaction gas tracking data.
@@ -460,10 +730,26 @@ Object is being created at the module EndBlocker.
 
 
 
+
+<a name="archway.tracking.v1beta1.TxTracking"></a>
+
+### TxTracking
+TxTracking is the tracking information for a single transaction.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `info` | [TxInfo](#archway.tracking.v1beta1.TxInfo) |  | info defines the transaction details. |
+| `contract_operations` | [ContractOperationInfo](#archway.tracking.v1beta1.ContractOperationInfo) | repeated | contract_operations defines the list of contract operations consumed by the transaction. |
+
+
+
+
+
  <!-- end messages -->
 
 
-<a name="archway.tracking.v1.ContractOperation"></a>
+<a name="archway.tracking.v1beta1.ContractOperation"></a>
 
 ### ContractOperation
 ContractOperation denotes which operation consumed gas.
@@ -488,14 +774,14 @@ ContractOperation denotes which operation consumed gas.
 
 
 
-<a name="archway/tracking/v1/genesis.proto"></a>
+<a name="archway/tracking/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## archway/tracking/v1/genesis.proto
+## archway/tracking/v1beta1/genesis.proto
 
 
 
-<a name="archway.tracking.v1.GenesisState"></a>
+<a name="archway.tracking.v1beta1.GenesisState"></a>
 
 ### GenesisState
 GenesisState defines the initial state of the tracking module.
@@ -503,9 +789,9 @@ GenesisState defines the initial state of the tracking module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#archway.tracking.v1.Params) |  | params defines all the module parameters. |
-| `tx_infos` | [TxInfo](#archway.tracking.v1.TxInfo) | repeated | tx_infos defines a list of all the tracked transactions. |
-| `contract_op_infos` | [ContractOperationInfo](#archway.tracking.v1.ContractOperationInfo) | repeated | contract_op_infos defines a list of all the tracked contract operations. |
+| `params` | [Params](#archway.tracking.v1beta1.Params) |  | params defines all the module parameters. |
+| `tx_infos` | [TxInfo](#archway.tracking.v1beta1.TxInfo) | repeated | tx_infos defines a list of all the tracked transactions. |
+| `contract_op_infos` | [ContractOperationInfo](#archway.tracking.v1beta1.ContractOperationInfo) | repeated | contract_op_infos defines a list of all the tracked contract operations. |
 
 
 
@@ -521,14 +807,14 @@ GenesisState defines the initial state of the tracking module.
 
 
 
-<a name="archway/tracking/v1/query.proto"></a>
+<a name="archway/tracking/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## archway/tracking/v1/query.proto
+## archway/tracking/v1beta1/query.proto
 
 
 
-<a name="archway.tracking.v1.QueryBlockGasTrackingRequest"></a>
+<a name="archway.tracking.v1beta1.QueryBlockGasTrackingRequest"></a>
 
 ### QueryBlockGasTrackingRequest
 QueryBlockGasTrackingRequest is the request for Query.BlockGasTracking.
@@ -538,7 +824,7 @@ QueryBlockGasTrackingRequest is the request for Query.BlockGasTracking.
 
 
 
-<a name="archway.tracking.v1.QueryBlockGasTrackingResponse"></a>
+<a name="archway.tracking.v1beta1.QueryBlockGasTrackingResponse"></a>
 
 ### QueryBlockGasTrackingResponse
 QueryBlockGasTrackingResponse is the response for Query.BlockGasTracking.
@@ -546,14 +832,14 @@ QueryBlockGasTrackingResponse is the response for Query.BlockGasTracking.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `txs` | [TxTracking](#archway.tracking.v1.TxTracking) | repeated |  |
+| `block` | [BlockTracking](#archway.tracking.v1beta1.BlockTracking) |  |  |
 
 
 
 
 
 
-<a name="archway.tracking.v1.QueryParamsRequest"></a>
+<a name="archway.tracking.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
 QueryParamsRequest is the request for Query.Params.
@@ -563,7 +849,7 @@ QueryParamsRequest is the request for Query.Params.
 
 
 
-<a name="archway.tracking.v1.QueryParamsResponse"></a>
+<a name="archway.tracking.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
 QueryParamsResponse is the response for Query.Params.
@@ -571,23 +857,7 @@ QueryParamsResponse is the response for Query.Params.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#archway.tracking.v1.Params) |  |  |
-
-
-
-
-
-
-<a name="archway.tracking.v1.TxTracking"></a>
-
-### TxTracking
-TxTracking is the tracking information for a transaction used by the Query.BlockGasTracking query.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `info` | [TxInfo](#archway.tracking.v1.TxInfo) |  | info defines the transaction details. |
-| `contract_operations` | [ContractOperationInfo](#archway.tracking.v1.ContractOperationInfo) | repeated | contract_operations defines contract operations consumed by the transaction. |
+| `params` | [Params](#archway.tracking.v1beta1.Params) |  |  |
 
 
 
@@ -600,15 +870,15 @@ TxTracking is the tracking information for a transaction used by the Query.Block
  <!-- end HasExtensions -->
 
 
-<a name="archway.tracking.v1.Query"></a>
+<a name="archway.tracking.v1beta1.Query"></a>
 
 ### Query
 Query service for the tracking module.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Params` | [QueryParamsRequest](#archway.tracking.v1.QueryParamsRequest) | [QueryParamsResponse](#archway.tracking.v1.QueryParamsResponse) | Params returns module parameters. | GET|/archway/tracking/v1/params|
-| `BlockGasTracking` | [QueryBlockGasTrackingRequest](#archway.tracking.v1.QueryBlockGasTrackingRequest) | [QueryBlockGasTrackingResponse](#archway.tracking.v1.QueryBlockGasTrackingResponse) | BlockGasTracking returns block gas tracking for the latest block | GET|/archway/tracking/v1/block_gas_tracking|
+| `Params` | [QueryParamsRequest](#archway.tracking.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#archway.tracking.v1beta1.QueryParamsResponse) | Params returns module parameters. | GET|/archway/tracking/v1/params|
+| `BlockGasTracking` | [QueryBlockGasTrackingRequest](#archway.tracking.v1beta1.QueryBlockGasTrackingRequest) | [QueryBlockGasTrackingResponse](#archway.tracking.v1beta1.QueryBlockGasTrackingResponse) | BlockGasTracking returns block gas tracking for the latest block | GET|/archway/tracking/v1/block_gas_tracking|
 
  <!-- end services -->
 

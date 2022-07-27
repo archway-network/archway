@@ -1,11 +1,11 @@
 syntax = "proto3";
-package archway.tracking.v1;
+package archway.tracking.v1beta1;
 
 option go_package = "github.com/archway-network/archway/x/tracking/types";
 
 import "gogoproto/gogo.proto";
-import "archway/tracking/v1/tracking.proto";
 import "google/api/annotations.proto";
+import "archway/tracking/v1beta1/tracking.proto";
 
 // Query service for the tracking module.
 service Query {
@@ -25,7 +25,7 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse is the response for Query.Params.
 message QueryParamsResponse {
-  archway.tracking.v1.Params params = 1 [
+  Params params = 1 [
     (gogoproto.nullable) = false
   ];
 }
@@ -35,21 +35,7 @@ message QueryBlockGasTrackingRequest {}
 
 // QueryBlockGasTrackingResponse is the response for Query.BlockGasTracking.
 message QueryBlockGasTrackingResponse {
-  repeated TxTracking txs = 1 [
-    (gogoproto.nullable) = false
-  ];
-}
-
-// TxTracking is the tracking information for a transaction used by the Query.BlockGasTracking query.
-message TxTracking {
-  option (gogoproto.goproto_stringer) = false;
-
-  // info defines the transaction details.
-  TxInfo info = 1 [
-    (gogoproto.nullable) = false
-  ];
-  // contract_operations defines contract operations consumed by the transaction.
-  repeated ContractOperationInfo contract_operations = 2 [
+  BlockTracking block = 1 [
     (gogoproto.nullable) = false
   ];
 }

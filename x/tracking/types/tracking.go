@@ -41,3 +41,9 @@ func (m ContractOperationInfo) Validate() error {
 
 	return nil
 }
+
+// String implements the fmt.Stringer interface.
+func (m BlockTracking) String() string {
+	bz, _ := yaml.Marshal(m)
+	return string(bz)
+}

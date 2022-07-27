@@ -1,0 +1,35 @@
+syntax = "proto3";
+package archway.rewards.v1beta1;
+
+option go_package = "github.com/archway-network/archway/x/rewards/types";
+
+import "gogoproto/gogo.proto";
+
+// Params defines the module parameters.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+
+  // rewards_enabled flag indicates whether rewards calculation and distribution is enabled.
+  bool rewards_enabled = 1;
+
+  string inflation_rewards_ratio = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+
+  string tx_fee_rebate_ratio = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ContractMetadata defines the contract rewards distribution options.
+message ContractMetadata {
+  option (gogoproto.goproto_stringer) = false;
+
+  // owner_address is the contract owner address that can modify contract reward options (bech32 encoded).
+  string owner_address = 1;
+
+  // rewards_address is an address to distribute rewards to (bech32 encoded).
+  string rewards_address = 2;
+}

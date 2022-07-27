@@ -58,8 +58,7 @@ func validateGasTrackingEnabled(v interface{}) (retErr error) {
 		}
 	}()
 
-	v, ok := v.(bool)
-	if !ok {
+	if _, ok := v.(bool); !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
