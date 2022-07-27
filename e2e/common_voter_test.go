@@ -71,7 +71,6 @@ func (s *E2ETestSuite) VoterNewVoting(chain *e2eTesting.TestChain, contractAddr 
 	}
 
 	_, res, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
-	s.Require().NoError(err)
 
 	txRes := chain.ParseSDKResultData(res)
 	s.Require().Len(txRes.Data, 1)
