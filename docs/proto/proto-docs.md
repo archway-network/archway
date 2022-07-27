@@ -33,6 +33,25 @@
   
     - [Msg](#archway.gastracker.v1.Msg)
   
+- [archway/tracking/v1/tracking.proto](#archway/tracking/v1/tracking.proto)
+    - [ContractOperationInfo](#archway.tracking.v1.ContractOperationInfo)
+    - [Params](#archway.tracking.v1.Params)
+    - [TxInfo](#archway.tracking.v1.TxInfo)
+  
+    - [ContractOperation](#archway.tracking.v1.ContractOperation)
+  
+- [archway/tracking/v1/genesis.proto](#archway/tracking/v1/genesis.proto)
+    - [GenesisState](#archway.tracking.v1.GenesisState)
+  
+- [archway/tracking/v1/query.proto](#archway/tracking/v1/query.proto)
+    - [QueryBlockGasTrackingRequest](#archway.tracking.v1.QueryBlockGasTrackingRequest)
+    - [QueryBlockGasTrackingResponse](#archway.tracking.v1.QueryBlockGasTrackingResponse)
+    - [QueryParamsRequest](#archway.tracking.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#archway.tracking.v1.QueryParamsResponse)
+    - [TxTracking](#archway.tracking.v1.TxTracking)
+  
+    - [Query](#archway.tracking.v1.Query)
+  
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -376,6 +395,220 @@ Msg defines the gastracker msg service
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SetContractMetadata` | [MsgSetContractMetadata](#archway.gastracker.v1.MsgSetContractMetadata) | [MsgSetContractMetadataResponse](#archway.gastracker.v1.MsgSetContractMetadataResponse) | SetContractMetadata to set the gas tracking metadata of contract | |
+
+ <!-- end services -->
+
+
+
+<a name="archway/tracking/v1/tracking.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/tracking/v1/tracking.proto
+
+
+
+<a name="archway.tracking.v1.ContractOperationInfo"></a>
+
+### ContractOperationInfo
+ContractOperationInfo keeps a single contract operation gas consumption data.
+Object is being created by the IngestGasRecord call from the wasmd.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | id defines the unique operation ID. |
+| `tx_id` | [uint64](#uint64) |  | tx_id defines a transaction ID operation relates to (TxInfo.id). |
+| `contract_address` | [string](#string) |  | contract_address defines the contract address operation relates to. |
+| `operation_type` | [ContractOperation](#archway.tracking.v1.ContractOperation) |  | operation_type defines the gas consumption type. |
+| `vm_gas` | [uint64](#uint64) |  | vm_gas is the gas consumption reported by the WASM VM. Value is adjusted by this module (CalculateUpdatedGas func). |
+| `sdk_gas` | [uint64](#uint64) |  | sdk_gas is the gas consumption reported by the SDK gas meter and the WASM GasRegister (cost of Execute/Query/etc). Value is adjusted by this module (CalculateUpdatedGas func). |
+
+
+
+
+
+
+<a name="archway.tracking.v1.Params"></a>
+
+### Params
+Params defines the module parameters.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `gas_tracking_enabled` | [bool](#bool) |  | gas_tracking_enabled flag indicates whether gas tracking is enabled (TXs and ContractOperations creation). |
+
+
+
+
+
+
+<a name="archway.tracking.v1.TxInfo"></a>
+
+### TxInfo
+TxInfo keeps a transaction gas tracking data.
+Object is being created at the module EndBlocker.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | id defines the unique transaction ID. |
+| `height` | [int64](#int64) |  | height defines the block height of the transaction. |
+| `total_gas` | [uint64](#uint64) |  | total_gas defines total gas consumption by the transaction. It is the sum of gas consumed by all contract operations (VM + SDK gas). |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="archway.tracking.v1.ContractOperation"></a>
+
+### ContractOperation
+ContractOperation denotes which operation consumed gas.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| CONTRACT_OPERATION_UNSPECIFIED | 0 | Invalid or unknown operation |
+| CONTRACT_OPERATION_INSTANTIATION | 1 | Instantiate operation |
+| CONTRACT_OPERATION_EXECUTION | 2 | Execute operation |
+| CONTRACT_OPERATION_QUERY | 3 | Query |
+| CONTRACT_OPERATION_MIGRATE | 4 | Migrate operation |
+| CONTRACT_OPERATION_IBC | 5 | IBC operations |
+| CONTRACT_OPERATION_SUDO | 6 | Sudo operation |
+| CONTRACT_OPERATION_REPLY | 7 | Reply callback operation |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="archway/tracking/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/tracking/v1/genesis.proto
+
+
+
+<a name="archway.tracking.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the initial state of the tracking module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#archway.tracking.v1.Params) |  | params defines all the module parameters. |
+| `tx_infos` | [TxInfo](#archway.tracking.v1.TxInfo) | repeated | tx_infos defines a list of all the tracked transactions. |
+| `contract_op_infos` | [ContractOperationInfo](#archway.tracking.v1.ContractOperationInfo) | repeated | contract_op_infos defines a list of all the tracked contract operations. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="archway/tracking/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/tracking/v1/query.proto
+
+
+
+<a name="archway.tracking.v1.QueryBlockGasTrackingRequest"></a>
+
+### QueryBlockGasTrackingRequest
+QueryBlockGasTrackingRequest is the request for Query.BlockGasTracking.
+
+
+
+
+
+
+<a name="archway.tracking.v1.QueryBlockGasTrackingResponse"></a>
+
+### QueryBlockGasTrackingResponse
+QueryBlockGasTrackingResponse is the response for Query.BlockGasTracking.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `txs` | [TxTracking](#archway.tracking.v1.TxTracking) | repeated |  |
+
+
+
+
+
+
+<a name="archway.tracking.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request for Query.Params.
+
+
+
+
+
+
+<a name="archway.tracking.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response for Query.Params.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#archway.tracking.v1.Params) |  |  |
+
+
+
+
+
+
+<a name="archway.tracking.v1.TxTracking"></a>
+
+### TxTracking
+TxTracking is the tracking information for a transaction used by the Query.BlockGasTracking query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `info` | [TxInfo](#archway.tracking.v1.TxInfo) |  | info defines the transaction details. |
+| `contract_operations` | [ContractOperationInfo](#archway.tracking.v1.ContractOperationInfo) | repeated | contract_operations defines contract operations consumed by the transaction. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="archway.tracking.v1.Query"></a>
+
+### Query
+Query service for the tracking module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#archway.tracking.v1.QueryParamsRequest) | [QueryParamsResponse](#archway.tracking.v1.QueryParamsResponse) | Params returns module parameters. | GET|/archway/tracking/v1/params|
+| `BlockGasTracking` | [QueryBlockGasTrackingRequest](#archway.tracking.v1.QueryBlockGasTrackingRequest) | [QueryBlockGasTrackingResponse](#archway.tracking.v1.QueryBlockGasTrackingResponse) | BlockGasTracking returns block gas tracking for the latest block | GET|/archway/tracking/v1/block_gas_tracking|
 
  <!-- end services -->
 

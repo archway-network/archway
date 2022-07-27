@@ -60,8 +60,9 @@ func NewTestChain(t *testing.T, chainIdx int) *TestChain {
 	// Create an app and a default genesis state
 	encCfg := app.MakeEncodingConfig()
 
+	// Pick your poison here =)
 	//logger := log.TestingLogger()
-	logger := log.TestingLogger()
+	logger := log.NewNopLogger()
 
 	archApp := app.NewArchwayApp(
 		logger,
@@ -246,6 +247,11 @@ func (chain *TestChain) GetBlockHeight() int64 {
 // GetUnbondingTime returns x/staking validator unbonding time.
 func (chain *TestChain) GetUnbondingTime() time.Duration {
 	return chain.app.StakingKeeper.UnbondingTime(chain.GetContext())
+}
+
+// GetApp returns the application.
+func (chain *TestChain) GetApp() *app.ArchwayApp {
+	return chain.app
 }
 
 // NextBlock starts a new block with options time shift.

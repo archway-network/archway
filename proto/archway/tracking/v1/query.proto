@@ -1,0 +1,55 @@
+syntax = "proto3";
+package archway.tracking.v1;
+
+option go_package = "github.com/archway-network/archway/x/tracking/types";
+
+import "gogoproto/gogo.proto";
+import "archway/tracking/v1/tracking.proto";
+import "google/api/annotations.proto";
+
+// Query service for the tracking module.
+service Query {
+  // Params returns module parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/archway/tracking/v1/params";
+  }
+
+  // BlockGasTracking returns block gas tracking for the latest block
+  rpc BlockGasTracking(QueryBlockGasTrackingRequest) returns (QueryBlockGasTrackingResponse) {
+    option (google.api.http).get = "/archway/tracking/v1/block_gas_tracking";
+  }
+}
+
+// QueryParamsRequest is the request for Query.Params.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response for Query.Params.
+message QueryParamsResponse {
+  archway.tracking.v1.Params params = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryBlockGasTrackingRequest is the request for Query.BlockGasTracking.
+message QueryBlockGasTrackingRequest {}
+
+// QueryBlockGasTrackingResponse is the response for Query.BlockGasTracking.
+message QueryBlockGasTrackingResponse {
+  repeated TxTracking txs = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// TxTracking is the tracking information for a transaction used by the Query.BlockGasTracking query.
+message TxTracking {
+  option (gogoproto.goproto_stringer) = false;
+
+  // info defines the transaction details.
+  TxInfo info = 1 [
+    (gogoproto.nullable) = false
+  ];
+  // contract_operations defines contract operations consumed by the transaction.
+  repeated ContractOperationInfo contract_operations = 2 [
+    (gogoproto.nullable) = false
+  ];
+}

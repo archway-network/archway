@@ -22,6 +22,7 @@ require (
 	github.com/tendermint/tm-db v0.6.7
 	google.golang.org/genproto v0.0.0-20220317150908-0efb43f6373e
 	google.golang.org/grpc v1.45.0
+	sigs.k8s.io/yaml v1.2.0
 )
 
 require (

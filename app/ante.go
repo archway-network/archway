@@ -11,7 +11,8 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	gastrackerante "github.com/archway-network/archway/x/gastracker/ante"
+	trackingAnte "github.com/archway-network/archway/x/tracking/ante"
+	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
@@ -24,7 +25,7 @@ type HandlerOptions struct {
 
 	TXCounterStoreKey sdk.StoreKey
 
-	GasTrackingKeeper gastrackerante.GasTrackingKeeper
+	TrackingKeeper trackingKeeper.Keeper
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -60,7 +61,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		// custom archway fee deduction, which splits fees between gastracker and auths fee collector
-		gastrackerante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.GasTrackingKeeper),
+		//gastrackerante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.GasTrackingKeeper),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
@@ -68,7 +69,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewAnteDecorator(options.IBCChannelkeeper),
-		gastrackerante.NewTxGasTrackingDecorator(options.GasTrackingKeeper),
+		trackingAnte.NewTxGasTrackingDecorator(options.TrackingKeeper),
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

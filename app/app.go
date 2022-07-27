@@ -2,6 +2,9 @@ package app
 
 import (
 	"fmt"
+	"github.com/archway-network/archway/x/tracking"
+	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
+	trackingTypes "github.com/archway-network/archway/x/tracking/types"
 	"io"
 	"net/http"
 	"os"
@@ -202,6 +205,7 @@ var (
 		vesting.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 		gastrackermodule.AppModuleBasic{},
+		tracking.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -256,6 +260,7 @@ type ArchwayApp struct {
 	AuthzKeeper       authzkeeper.Keeper
 	WASMKeeper        wasm.Keeper
 	GasTrackingKeeper gastrackerkeeper.Keeper
+	TrackingKeeper    trackingKeeper.Keeper
 
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -301,6 +306,7 @@ func NewArchwayApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		feegrant.StoreKey, authzkeeper.StoreKey, wasm.StoreKey, gastracker.StoreKey,
+		trackingTypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -459,6 +465,13 @@ func NewArchwayApp(
 		defaultGasRegister,
 	)
 
+	app.TrackingKeeper = trackingKeeper.NewKeeper(
+		appCodec,
+		keys[trackingTypes.StoreKey],
+		defaultGasRegister,
+		app.getSubspace(trackingTypes.ModuleName),
+	)
+
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
@@ -511,7 +524,7 @@ func NewArchwayApp(
 	)
 
 	// Setting gas recorder here to avoid cyclic loop
-	trackingWasmVm.SetGasRecorder(app.GasTrackingKeeper)
+	trackingWasmVm.SetGasRecorder(app.TrackingKeeper)
 
 	// The gov proposal types can be individually enabled
 	if len(enabledProposals) != 0 {
@@ -562,6 +575,7 @@ func NewArchwayApp(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		gastrackermodule.NewAppModule(app.appCodec, app.GasTrackingKeeper, app.BankKeeper),
+		tracking.NewAppModule(app.appCodec, app.TrackingKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -590,7 +604,37 @@ func NewArchwayApp(
 		// additional non simd modules
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
+		// wasm
 		wasm.ModuleName,
+		// wasm gas tracking
+		trackingTypes.ModuleName,
+	)
+
+	app.mm.SetOrderEndBlockers(
+		// we have to specify all modules here (Cosmos's order is taken as a reference)
+		crisistypes.ModuleName,
+		govtypes.ModuleName,
+		stakingtypes.ModuleName,
+		ibctransfertypes.ModuleName,
+		ibchost.ModuleName,
+		feegrant.ModuleName,
+		authz.ModuleName,
+		capabilitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		minttypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		// wasm
+		wasm.ModuleName,
+		// wasm gas tracking
+		gastracker.ModuleName,
+		trackingTypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -623,6 +667,8 @@ func NewArchwayApp(
 		ibctransfertypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
+		// wasm gas tracking
+		trackingTypes.ModuleName,
 	)
 
 	// Uncomment if you want to set a custom migration order here.
@@ -676,7 +722,7 @@ func NewArchwayApp(
 			IBCChannelkeeper:  app.IBCKeeper.ChannelKeeper,
 			WasmConfig:        &wasmConfig,
 			TXCounterStoreKey: keys[wasm.StoreKey],
-			GasTrackingKeeper: app.GasTrackingKeeper,
+			TrackingKeeper:    app.TrackingKeeper,
 		},
 	)
 	if err != nil {
@@ -839,6 +885,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(gastracker.DefaultParamSpace)
+	paramsKeeper.Subspace(trackingTypes.ModuleName)
 
 	return paramsKeeper
 }
