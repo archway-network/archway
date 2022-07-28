@@ -1,10 +1,13 @@
 package module
 
 import (
+	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"github.com/gogo/protobuf/proto"
 	"math/rand"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -527,6 +530,150 @@ func TestRewardCalculation(t *testing.T) {
 
 	rewardDiff, isNegative = totalFeeSecondTx.SafeSub(secondTxTotalRewards)
 	require.True(t, rewardDiff.IsAllPositive() && !isNegative, "reward difference must be positive")
+}
+
+func generateArrayFromIntRange(min, max, step uint64, ascending bool) []uint64 {
+	data := make([]uint64, 0)
+	if ascending {
+		for i := min; i <= max; i += step {
+			data = append(data, i)
+		}
+	} else {
+		for i := max; i >= min; i -= step {
+			data = append(data, i)
+		}
+	}
+
+	return data
+}
+
+func generateArrayFromFloatRange(min, max, step float64, ascending bool) []float64 {
+	data := make([]float64, 0)
+	if ascending {
+		for i := min; i <= max; i += step {
+			data = append(data, i)
+		}
+	} else {
+		for i := max; i >= min; i -= step {
+			data = append(data, i)
+		}
+	}
+
+	return data
+}
+
+func TestSimulationOfRewardCalculation(t *testing.T) {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("archway", "archway")
+
+	var spareAddress = make([]sdk.AccAddress, 10)
+	for i := 0; i < 10; i++ {
+		spareAddress[i] = GenerateRandomAccAddress()
+	}
+
+	var totalSupply uint64 = 100000000000000
+	var blocksInAYear uint64 = 4360000
+
+	blockGasLimitRange := generateArrayFromIntRange(2000000, 20*2000000, 1000000, false)
+	fmt.Println("Block gas limit range is:", len(blockGasLimitRange))
+
+	coinsRange := generateArrayFromIntRange(1000, 20000, 100, false)
+	fmt.Println("Coins range is:", len(coinsRange))
+
+	ctx, gstKeeper := createTestBaseKeeperAndContext(t, spareAddress[0])
+	gstKeeper.SetParams(ctx, gstTypes.DefaultParams())
+
+	testRewardKeeper := &TestRewardTransferKeeper{B: Log}
+	testMintParamsKeeper := &TestMintParamsKeeper{B: Log}
+	testMintParamsKeeper.BlocksPerYear = blocksInAYear
+
+	ctx = ctx.WithBlockHeight(2)
+
+	err := gstKeeper.AddPendingChangeForContractMetadata(ctx, spareAddress[0], spareAddress[1], gstTypes.ContractInstanceMetadata{
+		RewardAddress:    spareAddress[5].String(),
+		GasRebateToUser:  false,
+		DeveloperAddress: spareAddress[0].String(),
+	})
+	require.NoError(t, err, "We should be able to add new contract metadata")
+
+	// Commit the pending changes
+	numberOfMetadataCommitted, err := gstKeeper.CommitPendingContractMetadata(ctx)
+	require.NoError(t, err, "We should be able to commit pending contract metadata")
+	require.Equal(t, 1, numberOfMetadataCommitted, "Number of metadata commits should match")
+
+	fileHandle, err := os.Create("simulation_output.csv")
+	require.NoError(t, err, "We should be able to open file")
+
+	csvWriter := csv.NewWriter(fileHandle)
+
+	for _, gasLimit := range blockGasLimitRange {
+		for _, coinToPay := range coinsRange {
+
+			inflation := (totalSupply * 20) / 100
+			testMintParamsKeeper.AnnualProvisions = sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(inflation))
+
+			firstTxMaxContractReward := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(coinToPay))))
+			remainingFeeFirstTx := sdk.NewDecCoins(sdk.NewDecCoinFromDec("test", sdk.NewDecFromBigInt(gstTypes.ConvertUint64ToBigInt(coinToPay))))
+			totalFeeFirstTx := firstTxMaxContractReward.Add(remainingFeeFirstTx...)
+
+			ctx = ctx.WithEventManager(sdk.NewEventManager())
+			ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(gasLimit))
+			err = gstKeeper.TrackNewBlock(ctx)
+			require.NoError(t, err, "We should be able to track new block")
+
+			CreateTestBlockEntry(ctx, gstTypes.BlockGasTracking{TxTrackingInfos: []*gstTypes.TransactionTracking{
+				{
+					MaxGasAllowed:      400000,
+					MaxContractRewards: []*sdk.DecCoin{&firstTxMaxContractReward[0]},
+					RemainingFee:       []*sdk.DecCoin{&remainingFeeFirstTx[0]},
+					ContractTrackingInfos: []*gstTypes.ContractGasTracking{
+						{
+							Address:        spareAddress[1].String(),
+							OriginalVmGas:  200000,
+							OriginalSdkGas: 200000,
+							Operation:      gstTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
+						},
+					},
+				},
+			}})
+
+			BeginBlock(ctx, types.RequestBeginBlock{}, gstKeeper, testRewardKeeper, testMintParamsKeeper)
+
+			beginBlockEvents := ctx.EventManager().Events()
+
+			generatedAttributeValue, err := FindAttributeFromEvent(beginBlockEvents[0], "contract_rewards")
+			require.NoError(t, err, "should not be an error in finding attribute")
+
+			var contractRewards sdk.DecCoins
+			err = json.Unmarshal(generatedAttributeValue, &contractRewards)
+			require.NoError(t, err, "there should not be an error in unmarshalling contract rewards")
+
+			safetyNetSimulatedReward := sdk.NewDecCoinFromDec(totalFeeFirstTx[0].Denom, totalFeeFirstTx[0].Amount.MulInt64(90).QuoInt64(100))
+			if safetyNetSimulatedReward.IsGTE(contractRewards[0]) {
+				safetyNetSimulatedReward = contractRewards[0]
+			}
+
+			// Result analysis
+			// We capture the reward without cap
+			// We also document the cap as well
+			// With all the other parameters
+			err = csvWriter.Write(
+				[]string{
+					strconv.FormatUint(gasLimit, 10),
+					totalFeeFirstTx[0].Amount.String(),
+					contractRewards[0].Amount.String(),
+
+					strconv.FormatUint(gasLimit, 10),
+					totalFeeFirstTx[0].Amount.String(),
+					safetyNetSimulatedReward.Amount.String(),
+				},
+			)
+			require.NoError(t, err, "there should not be an error in writing csv")
+		}
+	}
+
+	csvWriter.Flush()
+	fileHandle.Close()
 }
 
 // In a real world scenario where without safety net we would be giving more rewards
