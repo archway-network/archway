@@ -2,21 +2,15 @@ package app
 
 import (
 	"fmt"
-	"github.com/archway-network/archway/x/tracking"
-	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
-	trackingTypes "github.com/archway-network/archway/x/tracking/types"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/archway-network/archway/x/gastracker/mintbankkeeper"
-
 	wasmdKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	cosmwasm "github.com/CosmWasm/wasmvm"
-	"github.com/archway-network/archway/x/gastracker/wasmbinding"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -84,7 +78,7 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
+	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v2/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v2/modules/core"
@@ -104,13 +98,19 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/archway-network/archway/x/rewards"
+	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
+	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
+	"github.com/archway-network/archway/x/rewards/wasmbinding"
+	"github.com/archway-network/archway/x/tracking"
+	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
+	trackingTypes "github.com/archway-network/archway/x/tracking/types"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
-	archwayappparams "github.com/archway-network/archway/app/params"
 
-	"github.com/archway-network/archway/x/gastracker"
-	gastrackerkeeper "github.com/archway-network/archway/x/gastracker/keeper"
-	gastrackermodule "github.com/archway-network/archway/x/gastracker/module"
+	archwayappparams "github.com/archway-network/archway/app/params"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -204,21 +204,21 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		wasm.AppModuleBasic{},
-		gastrackermodule.AppModuleBasic{},
 		tracking.AppModuleBasic{},
+		rewards.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		gastracker.ContractRewardCollector: nil,
-		authtypes.FeeCollectorName:         nil,
-		distrtypes.ModuleName:              nil,
-		minttypes.ModuleName:               {authtypes.Minter},
-		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                {authtypes.Burner},
-		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
-		wasm.ModuleName:                    {authtypes.Burner},
+		rewardsTypes.ContractRewardCollector: nil,
+		authtypes.FeeCollectorName:           nil,
+		distrtypes.ModuleName:                nil,
+		minttypes.ModuleName:                 {authtypes.Minter},
+		stakingtypes.BondedPoolName:          {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:       {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                  {authtypes.Burner},
+		ibctransfertypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
+		wasm.ModuleName:                      {authtypes.Burner},
 	}
 )
 
@@ -242,25 +242,25 @@ type ArchwayApp struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// keepers
-	AccountKeeper     authkeeper.AccountKeeper
-	BankKeeper        bankkeeper.Keeper
-	CapabilityKeeper  *capabilitykeeper.Keeper
-	StakingKeeper     stakingkeeper.Keeper
-	slashingKeeper    slashingkeeper.Keeper
-	MintKeeper        mintkeeper.Keeper
-	DistrKeeper       distrkeeper.Keeper
-	GovKeeper         govkeeper.Keeper
-	CrisisKeeper      crisiskeeper.Keeper
-	UpgradeKeeper     upgradekeeper.Keeper
-	ParamsKeeper      paramskeeper.Keeper
-	IBCKeeper         *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	EvidenceKeeper    evidencekeeper.Keeper
-	TransferKeeper    ibctransferkeeper.Keeper
-	FeeGrantKeeper    feegrantkeeper.Keeper
-	AuthzKeeper       authzkeeper.Keeper
-	WASMKeeper        wasm.Keeper
-	GasTrackingKeeper gastrackerkeeper.Keeper
-	TrackingKeeper    trackingKeeper.Keeper
+	AccountKeeper    authkeeper.AccountKeeper
+	BankKeeper       bankkeeper.Keeper
+	CapabilityKeeper *capabilitykeeper.Keeper
+	StakingKeeper    stakingkeeper.Keeper
+	slashingKeeper   slashingkeeper.Keeper
+	MintKeeper       mintkeeper.Keeper
+	DistrKeeper      distrkeeper.Keeper
+	GovKeeper        govkeeper.Keeper
+	CrisisKeeper     crisiskeeper.Keeper
+	UpgradeKeeper    upgradekeeper.Keeper
+	ParamsKeeper     paramskeeper.Keeper
+	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	EvidenceKeeper   evidencekeeper.Keeper
+	TransferKeeper   ibctransferkeeper.Keeper
+	FeeGrantKeeper   feegrantkeeper.Keeper
+	AuthzKeeper      authzkeeper.Keeper
+	WASMKeeper       wasm.Keeper
+	TrackingKeeper   trackingKeeper.Keeper
+	RewardsKeeper    rewardsKeeper.Keeper
 
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -305,8 +305,8 @@ func NewArchwayApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		feegrant.StoreKey, authzkeeper.StoreKey, wasm.StoreKey, gastracker.StoreKey,
-		trackingTypes.StoreKey,
+		feegrant.StoreKey, authzkeeper.StoreKey, wasm.StoreKey,
+		trackingTypes.StoreKey, rewardsTypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -457,19 +457,10 @@ func NewArchwayApp(
 
 	defaultGasRegister := wasmdKeeper.NewDefaultWasmGasRegister()
 
-	app.GasTrackingKeeper = gastrackerkeeper.NewGasTrackingKeeper(
-		keys[gastracker.StoreKey],
-		app.appCodec,
-		app.getSubspace(gastracker.DefaultParamSpace),
-		nil,
-		defaultGasRegister,
-	)
-
 	app.TrackingKeeper = trackingKeeper.NewKeeper(
 		appCodec,
 		keys[trackingTypes.StoreKey],
 		defaultGasRegister,
-		app.getSubspace(trackingTypes.ModuleName),
 	)
 
 	wasmDir := filepath.Join(homePath, "wasm")
@@ -486,10 +477,11 @@ func NewArchwayApp(
 	if err != nil {
 		panic(err)
 	}
+
 	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
 
 	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
-	wasmOpts = append(wasmOpts, wasmbinding.GetCustomWasmOptions(&app.GasTrackingKeeper)...)
+	wasmOpts = append(wasmOpts, wasmbinding.GetCustomWasmOptions(&app.RewardsKeeper)...) // using a pointer as the keeper is initialized below
 
 	app.WASMKeeper = wasm.NewKeeper(
 		appCodec,
@@ -510,21 +502,30 @@ func NewArchwayApp(
 		supportedFeatures,
 		wasmOpts...,
 	)
-	app.GasTrackingKeeper.SetContractInfoView(app.WASMKeeper) // post initialization
 
-	// note we set up mint keeper after gastracking keeper
+	// Setting gas recorder here to avoid cyclic loop
+	trackingWasmVm.SetGasRecorder(app.TrackingKeeper)
+
+	app.RewardsKeeper = rewardsKeeper.NewKeeper(
+		appCodec,
+		keys[rewardsTypes.StoreKey],
+		app.WASMKeeper,
+		app.TrackingKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.getSubspace(rewardsTypes.ModuleName),
+	)
+
+	// Note we set up mint keeper after the x/rewards keeper
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,
 		keys[minttypes.StoreKey],
 		app.getSubspace(minttypes.ModuleName),
 		&stakingKeeper,
 		app.AccountKeeper,
-		mintbankkeeper.NewKeeper(app.BankKeeper, app.GasTrackingKeeper),
+		mintbankkeeper.NewKeeper(app.BankKeeper, app.RewardsKeeper),
 		authtypes.FeeCollectorName,
 	)
-
-	// Setting gas recorder here to avoid cyclic loop
-	trackingWasmVm.SetGasRecorder(app.TrackingKeeper)
 
 	// The gov proposal types can be individually enabled
 	if len(enabledProposals) != 0 {
@@ -574,8 +575,8 @@ func NewArchwayApp(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
-		gastrackermodule.NewAppModule(app.appCodec, app.GasTrackingKeeper, app.BankKeeper),
 		tracking.NewAppModule(app.appCodec, app.TrackingKeeper),
+		rewards.NewAppModule(app.appCodec, app.RewardsKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -587,7 +588,6 @@ func NewArchwayApp(
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
-		gastracker.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -608,6 +608,7 @@ func NewArchwayApp(
 		wasm.ModuleName,
 		// wasm gas tracking
 		trackingTypes.ModuleName,
+		rewardsTypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -633,8 +634,8 @@ func NewArchwayApp(
 		// wasm
 		wasm.ModuleName,
 		// wasm gas tracking
-		gastracker.ModuleName,
 		trackingTypes.ModuleName,
+		rewardsTypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -651,7 +652,6 @@ func NewArchwayApp(
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
-		gastracker.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
@@ -669,6 +669,7 @@ func NewArchwayApp(
 		wasm.ModuleName,
 		// wasm gas tracking
 		trackingTypes.ModuleName,
+		rewardsTypes.ModuleName,
 	)
 
 	// Uncomment if you want to set a custom migration order here.
@@ -700,7 +701,6 @@ func NewArchwayApp(
 		wasm.NewAppModule(appCodec, &app.WASMKeeper, app.StakingKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
-		gastrackermodule.NewAppModule(app.appCodec, app.GasTrackingKeeper, app.BankKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -723,6 +723,7 @@ func NewArchwayApp(
 			WasmConfig:        &wasmConfig,
 			TXCounterStoreKey: keys[wasm.StoreKey],
 			TrackingKeeper:    app.TrackingKeeper,
+			RewardsKeeper:     app.RewardsKeeper,
 		},
 	)
 	if err != nil {
@@ -884,8 +885,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
-	paramsKeeper.Subspace(gastracker.DefaultParamSpace)
-	paramsKeeper.Subspace(trackingTypes.ModuleName)
+	paramsKeeper.Subspace(rewardsTypes.ModuleName)
 
 	return paramsKeeper
 }

@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	"github.com/archway-network/archway/x/tracking/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/tracking/types"
 )
 
 // State is a wrapper around the module storage state.

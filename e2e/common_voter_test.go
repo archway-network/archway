@@ -12,9 +12,10 @@ import (
 	cwMath "github.com/CosmWasm/cosmwasm-go/std/math"
 	cwSdkTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channelTypes "github.com/cosmos/ibc-go/v2/modules/core/04-channel/types"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 // Voter contract related helpers.
@@ -70,7 +71,7 @@ func (s *E2ETestSuite) VoterNewVoting(chain *e2eTesting.TestChain, contractAddr 
 		}),
 	}
 
-	_, res, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
+	_, res, _, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 
 	txRes := chain.ParseSDKResultData(res)
 	s.Require().Len(txRes.Data, 1)
@@ -146,7 +147,7 @@ func (s *E2ETestSuite) VoterIBCVote(chain *e2eTesting.TestChain, contractAddr sd
 		}),
 	}
 
-	_, res, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
+	_, res, _, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 
 	// Assemble the IBC packet from the response
 	var packet channelTypes.Packet
@@ -208,7 +209,7 @@ func (s *E2ETestSuite) VoterRelease(chain *e2eTesting.TestChain, contractAddr sd
 		Msg:      reqBz,
 	}
 
-	_, res, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
+	_, res, _, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 
 	txRes := chain.ParseSDKResultData(res)
 	s.Require().Len(txRes.Data, 1)
@@ -333,7 +334,7 @@ func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contract
 		Msg:      reqBz,
 	}
 
-	_, _, err = chain.SendMsgs(acc, expPass, []sdk.Msg{&msg})
+	_, _, _, err = chain.SendMsgs(acc, expPass, []sdk.Msg{&msg})
 
 	return err
 }

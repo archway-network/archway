@@ -5,6 +5,7 @@ option go_package = "github.com/archway-network/archway/x/rewards/types";
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "archway/rewards/v1beta1/rewards.proto";
 
 // Query service for the tracking module.
@@ -17,6 +18,16 @@ service Query {
   // ContractMetadata returns the contract rewards parameters (metadata).
   rpc ContractMetadata(QueryContractMetadataRequest) returns (QueryContractMetadataResponse) {
     option (google.api.http).get = "/archway/rewards/v1/contract_metadata";
+  }
+
+  // BlockRewardsTracking returns block rewards tracking for the current block.
+  rpc BlockRewardsTracking(QueryBlockRewardsTrackingRequest) returns (QueryBlockRewardsTrackingResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/block_rewards_tracking";
+  }
+
+  // RewardsPool returns the current undistributed rewards pool funds.
+  rpc RewardsPool(QueryRewardsPoolRequest) returns (QueryRewardsPoolResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/rewards_pool";
   }
 }
 
@@ -39,6 +50,26 @@ message QueryContractMetadataRequest {
 // QueryContractMetadataResponse is the response for Query.ContractMetadata.
 message QueryContractMetadataResponse {
   ContractMetadata metadata = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryBlockRewardsTrackingRequest is the request for Query.BlockRewardsTracking.
+message QueryBlockRewardsTrackingRequest {}
+
+// QueryBlockRewardsTrackingResponse is the response for Query.BlockRewardsTracking.
+message QueryBlockRewardsTrackingResponse {
+  BlockTracking block = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryRewardsPoolRequest is the request for Query.RewardsPool.
+message QueryRewardsPoolRequest {}
+
+// QueryRewardsPoolResponse is the response for Query.RewardsPool.
+message QueryRewardsPoolResponse {
+  repeated cosmos.base.v1beta1.Coin funds = 1 [
     (gogoproto.nullable) = false
   ];
 }

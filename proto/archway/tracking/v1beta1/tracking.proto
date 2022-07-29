@@ -5,14 +5,6 @@ option go_package = "github.com/archway-network/archway/x/tracking/types";
 
 import "gogoproto/gogo.proto";
 
-// Params defines the module parameters.
-message Params {
-  option (gogoproto.goproto_stringer) = false;
-
-  // gas_tracking_enabled flag indicates whether gas tracking is enabled (TXs and ContractOperations creation).
-  bool gas_tracking_enabled = 1;
-}
-
 // ContractOperation denotes which operation consumed gas.
 enum ContractOperation {
   CONTRACT_OPERATION_UNSPECIFIED = 0; // Invalid or unknown operation

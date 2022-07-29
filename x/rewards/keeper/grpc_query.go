@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
-	"github.com/archway-network/archway/x/rewards/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/archway-network/archway/x/rewards/types"
 )
 
 var _ types.QueryServer = &QueryServer{}
@@ -47,14 +49,49 @@ func (s *QueryServer) ContractMetadata(c context.Context, request *types.QueryCo
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	metaState := s.keeper.state.ContractMetadataState(ctx)
 
-	meta, found := metaState.GetContractMetadata(contractAddr)
-	if !found {
+	meta := s.keeper.GetContractMetadata(ctx, contractAddr)
+	if meta == nil {
 		return nil, status.Errorf(codes.NotFound, "metadata for the contract: not found")
 	}
 
 	return &types.QueryContractMetadataResponse{
-		Metadata: meta,
+		Metadata: *meta,
+	}, nil
+}
+
+// BlockRewardsTracking implements the types.QueryServer interface.
+func (s *QueryServer) BlockRewardsTracking(c context.Context, request *types.QueryBlockRewardsTrackingRequest) (*types.QueryBlockRewardsTrackingResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	height := ctx.BlockHeight()
+
+	blockRewards, found := s.keeper.state.BlockRewardsState(ctx).GetBlockRewards(height)
+	if !found {
+		blockRewards.Height = ctx.BlockHeight()
+	}
+	txRewards := s.keeper.state.TxRewardsState(ctx).GetTxRewardsByBlock(height)
+
+	return &types.QueryBlockRewardsTrackingResponse{
+		Block: types.BlockTracking{
+			InflationRewards: blockRewards,
+			TxRewards:        txRewards,
+		},
+	}, nil
+}
+
+// RewardsPool implements the types.QueryServer interface.
+func (s *QueryServer) RewardsPool(c context.Context, request *types.QueryRewardsPoolRequest) (*types.QueryRewardsPoolResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	return &types.QueryRewardsPoolResponse{
+		Funds: s.keeper.UndistributedRewardsPool(ctx),
 	}, nil
 }

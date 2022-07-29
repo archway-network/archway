@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
+
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/archway-network/archway/x/gastracker"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +24,7 @@ func (chain *TestChain) UploadContract(sender Account, wasmPath string, instanti
 		InstantiatePermission: &instantiatePerms,
 	}
 
-	_, res, err := chain.SendMsgs(sender, true, []sdk.Msg{&txMsg})
+	_, res, _, err := chain.SendMsgs(sender, true, []sdk.Msg{&txMsg})
 	require.NoError(t, err)
 
 	txRes := chain.ParseSDKResultData(res)
@@ -56,7 +57,7 @@ func (chain *TestChain) InstantiateContract(sender Account, codeID uint64, admin
 		Funds:  funds,
 	}
 
-	_, res, err := chain.SendMsgs(sender, true, []sdk.Msg{&txMsg})
+	_, res, _, err := chain.SendMsgs(sender, true, []sdk.Msg{&txMsg})
 	require.NoError(t, err)
 
 	txRes := chain.ParseSDKResultData(res)
@@ -101,25 +102,27 @@ func (chain *TestChain) GetContractInfo(contractAddr sdk.AccAddress) wasmdTypes.
 }
 
 // GetContractMetadata returns a contract metadata.
-func (chain *TestChain) GetContractMetadata(contractAddr sdk.AccAddress) gastracker.ContractInstanceMetadata {
+func (chain *TestChain) GetContractMetadata(contractAddr sdk.AccAddress) rewardsTypes.ContractMetadata {
 	t := chain.t
 
-	metadata, err := chain.app.GasTrackingKeeper.GetContractMetadata(chain.GetContext(), contractAddr)
-	require.NoError(t, err)
+	state := chain.app.RewardsKeeper.GetState().ContractMetadataState(chain.GetContext())
+
+	metadata, found := state.GetContractMetadata(contractAddr)
+	require.True(t, found)
 
 	return metadata
 }
 
 // SetContractMetadata sets a contract metadata.
-func (chain *TestChain) SetContractMetadata(sender Account, contractAddr sdk.AccAddress, metadata gastracker.ContractInstanceMetadata) {
+func (chain *TestChain) SetContractMetadata(sender Account, contractAddr sdk.AccAddress, metadata rewardsTypes.ContractMetadata) {
 	t := chain.t
 
-	txMsg := gastracker.MsgSetContractMetadata{
-		Sender:          sender.Address.String(),
+	txMsg := rewardsTypes.MsgSetContractMetadata{
+		SenderAddress:   sender.Address.String(),
 		ContractAddress: contractAddr.String(),
-		Metadata:        &metadata,
+		Metadata:        metadata,
 	}
 
-	_, _, err := chain.SendMsgs(sender, true, []sdk.Msg{&txMsg})
+	_, _, _, err := chain.SendMsgs(sender, true, []sdk.Msg{&txMsg})
 	require.NoError(t, err)
 }

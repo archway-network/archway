@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/archway-network/archway/x/tracking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/tracking/types"
 )
 
 // ContractOpInfoState provides access to the types.ContractOperationInfo objects storage operations.
@@ -56,7 +58,7 @@ func (s ContractOpInfoState) GetContractOpInfoByTxID(txID uint64) (objs []types.
 
 		obj, found := s.GetContractOpInfo(id)
 		if !found {
-			panic(fmt.Errorf("invalid ContractOpInfo tx index state: id (%d): not found", id))
+			panic(fmt.Errorf("invalid ContractOpInfo TxInfo index state: id (%d): not found", id))
 		}
 		objs = append(objs, obj)
 	}
@@ -138,12 +140,12 @@ func (s ContractOpInfoState) getContractOpInfo(id uint64) *types.ContractOperati
 	return &obj
 }
 
-// buildTxIndexPrefix returns the key prefix used to maintain types.ContractOperationInfo tx index.
+// buildTxIndexPrefix returns the key prefix used to maintain types.ContractOperationInfo's tx index.
 func (s ContractOpInfoState) buildTxIndexPrefix(txID uint64) []byte {
 	return sdk.Uint64ToBigEndian(txID)
 }
 
-// buildTxIndexKey returns the key used to maintain types.ContractOperationInfo tx index.
+// buildTxIndexKey returns the key used to maintain types.ContractOperationInfo's tx index.
 func (s ContractOpInfoState) buildTxIndexKey(txID, id uint64) []byte {
 	return append(
 		s.buildTxIndexPrefix(txID),
@@ -151,7 +153,7 @@ func (s ContractOpInfoState) buildTxIndexKey(txID, id uint64) []byte {
 	)
 }
 
-// parseTxIndexKey parses the types.ContractOperationInfo tx index key.
+// parseTxIndexKey parses the types.ContractOperationInfo's tx index key.
 func (s ContractOpInfoState) parseTxIndexKey(key []byte) (txID, id uint64) {
 	if len(key) != 16 {
 		panic(fmt.Errorf("invalid ContractOpInfo TxInfo index key length: %d", len(key)))
@@ -163,7 +165,7 @@ func (s ContractOpInfoState) parseTxIndexKey(key []byte) (txID, id uint64) {
 	return
 }
 
-// setTxIndex adds the types.ContractOperationInfo tx index entry.
+// setTxIndex adds the types.ContractOperationInfo's tx index entry.
 func (s ContractOpInfoState) setTxIndex(txID, id uint64) {
 	store := prefix.NewStore(s.stateStore, types.ContractOpInfoTxIndexPrefix)
 	store.Set(

@@ -16,22 +16,17 @@ func (s *KeeperTestSuite) TestGenesisExport() {
 		keeper.TrackNewTx(ctx)
 		keeper.TrackNewContractOperation(ctx, chain.GetAccount(rand.Intn(5)).Address, types.ContractOperation(rand.Int31n(8)-1), 1, 1)
 	}
-	p := keeper.GetParams(ctx)
-	p.GasTrackingEnabled = false
-	keeper.SetParams(ctx, p)
 
 	genesis := keeper.ExportGenesis(ctx)
-	s.Require().Nil(genesis.Validate())
-	s.Require().False(genesis.Params.GasTrackingEnabled)
-	s.Require().Equal(operationsToExecute, len(genesis.ContractOpInfos))
-	s.Require().Equal(operationsToExecute, len(genesis.TxInfos))
+	s.Require().NoError(genesis.Validate())
+	s.Assert().Equal(operationsToExecute, len(genesis.TxInfos))
+	s.Assert().Equal(operationsToExecute, len(genesis.ContractOpInfos))
 }
 
 func (s *KeeperTestSuite) TestGenesisImport() {
 	chain := s.chain
 	ctx, keeper := chain.GetContext(), chain.GetApp().TrackingKeeper
-	genesis := types.DefaultGenesisState()
-	genesis.Params.GasTrackingEnabled = false
+	genesisExpected := types.DefaultGenesisState()
 	operationsToExecute := 100
 
 	// Ids must be greater than 0
@@ -45,12 +40,12 @@ func (s *KeeperTestSuite) TestGenesisImport() {
 			1,
 			1,
 		}
-		genesis.TxInfos = append(genesis.TxInfos, txInfo)
-		genesis.ContractOpInfos = append(genesis.ContractOpInfos, contractOperation)
+		genesisExpected.TxInfos = append(genesisExpected.TxInfos, txInfo)
+		genesisExpected.ContractOpInfos = append(genesisExpected.ContractOpInfos, contractOperation)
 	}
+	s.Require().NoError(genesisExpected.Validate())
 
-	s.Require().Nil(genesis.Validate())
-	keeper.InitGenesis(ctx, genesis)
-	newGenesis := keeper.ExportGenesis(ctx)
-	s.Require().Equal(genesis, newGenesis)
+	keeper.InitGenesis(ctx, genesisExpected)
+	genesisReceived := keeper.ExportGenesis(ctx)
+	s.Assert().Equal(genesisExpected, genesisReceived)
 }

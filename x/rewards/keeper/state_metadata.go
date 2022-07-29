@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/archway-network/archway/x/rewards/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/rewards/types"
 )
 
 // ContractMetadataState provides access to the types.ContractMetadata objects storage operations.
@@ -17,11 +19,11 @@ type ContractMetadataState struct {
 }
 
 // SetContractMetadata creates or modifies a types.ContractMetadata object.
-func (s ContractMetadataState) SetContractMetadata(contractAddr sdk.AccAddress, meta types.ContractMetadata) {
+func (s ContractMetadataState) SetContractMetadata(contractAddr sdk.AccAddress, obj types.ContractMetadata) {
 	store := prefix.NewStore(s.stateStore, types.ContractMetadataPrefix)
 	store.Set(
 		s.buildContractMetadataKey(contractAddr),
-		s.cdc.MustMarshal(&meta),
+		s.cdc.MustMarshal(&obj),
 	)
 }
 

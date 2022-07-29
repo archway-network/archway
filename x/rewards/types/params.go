@@ -2,12 +2,13 @@ package types
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"sigs.k8s.io/yaml"
 )
 
 var (
-	RewardsEnabledParamKey        = []byte("RewardsEnabled")
 	InflationRewardsRatioParamKey = []byte("InflationRewardsRatio")
 	TxFeeRebateRatioParamKey      = []byte("TxFeeRebateRatio")
 )
@@ -20,9 +21,8 @@ func ParamKeyTable() paramTypes.KeyTable {
 }
 
 // NewParams creates a new Params instance.
-func NewParams(rewardsEnabled bool, inflationRewardsRatio, txFeeRebateRatio sdk.Dec) Params {
+func NewParams(inflationRewardsRatio, txFeeRebateRatio sdk.Dec) Params {
 	return Params{
-		RewardsEnabled:        rewardsEnabled,
 		InflationRewardsRatio: inflationRewardsRatio,
 		TxFeeRebateRatio:      txFeeRebateRatio,
 	}
@@ -33,13 +33,12 @@ func DefaultParams() Params {
 	defInflationRatio := sdk.MustNewDecFromStr("0.20")   // 20%
 	defTxFeeRebateRatio := sdk.MustNewDecFromStr("0.50") // 50%
 
-	return NewParams(true, defInflationRatio, defTxFeeRebateRatio)
+	return NewParams(defInflationRatio, defTxFeeRebateRatio)
 }
 
 // ParamSetPairs Implements the paramTypes.ParamSet interface.
 func (m *Params) ParamSetPairs() paramTypes.ParamSetPairs {
 	return paramTypes.ParamSetPairs{
-		paramTypes.NewParamSetPair(RewardsEnabledParamKey, &m.RewardsEnabled, validateRewardsEnabled),
 		paramTypes.NewParamSetPair(InflationRewardsRatioParamKey, &m.InflationRewardsRatio, validateInflationRewardsRatio),
 		paramTypes.NewParamSetPair(TxFeeRebateRatioParamKey, &m.TxFeeRebateRatio, validateTxFeeRebateRatio),
 	}
@@ -47,9 +46,6 @@ func (m *Params) ParamSetPairs() paramTypes.ParamSetPairs {
 
 // Validate perform object fields validation.
 func (m Params) Validate() error {
-	if err := validateRewardsEnabled(m.RewardsEnabled); err != nil {
-		return err
-	}
 	if err := validateInflationRewardsRatio(m.InflationRewardsRatio); err != nil {
 		return err
 	}
@@ -60,19 +56,10 @@ func (m Params) Validate() error {
 	return nil
 }
 
-func validateRewardsEnabled(v interface{}) (retErr error) {
-	defer func() {
-		if retErr != nil {
-			retErr = fmt.Errorf("rewardsEnabled param: %w", retErr)
-		}
-	}()
-
-	v, ok := v.(bool)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", v)
-	}
-
-	return
+// String implements the fmt.Stringer interface.
+func (m Params) String() string {
+	bz, _ := yaml.Marshal(m)
+	return string(bz)
 }
 
 func validateInflationRewardsRatio(v interface{}) (retErr error) {

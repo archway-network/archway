@@ -3,9 +3,8 @@ package types
 import "fmt"
 
 // NewGenesisState creates a new GenesisState object.
-func NewGenesisState(params Params, txInfos []TxInfo, contractOpInfos []ContractOperationInfo) *GenesisState {
+func NewGenesisState(txInfos []TxInfo, contractOpInfos []ContractOperationInfo) *GenesisState {
 	return &GenesisState{
-		Params:          params,
 		TxInfos:         txInfos,
 		ContractOpInfos: contractOpInfos,
 	}
@@ -14,7 +13,6 @@ func NewGenesisState(params Params, txInfos []TxInfo, contractOpInfos []Contract
 // DefaultGenesisState returns a default genesis state.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		Params:          DefaultParams(),
 		TxInfos:         []TxInfo{},
 		ContractOpInfos: []ContractOperationInfo{},
 	}
@@ -22,10 +20,6 @@ func DefaultGenesisState() *GenesisState {
 
 // Validate performs genesis state validation.
 func (m GenesisState) Validate() error {
-	if err := m.Params.Validate(); err != nil {
-		return fmt.Errorf("params: %w", err)
-	}
-
 	txIDSet := make(map[uint64]struct{})
 	for i, txInfo := range m.TxInfos {
 		if err := txInfo.Validate(); err != nil {

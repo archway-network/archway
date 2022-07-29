@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	"github.com/archway-network/archway/x/tracking/types"
 )
 

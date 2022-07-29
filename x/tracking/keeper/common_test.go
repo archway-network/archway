@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
+	"testing"
+
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/stretchr/testify/suite"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/tracking/types"
-	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type KeeperTestSuite struct {

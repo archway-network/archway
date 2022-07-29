@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/archway-network/archway/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptoCodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -29,6 +28,8 @@ import (
 	tmProto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmTypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/archway-network/archway/app"
 )
 
 // TestChain keeps a test chain state and provides helper functions to simulate various operations.
@@ -255,11 +256,13 @@ func (chain *TestChain) GetApp() *app.ArchwayApp {
 }
 
 // NextBlock starts a new block with options time shift.
-func (chain *TestChain) NextBlock(skipTime time.Duration) {
-	chain.endBlock()
+func (chain *TestChain) NextBlock(skipTime time.Duration) []abci.Event {
+	ebEvents := chain.endBlock()
 
 	chain.curHeader.Time = chain.curHeader.Time.Add(skipTime)
-	chain.beginBlock()
+	bbEvents := chain.beginBlock()
+
+	return append(ebEvents, bbEvents...)
 }
 
 type SendMsgOption func(opt *sendMsgOptions)
@@ -276,7 +279,7 @@ func SendMsgWithFees(coins sdk.Coins) SendMsgOption {
 }
 
 // SendMsgs sends a series of messages.
-func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, error) {
+func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, []abci.Event, error) {
 	options := &sendMsgOptions{
 		fees:     sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)),
 		gasLimit: 10_000_000,
@@ -315,10 +318,10 @@ func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg
 		require.Nil(t, res)
 	}
 
-	chain.endBlock()
-	chain.beginBlock()
+	ebEvents := chain.endBlock()
+	bbEvents := chain.beginBlock()
 
-	return gasInfo, res, err
+	return gasInfo, res, append(ebEvents, bbEvents...), err
 }
 
 // ParseSDKResultData converts TX result data into a slice of Msgs.
@@ -334,7 +337,7 @@ func (chain *TestChain) ParseSDKResultData(r *sdk.Result) sdk.TxMsgData {
 }
 
 // beginBlock begins a new block.
-func (chain *TestChain) beginBlock() {
+func (chain *TestChain) beginBlock() []abci.Event {
 	const blockDur = 5 * time.Second
 
 	chain.lastHeader = chain.curHeader
@@ -345,11 +348,15 @@ func (chain *TestChain) beginBlock() {
 	chain.curHeader.ValidatorsHash = chain.valSet.Hash()
 	chain.curHeader.NextValidatorsHash = chain.valSet.Hash()
 
-	chain.app.BeginBlock(abci.RequestBeginBlock{Header: chain.curHeader})
+	res := chain.app.BeginBlock(abci.RequestBeginBlock{Header: chain.curHeader})
+
+	return res.Events
 }
 
 // endBlock finalizes the current block.
-func (chain *TestChain) endBlock() {
-	chain.app.EndBlock(abci.RequestEndBlock{Height: chain.curHeader.Height})
+func (chain *TestChain) endBlock() []abci.Event {
+	res := chain.app.EndBlock(abci.RequestEndBlock{Height: chain.curHeader.Height})
 	chain.app.Commit()
+
+	return res.Events
 }

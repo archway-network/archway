@@ -9,25 +9,10 @@ import "archway/tracking/v1beta1/tracking.proto";
 
 // Query service for the tracking module.
 service Query {
-  // Params returns module parameters.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/archway/tracking/v1/params";
-  }
-
-  // BlockGasTracking returns block gas tracking for the latest block
+  // BlockGasTracking returns block gas tracking for the current block
   rpc BlockGasTracking(QueryBlockGasTrackingRequest) returns (QueryBlockGasTrackingResponse) {
     option (google.api.http).get = "/archway/tracking/v1/block_gas_tracking";
   }
-}
-
-// QueryParamsRequest is the request for Query.Params.
-message QueryParamsRequest {}
-
-// QueryParamsResponse is the response for Query.Params.
-message QueryParamsResponse {
-  Params params = 1 [
-    (gogoproto.nullable) = false
-  ];
 }
 
 // QueryBlockGasTrackingRequest is the request for Query.BlockGasTracking.

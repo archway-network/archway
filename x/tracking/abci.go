@@ -1,12 +1,14 @@
 package tracking
 
 import (
-	"github.com/archway-network/archway/x/tracking/keeper"
-	"github.com/archway-network/archway/x/tracking/types"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"time"
+
+	"github.com/archway-network/archway/x/tracking/keeper"
+	"github.com/archway-network/archway/x/tracking/types"
 )
 
 // EndBlocker modifies tracked transactions using tracked contract operations.

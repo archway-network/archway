@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"fmt"
+
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/archway-network/archway/x/tracking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/tracking/types"
 )
 
 var _ wasmTypes.ContractGasProcessor = &Keeper{}
@@ -12,11 +14,6 @@ var _ wasmTypes.ContractGasProcessor = &Keeper{}
 // IngestGasRecord implements the wasmTypes.ContractGasProcessor interface.
 // It is called by the wasmd to track contract gas records.
 func (k Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGasRecord) error {
-	// Skip ingesting if not enabled
-	if !k.GasTrackingEnabled(ctx) {
-		return nil
-	}
-
 	// Ingest operation for every record
 	for _, record := range records {
 		contractAddr, err := sdk.AccAddressFromBech32(record.ContractAddress)
@@ -70,7 +67,7 @@ func (k Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGas
 // It is called by the wasmd to get the gas consumption adjustment function for a contract.
 // This is a no-op function since we don't change gas values atm.
 func (k Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddrBz string) (func(operationId uint64, gasInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo, error) {
-	return func(operationId uint64, gasConsumptionInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
+	return func(operationID uint64, gasConsumptionInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
 		return gasConsumptionInfo
 	}, nil
 }

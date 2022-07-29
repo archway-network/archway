@@ -1,13 +1,14 @@
 // Package tracking defines a module that tracks WASM contracts gas usage per transaction.
+// Module is not configurable and tracking is always enabled.
+// TODO: collected tracking data should be pruned.
 package tracking
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/archway-network/archway/x/tracking/client/cli"
-	"github.com/archway-network/archway/x/tracking/keeper"
-	"github.com/archway-network/archway/x/tracking/types"
+	"math/rand"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,7 +19,10 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"math/rand"
+
+	"github.com/archway-network/archway/x/tracking/client/cli"
+	"github.com/archway-network/archway/x/tracking/keeper"
+	"github.com/archway-network/archway/x/tracking/types"
 )
 
 var (
@@ -138,7 +142,7 @@ func (a AppModule) ConsensusVersion() uint64 {
 }
 
 // BeginBlock returns the begin blocker for the module.
-func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock) {}
+func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the module. It returns no validator updates.
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {

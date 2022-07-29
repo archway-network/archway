@@ -3,7 +3,7 @@ module github.com/archway-network/archway
 go 1.18
 
 require (
-	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220719123407-a0448ffb23f6
+	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220729111547-079232ac0432
 	github.com/CosmWasm/wasmd v0.25.0
 	github.com/CosmWasm/wasmvm v1.0.0-rc.0
 	github.com/cosmos/cosmos-sdk v0.45.1

@@ -35,6 +35,7 @@ type MsgSetContractMetadata struct {
 	// contract_address is the target contract address (bech32 encoded).
 	ContractAddress string `protobuf:"bytes,2,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
 	// metadata is the contract metadata to set / update.
+	// If metadata exists, non-empty fields will be updated.
 	Metadata ContractMetadata `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata"`
 }
 

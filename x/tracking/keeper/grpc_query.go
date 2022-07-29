@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
-	"github.com/archway-network/archway/x/tracking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/archway-network/archway/x/tracking/types"
 )
 
 var _ types.QueryServer = &QueryServer{}
@@ -20,19 +22,6 @@ func NewQueryServer(keeper Keeper) *QueryServer {
 	return &QueryServer{
 		keeper: keeper,
 	}
-}
-
-// Params implements the types.QueryServer interface.
-func (s *QueryServer) Params(c context.Context, request *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-
-	return &types.QueryParamsResponse{
-		Params: s.keeper.GetParams(ctx),
-	}, nil
 }
 
 // BlockGasTracking implements the types.QueryServer interface.

@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -15,15 +16,21 @@ var (
 )
 
 // NewMsgSetContractMetadata creates a new MsgSetContractMetadata instance.
-func NewMsgSetContractMetadata(senderAddr, contractAddr, ownerAddr, rewardsAddr sdk.AccAddress) *MsgSetContractMetadata {
-	return &MsgSetContractMetadata{
+func NewMsgSetContractMetadata(senderAddr, contractAddr sdk.AccAddress, ownerAddr, rewardsAddr *sdk.AccAddress) *MsgSetContractMetadata {
+	msg := &MsgSetContractMetadata{
 		SenderAddress:   senderAddr.String(),
 		ContractAddress: contractAddr.String(),
-		Metadata: ContractMetadata{
-			OwnerAddress:   ownerAddr.String(),
-			RewardsAddress: rewardsAddr.String(),
-		},
+		Metadata:        ContractMetadata{},
 	}
+
+	if ownerAddr != nil {
+		msg.Metadata.OwnerAddress = ownerAddr.String()
+	}
+	if rewardsAddr != nil {
+		msg.Metadata.RewardsAddress = rewardsAddr.String()
+	}
+
+	return msg
 }
 
 // Route implements the sdk.Msg interface.
@@ -36,7 +43,7 @@ func (m MsgSetContractMetadata) Type() string { return TypeMsgSetContractMetadat
 func (m MsgSetContractMetadata) GetSigners() []sdk.AccAddress {
 	senderAddr, err := sdk.AccAddressFromBech32(m.SenderAddress)
 	if err != nil {
-		panic(fmt.Errorf("parsing sender address: %w", err))
+		panic(fmt.Errorf("parsing sender address (%s): %w", m.SenderAddress, err))
 	}
 
 	return []sdk.AccAddress{senderAddr}
@@ -58,7 +65,7 @@ func (m MsgSetContractMetadata) ValidateBasic() error {
 		return sdkErrors.Wrap(sdkErrors.ErrInvalidAddress, "invalid contract address")
 	}
 
-	if err := m.Metadata.Validate(); err != nil {
+	if err := m.Metadata.Validate(false); err != nil {
 		return err
 	}
 

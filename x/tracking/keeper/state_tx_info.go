@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/archway-network/archway/x/tracking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/tracking/types"
 )
 
 // TxInfoState provides access to the types.TxInfo objects storage operations.
@@ -38,7 +40,8 @@ func (s TxInfoState) CreateEmptyTxInfo() types.TxInfo {
 	return obj
 }
 
-// SetTxInfo sets a types.TxInfo object overwriting and existing one.
+// SetTxInfo sets a types.TxInfo object overwriting an existing one.
+// CONTRACT: Block index is not updated.
 func (s TxInfoState) SetTxInfo(obj types.TxInfo) {
 	store := prefix.NewStore(s.stateStore, types.TxInfoPrefix)
 	store.Set(
@@ -69,7 +72,7 @@ func (s TxInfoState) GetTxInfosByBlock(height int64) (objs []types.TxInfo) {
 
 		obj, found := s.GetTxInfo(id)
 		if !found {
-			panic(fmt.Errorf("invalid TxInfo block index state: id (%d): not found", id))
+			panic(fmt.Errorf("invalid TxInfo Block index state: id (%d): not found", id))
 		}
 		objs = append(objs, obj)
 	}
@@ -142,12 +145,12 @@ func (s TxInfoState) getTxInfo(id uint64) *types.TxInfo {
 	return &obj
 }
 
-// buildBlockIndexPrefix returns the key prefix used to maintain types.TxInfo block index.
+// buildBlockIndexPrefix returns the key prefix used to maintain types.TxInfo's block index.
 func (s TxInfoState) buildBlockIndexPrefix(height int64) []byte {
 	return sdk.Uint64ToBigEndian(uint64(height))
 }
 
-// buildBlockIndexKey returns the key used to maintain types.TxInfo block index.
+// buildBlockIndexKey returns the key used to maintain types.TxInfo's block index.
 func (s TxInfoState) buildBlockIndexKey(height int64, id uint64) []byte {
 	return append(
 		s.buildBlockIndexPrefix(height),
@@ -155,10 +158,10 @@ func (s TxInfoState) buildBlockIndexKey(height int64, id uint64) []byte {
 	)
 }
 
-// parseBlockIndexKey parses the types.TxInfo block index key.
+// parseBlockIndexKey parses the types.TxInfo's block index key.
 func (s TxInfoState) parseBlockIndexKey(key []byte) (height int64, id uint64) {
 	if len(key) != 16 {
-		panic(fmt.Errorf("invalid TxInfo block index key length: %d", len(key)))
+		panic(fmt.Errorf("invalid TxInfo Block index key length: %d", len(key)))
 	}
 
 	height = int64(sdk.BigEndianToUint64(key[:8]))
@@ -167,7 +170,7 @@ func (s TxInfoState) parseBlockIndexKey(key []byte) (height int64, id uint64) {
 	return
 }
 
-// setBlockIndex adds the types.TxInfo block index entry.
+// setBlockIndex adds the types.TxInfo's block index entry.
 func (s TxInfoState) setBlockIndex(height int64, id uint64) {
 	store := prefix.NewStore(s.stateStore, types.TxInfoBlockIndexPrefix)
 	store.Set(

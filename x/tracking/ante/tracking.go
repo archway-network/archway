@@ -18,9 +18,10 @@ type TxGasTrackingDecorator struct {
 
 // AnteHandle implements the AnteDecorator interface.
 func (d TxGasTrackingDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	if ctx.BlockHeight() <= 1 {
-		return next(ctx, tx, simulate)
-	}
+	// TODO: commented out because we need to have x/tracking and x/rewards in sync.
+	//if ctx.BlockHeight() <= 1 {
+	//	return next(ctx, tx, simulate)
+	//}
 
 	d.keeper.TrackNewTx(ctx)
 

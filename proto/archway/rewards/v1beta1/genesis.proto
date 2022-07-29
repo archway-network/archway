@@ -16,6 +16,14 @@ message GenesisState {
   repeated GenesisContractMetadata contracts_metadata = 2 [
     (gogoproto.nullable) = false
   ];
+  // block_rewards defines a list of all block rewards objects.
+  repeated BlockRewards block_rewards = 3 [
+    (gogoproto.nullable) = false
+  ];
+  // tx_rewards defines a list of all tx rewards objects.
+  repeated TxRewards tx_rewards = 4 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // GenesisContractMetadata is used init ContractMetadata state via module genesis.

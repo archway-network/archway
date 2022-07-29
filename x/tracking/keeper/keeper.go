@@ -2,11 +2,12 @@ package keeper
 
 import (
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/archway-network/archway/x/tracking/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/archway-network/archway/x/tracking/types"
 )
 
 // Keeper provides module state operations.
@@ -19,15 +20,10 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key sdk.StoreKey, gasRegister wasmKeeper.GasRegister, ps paramTypes.Subspace) Keeper {
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
-
+func NewKeeper(cdc codec.Codec, key sdk.StoreKey, gasRegister wasmKeeper.GasRegister) Keeper {
 	return Keeper{
 		cdc:             cdc,
 		WasmGasRegister: gasRegister,
-		paramStore:      ps,
 		state:           NewState(cdc, key),
 	}
 }
@@ -43,10 +39,22 @@ func (k Keeper) TrackNewTx(ctx sdk.Context) {
 	k.state.TxInfoState(ctx).CreateEmptyTxInfo()
 }
 
+// GetCurrentTxID returns the current transaction ID being tracked.
+// That ID is used to link new contract operations and rewards tracking to the current transaction.
+func (k Keeper) GetCurrentTxID(ctx sdk.Context) uint64 {
+	return k.state.TxInfoState(ctx).GetCurrentTxID()
+}
+
 // TrackNewContractOperation creates a new contract operation tracking entry with a unique ID using the current transaction ID.
 func (k Keeper) TrackNewContractOperation(ctx sdk.Context, contractAddr sdk.AccAddress, opType types.ContractOperation, vmGasConsumed, sdkGasConsumed uint64) {
-	curTxID := k.state.TxInfoState(ctx).GetCurrentTxID()
-	k.state.ContractOpInfoState(ctx).CreateContractOpInfo(curTxID, contractAddr, opType, vmGasConsumed, sdkGasConsumed)
+	curTxID := k.GetCurrentTxID(ctx)
+	k.state.ContractOpInfoState(ctx).CreateContractOpInfo(
+		curTxID,
+		contractAddr,
+		opType,
+		vmGasConsumed,
+		sdkGasConsumed,
+	)
 }
 
 // FinalizeBlockTxTracking updates block transactions total gas consumed value using tracked contract operations.
