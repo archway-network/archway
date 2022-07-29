@@ -17,7 +17,7 @@ type BlockRewardsState struct {
 }
 
 // CreateBlockRewards creates a types.BlockRewards object.
-func (s BlockRewardsState) CreateBlockRewards(height int64, rewards sdk.Coin, blockMaxGas int64) types.BlockRewards {
+func (s BlockRewardsState) CreateBlockRewards(height int64, rewards sdk.Coin, blockMaxGas uint64) types.BlockRewards {
 	obj := types.BlockRewards{
 		Height:           height,
 		InflationRewards: rewards,

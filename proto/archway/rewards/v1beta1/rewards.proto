@@ -47,8 +47,8 @@ message BlockRewards {
   cosmos.base.v1beta1.Coin inflation_rewards = 2 [
     (gogoproto.nullable) = false
   ];
-  // max_gas defines the maximum gas that can be used for the block (consensus parameter).
-  int64 max_gas = 3;
+  // max_gas defines the maximum gas for the block that is used to distribute inflation rewards (consensus parameter).
+  uint64 max_gas = 3;
 }
 
 // TxRewards defines transaction related rewards distribution data.

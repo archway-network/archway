@@ -12,6 +12,11 @@ func (m BlockRewards) HasRewards() bool {
 	return !m.InflationRewards.IsZero()
 }
 
+// HasGasLimit returns true if the gas limit has been set.
+func (m BlockRewards) HasGasLimit() bool {
+	return m.MaxGas > 0
+}
+
 // Validate performs object fields validation.
 func (m BlockRewards) Validate() error {
 	if m.Height < 0 {

@@ -144,7 +144,7 @@ func (k Keeper) TrackInflationRewards(ctx sdk.Context, rewards sdk.Coin) {
 	k.state.BlockRewardsState(ctx).CreateBlockRewards(
 		ctx.BlockHeight(),
 		rewards,
-		ctx.ConsensusParams().Block.MaxGas,
+		ctx.BlockGasMeter().Limit(),
 	)
 }
 

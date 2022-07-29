@@ -13,9 +13,8 @@ import (
 type (
 	// blockRewardsDistributionState is used to gather gas usage and rewards for a block.
 	blockRewardsDistributionState struct {
-		Height  int64   // block height
-		GasUsed sdk.Dec // total gas used by the block
-		Txs     []*txRewardsDistributionState
+		Height int64 // block height
+		Txs    []*txRewardsDistributionState
 	}
 
 	// txRewardsDistributionState is used to gather gas usage and rewards for a transaction.
@@ -49,8 +48,7 @@ func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewar
 
 	// Create a new block rewards distribution state and fill it up
 	blockDistrState := &blockRewardsDistributionState{
-		Height:  height,
-		GasUsed: sdk.ZeroDec(),
+		Height: height,
 	}
 
 	// Get all tracked transactions by the x/tracking module
@@ -77,8 +75,9 @@ func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewar
 			contractDistrState := contractDistrStatesSet[contractOp.ContractAddress]
 			if contractDistrState == nil {
 				contractDistrState = &contractRewardsDistributionState{
-					ContractAddress: contractOp.MustGetContractAddress(),
-					GasUsed:         sdk.ZeroDec(),
+					ContractAddress:     contractOp.MustGetContractAddress(),
+					GasUsed:             sdk.ZeroDec(),
+					InflationaryRewards: sdk.Coin{Amount: sdk.ZeroInt()}, // necessary to avoid nil pointer panic on Coins.Add call
 				}
 				if metadata, found := metadataState.GetContractMetadata(contractDistrState.ContractAddress); found {
 					contractDistrState.Metadata = &metadata
@@ -103,8 +102,7 @@ func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewar
 			return txDistState.Contracts[i].ContractAddress.String() < txDistState.Contracts[j].ContractAddress.String()
 		})
 
-		// Append tx distr state updating the block gas used
-		blockDistrState.GasUsed = blockDistrState.GasUsed.Add(txDistState.GasUsed)
+		// Append tx distr state to the block state
 		blockDistrState.Txs = append(blockDistrState.Txs, txDistState)
 	}
 
@@ -117,7 +115,14 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 	txRewardsState := k.state.TxRewardsState(ctx)
 
 	// Get tracked block rewards by the x/rewards module (might not be found in case this reward is disabled)
+	var blockGasLimit sdk.Dec
 	blockRewards, blockRewardsFound := k.state.BlockRewardsState(ctx).GetBlockRewards(blockDistrState.Height)
+	if blockRewardsFound {
+		blockGasLimit = pkg.NewDecFromUint64(blockRewards.MaxGas)
+		if !blockRewards.HasRewards() || !blockRewards.HasGasLimit() {
+			k.Logger(ctx).Debug("No block rewards found (coins are empty or gas limit is not set)", "height", blockDistrState.Height)
+		}
+	}
 
 	// Estimate reward shares for each contract operation
 	for _, txDistrState := range blockDistrState.Txs {
@@ -139,9 +144,9 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 				contractDistrState.FeeRewards = rewardCoins
 			}
 
-			// Estimate contract inflation rewards
-			if blockRewardsFound && blockRewards.HasRewards() {
-				rewardsShare := contractDistrState.GasUsed.Quo(blockDistrState.GasUsed)
+			// Estimate contract inflation rewards (only if block has rewards and gas limit is set)
+			if blockRewardsFound && blockRewards.HasRewards() && blockRewards.HasGasLimit() {
+				rewardsShare := contractDistrState.GasUsed.Quo(blockGasLimit)
 
 				contractDistrState.InflationaryRewards = sdk.NewCoin(
 					blockRewards.InflationRewards.Denom,
@@ -183,7 +188,7 @@ func (k Keeper) distributeBlockRewards(ctx sdk.Context, blockDistrState *blockRe
 			rewardsAddr := contractDistrState.Metadata.MustGetRewardsAddress()
 
 			// Distribute
-			rewards := sdk.NewCoins(contractDistrState.FeeRewards...).Add(contractDistrState.InflationaryRewards)
+			rewards := sdk.NewCoins().Add(contractDistrState.FeeRewards...).Add(contractDistrState.InflationaryRewards)
 			if rewards.IsZero() {
 				k.Logger(ctx).Debug("Contract rewards distribution skipped (no rewards)", "contractAddress", contractDistrState.ContractAddress)
 				continue

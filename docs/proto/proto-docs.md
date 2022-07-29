@@ -449,7 +449,7 @@ BlockRewards defines block related rewards distribution data.
 | ----- | ---- | ----- | ----------- |
 | `height` | [int64](#int64) |  | height defines the block height. |
 | `inflation_rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | inflation_rewards is the rewards to be distributed. |
-| `max_gas` | [int64](#int64) |  | max_gas defines the maximum gas that can be used for the block (consensus parameter). |
+| `max_gas` | [uint64](#uint64) |  | max_gas defines the maximum gas for the block that is used to distribute inflation rewards (consensus parameter). |
 
 
 
