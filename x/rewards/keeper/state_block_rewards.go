@@ -44,6 +44,12 @@ func (s BlockRewardsState) GetBlockRewards(height int64) (types.BlockRewards, bo
 	return obj, true
 }
 
+// DeleteBlockRewards deletes a types.BlockRewards object.
+func (s BlockRewardsState) DeleteBlockRewards(height int64) {
+	store := prefix.NewStore(s.stateStore, types.BlockRewardsPrefix)
+	store.Delete(s.buildBlockRewardsKey(height))
+}
+
 // Import initializes state from the module genesis data.
 func (s BlockRewardsState) Import(objs []types.BlockRewards) {
 	for _, obj := range objs {

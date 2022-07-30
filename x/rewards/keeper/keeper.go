@@ -153,3 +153,9 @@ func (k Keeper) UndistributedRewardsPool(ctx sdk.Context) sdk.Coins {
 	poolAcc := k.authKeeper.GetModuleAccount(ctx, types.ContractRewardCollector)
 	return k.bankKeeper.GetAllBalances(ctx, poolAcc.GetAddress())
 }
+
+// SetContractInfoViewer sets the contract info view dependency.
+// Only for testing purposes.
+func (k *Keeper) SetContractInfoViewer(viewer ContractInfoReaderExpected) {
+	k.contractInfoView = viewer
+}

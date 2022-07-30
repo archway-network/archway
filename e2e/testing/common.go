@@ -1,6 +1,10 @@
 package e2eTesting
 
 import (
+	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -21,4 +25,31 @@ func GetStringEventAttribute(events []abci.Event, eventType, attrKey string) str
 	}
 
 	return ""
+}
+
+// GenAccounts generates a list of accounts and private keys for them.
+func GenAccounts(num uint) ([]sdk.AccAddress, []cryptotypes.PrivKey) {
+	addrs := make([]sdk.AccAddress, 0, num)
+	privKeys := make([]cryptotypes.PrivKey, 0, num)
+
+	for i := 0; i < cap(addrs); i++ {
+		privKey := secp256k1.GenPrivKey()
+
+		addrs = append(addrs, sdk.AccAddress(privKey.PubKey().Address()))
+		privKeys = append(privKeys, privKey)
+	}
+
+	return addrs, privKeys
+}
+
+// GenContractAddresses generates a list of contract addresses (codeID and instanceID are sequential).
+func GenContractAddresses(num uint) []sdk.AccAddress {
+	addrs := make([]sdk.AccAddress, 0, num)
+
+	for i := 0; i < cap(addrs); i++ {
+		contractAddr := wasmKeeper.BuildContractAddress(uint64(i), uint64(i))
+		addrs = append(addrs, contractAddr)
+	}
+
+	return addrs
 }
