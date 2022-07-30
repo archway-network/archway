@@ -22,6 +22,17 @@ func NewState(cdc codec.Codec, key sdk.StoreKey) State {
 	}
 }
 
+// DeleteTxInfosCascade deletes all block tracking for a given height.
+// Function removes TxInfo and ContractOpInfo objects cleaning up their indexes.
+func (s State) DeleteTxInfosCascade(ctx sdk.Context, height int64) {
+	contractOpInfoState := s.ContractOpInfoState(ctx)
+
+	txIDs := s.TxInfoState(ctx).DeleteTxInfosByBlock(height)
+	for _, txID := range txIDs {
+		contractOpInfoState.DeleteContractOpsByTxID(txID)
+	}
+}
+
 // TxInfoState returns types.TxInfo repository.
 func (s State) TxInfoState(ctx sdk.Context) TxInfoState {
 	baseStore := ctx.KVStore(s.key)

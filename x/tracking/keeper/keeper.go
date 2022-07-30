@@ -91,3 +91,8 @@ func (k Keeper) GetBlockTrackingInfo(ctx sdk.Context, height int64) types.BlockT
 
 	return resp
 }
+
+// RemoveBlockTrackingInfo removes gas tracking entries for the given height.
+func (k Keeper) RemoveBlockTrackingInfo(ctx sdk.Context, height int64) {
+	k.state.DeleteTxInfosCascade(ctx, height)
+}

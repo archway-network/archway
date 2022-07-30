@@ -18,10 +18,11 @@ type ContractInfoReaderExpected interface {
 	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
 }
 
-// TrackingReaderExpected defines the interface for the x/tracking module dependency.
-type TrackingReaderExpected interface {
+// TrackingKeeperExpected defines the interface for the x/tracking module dependency.
+type TrackingKeeperExpected interface {
 	GetCurrentTxID(ctx sdk.Context) uint64
 	GetBlockTrackingInfo(ctx sdk.Context, height int64) trackingTypes.BlockTracking
+	RemoveBlockTrackingInfo(ctx sdk.Context, height int64)
 }
 
 // AuthKeeperExpected defines the interface for the x/auth module dependency.
@@ -41,13 +42,13 @@ type Keeper struct {
 	paramStore       paramTypes.Subspace
 	state            State
 	contractInfoView ContractInfoReaderExpected
-	trackingView     TrackingReaderExpected
+	trackingKeeper   TrackingKeeperExpected
 	authKeeper       AuthKeeperExpected
 	bankKeeper       BankKeeperExpected
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingReader TrackingReaderExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace) Keeper {
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
@@ -57,7 +58,7 @@ func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInf
 		paramStore:       ps,
 		state:            NewState(cdc, key),
 		contractInfoView: contractInfoReader,
-		trackingView:     trackingReader,
+		trackingKeeper:   trackingKeeper,
 		authKeeper:       ak,
 		bankKeeper:       bk,
 	}
@@ -131,7 +132,7 @@ func (k Keeper) GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress
 // Unique transaction ID is taken from the tracking module.
 // CONTRACT: tracking Ante handler must be called before this module's Ante handler (tracking provides the primary key).
 func (k Keeper) TrackFeeRebatesRewards(ctx sdk.Context, rewards sdk.Coins) {
-	txID := k.trackingView.GetCurrentTxID(ctx)
+	txID := k.trackingKeeper.GetCurrentTxID(ctx)
 	k.state.TxRewardsState(ctx).CreateTxRewards(
 		txID,
 		ctx.BlockHeight(),

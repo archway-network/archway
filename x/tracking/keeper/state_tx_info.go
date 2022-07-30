@@ -80,6 +80,30 @@ func (s TxInfoState) GetTxInfosByBlock(height int64) (objs []types.TxInfo) {
 	return
 }
 
+// DeleteTxInfosByBlock deletes all types.TxInfo objects by block height clearing the block index.
+// Returns the list of deleted IDs.
+func (s TxInfoState) DeleteTxInfosByBlock(height int64) []uint64 {
+	store := prefix.NewStore(s.stateStore, types.TxInfoBlockIndexPrefix)
+
+	iterator := sdk.KVStorePrefixIterator(store, s.buildBlockIndexPrefix(height))
+	defer iterator.Close()
+
+	var blockIndexKeys [][]byte
+	var removedIDs []uint64
+	for ; iterator.Valid(); iterator.Next() {
+		_, id := s.parseBlockIndexKey(iterator.Key())
+		s.deleteTxInfo(id)
+
+		removedIDs = append(removedIDs, id)
+		blockIndexKeys = append(blockIndexKeys, iterator.Key())
+	}
+	for _, key := range blockIndexKeys {
+		store.Delete(key)
+	}
+
+	return removedIDs
+}
+
 // Import initializes state from the module genesis data.
 func (s TxInfoState) Import(objs []types.TxInfo) {
 	lastID := uint64(0)
@@ -143,6 +167,12 @@ func (s TxInfoState) getTxInfo(id uint64) *types.TxInfo {
 	s.cdc.MustUnmarshal(bz, &obj)
 
 	return &obj
+}
+
+// deleteTxInfo deletes a types.TxInfo object by ID.
+func (s TxInfoState) deleteTxInfo(id uint64) {
+	store := prefix.NewStore(s.stateStore, types.TxInfoPrefix)
+	store.Delete(s.buildTxInfoKey(id))
 }
 
 // buildBlockIndexPrefix returns the key prefix used to maintain types.TxInfo's block index.

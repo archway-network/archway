@@ -22,6 +22,13 @@ func NewState(cdc codec.Codec, key sdk.StoreKey) State {
 	}
 }
 
+// DeleteBlockRewardsCascade deletes all block rewards for a given height.
+// Function removes BlockRewards and TxRewards objects cleaning up their indexes.
+func (s State) DeleteBlockRewardsCascade(ctx sdk.Context, height int64) {
+	s.BlockRewardsState(ctx).DeleteBlockRewards(height)
+	s.TxRewardsState(ctx).deleteTxRewardsByBlock(height)
+}
+
 // ContractMetadataState returns types.ContractMetadata repository.
 func (s State) ContractMetadataState(ctx sdk.Context) ContractMetadataState {
 	baseStore := ctx.KVStore(s.key)

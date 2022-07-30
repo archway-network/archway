@@ -87,6 +87,30 @@ func (s TxRewardsState) Export() (objs []types.TxRewards) {
 	return
 }
 
+// deleteTxRewardsByBlock deletes types.TxRewards objects by block height cleaning up the block index.
+// Returns the list of deleted txIDs.
+func (s TxRewardsState) deleteTxRewardsByBlock(height int64) []uint64 {
+	store := prefix.NewStore(s.stateStore, types.TxRewardsBlockIndexPrefix)
+
+	iterator := sdk.KVStorePrefixIterator(store, s.buildBlockIndexPrefix(height))
+	defer iterator.Close()
+
+	var blockIndexKeys [][]byte
+	var removedTxIDs []uint64
+	for ; iterator.Valid(); iterator.Next() {
+		_, txID := s.parseBlockIndexKey(iterator.Key())
+		s.deleteTxRewards(txID)
+
+		removedTxIDs = append(removedTxIDs, txID)
+		blockIndexKeys = append(blockIndexKeys, iterator.Key())
+	}
+	for _, key := range blockIndexKeys {
+		store.Delete(key)
+	}
+
+	return removedTxIDs
+}
+
 // buildTxRewardsKey returns the key used to store a types.TxRewards object.
 func (s TxRewardsState) buildTxRewardsKey(txID uint64) []byte {
 	return sdk.Uint64ToBigEndian(txID)
@@ -114,6 +138,12 @@ func (s TxRewardsState) getTxRewards(txID uint64) *types.TxRewards {
 	s.cdc.MustUnmarshal(bz, &obj)
 
 	return &obj
+}
+
+// deleteTxRewards deletes a types.TxRewards object.
+func (s TxRewardsState) deleteTxRewards(txID uint64) {
+	store := prefix.NewStore(s.stateStore, types.TxRewardsPrefix)
+	store.Delete(s.buildTxRewardsKey(txID))
 }
 
 // buildBlockIndexPrefix returns the key prefix used to maintain types.TxRewards's block index.

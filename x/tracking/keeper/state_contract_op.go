@@ -66,6 +66,30 @@ func (s ContractOpInfoState) GetContractOpInfoByTxID(txID uint64) (objs []types.
 	return
 }
 
+// DeleteContractOpsByTxID deletes all types.ContractOperationInfo objects by tx ID.
+// Returns the list of deleted IDs.
+func (s ContractOpInfoState) DeleteContractOpsByTxID(txID uint64) []uint64 {
+	store := prefix.NewStore(s.stateStore, types.ContractOpInfoTxIndexPrefix)
+
+	iterator := sdk.KVStorePrefixIterator(store, s.buildTxIndexPrefix(txID))
+	defer iterator.Close()
+
+	var txIndexKeys [][]byte
+	var removedIDs []uint64
+	for ; iterator.Valid(); iterator.Next() {
+		_, id := s.parseTxIndexKey(iterator.Key())
+		s.deleteContractOpInfo(id)
+
+		removedIDs = append(removedIDs, id)
+		txIndexKeys = append(txIndexKeys, iterator.Key())
+	}
+	for _, key := range txIndexKeys {
+		store.Delete(key)
+	}
+
+	return removedIDs
+}
+
 // Import initializes state from the module genesis data.
 func (s ContractOpInfoState) Import(objs []types.ContractOperationInfo) {
 	lastID := uint64(0)
@@ -138,6 +162,12 @@ func (s ContractOpInfoState) getContractOpInfo(id uint64) *types.ContractOperati
 	s.cdc.MustUnmarshal(bz, &obj)
 
 	return &obj
+}
+
+// deleteContractOpInfo deletes a types.ContractOperationInfo object by ID.
+func (s ContractOpInfoState) deleteContractOpInfo(id uint64) {
+	store := prefix.NewStore(s.stateStore, types.ContractOpInfoPrefix)
+	store.Delete(s.buildContractOpInfoKey(id))
 }
 
 // buildTxIndexPrefix returns the key prefix used to maintain types.ContractOperationInfo's tx index.

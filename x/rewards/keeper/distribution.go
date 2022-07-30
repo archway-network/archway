@@ -36,6 +36,7 @@ func (k Keeper) DistributeRewards(ctx sdk.Context, height int64) {
 	blockDistrState := k.estimateBlockGasUsage(ctx, height)
 	blockDistrState = k.estimateBlockRewards(ctx, blockDistrState)
 	k.distributeBlockRewards(ctx, blockDistrState)
+	k.cleanupTracking(ctx, height)
 }
 
 // estimateBlockGasUsage creates a new distribution state for the given block height.
@@ -44,7 +45,7 @@ func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewar
 	metadataState := k.state.ContractMetadataState(ctx)
 
 	// Get all tracked transactions by the x/tracking module
-	blockGasTrackingInfo := k.trackingView.GetBlockTrackingInfo(ctx, height)
+	blockGasTrackingInfo := k.trackingKeeper.GetBlockTrackingInfo(ctx, height)
 
 	// Create a new block rewards distribution state and fill it up
 	blockDistrState := &blockRewardsDistributionState{
@@ -215,4 +216,10 @@ func (k Keeper) distributeBlockRewards(ctx sdk.Context, blockDistrState *blockRe
 			rewards,
 		)
 	}
+}
+
+// cleanupTracking prunes all tracking data for the given block height for x/tracking and x/rewards modules.
+func (k Keeper) cleanupTracking(ctx sdk.Context, height int64) {
+	k.trackingKeeper.RemoveBlockTrackingInfo(ctx, height)
+	k.state.DeleteBlockRewardsCascade(ctx, height)
 }
