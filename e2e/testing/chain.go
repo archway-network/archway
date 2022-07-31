@@ -255,6 +255,14 @@ func (chain *TestChain) GetBalance(accAddr sdk.AccAddress) sdk.Coins {
 	return chain.app.BankKeeper.GetAllBalances(chain.GetContext(), accAddr)
 }
 
+// GetModuleBalance returns the balance of the given module.
+func (chain *TestChain) GetModuleBalance(moduleName string) sdk.Coins {
+	ctx := chain.GetContext()
+	moduleAcc := chain.app.AccountKeeper.GetModuleAccount(ctx, moduleName)
+
+	return chain.app.BankKeeper.GetAllBalances(chain.GetContext(), moduleAcc.GetAddress())
+}
+
 // GetContext returns a context for the current block.
 func (chain *TestChain) GetContext() sdk.Context {
 	ctx := chain.app.BaseApp.NewContext(false, chain.curHeader)

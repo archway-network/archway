@@ -44,7 +44,7 @@ func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recip
 	}
 
 	ratio := k.rewardsKeeper.InflationRewardsRatio(ctx)
-	stakingRewards, dappRewards := pkg.SplitCoins(amt, ratio)
+	dappRewards, stakingRewards := pkg.SplitCoins(amt, ratio)
 
 	// Send to the x/auth fee collector account
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, stakingRewards); err != nil {

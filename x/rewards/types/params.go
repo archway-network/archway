@@ -97,8 +97,8 @@ func validateRatio(v sdk.Dec) error {
 	if v.IsNegative() {
 		return fmt.Errorf("must be GTE 0.0")
 	}
-	if v.GT(sdk.OneDec()) {
-		return fmt.Errorf("must be LTE 1.0")
+	if v.GTE(sdk.OneDec()) {
+		return fmt.Errorf("must be LT 1.0")
 	}
 
 	return nil
