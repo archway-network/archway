@@ -229,11 +229,11 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		valSigners:  valSigners,
 		accPrivKeys: genAccPrivKeys,
 	}
-	chain.beginBlock()
-	chain.endBlock()
+	chain.BeginBlock()
+	chain.EndBlock()
 
 	// Start a new block
-	chain.beginBlock()
+	chain.BeginBlock()
 	return &chain
 }
 
@@ -308,32 +308,74 @@ func (chain *TestChain) GetApp() *app.ArchwayApp {
 
 // NextBlock starts a new block with options time shift.
 func (chain *TestChain) NextBlock(skipTime time.Duration) []abci.Event {
-	ebEvents := chain.endBlock()
+	ebEvents := chain.EndBlock()
 
 	chain.curHeader.Time = chain.curHeader.Time.Add(skipTime)
-	bbEvents := chain.beginBlock()
+	bbEvents := chain.BeginBlock()
 
 	return append(ebEvents, bbEvents...)
+}
+
+// BeginBlock begins a new block.
+func (chain *TestChain) BeginBlock() []abci.Event {
+	const blockDur = 5 * time.Second
+
+	chain.lastHeader = chain.curHeader
+
+	chain.curHeader.Height++
+	chain.curHeader.Time = chain.curHeader.Time.Add(blockDur)
+	chain.curHeader.AppHash = chain.app.LastCommitID().Hash
+	chain.curHeader.ValidatorsHash = chain.valSet.Hash()
+	chain.curHeader.NextValidatorsHash = chain.valSet.Hash()
+
+	res := chain.app.BeginBlock(abci.RequestBeginBlock{Header: chain.curHeader})
+
+	return res.Events
+}
+
+// EndBlock finalizes the current block.
+func (chain *TestChain) EndBlock() []abci.Event {
+	res := chain.app.EndBlock(abci.RequestEndBlock{Height: chain.curHeader.Height})
+	chain.app.Commit()
+
+	return res.Events
 }
 
 type SendMsgOption func(opt *sendMsgOptions)
 
 type sendMsgOptions struct {
-	fees     sdk.Coins
-	gasLimit uint64
+	fees          sdk.Coins
+	gasLimit      uint64
+	noBlockChange bool
 }
 
-func SendMsgWithFees(coins sdk.Coins) SendMsgOption {
+// WithMsgFees option add fees to the transaction.
+func WithMsgFees(coins sdk.Coins) SendMsgOption {
 	return func(opt *sendMsgOptions) {
 		opt.fees = coins
+	}
+}
+
+// WithTxGasLimit option overrides the default gas limit for the transaction.
+func WithTxGasLimit(limit uint64) SendMsgOption {
+	return func(opt *sendMsgOptions) {
+		opt.gasLimit = limit
+	}
+}
+
+// WithoutBlockChange option disables EndBlocker and BeginBlocker after the transaction.
+func WithoutBlockChange() SendMsgOption {
+	return func(opt *sendMsgOptions) {
+		opt.noBlockChange = true
 	}
 }
 
 // SendMsgs sends a series of messages.
 func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, []abci.Event, error) {
 	options := &sendMsgOptions{
-		fees:     sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)),
-		gasLimit: 10_000_000,
+		fees:          sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)),
+		gasLimit:      10_000_000,
+		noBlockChange: false,
 	}
 
 	for _, o := range opts {
@@ -369,10 +411,14 @@ func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg
 		require.Nil(t, res)
 	}
 
-	ebEvents := chain.endBlock()
-	bbEvents := chain.beginBlock()
+	var abciEvents []abci.Event
+	if !options.noBlockChange {
+		ebEvents := chain.EndBlock()
+		bbEvents := chain.BeginBlock()
+		abciEvents = append(ebEvents, bbEvents...)
+	}
 
-	return gasInfo, res, append(ebEvents, bbEvents...), err
+	return gasInfo, res, abciEvents, err
 }
 
 // ParseSDKResultData converts TX result data into a slice of Msgs.
@@ -385,29 +431,4 @@ func (chain *TestChain) ParseSDKResultData(r *sdk.Result) sdk.TxMsgData {
 	require.NoError(chain.t, proto.Unmarshal(r.Data, &protoResult))
 
 	return protoResult
-}
-
-// beginBlock begins a new block.
-func (chain *TestChain) beginBlock() []abci.Event {
-	const blockDur = 5 * time.Second
-
-	chain.lastHeader = chain.curHeader
-
-	chain.curHeader.Height++
-	chain.curHeader.Time = chain.curHeader.Time.Add(blockDur)
-	chain.curHeader.AppHash = chain.app.LastCommitID().Hash
-	chain.curHeader.ValidatorsHash = chain.valSet.Hash()
-	chain.curHeader.NextValidatorsHash = chain.valSet.Hash()
-
-	res := chain.app.BeginBlock(abci.RequestBeginBlock{Header: chain.curHeader})
-
-	return res.Events
-}
-
-// endBlock finalizes the current block.
-func (chain *TestChain) endBlock() []abci.Event {
-	res := chain.app.EndBlock(abci.RequestEndBlock{Height: chain.curHeader.Height})
-	chain.app.Commit()
-
-	return res.Events
 }

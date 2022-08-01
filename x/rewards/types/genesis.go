@@ -2,12 +2,10 @@ package types
 
 import (
 	"fmt"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewGenesisState creates a new GenesisState object.
-func NewGenesisState(params Params, contractsMetadata []GenesisContractMetadata, blockRewards []BlockRewards, txRewards []TxRewards) *GenesisState {
+func NewGenesisState(params Params, contractsMetadata []ContractMetadata, blockRewards []BlockRewards, txRewards []TxRewards) *GenesisState {
 	return &GenesisState{
 		Params:            params,
 		ContractsMetadata: contractsMetadata,
@@ -20,7 +18,7 @@ func NewGenesisState(params Params, contractsMetadata []GenesisContractMetadata,
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		Params:            DefaultParams(),
-		ContractsMetadata: []GenesisContractMetadata{},
+		ContractsMetadata: []ContractMetadata{},
 		BlockRewards:      []BlockRewards{},
 		TxRewards:         []TxRewards{},
 	}
@@ -34,7 +32,7 @@ func (m GenesisState) Validate() error {
 
 	contractAddrSet := make(map[string]struct{})
 	for i, meta := range m.ContractsMetadata {
-		if err := meta.Validate(); err != nil {
+		if err := meta.Validate(true); err != nil {
 			return fmt.Errorf("contractsMetadata [%d]: %w", i, err)
 		}
 
@@ -67,27 +65,4 @@ func (m GenesisState) Validate() error {
 	}
 
 	return nil
-}
-
-// Validate perform object fields validation.
-func (m GenesisContractMetadata) Validate() error {
-	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
-		return fmt.Errorf("contractAddress: %w", err)
-	}
-	if err := m.Metadata.Validate(true); err != nil {
-		return fmt.Errorf("metadata: %w", err)
-	}
-
-	return nil
-}
-
-// MustGetContractAddress returns the contract address parsed.
-// CONTRACT: panics of error.
-func (m GenesisContractMetadata) MustGetContractAddress() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(m.ContractAddress)
-	if err != nil {
-		panic(fmt.Errorf("invalid contract address: %w", err))
-	}
-
-	return addr
 }

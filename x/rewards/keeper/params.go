@@ -12,20 +12,10 @@ func (k Keeper) InflationRewardsRatio(ctx sdk.Context) (res sdk.Dec) {
 	return
 }
 
-// InflationRewardsEnabled return inflation rewards enabled flag.
-func (k Keeper) InflationRewardsEnabled(ctx sdk.Context) bool {
-	return !k.InflationRewardsRatio(ctx).IsZero()
-}
-
 // TxFeeRebateRatio return tx fee rebate rewards params ratio.
 func (k Keeper) TxFeeRebateRatio(ctx sdk.Context) (res sdk.Dec) {
 	k.paramStore.Get(ctx, types.TxFeeRebateRatioParamKey, &res)
 	return
-}
-
-// TxFeeRewardsEnabled return tx fee rewards enabled flag.
-func (k Keeper) TxFeeRewardsEnabled(ctx sdk.Context) bool {
-	return !k.TxFeeRebateRatio(ctx).IsZero()
 }
 
 // GetParams return all module parameters.

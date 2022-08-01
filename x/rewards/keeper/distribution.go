@@ -205,7 +205,7 @@ func (k Keeper) distributeBlockRewards(ctx sdk.Context, blockDistrState *blockRe
 			Add(contractDistrState.FeeRewards...)
 
 		if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ContractRewardCollector, rewardsAddr, rewards); err != nil {
-			panic(fmt.Errorf("sending rewards (%s) to the rewards address (%s) for the contract (%s): %w", contractDistrState.FeeRewards, rewardsAddr, contractDistrState.ContractAddress, err))
+			panic(fmt.Errorf("sending rewards (%s) to the rewards address (%s) for the contract (%s): %w", rewards, rewardsAddr, contractDistrState.ContractAddress, err))
 		}
 
 		// Emit distribution event
@@ -220,6 +220,14 @@ func (k Keeper) distributeBlockRewards(ctx sdk.Context, blockDistrState *blockRe
 
 // cleanupTracking prunes all tracking data for the given block height for x/tracking and x/rewards modules.
 func (k Keeper) cleanupTracking(ctx sdk.Context, height int64) {
-	k.trackingKeeper.RemoveBlockTrackingInfo(ctx, height)
-	k.state.DeleteBlockRewardsCascade(ctx, height)
+	// We can prune the previous block ({height}), but that makes tracking CLI queries useless as there won't be any data.
+	// Pruning history block also makes e2e tests possible.
+	// TODO: this should be replaced with a param
+	heightToPrune := height - 10
+	if heightToPrune <= 0 {
+		return
+	}
+
+	k.trackingKeeper.RemoveBlockTrackingInfo(ctx, heightToPrune)
+	k.state.DeleteBlockRewardsCascade(ctx, heightToPrune)
 }

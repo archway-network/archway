@@ -158,7 +158,7 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 		{
 			name:               "2 txs with contract ops intersection (rewards from both txs)",
 			blockInflationCoin: "1000stake",
-			blockGasLimit:      1000,
+			blockGasLimit:      1500,
 			txs: []transactionInput{
 				{
 					feeCoins: "500stake",
@@ -212,15 +212,15 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					rewardsAddr: accAddrs[0],
 					// Tx 1 rewards: ~0.43 (450 / 1050 tx gas)    = 214stake
 					// Tx 2 rewards: ~0.17 (10 / 60 tx gas)       = 100stake
-					// Inf rewards:  0.46  (460 / 1000 block gas) = 460stake
-					rewards: "774stake",
+					// Inf rewards:  ~0.30 (460 / 1500 block gas) = 306stake
+					rewards: "620stake",
 				},
 				{
 					rewardsAddr: accAddrs[1],
 					// Tx 1 rewards:  ~0.57 (600 / 1050 tx gas)    = 285stake
 					// Tx 2 rewards:  ~0.83 (50 / 60 tx gas)       = 499stake
-					// Inf rewards: 0.65    (650 / 1000 block gas) = 650stake
-					rewards: "1434stake",
+					// Inf rewards:   ~0.43 (650 / 1500 block gas) = 433stake
+					rewards: "1217stake",
 				},
 			},
 		},
@@ -471,7 +471,7 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 						// Emulate x/rewards AnteHandler call
 						rKeeper.TrackFeeRebatesRewards(ctx, feeRewards)
 						// Mint and transfer
-						require.NoError(t, chain.GetApp().MintKeeper.MintCoins(ctx, feeRewards))
+						require.NoError(t, chain.GetApp().BankKeeper.MintCoins(ctx, mintTypes.ModuleName, feeRewards))
 						require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, feeRewards))
 					}
 				}
@@ -485,7 +485,7 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					// Emulate x/rewards MintKeeper call
 					rKeeper.TrackInflationRewards(ctx, inflationReward)
 					// Mint and transfer
-					require.NoError(t, chain.GetApp().MintKeeper.MintCoins(ctx, inflationRewards))
+					require.NoError(t, chain.GetApp().BankKeeper.MintCoins(ctx, mintTypes.ModuleName, inflationRewards))
 					require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, inflationRewards))
 				} else {
 					// We have to remove it since it was created by the x/mint

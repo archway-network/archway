@@ -38,29 +38,24 @@ func (s ContractMetadataState) GetContractMetadata(contractAddr sdk.AccAddress) 
 }
 
 // Import initializes state from the module genesis data.
-func (s ContractMetadataState) Import(objs []types.GenesisContractMetadata) {
+func (s ContractMetadataState) Import(objs []types.ContractMetadata) {
 	for _, obj := range objs {
-		s.SetContractMetadata(obj.MustGetContractAddress(), obj.Metadata)
+		s.SetContractMetadata(obj.MustGetContractAddress(), obj)
 	}
 }
 
 // Export returns the module genesis data for the state.
-func (s ContractMetadataState) Export() (objs []types.GenesisContractMetadata) {
+func (s ContractMetadataState) Export() (objs []types.ContractMetadata) {
 	store := prefix.NewStore(s.stateStore, types.ContractMetadataPrefix)
 
 	iterator := store.Iterator(nil, nil)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		contractAddr := s.parseContractMetadataKey(iterator.Key())
-
 		var obj types.ContractMetadata
 		s.cdc.MustUnmarshal(iterator.Value(), &obj)
 
-		objs = append(objs, types.GenesisContractMetadata{
-			ContractAddress: contractAddr.String(),
-			Metadata:        obj,
-		})
+		objs = append(objs, obj)
 	}
 
 	return

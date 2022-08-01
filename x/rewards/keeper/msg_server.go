@@ -37,7 +37,7 @@ func (s MsgServer) SetContractMetadata(c context.Context, request *types.MsgSetC
 		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
 	}
 
-	contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)
+	contractAddr, err := sdk.AccAddressFromBech32(request.Metadata.ContractAddress)
 	if err != nil {
 		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
 	}

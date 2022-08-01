@@ -18,6 +18,17 @@ func (m ContractMetadata) HasRewardsAddress() bool {
 	return m.RewardsAddress != ""
 }
 
+// MustGetContractAddress returns the contract address.
+// CONTRACT: panics in case of an error.
+func (m ContractMetadata) MustGetContractAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(m.ContractAddress)
+	if err != nil {
+		panic(fmt.Errorf("parsing contract address: %w", err))
+	}
+
+	return addr
+}
+
 // MustGetRewardsAddress returns the rewards address.
 // CONTRACT: panics in case of an error.
 func (m ContractMetadata) MustGetRewardsAddress() sdk.AccAddress {
@@ -32,6 +43,10 @@ func (m ContractMetadata) MustGetRewardsAddress() sdk.AccAddress {
 // Validate performs object fields validation.
 // genesisValidation flag perform strict validation of the genesis state (some field must be set).
 func (m ContractMetadata) Validate(genesisValidation bool) error {
+	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
+		return sdkErrors.Wrap(sdkErrors.ErrInvalidAddress, "invalid contract address")
+	}
+
 	if genesisValidation || m.OwnerAddress != "" {
 		if _, err := sdk.AccAddressFromBech32(m.OwnerAddress); err != nil {
 			return sdkErrors.Wrap(sdkErrors.ErrInvalidAddress, "invalid owner address")

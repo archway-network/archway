@@ -2,15 +2,17 @@ package integration
 
 import (
 	"encoding/json"
+	"testing"
+
 	voterTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/x/gastracker"
-	"github.com/archway-network/archway/x/gastracker/common"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/x/gastracker"
+	"github.com/archway-network/archway/x/gastracker/common"
 )
 
 func TestRewardsCollection(t *testing.T) {
@@ -47,7 +49,7 @@ func TestRewardsCollection(t *testing.T) {
 		Msg:      jsonMarshal(t, msg),
 		Funds:    sdk.NewCoins(sdk.NewInt64Coin("stake", 100)),
 	}},
-		e2eTesting.SendMsgWithFees(txFees),
+		e2eTesting.WithMsgFees(txFees),
 	)
 	require.NoError(t, err)
 

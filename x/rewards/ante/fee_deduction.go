@@ -8,13 +8,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	"github.com/archway-network/archway/pkg"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // RewardsKeeperExpected defines the expected interface for the x/rewards keeper.
 type RewardsKeeperExpected interface {
-	TxFeeRewardsEnabled(ctx sdk.Context) bool
 	TxFeeRebateRatio(ctx sdk.Context) sdk.Dec
 	TrackFeeRebatesRewards(ctx sdk.Context, rewards sdk.Coins)
 }
@@ -79,7 +80,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	// Deduct the fees
 	if !feeTx.GetFee().IsZero() {
-		if err := dfd.deductFees(ctx, deductFeesFromAcc, feeTx.GetFee()); err != nil {
+		if err := dfd.deductFees(ctx, tx, deductFeesFromAcc, feeTx.GetFee()); err != nil {
 			return ctx, err
 		}
 	}
@@ -95,15 +96,24 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 // deductFees deducts fees from the given account if rewards calculation and distribution is enabled.
 // If rewards module is disabled, all the fees are sent to the fee collector account.
 // NOTE: this is the only logic being changed.
-func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, acc authTypes.AccountI, fees sdk.Coins) error {
-	// TODO: we need to identify Msg type to only deduct fees for the WASM operation (not all of them)
-
+func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTypes.AccountI, fees sdk.Coins) error {
 	if !fees.IsValid() {
 		return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	// Send everything to the fee collector account if rewards are disabled
-	if !dfd.rewardsKeeper.TxFeeRewardsEnabled(ctx) {
+	// Check if transaction has wasmd operations
+	hasWasmMsgs := false
+	for _, msg := range tx.GetMsgs() {
+		_, ok := msg.(*wasmdTypes.MsgExecuteContract)
+		if ok {
+			hasWasmMsgs = true
+			break
+		}
+	}
+
+	// Send everything to the fee collector account if rewards are disabled or transaction is not wasm related
+	rebateRatio := dfd.rewardsKeeper.TxFeeRebateRatio(ctx)
+	if rebateRatio.IsZero() || !hasWasmMsgs {
 		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authTypes.FeeCollectorName, fees); err != nil {
 			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
 		}
@@ -111,7 +121,6 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, acc authTypes.AccountI
 	}
 
 	// Split the fees between the fee collector account and the rewards collector account
-	rebateRatio := dfd.rewardsKeeper.TxFeeRebateRatio(ctx)
 	authFees, rewardsFees := pkg.SplitCoins(fees, rebateRatio)
 
 	if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authTypes.FeeCollectorName, authFees); err != nil {

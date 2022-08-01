@@ -28,13 +28,15 @@ message Params {
 message ContractMetadata {
   option (gogoproto.goproto_stringer) = false;
 
+  // contract_address defines the contract address (bech32 encoded).
+  string contract_address = 1;
   // owner_address is the contract owner address that can modify contract reward options (bech32 encoded).
   // That could be the contract admin or the contract itself.
   // If owner_address is set to contract address, contract can modify the metadata on its own using WASM bindings.
-  string owner_address = 1;
+  string owner_address = 2;
   // rewards_address is an address to distribute rewards to (bech32 encoded).
   // If not set (empty), rewards are not distributed for this contract.
-  string rewards_address = 2;
+  string rewards_address = 3;
 }
 
 // BlockRewards defines block related rewards distribution data.

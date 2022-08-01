@@ -96,6 +96,7 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 	// Build the updated meta
 	metaNew := metaOld
 	if !metaExists {
+		metaNew.ContractAddress = contractAddr.String()
 		metaNew.OwnerAddress = senderAddr.String()
 	}
 	if metaUpdates.HasOwnerAddress() {

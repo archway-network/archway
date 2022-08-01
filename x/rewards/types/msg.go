@@ -18,9 +18,10 @@ var (
 // NewMsgSetContractMetadata creates a new MsgSetContractMetadata instance.
 func NewMsgSetContractMetadata(senderAddr, contractAddr sdk.AccAddress, ownerAddr, rewardsAddr *sdk.AccAddress) *MsgSetContractMetadata {
 	msg := &MsgSetContractMetadata{
-		SenderAddress:   senderAddr.String(),
-		ContractAddress: contractAddr.String(),
-		Metadata:        ContractMetadata{},
+		SenderAddress: senderAddr.String(),
+		Metadata: ContractMetadata{
+			ContractAddress: contractAddr.String(),
+		},
 	}
 
 	if ownerAddr != nil {
@@ -59,10 +60,6 @@ func (m MsgSetContractMetadata) GetSignBytes() []byte {
 func (m MsgSetContractMetadata) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.SenderAddress); err != nil {
 		return sdkErrors.Wrap(sdkErrors.ErrInvalidAddress, "invalid sender address")
-	}
-
-	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
-		return sdkErrors.Wrap(sdkErrors.ErrInvalidAddress, "invalid contract address")
 	}
 
 	if err := m.Metadata.Validate(false); err != nil {

@@ -1,14 +1,16 @@
 package e2e
 
 import (
+	"strconv"
+	"time"
+
 	voterTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strconv"
-	"time"
 )
 
 // TestGasTracking_TxGasConsumption tries to check gas consumption by contract execution, but

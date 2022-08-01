@@ -46,7 +46,6 @@
     - [ContractRewardDistributionEvent](#archway.rewards.v1beta1.ContractRewardDistributionEvent)
   
 - [archway/rewards/v1beta1/genesis.proto](#archway/rewards/v1beta1/genesis.proto)
-    - [GenesisContractMetadata](#archway.rewards.v1beta1.GenesisContractMetadata)
     - [GenesisState](#archway.rewards.v1beta1.GenesisState)
   
 - [archway/rewards/v1beta1/query.proto](#archway/rewards/v1beta1/query.proto)
@@ -480,6 +479,7 @@ ContractMetadata defines the contract rewards distribution options for a particu
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `contract_address` | [string](#string) |  | contract_address defines the contract address (bech32 encoded). |
 | `owner_address` | [string](#string) |  | owner_address is the contract owner address that can modify contract reward options (bech32 encoded). That could be the contract admin or the contract itself. If owner_address is set to contract address, contract can modify the metadata on its own using WASM bindings. |
 | `rewards_address` | [string](#string) |  | rewards_address is an address to distribute rewards to (bech32 encoded). If not set (empty), rewards are not distributed for this contract. |
 
@@ -606,22 +606,6 @@ This event might not follow the ContractRewardCalculationEvent if the contract h
 
 
 
-<a name="archway.rewards.v1beta1.GenesisContractMetadata"></a>
-
-### GenesisContractMetadata
-GenesisContractMetadata is used init ContractMetadata state via module genesis.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `contract_address` | [string](#string) |  | contract_address defines the contract address. |
-| `metadata` | [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata) |  | metadata defines the contract metadata. |
-
-
-
-
-
-
 <a name="archway.rewards.v1beta1.GenesisState"></a>
 
 ### GenesisState
@@ -631,7 +615,7 @@ GenesisState defines the initial state of the tracking module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#archway.rewards.v1beta1.Params) |  | params defines all the module parameters. |
-| `contracts_metadata` | [GenesisContractMetadata](#archway.rewards.v1beta1.GenesisContractMetadata) | repeated | contracts_metadata defines a list of all contracts metadata. |
+| `contracts_metadata` | [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata) | repeated | contracts_metadata defines a list of all contracts metadata. |
 | `block_rewards` | [BlockRewards](#archway.rewards.v1beta1.BlockRewards) | repeated | block_rewards defines a list of all block rewards objects. |
 | `tx_rewards` | [TxRewards](#archway.rewards.v1beta1.TxRewards) | repeated | tx_rewards defines a list of all tx rewards objects. |
 
@@ -799,7 +783,6 @@ MsgSetContractMetadata is the request for Msg.SetContractMetadata.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender_address` | [string](#string) |  | sender_address is the msg sender address (bech32 encoded). |
-| `contract_address` | [string](#string) |  | contract_address is the target contract address (bech32 encoded). |
 | `metadata` | [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata) |  | metadata is the contract metadata to set / update. If metadata exists, non-empty fields will be updated. |
 
 

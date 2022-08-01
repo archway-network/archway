@@ -15,7 +15,6 @@ var _ mintTypes.BankKeeper = Keeper{}
 
 // RewardsKeeperExpected defines the expected interface for the x/rewards keeper.
 type RewardsKeeperExpected interface {
-	InflationRewardsEnabled(ctx sdk.Context) bool
 	InflationRewardsRatio(ctx sdk.Context) sdk.Dec
 	TrackInflationRewards(ctx sdk.Context, rewards sdk.Coin)
 }
@@ -39,11 +38,11 @@ func NewKeeper(bk mintTypes.BankKeeper, rk RewardsKeeperExpected) Keeper {
 func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
 	// Perform the split only if the recipient is fee collector (which for instance is always the case) and
 	// inflation rewards are enabled.
-	if recipientModule != authTypes.FeeCollectorName || !k.rewardsKeeper.InflationRewardsEnabled(ctx) {
+	ratio := k.rewardsKeeper.InflationRewardsRatio(ctx)
+	if recipientModule != authTypes.FeeCollectorName || ratio.IsZero() {
 		return k.bankKeeper.SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt)
 	}
 
-	ratio := k.rewardsKeeper.InflationRewardsRatio(ctx)
 	dappRewards, stakingRewards := pkg.SplitCoins(amt, ratio)
 
 	// Send to the x/auth fee collector account

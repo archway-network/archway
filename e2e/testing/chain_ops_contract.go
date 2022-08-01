@@ -117,10 +117,10 @@ func (chain *TestChain) GetContractMetadata(contractAddr sdk.AccAddress) rewards
 func (chain *TestChain) SetContractMetadata(sender Account, contractAddr sdk.AccAddress, metadata rewardsTypes.ContractMetadata) {
 	t := chain.t
 
+	metadata.ContractAddress = contractAddr.String()
 	txMsg := rewardsTypes.MsgSetContractMetadata{
-		SenderAddress:   sender.Address.String(),
-		ContractAddress: contractAddr.String(),
-		Metadata:        metadata,
+		SenderAddress: sender.Address.String(),
+		Metadata:      metadata,
 	}
 
 	_, _, _, err := chain.SendMsgs(sender, true, []sdk.Msg{&txMsg})
