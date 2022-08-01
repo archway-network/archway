@@ -163,7 +163,7 @@ func (s *KeeperTestSuite) TestStates() {
 			records = append(
 				records,
 				wasmTypes.ContractGasRecord{
-					OperationId:     testutils.ContractOperationToWASM(op.OperationType),
+					OperationId:     testutils.RewardsContractOperationToWASM(op.OperationType),
 					ContractAddress: op.ContractAddress,
 					OriginalGas: wasmTypes.GasConsumptionInfo{
 						VMGas:  keeper.WasmGasRegister.ToWasmVMGas(op.VmGas),

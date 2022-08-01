@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"sigs.k8s.io/yaml"
+
+	"github.com/archway-network/archway/pkg"
 )
 
 // HasRewards returns true if the block rewards have been set.
@@ -23,17 +25,10 @@ func (m BlockRewards) Validate() error {
 		return fmt.Errorf("height: must be GTE 0")
 	}
 
-	if m.InflationRewards.Denom != "" {
-		if err := sdk.ValidateDenom(m.InflationRewards.Denom); err != nil {
-			return fmt.Errorf("inflationRewards: denom: %w", err)
+	if !pkg.CoinIsZero(m.InflationRewards) {
+		if err := pkg.ValidateCoin(m.InflationRewards); err != nil {
+			return fmt.Errorf("inflationRewards: %w", err)
 		}
-	}
-	if m.InflationRewards.Amount.IsNegative() {
-		return fmt.Errorf("inflationRewards: amount: is negative")
-	}
-
-	if m.MaxGas <= 0 {
-		return fmt.Errorf("maxGas: must be GT 0")
 	}
 
 	return nil
@@ -61,11 +56,12 @@ func (m TxRewards) Validate() error {
 	}
 
 	for i, coin := range m.FeeRewards {
-		if err := sdk.ValidateDenom(coin.Denom); err != nil {
-			return fmt.Errorf("feeRewards [%d]: denom: %w", i, err)
+		if pkg.CoinIsZero(coin) {
+			return fmt.Errorf("feeRewards [%d]: must be non-zero", i)
 		}
-		if coin.Amount.IsNegative() {
-			return fmt.Errorf("feeRewards [%d]: amount: is negative", i)
+
+		if err := pkg.ValidateCoin(coin); err != nil {
+			return fmt.Errorf("feeRewards [%d]: %w", i, err)
 		}
 	}
 

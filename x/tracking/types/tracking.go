@@ -58,6 +58,10 @@ func (m ContractOperationInfo) Validate() error {
 		return fmt.Errorf("contractAddress: %s", err.Error())
 	}
 
+	if _, found := ContractOperation_name[int32(m.OperationType)]; !found {
+		return fmt.Errorf("operationType: unknown type")
+	}
+
 	return nil
 }
 

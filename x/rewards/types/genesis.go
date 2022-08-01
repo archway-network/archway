@@ -58,6 +58,9 @@ func (m GenesisState) Validate() error {
 		if err := txRewards.Validate(); err != nil {
 			return fmt.Errorf("txRewards [%d]: %w", i, err)
 		}
+		if _, ok := blockRewardsHeightSet[txRewards.Height]; !ok {
+			return fmt.Errorf("txRewards [%d]: height not found: %d", i, txRewards.Height)
+		}
 		if _, ok := txRewardsIdSet[txRewards.TxId]; ok {
 			return fmt.Errorf("txRewards [%d]: duplicated txId: %d", i, txRewards.TxId)
 		}

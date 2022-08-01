@@ -5,7 +5,7 @@ import (
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	treckingTypes "github.com/archway-network/archway/x/tracking/types"
+	trackingTypes "github.com/archway-network/archway/x/tracking/types"
 )
 
 var allContractOperationTypes = []uint64{
@@ -30,26 +30,58 @@ func GetRandomContractOperationType() uint64 {
 	return allContractOperationTypes[idx]
 }
 
-// ContractOperationToWASM converts x/tracking contract operation to wasmd type.
-func ContractOperationToWASM(opType treckingTypes.ContractOperation) uint64 {
+// RewardsContractOperationToWASM converts x/tracking contract operation to wasmd type.
+func RewardsContractOperationToWASM(opType trackingTypes.ContractOperation) uint64 {
 	switch opType {
-	case treckingTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION:
+	case trackingTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION:
 		return wasmdTypes.ContractOperationInstantiate
-	case treckingTypes.ContractOperation_CONTRACT_OPERATION_EXECUTION:
+	case trackingTypes.ContractOperation_CONTRACT_OPERATION_EXECUTION:
 		return wasmdTypes.ContractOperationExecute
-	case treckingTypes.ContractOperation_CONTRACT_OPERATION_QUERY:
+	case trackingTypes.ContractOperation_CONTRACT_OPERATION_QUERY:
 		return wasmdTypes.ContractOperationQuery
-	case treckingTypes.ContractOperation_CONTRACT_OPERATION_MIGRATE:
+	case trackingTypes.ContractOperation_CONTRACT_OPERATION_MIGRATE:
 		return wasmdTypes.ContractOperationMigrate
-	case treckingTypes.ContractOperation_CONTRACT_OPERATION_IBC:
+	case trackingTypes.ContractOperation_CONTRACT_OPERATION_IBC:
 		return wasmdTypes.ContractOperationIbcPacketReceive
-	case treckingTypes.ContractOperation_CONTRACT_OPERATION_SUDO:
+	case trackingTypes.ContractOperation_CONTRACT_OPERATION_SUDO:
 		return wasmdTypes.ContractOperationSudo
-	case treckingTypes.ContractOperation_CONTRACT_OPERATION_REPLY:
+	case trackingTypes.ContractOperation_CONTRACT_OPERATION_REPLY:
 		return wasmdTypes.ContractOperationReply
-	case treckingTypes.ContractOperation_CONTRACT_OPERATION_UNSPECIFIED:
+	case trackingTypes.ContractOperation_CONTRACT_OPERATION_UNSPECIFIED:
 		fallthrough
 	default:
 		return wasmdTypes.ContractOperationUnknown
+	}
+}
+
+// WASMContractOperationToRewards converts wasmd operation type to x/tracking type.
+func WASMContractOperationToRewards(opType uint64) trackingTypes.ContractOperation {
+	switch opType {
+	case wasmdTypes.ContractOperationQuery:
+		return trackingTypes.ContractOperation_CONTRACT_OPERATION_QUERY
+	case wasmdTypes.ContractOperationInstantiate:
+		return trackingTypes.ContractOperation_CONTRACT_OPERATION_INSTANTIATION
+	case wasmdTypes.ContractOperationExecute:
+		return trackingTypes.ContractOperation_CONTRACT_OPERATION_EXECUTION
+	case wasmdTypes.ContractOperationMigrate:
+		return trackingTypes.ContractOperation_CONTRACT_OPERATION_MIGRATE
+	case wasmdTypes.ContractOperationSudo:
+		return trackingTypes.ContractOperation_CONTRACT_OPERATION_SUDO
+	case wasmdTypes.ContractOperationReply:
+		return trackingTypes.ContractOperation_CONTRACT_OPERATION_REPLY
+	case wasmdTypes.ContractOperationIbcPacketTimeout:
+		fallthrough
+	case wasmdTypes.ContractOperationIbcPacketAck:
+		fallthrough
+	case wasmdTypes.ContractOperationIbcPacketReceive:
+		fallthrough
+	case wasmdTypes.ContractOperationIbcChannelClose:
+		fallthrough
+	case wasmdTypes.ContractOperationIbcChannelOpen:
+		fallthrough
+	case wasmdTypes.ContractOperationIbcChannelConnect:
+		return trackingTypes.ContractOperation_CONTRACT_OPERATION_IBC
+	default:
+		return trackingTypes.ContractOperation_CONTRACT_OPERATION_UNSPECIFIED
 	}
 }

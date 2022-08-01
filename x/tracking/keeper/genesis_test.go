@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"math/rand"
 
+	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/tracking/types"
 )
 
@@ -13,8 +14,10 @@ func (s *KeeperTestSuite) TestGenesisExport() {
 	operationsToExecute := 100
 
 	for i := 0; i < operationsToExecute; i++ {
+		opType := testutils.WASMContractOperationToRewards(testutils.GetRandomContractOperationType())
+
 		keeper.TrackNewTx(ctx)
-		keeper.TrackNewContractOperation(ctx, chain.GetAccount(rand.Intn(5)).Address, types.ContractOperation(rand.Int31n(8)-1), 1, 1)
+		keeper.TrackNewContractOperation(ctx, chain.GetAccount(rand.Intn(5)).Address, opType, 1, 1)
 	}
 
 	genesis := keeper.ExportGenesis(ctx)
@@ -31,12 +34,14 @@ func (s *KeeperTestSuite) TestGenesisImport() {
 
 	// Ids must be greater than 0
 	for i := 1; i <= operationsToExecute; i++ {
+		opType := testutils.WASMContractOperationToRewards(testutils.GetRandomContractOperationType())
+
 		txInfo := types.TxInfo{uint64(i), 0, 2}
 		contractOperation := types.ContractOperationInfo{
 			txInfo.Id,
 			txInfo.Id,
 			chain.GetAccount(rand.Intn(5)).Address.String(),
-			types.ContractOperation(rand.Int31n(8) - 1),
+			opType,
 			1,
 			1,
 		}
