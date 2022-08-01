@@ -3,6 +3,7 @@ package keeper_test
 import (
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/tracking/types"
 )
 
@@ -162,7 +163,7 @@ func (s *KeeperTestSuite) TestStates() {
 			records = append(
 				records,
 				wasmTypes.ContractGasRecord{
-					OperationId:     ContractOperationToWASM(op.OperationType),
+					OperationId:     testutils.ContractOperationToWASM(op.OperationType),
 					ContractAddress: op.ContractAddress,
 					OriginalGas: wasmTypes.GasConsumptionInfo{
 						VMGas:  keeper.WasmGasRegister.ToWasmVMGas(op.VmGas),
@@ -235,5 +236,23 @@ func (s *KeeperTestSuite) TestStates() {
 			opsReceived := opsState.GetContractOpInfoByTxID(txID)
 			s.Assert().ElementsMatch(opsExpected, opsReceived, "ContractOpInfoByTxID (%d): wrong value", txID)
 		}
+	})
+
+	// Check records removal
+	s.Run("Check records removal for the 1st block", func() {
+		keeper.GetState().DeleteTxInfosCascade(ctx, startBlock+1)
+
+		block1Txs := keeper.GetState().TxInfoState(ctx).GetTxInfosByBlock(startBlock + 1)
+		s.Assert().Empty(block1Txs)
+
+		block2Txs := keeper.GetState().TxInfoState(ctx).GetTxInfosByBlock(startBlock + 2)
+		s.Assert().Len(block2Txs, 2)
+	})
+
+	s.Run("Check records removal for the 2nd block", func() {
+		keeper.GetState().DeleteTxInfosCascade(ctx, startBlock+2)
+
+		block2Txs := keeper.GetState().TxInfoState(ctx).GetTxInfosByBlock(startBlock + 2)
+		s.Assert().Empty(block2Txs)
 	})
 }

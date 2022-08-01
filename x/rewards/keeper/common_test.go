@@ -18,6 +18,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.chain = e2eTesting.NewTestChain(s.T(), 1)
 }
 
-func TestTrackingKeeper(t *testing.T) {
+func TestRewardsKeeper(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
