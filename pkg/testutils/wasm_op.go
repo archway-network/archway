@@ -1,10 +1,9 @@
-package keeper_test
+package testutils
 
 import (
 	"math/rand"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var allContractOperationTypes = []uint64{
@@ -21,33 +20,6 @@ var allContractOperationTypes = []uint64{
 	wasmdTypes.ContractOperationIbcPacketAck,
 	wasmdTypes.ContractOperationIbcPacketTimeout,
 	wasmdTypes.ContractOperationUnknown,
-}
-
-// mockContractViewer mocks x/wasmd module dependency.
-type mockContractViewer struct {
-	contractAdminSet map[string]string // key: contractAddr, value: adminAddr
-}
-
-func newMockContractViewer() *mockContractViewer {
-	return &mockContractViewer{
-		contractAdminSet: make(map[string]string),
-	}
-}
-
-// AddContractAdmin adds a contract admin link.
-func (v *mockContractViewer) AddContractAdmin(contractAddr, adminAddr string) {
-	v.contractAdminSet[contractAddr] = adminAddr
-}
-
-func (v mockContractViewer) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmdTypes.ContractInfo {
-	adminAddr, found := v.contractAdminSet[contractAddress.String()]
-	if !found {
-		return nil
-	}
-
-	return &wasmdTypes.ContractInfo{
-		Admin: adminAddr,
-	}
 }
 
 // GetRandomContractOperationType returns a random wasmd contract operation type.

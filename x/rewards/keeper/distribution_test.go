@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg/testutils"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -420,7 +421,7 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 			acc := chain.GetAccount(0)
 
 			// Set mock ContractViewer (to pass contract admin check for metadata setup)
-			contractViewer := newMockContractViewer()
+			contractViewer := testutils.NewMockContractViewer()
 			chain.GetApp().RewardsKeeper.SetContractInfoViewer(contractViewer)
 
 			tKeeper, rKeeper := chain.GetApp().TrackingKeeper, chain.GetApp().RewardsKeeper
@@ -439,7 +440,7 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 						var gasConsumptionRecords []wasmdTypes.ContractGasRecord
 						for _, op := range contract.operations {
 							gasConsumptionRecord := wasmdTypes.ContractGasRecord{
-								OperationId:     GetRandomContractOperationType(),
+								OperationId:     testutils.GetRandomContractOperationType(),
 								ContractAddress: contract.contractAddr.String(),
 								OriginalGas: wasmdTypes.GasConsumptionInfo{
 									SDKGas: op,

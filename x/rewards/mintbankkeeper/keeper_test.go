@@ -27,7 +27,6 @@ func TestMintBankKeeper(t *testing.T) {
 		// Expected outputs
 		errExpected                bool
 		rewardRecordExpected       bool   // reward record expected to be created
-		srcBalanceDiffExpected     string // expected source module balance diff [sdk.Coins]
 		dstBalanceDiffExpected     string // expected destination module balance diff [sdk.Coins]
 		rewardsBalanceDiffExpected string // expected x/rewards module balance diff [sdk.Coins]
 	}
@@ -43,7 +42,6 @@ func TestMintBankKeeper(t *testing.T) {
 			transferCoins:         "1000stake",
 			//
 			rewardRecordExpected:       true,
-			srcBalanceDiffExpected:     "",
 			dstBalanceDiffExpected:     "400stake",
 			rewardsBalanceDiffExpected: "600stake",
 		},
@@ -57,7 +55,6 @@ func TestMintBankKeeper(t *testing.T) {
 			transferCoins:         "45stake",
 			//
 			rewardRecordExpected:       true,
-			srcBalanceDiffExpected:     "",
 			dstBalanceDiffExpected:     "23stake",
 			rewardsBalanceDiffExpected: "22stake",
 		},
@@ -71,7 +68,6 @@ func TestMintBankKeeper(t *testing.T) {
 			transferCoins:         "100stake",
 			//
 			rewardRecordExpected:       true,
-			srcBalanceDiffExpected:     "",
 			dstBalanceDiffExpected:     "1stake",
 			rewardsBalanceDiffExpected: "99stake",
 		},
@@ -85,7 +81,6 @@ func TestMintBankKeeper(t *testing.T) {
 			transferCoins:         "100stake",
 			//
 			rewardRecordExpected:       false,
-			srcBalanceDiffExpected:     "",
 			dstBalanceDiffExpected:     "100stake",
 			rewardsBalanceDiffExpected: "",
 		},
@@ -99,7 +94,6 @@ func TestMintBankKeeper(t *testing.T) {
 			transferCoins:         "100stake",
 			//
 			rewardRecordExpected:       true,
-			srcBalanceDiffExpected:     "",
 			dstBalanceDiffExpected:     "99stake",
 			rewardsBalanceDiffExpected: "1stake",
 		},
@@ -113,7 +107,6 @@ func TestMintBankKeeper(t *testing.T) {
 			transferCoins:         "100stake",
 			//
 			rewardRecordExpected:       false,
-			srcBalanceDiffExpected:     "",
 			dstBalanceDiffExpected:     "100stake",
 			rewardsBalanceDiffExpected: "",
 		},
@@ -164,14 +157,12 @@ func TestMintBankKeeper(t *testing.T) {
 			dstBalanceDiffReceived := dstBalanceAfter.Sub(dstBalanceBefore)             // positive
 			rewardsBalanceDiffReceived := rewardsBalanceAfter.Sub(rewardsBalanceBefore) // positive
 
-			srcBalanceDiffExpected, err := sdk.ParseCoinsNormalized(tc.srcBalanceDiffExpected)
-			require.NoError(t, err)
 			dstBalanceDiffExpected, err := sdk.ParseCoinsNormalized(tc.dstBalanceDiffExpected)
 			require.NoError(t, err)
 			rewardsDiffExpected, err := sdk.ParseCoinsNormalized(tc.rewardsBalanceDiffExpected)
 			require.NoError(t, err)
 
-			assert.Equal(t, srcBalanceDiffExpected.String(), srcBalanceDiffReceived.String())
+			assert.True(t, srcBalanceDiffReceived.IsZero())
 			assert.Equal(t, dstBalanceDiffExpected.String(), dstBalanceDiffReceived.String())
 			assert.Equal(t, rewardsDiffExpected.String(), rewardsBalanceDiffReceived.String())
 
