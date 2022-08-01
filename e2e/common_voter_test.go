@@ -14,7 +14,7 @@ import (
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channelTypes "github.com/cosmos/ibc-go/v2/modules/core/04-channel/types"
+	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 )
 
 // Voter contract related helpers.
