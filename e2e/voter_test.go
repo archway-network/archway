@@ -18,9 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channelTypes "github.com/cosmos/ibc-go/v2/modules/core/04-channel/types"
-
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 )
 
 const (

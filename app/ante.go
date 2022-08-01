@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	channelkeeper "github.com/cosmos/ibc-go/v2/modules/core/04-channel/keeper"
-	ibcante "github.com/cosmos/ibc-go/v2/modules/core/ante"
+	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 
 	rewardsAnte "github.com/archway-network/archway/x/rewards/ante"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
@@ -21,8 +21,8 @@ import (
 type HandlerOptions struct {
 	ante.HandlerOptions
 
-	IBCChannelkeeper channelkeeper.Keeper
-	WasmConfig       *wasmTypes.WasmConfig
+	IBCKeeper  *ibckeeper.Keeper
+	WasmConfig *wasmTypes.WasmConfig
 
 	TXCounterStoreKey sdk.StoreKey
 
@@ -45,6 +45,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 	if options.TXCounterStoreKey == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "tx counter key is required for ante builder")
+	}
+
+	if options.IBCKeeper == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "ibc keeper is required for ante builder")
 	}
 
 	var sigGasConsumer = options.SigGasConsumer
