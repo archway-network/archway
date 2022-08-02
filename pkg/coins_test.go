@@ -42,6 +42,12 @@ func TestSplitCoins(t *testing.T) {
 			stack1Expected: "3uatom,5ubtc",
 			stack2Expected: "10uatom,15ubtc",
 		},
+		{
+			coins:          "13uatom,20ubtc",
+			ratio:          "1.0",
+			stack1Expected: "13uatom,20ubtc",
+			stack2Expected: "",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -59,6 +65,13 @@ func TestSplitCoins(t *testing.T) {
 			require.NoError(t, err)
 
 			stack1Received, stack2Received := SplitCoins(coins, ratio)
+			if tc.stack1Expected == "" {
+				assert.True(t, stack1Received.Empty())
+			}
+			if tc.stack2Expected == "" {
+				assert.True(t, stack2Received.Empty())
+			}
+
 			assert.ElementsMatch(t, stack1Expected, stack1Received)
 			assert.ElementsMatch(t, stack2Expected, stack2Received)
 		})

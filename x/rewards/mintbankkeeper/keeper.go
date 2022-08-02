@@ -46,13 +46,17 @@ func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recip
 	dappRewards, stakingRewards := pkg.SplitCoins(amt, ratio)
 
 	// Send to the x/auth fee collector account
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, stakingRewards); err != nil {
-		return err
+	if !stakingRewards.Empty() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, stakingRewards); err != nil {
+			return err
+		}
 	}
 
 	// Send to the x/rewards account
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, senderModule, rewardsTypes.ContractRewardCollector, dappRewards); err != nil {
-		return err
+	if !dappRewards.Empty() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, senderModule, rewardsTypes.ContractRewardCollector, dappRewards); err != nil {
+			return err
+		}
 	}
 
 	// Check that only one coin has been minted

@@ -127,12 +127,16 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 	// Split the fees between the fee collector account and the rewards collector account
 	rewardsFees, authFees := pkg.SplitCoins(fees, rebateRatio)
 
-	if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authTypes.FeeCollectorName, authFees); err != nil {
-		return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+	if !authFees.Empty() {
+		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authTypes.FeeCollectorName, authFees); err != nil {
+			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+		}
 	}
 
-	if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), rewardsTypes.ContractRewardCollector, rewardsFees); err != nil {
-		return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+	if !rewardsFees.Empty() {
+		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), rewardsTypes.ContractRewardCollector, rewardsFees); err != nil {
+			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+		}
 	}
 
 	// Track transaction fee rewards
