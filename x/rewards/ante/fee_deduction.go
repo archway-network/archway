@@ -104,8 +104,12 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 	// Check if transaction has wasmd operations
 	hasWasmMsgs := false
 	for _, msg := range tx.GetMsgs() {
-		_, ok := msg.(*wasmdTypes.MsgExecuteContract)
-		if ok {
+		// We can use switch here, but breaking the for loop from switch is less readable
+		if _, ok := msg.(*wasmdTypes.MsgExecuteContract); ok {
+			hasWasmMsgs = true
+			break
+		}
+		if _, ok := msg.(*wasmdTypes.MsgMigrateContract); ok {
 			hasWasmMsgs = true
 			break
 		}
