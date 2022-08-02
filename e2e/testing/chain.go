@@ -411,7 +411,9 @@ func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg
 		require.Error(t, err)
 		require.Nil(t, res)
 	}
-	abciEvents = append(abciEvents, res.Events...)
+	if res != nil {
+		abciEvents = append(abciEvents, res.Events...)
+	}
 
 	if !options.noBlockChange {
 		abciEvents = append(abciEvents, chain.EndBlock()...)
