@@ -350,7 +350,7 @@ type sendMsgOptions struct {
 }
 
 // WithMsgFees option add fees to the transaction.
-func WithMsgFees(coins sdk.Coins) SendMsgOption {
+func WithMsgFees(coins ...sdk.Coin) SendMsgOption {
 	return func(opt *sendMsgOptions) {
 		opt.fees = coins
 	}
@@ -383,6 +383,7 @@ func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg
 	}
 
 	t := chain.t
+	var abciEvents []abci.Event
 
 	// Get the sender account
 	senderAccI := chain.app.AccountKeeper.GetAccount(chain.GetContext(), senderAcc.Address)
@@ -410,12 +411,11 @@ func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg
 		require.Error(t, err)
 		require.Nil(t, res)
 	}
+	abciEvents = append(abciEvents, res.Events...)
 
-	var abciEvents []abci.Event
 	if !options.noBlockChange {
-		ebEvents := chain.EndBlock()
-		bbEvents := chain.BeginBlock()
-		abciEvents = append(ebEvents, bbEvents...)
+		abciEvents = append(abciEvents, chain.EndBlock()...)
+		abciEvents = append(abciEvents, chain.BeginBlock()...)
 	}
 
 	return gasInfo, res, abciEvents, err

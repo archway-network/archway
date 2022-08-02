@@ -1,6 +1,8 @@
 package e2eTesting
 
 import (
+	"strconv"
+
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -20,7 +22,12 @@ func GetStringEventAttribute(events []abci.Event, eventType, attrKey string) str
 				continue
 			}
 
-			return string(attr.Value)
+			attrValue := string(attr.Value)
+			if valueUnquoted, err := strconv.Unquote(string(attr.Value)); err == nil {
+				attrValue = valueUnquoted
+			}
+
+			return attrValue
 		}
 	}
 

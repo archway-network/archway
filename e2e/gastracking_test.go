@@ -1,37 +1,112 @@
 package e2e
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 
 	voterTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
 )
 
-// TestGasTracking_TxGasConsumption tries to check gas consumption by contract execution, but
-// since we can't (or I don't know how) check the real gas consumption by WASM only, it is kind of useless.
-// TODO: modify the Voter (or create an other contract) with a pure "Execute" call without bank involvement.
-func (s *E2ETestSuite) TestGasTracking_TxGasConsumption() {
-	chain := s.chainA
+// TestGasTrackingAndRewardsDistribution tests the whole x/tracking + x/rewards chain:
+//   * sets contract metadata and check an emitted event;
+//   * sends WASM Execute event;
+//   * checks x/tracking records created;
+//   * checks x/rewards records created;
+//   * checks x/rewards events emitted;
+//   * checks rewards address receives distributed rewards;
+func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
+	txFeeRebateRewardsRatio := sdk.NewDecWithPrec(5, 1)
+	inflationRewardsRatio := sdk.NewDecWithPrec(5, 1)
+	blockGasLimit := int64(10_000_000)
 
-	acc := chain.GetAccount(0)
-	contractAddr := s.VoterUploadAndInstantiate(chain, acc)
+	// Setup (create new chain here with custom params)
+	chain := e2eTesting.NewTestChain(s.T(), 1,
+		e2eTesting.WithTxFeeRebatesRewardsRatio(txFeeRebateRewardsRatio),
+		e2eTesting.WithInflationRewardsRatio(inflationRewardsRatio),
+		e2eTesting.WithBlockGasLimit(blockGasLimit),
+		// Artificially increase the minted inflation coin to get some rewards for the contract (otherwise contractOp gas / blockGasLimit ratio will be 0)
+		e2eTesting.WithMintParams(
+			sdk.NewDecWithPrec(8, 1),
+			sdk.NewDecWithPrec(8, 1),
+			1,
+		),
+	)
+	trackingKeeper, rewardsKeeper := chain.GetApp().TrackingKeeper, chain.GetApp().RewardsKeeper
 
-	// Set metadata to get rewards
+	senderAcc := chain.GetAccount(0)
+	contractAddr := s.VoterUploadAndInstantiate(chain, senderAcc)
+	accAddrs, _ := e2eTesting.GenAccounts(1) // an empty account
+
+	// Inputs
+	txFees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))
+	rewardsAddr := accAddrs[0]
+
+	// Collected values
+	var abciEvents []abci.Event        // all ABCI events from Tx execution, BeginBlocker and EndBlockers
+	var txID uint64                    // tracked Tx ID
+	var txGasUsed, txGasTracked uint64 // tx gas tracking
+
+	// Expected values (set below)
+	contractMetadataExpected := rewardsTypes.ContractMetadata{
+		ContractAddress: contractAddr.String(),
+		OwnerAddress:    senderAcc.Address.String(),
+		RewardsAddress:  rewardsAddr.String(),
+	}
+	var contractTxRewardsExpected sdk.Coins       // contract tx fee rebate rewards expected
+	var contractInflationRewardsExpected sdk.Coin // contract inflation rewards expected
+	var contractTotalRewardsExpected sdk.Coins    // contract tx + inflation rewards expected
+	var blockInflationRewardsExpected sdk.Coin    // block rewards expected
+
+	// Set metadata and fetch ABCI events
 	{
-		chain.SetContractMetadata(acc, contractAddr, rewardsTypes.ContractMetadata{
-			OwnerAddress:   acc.Address.String(),
-			RewardsAddress: acc.Address.String(),
-		})
+		msg := rewardsTypes.NewMsgSetContractMetadata(senderAcc.Address, contractAddr, &senderAcc.Address, &rewardsAddr)
+		_, _, events, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{msg})
+
+		abciEvents = append(abciEvents, events...)
 	}
 
-	// Send Tx manually to get Tx results
-	var txGasUsed uint64
+	// Check x/rewards metadata set event
+	s.Run("Check metadata set event", func() {
+		eventContractAddr := e2eTesting.GetStringEventAttribute(abciEvents,
+			"archway.rewards.v1beta1.ContractMetadataSetEvent",
+			"contract_address",
+		)
+		eventMetadataBz := e2eTesting.GetStringEventAttribute(abciEvents,
+			"archway.rewards.v1beta1.ContractMetadataSetEvent",
+			"metadata",
+		)
+
+		var metadataReceived rewardsTypes.ContractMetadata
+		s.Require().NoError(json.Unmarshal([]byte(eventMetadataBz), &metadataReceived))
+
+		s.Assert().Equal(contractAddr.String(), eventContractAddr)
+		s.Assert().Equal(contractMetadataExpected, metadataReceived)
+	})
+
+	// Estimate block rewards (inflation portion that should be distributed over contracts)
+	// This should be done before the actual Tx to get Minter values for the Tx's block
+	{
+		ctx := chain.GetContext()
+
+		mintKeeper := chain.GetApp().MintKeeper
+		mintParams := mintKeeper.GetParams(ctx)
+
+		mintedCoin := chain.GetApp().MintKeeper.GetMinter(ctx).BlockProvision(mintParams)
+		inflationRewards, _ := pkg.SplitCoins(sdk.NewCoins(mintedCoin), inflationRewardsRatio)
+		s.Require().Len(inflationRewards, 1)
+		blockInflationRewardsExpected = inflationRewards[0]
+	}
+
+	// Send contract Execute Tx with fees, fetch ABCI events and Tx gas used
 	{
 		req := voterTypes.MsgExecute{
 			NewVoting: &voterTypes.NewVotingRequest{
@@ -44,7 +119,7 @@ func (s *E2ETestSuite) TestGasTracking_TxGasConsumption() {
 		s.Require().NoError(err)
 
 		msg := wasmdTypes.MsgExecuteContract{
-			Sender:   acc.Address.String(),
+			Sender:   senderAcc.Address.String(),
 			Contract: contractAddr.String(),
 			Msg:      reqBz,
 			Funds: sdk.NewCoins(sdk.Coin{
@@ -52,38 +127,158 @@ func (s *E2ETestSuite) TestGasTracking_TxGasConsumption() {
 				Amount: sdk.NewIntFromUint64(DefNewVotingCostAmt),
 			}),
 		}
-
-		gasInfo, _, events, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
-		txGasUsed = gasInfo.GasUsed
-
-		// TODO: add proper event checks
-		calcEventContractAddr, err := strconv.Unquote(
-			e2eTesting.GetStringEventAttribute(events,
-				"archway.rewards.v1beta1.ContractRewardCalculationEvent",
-				"contract_address",
-			),
+		gasInfo, _, events, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{&msg},
+			e2eTesting.WithMsgFees(txFees...),
 		)
-		s.Require().NoError(err)
-		s.Assert().Equal(contractAddr.String(), calcEventContractAddr)
+
+		txGasUsed = gasInfo.GasUsed
+		abciEvents = append(abciEvents, events...)
 	}
 
-	// Get gas tracking data
-	var trackedGas uint64
-	{
+	// Check x/tracking Tx and ContractOps records
+	s.Run("Check gas tracked records", func() {
 		ctx := chain.GetContext()
+		txInfoState := trackingKeeper.GetState().TxInfoState(ctx)
+		contractOpState := trackingKeeper.GetState().ContractOpInfoState(ctx)
 
-		txInfos := chain.GetApp().TrackingKeeper.GetState().TxInfoState(ctx).GetTxInfosByBlock(ctx.BlockHeight() - 1)
+		// TxInfo
+		txInfos := txInfoState.GetTxInfosByBlock(ctx.BlockHeight() - 1)
 		s.Require().Len(txInfos, 1)
+		s.Assert().NotEmpty(txInfos[0].Id)
+		s.Assert().EqualValues(ctx.BlockHeight()-1, txInfos[0].Height)
+		s.Assert().NotEmpty(txInfos[0].TotalGas)
 
-		contractOps := chain.GetApp().TrackingKeeper.GetState().ContractOpInfoState(ctx).GetContractOpInfoByTxID(txInfos[0].Id)
+		txID = txInfos[0].Id
+		txGasTracked = txInfos[0].TotalGas
+
+		// Contract operations
+		contractOps := contractOpState.GetContractOpInfoByTxID(txInfos[0].Id)
 		s.Require().Len(contractOps, 1)
+		s.Assert().NotEmpty(contractOps[0].Id)
+		s.Assert().Equal(txInfos[0].Id, contractOps[0].TxId)
+		s.Assert().Equal(contractAddr.String(), contractOps[0].ContractAddress)
 		s.Assert().Equal(trackingTypes.ContractOperation_CONTRACT_OPERATION_EXECUTION, contractOps[0].OperationType)
-		s.Assert().Equal(contractOps[0].VmGas+contractOps[0].SdkGas, txInfos[0].TotalGas)
+		s.Assert().NotEmpty(contractOps[0].VmGas)
+		s.Assert().NotEmpty(contractOps[0].SdkGas)
 
-		trackedGas = txInfos[0].TotalGas
+		contractGasTracked := contractOps[0].VmGas + contractOps[0].SdkGas
+
+		// Assert gas consumptions
+		s.Assert().Equal(txGasTracked, contractGasTracked)
+		s.Assert().LessOrEqual(txGasTracked, txGasUsed)
+	})
+
+	// Estimate contract rewards
+	// This should be done after the actual Tx to get gas tracking data
+	{
+		// Contract fee rewards
+		txFeeRewards, _ := pkg.SplitCoins(txFees, txFeeRebateRewardsRatio)
+		contractTxRewardsExpected = txFeeRewards
+
+		// Contract inflation rewards
+		contractToBlockGasRatio := sdk.NewDec(int64(txGasTracked)).Quo(sdk.NewDec(blockGasLimit))
+		contractInflationRewardsExpected = sdk.Coin{
+			Denom:  blockInflationRewardsExpected.Denom,
+			Amount: blockInflationRewardsExpected.Amount.ToDec().Mul(contractToBlockGasRatio).TruncateInt(),
+		}
+
+		// Total
+		contractTotalRewardsExpected = contractTxRewardsExpected.Add(contractInflationRewardsExpected)
 	}
 
-	s.Assert().NotEmpty(trackedGas)
-	s.Assert().Less(trackedGas, txGasUsed)
-	s.T().Log("Gas consumption:", trackedGas, ">", txGasUsed)
+	// Check x/rewards Tx record
+	s.Run("Check tx fee rebate rewards records", func() {
+		ctx := chain.GetContext()
+		txRewardsState := rewardsKeeper.GetState().TxRewardsState(ctx)
+
+		txRewards := txRewardsState.GetTxRewardsByBlock(ctx.BlockHeight() - 1)
+		s.Require().Len(txRewards, 1)
+		s.Assert().Equal(txID, txRewards[0].TxId)
+		s.Assert().Equal(ctx.BlockHeight()-1, txRewards[0].Height)
+		s.Assert().Equal(contractTxRewardsExpected.String(), sdk.NewCoins(txRewards[0].FeeRewards...).String())
+	})
+
+	// Check x/rewards Block record
+	s.Run("Check block rewards record", func() {
+		ctx := chain.GetContext()
+		blockRewardsState := rewardsKeeper.GetState().BlockRewardsState(ctx)
+
+		blockRewards, found := blockRewardsState.GetBlockRewards(ctx.BlockHeight() - 1)
+		s.Require().True(found)
+		s.Assert().Equal(ctx.BlockHeight()-1, blockRewards.Height)
+		s.Assert().Equal(blockInflationRewardsExpected.String(), blockRewards.InflationRewards.String())
+		s.Assert().EqualValues(blockGasLimit, blockRewards.MaxGas)
+	})
+
+	// Check x/rewards calculation event
+	s.Run("Check calculation event", func() {
+		eventContractAddr := e2eTesting.GetStringEventAttribute(abciEvents,
+			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+			"contract_address",
+		)
+		eventGasConsumedBz := e2eTesting.GetStringEventAttribute(abciEvents,
+			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+			"gas_consumed",
+		)
+		eventInflationRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
+			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+			"inflation_rewards",
+		)
+		eventFeeRebateRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
+			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+			"fee_rebate_rewards",
+		)
+		eventMetadataBz := e2eTesting.GetStringEventAttribute(abciEvents,
+			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+			"metadata",
+		)
+
+		gasConsumedReceived, err := strconv.ParseUint(eventGasConsumedBz, 10, 64)
+		s.Require().NoError(err)
+
+		var inflationRewardsReceived sdk.Coin
+		s.Require().NoError(json.Unmarshal([]byte(eventInflationRewardsBz), &inflationRewardsReceived))
+
+		var feeRebateRewardsReceived sdk.Coins
+		s.Require().NoError(json.Unmarshal([]byte(eventFeeRebateRewardsBz), &feeRebateRewardsReceived))
+		s.Require().NoError(err)
+
+		var metadataReceived rewardsTypes.ContractMetadata
+		s.Require().NoError(json.Unmarshal([]byte(eventMetadataBz), &metadataReceived))
+
+		s.Assert().Equal(contractAddr.String(), eventContractAddr)
+		s.Assert().Equal(txGasTracked, gasConsumedReceived)
+		s.Assert().Equal(contractInflationRewardsExpected.String(), inflationRewardsReceived.String())
+		s.Assert().Equal(contractTxRewardsExpected.String(), feeRebateRewardsReceived.String())
+		s.Assert().Equal(contractMetadataExpected, metadataReceived)
+	})
+
+	// Check x/rewards distribution event
+	s.Run("Check distribution event", func() {
+		eventContractAddr := e2eTesting.GetStringEventAttribute(abciEvents,
+			"archway.rewards.v1beta1.ContractRewardDistributionEvent",
+			"contract_address",
+		)
+		eventRewardsAddr := e2eTesting.GetStringEventAttribute(abciEvents,
+			"archway.rewards.v1beta1.ContractRewardDistributionEvent",
+			"reward_address",
+		)
+		eventRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
+			"archway.rewards.v1beta1.ContractRewardDistributionEvent",
+			"rewards",
+		)
+
+		var rewardsReceived sdk.Coins
+		s.Require().NoError(json.Unmarshal([]byte(eventRewardsBz), &rewardsReceived))
+
+		s.Assert().Equal(contractAddr.String(), eventContractAddr)
+		s.Assert().Equal(contractMetadataExpected.RewardsAddress, eventRewardsAddr)
+		s.Assert().Equal(contractTotalRewardsExpected.String(), rewardsReceived.String())
+	})
+
+	// Check rewards address balance
+	s.Run("Check funds transferred", func() {
+		accCoins := chain.GetBalance(rewardsAddr)
+		s.Assert().Equal(contractTotalRewardsExpected.String(), accCoins.String())
+	})
 }

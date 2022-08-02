@@ -43,7 +43,7 @@ func TestRewardsCollection(t *testing.T) {
 		},
 	}
 	txFees := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))
-	_, _, err = chain.SendMsgs(chain.GetAccount(0), true, []sdk.Msg{&wasmtypes.MsgExecuteContract{
+	chain.SendMsgs(chain.GetAccount(0), true, []sdk.Msg{&wasmtypes.MsgExecuteContract{
 		Sender:   chain.GetAccount(0).Address.String(),
 		Contract: contractAddr.String(),
 		Msg:      jsonMarshal(t, msg),
@@ -51,7 +51,6 @@ func TestRewardsCollection(t *testing.T) {
 	}},
 		e2eTesting.WithMsgFees(txFees),
 	)
-	require.NoError(t, err)
 
 	balance := chain.GetBalance(authtypes.NewModuleAddress(gastracker.ModuleName))
 	totalInflation = sdk.NewCoin(
