@@ -10,6 +10,7 @@ import (
 // TestStates tests TxInfo and ContractOperationInfo state storages.
 // Test append multiple objects for different blocks to make sure there are no namespace
 // collisions (prefixed store keys) and state indexes work as expected.
+// Final test stage is the cascade delete of all objects.
 func (s *KeeperTestSuite) TestStates() {
 	type testData struct {
 		Tx  types.TxInfo
@@ -21,6 +22,7 @@ func (s *KeeperTestSuite) TestStates() {
 
 	// Fixtures
 	startBlock := ctx.BlockHeight()
+
 	testDataExpected := []testData{
 		// Block 1, Tx 1: 3 ops
 		{
@@ -154,8 +156,9 @@ func (s *KeeperTestSuite) TestStates() {
 			block = ctx.BlockHeight()
 		}
 
-		// Start tracking a new Tx (emulate Ante handler)
+		// Start tracking a new Tx (emulate Ante handler) and check TxID sequence is correct
 		keeper.TrackNewTx(ctx)
+		s.Require().Equal(data.Tx.Id, keeper.GetState().TxInfoState(ctx).GetCurrentTxID())
 
 		// Ingest contract operations
 		records := make([]wasmTypes.ContractGasRecord, 0, len(data.Ops))
@@ -175,6 +178,15 @@ func (s *KeeperTestSuite) TestStates() {
 		s.Require().NoError(keeper.IngestGasRecord(ctx, records))
 	}
 	keeper.FinalizeBlockTxTracking(ctx)
+
+	// Check non-existing records
+	s.Run("Check non-existing state records", func() {
+		_, txFound := keeper.GetState().TxInfoState(ctx).GetTxInfo(10)
+		s.Assert().False(txFound)
+
+		_, opFound := keeper.GetState().ContractOpInfoState(ctx).GetContractOpInfo(100)
+		s.Assert().False(opFound)
+	})
 
 	// Check that the states are as expected
 	s.Run("Check objects one by one", func() {
@@ -240,19 +252,35 @@ func (s *KeeperTestSuite) TestStates() {
 
 	// Check records removal
 	s.Run("Check records removal for the 1st block", func() {
+		txState := keeper.GetState().TxInfoState(ctx)
+
 		keeper.GetState().DeleteTxInfosCascade(ctx, startBlock+1)
 
-		block1Txs := keeper.GetState().TxInfoState(ctx).GetTxInfosByBlock(startBlock + 1)
+		block1Txs := txState.GetTxInfosByBlock(startBlock + 1)
 		s.Assert().Empty(block1Txs)
 
-		block2Txs := keeper.GetState().TxInfoState(ctx).GetTxInfosByBlock(startBlock + 2)
+		block2Txs := txState.GetTxInfosByBlock(startBlock + 2)
 		s.Assert().Len(block2Txs, 2)
+
+		_, tx1Found := txState.GetTxInfo(testDataExpected[0].Tx.Id)
+		s.Assert().False(tx1Found)
+
+		_, tx2Found := txState.GetTxInfo(testDataExpected[1].Tx.Id)
+		s.Assert().False(tx2Found)
 	})
 
 	s.Run("Check records removal for the 2nd block", func() {
+		txState := keeper.GetState().TxInfoState(ctx)
+
 		keeper.GetState().DeleteTxInfosCascade(ctx, startBlock+2)
 
-		block2Txs := keeper.GetState().TxInfoState(ctx).GetTxInfosByBlock(startBlock + 2)
+		block2Txs := txState.GetTxInfosByBlock(startBlock + 2)
 		s.Assert().Empty(block2Txs)
+
+		_, tx3Found := txState.GetTxInfo(testDataExpected[2].Tx.Id)
+		s.Assert().False(tx3Found)
+
+		_, tx4Found := txState.GetTxInfo(testDataExpected[3].Tx.Id)
+		s.Assert().False(tx4Found)
 	})
 }

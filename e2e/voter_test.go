@@ -18,8 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 const (
@@ -88,11 +89,6 @@ func (s *E2ETestSuite) TestVoter_ExecuteQueryAndReply() {
 //   - api.HumanAddress: called by querying contract Params (OwnerAddr);
 //   - and api.CanonicalAddress: called by instantiate to convert OwnerAddr (string) to canonical address (bytes);
 func (s *E2ETestSuite) TestVoter_Sudo() {
-	// x/wasmd/types/codec.go:
-	//   registry.RegisterImplementations() call:
-	//     "&SudoContractProposal{}" should be added
-	s.T().Skip("Current wasmd dependency doesn't have SudoContractProposal type registered (fixed in 1.0.0, skip for now)")
-
 	chain := s.chainA
 	acc := chain.GetAccount(0)
 	contractAddr := s.VoterUploadAndInstantiate(chain, acc)
@@ -768,8 +764,9 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataQuery() {
 	}
 
 	getAndCmpMetas := func(metaExp rewardsTypes.ContractMetadata) {
-		metaRcvStargate := s.VoterGetMetadata(chain, contractAddr, true, true)
-		cmpMetas(metaExp, metaRcvStargate)
+		// wasmvm v1.0.0 (wasmd for us) has disabled the Stargate query, so we skip this case
+		//metaRcvStargate := s.VoterGetMetadata(chain, contractAddr, true, true)
+		//cmpMetas(metaExp, metaRcvStargate)
 
 		metaRcvCustom := s.VoterGetMetadata(chain, contractAddr, false, true)
 		cmpMetas(metaExp, metaRcvCustom)
