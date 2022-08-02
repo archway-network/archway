@@ -241,7 +241,6 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 
 		var feeRebateRewardsReceived sdk.Coins
 		s.Require().NoError(json.Unmarshal([]byte(eventFeeRebateRewardsBz), &feeRebateRewardsReceived))
-		s.Require().NoError(err)
 
 		var metadataReceived rewardsTypes.ContractMetadata
 		s.Require().NoError(json.Unmarshal([]byte(eventMetadataBz), &metadataReceived))
