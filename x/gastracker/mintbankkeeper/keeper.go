@@ -2,11 +2,13 @@ package mintbankkeeper
 
 import (
 	"fmt"
-	"github.com/archway-network/archway/x/gastracker"
-	"github.com/archway-network/archway/x/gastracker/common"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
+	"github.com/archway-network/archway/x/gastracker"
+	"github.com/archway-network/archway/x/gastracker/common"
 )
 
 var (

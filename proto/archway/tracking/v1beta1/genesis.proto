@@ -1,0 +1,19 @@
+syntax = "proto3";
+package archway.tracking.v1beta1;
+
+option go_package = "github.com/archway-network/archway/x/tracking/types";
+
+import "gogoproto/gogo.proto";
+import "archway/tracking/v1beta1/tracking.proto";
+
+// GenesisState defines the initial state of the tracking module.
+message GenesisState {
+  // tx_infos defines a list of all the tracked transactions.
+  repeated TxInfo tx_infos = 2 [
+    (gogoproto.nullable) = false
+  ];
+  // contract_op_infos defines a list of all the tracked contract operations.
+  repeated ContractOperationInfo contract_op_infos = 3 [
+    (gogoproto.nullable) = false
+  ];
+}

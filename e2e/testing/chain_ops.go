@@ -21,7 +21,7 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 	msg, err := govTypes.NewMsgSubmitProposal(proposalContent, depositCoin, proposerAcc.Address)
 	require.NoError(t, err)
 
-	_, res, _ := chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
+	_, res, _, _ := chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
 	txRes := chain.ParseSDKResultData(res)
 	require.Len(t, txRes.Data, 1)
 

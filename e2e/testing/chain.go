@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/archway-network/archway/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptoCodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -29,6 +28,8 @@ import (
 	tmProto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmTypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/archway-network/archway/app"
 )
 
 // TestChain keeps a test chain state and provides helper functions to simulate various operations.
@@ -48,20 +49,45 @@ type TestChain struct {
 }
 
 // NewTestChain creates a new TestChain with the default amount of genesis accounts and validators.
-func NewTestChain(t *testing.T, chainIdx int) *TestChain {
+func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	const (
-		validatorsN      = 1
-		genAccsN         = 5
-		genBalanceAmount = "1000000000"
-		bondAmount       = "1000000"
-		chainIDPrefix    = "test-"
+		chainIDPrefix = "test-"
 	)
+
+	// Split options by groups (each group is applied in a different init step)
+	var chainCfgOpts []TestChainConfigOption
+	var consensusParamsOpts []TestChainConsensusParamsOption
+	var genStateOpts []TestChainGenesisOption
+	for i, opt := range opts {
+		switch opt.(type) {
+		case TestChainConfigOption:
+			chainCfgOpts = append(chainCfgOpts, opt.(TestChainConfigOption))
+		case TestChainConsensusParamsOption:
+			consensusParamsOpts = append(consensusParamsOpts, opt.(TestChainConsensusParamsOption))
+		case TestChainGenesisOption:
+			genStateOpts = append(genStateOpts, opt.(TestChainGenesisOption))
+		default:
+			require.Fail(t, "Unknown chain option type", "optionIdx", i)
+		}
+	}
+
+	// Define chain config
+	chainCfg := chainConfig{
+		ValidatorsNum:    1,
+		GenAccountsNum:   5,
+		GenBalanceAmount: "1000000000",
+		BondAmount:       "1000000",
+	}
+	for _, opt := range chainCfgOpts {
+		opt(&chainCfg)
+	}
 
 	// Create an app and a default genesis state
 	encCfg := app.MakeEncodingConfig()
 
+	// Pick your poison here =)
 	//logger := log.TestingLogger()
-	logger := log.TestingLogger()
+	logger := log.NewNopLogger()
 
 	archApp := app.NewArchwayApp(
 		logger,
@@ -78,9 +104,9 @@ func NewTestChain(t *testing.T, chainIdx int) *TestChain {
 	genState := app.NewDefaultGenesisState()
 
 	// Generate validators
-	validators := make([]*tmTypes.Validator, 0, validatorsN)
-	valSigners := make([]tmTypes.PrivValidator, 0, validatorsN)
-	for i := 0; i < validatorsN; i++ {
+	validators := make([]*tmTypes.Validator, 0, chainCfg.ValidatorsNum)
+	valSigners := make([]tmTypes.PrivValidator, 0, chainCfg.ValidatorsNum)
+	for i := 0; i < chainCfg.ValidatorsNum; i++ {
 		valPrivKey := mock.NewPV()
 		valPubKey, err := valPrivKey.GetPubKey()
 		require.NoError(t, err)
@@ -91,9 +117,9 @@ func NewTestChain(t *testing.T, chainIdx int) *TestChain {
 	validatorSet := tmTypes.NewValidatorSet(validators)
 
 	// Generate genesis accounts, gen and bond coins
-	genAccs := make([]authTypes.GenesisAccount, 0, genAccsN)
-	genAccPrivKeys := make([]cryptoTypes.PrivKey, 0, genAccsN)
-	for i := 0; i < genAccsN; i++ {
+	genAccs := make([]authTypes.GenesisAccount, 0, chainCfg.GenAccountsNum)
+	genAccPrivKeys := make([]cryptoTypes.PrivKey, 0, chainCfg.GenAccountsNum)
+	for i := 0; i < chainCfg.GenAccountsNum; i++ {
 		accPrivKey := secp256k1.GenPrivKey()
 		acc := authTypes.NewBaseAccount(accPrivKey.PubKey().Address().Bytes(), accPrivKey.PubKey(), uint64(i), 0)
 
@@ -101,11 +127,11 @@ func NewTestChain(t *testing.T, chainIdx int) *TestChain {
 		genAccPrivKeys = append(genAccPrivKeys, accPrivKey)
 	}
 
-	genAmt, ok := sdk.NewIntFromString(genBalanceAmount)
+	genAmt, ok := sdk.NewIntFromString(chainCfg.GenBalanceAmount)
 	require.True(t, ok)
 	genCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, genAmt))
 
-	bondAmt, ok := sdk.NewIntFromString(bondAmount)
+	bondAmt, ok := sdk.NewIntFromString(chainCfg.BondAmount)
 	require.True(t, ok)
 	bondCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))
 
@@ -147,15 +173,15 @@ func NewTestChain(t *testing.T, chainIdx int) *TestChain {
 	// Update x/bank genesis with total supply, gen account balances and bonding pool balance
 	totalSupply := sdk.NewCoins()
 	bondedPoolCoins := sdk.NewCoins()
-	balances := make([]bankTypes.Balance, 0, genAccsN)
-	for i := 0; i < genAccsN; i++ {
+	balances := make([]bankTypes.Balance, 0, chainCfg.GenAccountsNum)
+	for i := 0; i < chainCfg.GenAccountsNum; i++ {
 		balances = append(balances, bankTypes.Balance{
 			Address: genAccs[i].GetAddress().String(),
 			Coins:   genCoins,
 		})
 		totalSupply = totalSupply.Add(genCoins...)
 	}
-	for i := 0; i < validatorsN; i++ {
+	for i := 0; i < chainCfg.ValidatorsNum; i++ {
 		bondedPoolCoins = bondedPoolCoins.Add(bondCoins...)
 		totalSupply = totalSupply.Add(bondCoins...)
 	}
@@ -167,6 +193,17 @@ func NewTestChain(t *testing.T, chainIdx int) *TestChain {
 	bankGenesis := bankTypes.NewGenesisState(bankTypes.DefaultGenesisState().Params, balances, totalSupply, []bankTypes.Metadata{})
 	genState[bankTypes.ModuleName] = archApp.AppCodec().MustMarshalJSON(bankGenesis)
 
+	// Apply genesis options
+	for _, opt := range genStateOpts {
+		opt(archApp.AppCodec(), genState)
+	}
+
+	// Apply consensus params options
+	consensusParams := app.DefaultConsensusParams
+	for _, opt := range consensusParamsOpts {
+		opt(consensusParams)
+	}
+
 	// Init chain
 	genStateBytes, err := json.MarshalIndent(genState, "", " ")
 	require.NoError(t, err)
@@ -174,7 +211,7 @@ func NewTestChain(t *testing.T, chainIdx int) *TestChain {
 	archApp.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: app.DefaultConsensusParams,
+			ConsensusParams: consensusParams,
 			AppStateBytes:   genStateBytes,
 		},
 	)
@@ -192,11 +229,11 @@ func NewTestChain(t *testing.T, chainIdx int) *TestChain {
 		valSigners:  valSigners,
 		accPrivKeys: genAccPrivKeys,
 	}
-	chain.beginBlock()
-	chain.endBlock()
+	chain.BeginBlock()
+	chain.EndBlock()
 
 	// Start a new block
-	chain.beginBlock()
+	chain.BeginBlock()
 	return &chain
 }
 
@@ -218,9 +255,25 @@ func (chain *TestChain) GetBalance(accAddr sdk.AccAddress) sdk.Coins {
 	return chain.app.BankKeeper.GetAllBalances(chain.GetContext(), accAddr)
 }
 
+// GetModuleBalance returns the balance of the given module.
+func (chain *TestChain) GetModuleBalance(moduleName string) sdk.Coins {
+	ctx := chain.GetContext()
+	moduleAcc := chain.app.AccountKeeper.GetModuleAccount(ctx, moduleName)
+
+	return chain.app.BankKeeper.GetAllBalances(chain.GetContext(), moduleAcc.GetAddress())
+}
+
 // GetContext returns a context for the current block.
 func (chain *TestChain) GetContext() sdk.Context {
-	return chain.app.BaseApp.NewContext(false, chain.curHeader)
+	ctx := chain.app.BaseApp.NewContext(false, chain.curHeader)
+
+	blockGasMeter := sdk.NewInfiniteGasMeter()
+	blockMaxGas := chain.app.GetConsensusParams(ctx).Block.MaxGas
+	if blockMaxGas >= 0 {
+		blockGasMeter = sdk.NewGasMeter(sdk.Gas(blockMaxGas))
+	}
+
+	return ctx.WithBlockGasMeter(blockGasMeter)
 }
 
 // GetAppCodec returns the application codec.
@@ -248,32 +301,81 @@ func (chain *TestChain) GetUnbondingTime() time.Duration {
 	return chain.app.StakingKeeper.UnbondingTime(chain.GetContext())
 }
 
+// GetApp returns the application.
+func (chain *TestChain) GetApp() *app.ArchwayApp {
+	return chain.app
+}
+
 // NextBlock starts a new block with options time shift.
-func (chain *TestChain) NextBlock(skipTime time.Duration) {
-	chain.endBlock()
+func (chain *TestChain) NextBlock(skipTime time.Duration) []abci.Event {
+	ebEvents := chain.EndBlock()
 
 	chain.curHeader.Time = chain.curHeader.Time.Add(skipTime)
-	chain.beginBlock()
+	bbEvents := chain.BeginBlock()
+
+	return append(ebEvents, bbEvents...)
+}
+
+// BeginBlock begins a new block.
+func (chain *TestChain) BeginBlock() []abci.Event {
+	const blockDur = 5 * time.Second
+
+	chain.lastHeader = chain.curHeader
+
+	chain.curHeader.Height++
+	chain.curHeader.Time = chain.curHeader.Time.Add(blockDur)
+	chain.curHeader.AppHash = chain.app.LastCommitID().Hash
+	chain.curHeader.ValidatorsHash = chain.valSet.Hash()
+	chain.curHeader.NextValidatorsHash = chain.valSet.Hash()
+
+	res := chain.app.BeginBlock(abci.RequestBeginBlock{Header: chain.curHeader})
+
+	return res.Events
+}
+
+// EndBlock finalizes the current block.
+func (chain *TestChain) EndBlock() []abci.Event {
+	res := chain.app.EndBlock(abci.RequestEndBlock{Height: chain.curHeader.Height})
+	chain.app.Commit()
+
+	return res.Events
 }
 
 type SendMsgOption func(opt *sendMsgOptions)
 
 type sendMsgOptions struct {
-	fees     sdk.Coins
-	gasLimit uint64
+	fees          sdk.Coins
+	gasLimit      uint64
+	noBlockChange bool
 }
 
-func SendMsgWithFees(coins sdk.Coins) SendMsgOption {
+// WithMsgFees option add fees to the transaction.
+func WithMsgFees(coins ...sdk.Coin) SendMsgOption {
 	return func(opt *sendMsgOptions) {
 		opt.fees = coins
 	}
 }
 
+// WithTxGasLimit option overrides the default gas limit for the transaction.
+func WithTxGasLimit(limit uint64) SendMsgOption {
+	return func(opt *sendMsgOptions) {
+		opt.gasLimit = limit
+	}
+}
+
+// WithoutBlockChange option disables EndBlocker and BeginBlocker after the transaction.
+func WithoutBlockChange() SendMsgOption {
+	return func(opt *sendMsgOptions) {
+		opt.noBlockChange = true
+	}
+}
+
 // SendMsgs sends a series of messages.
-func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, error) {
+func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, []abci.Event, error) {
 	options := &sendMsgOptions{
-		fees:     sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)),
-		gasLimit: 10_000_000,
+		fees:          sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)),
+		gasLimit:      10_000_000,
+		noBlockChange: false,
 	}
 
 	for _, o := range opts {
@@ -281,6 +383,7 @@ func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg
 	}
 
 	t := chain.t
+	var abciEvents []abci.Event
 
 	// Get the sender account
 	senderAccI := chain.app.AccountKeeper.GetAccount(chain.GetContext(), senderAcc.Address)
@@ -308,11 +411,16 @@ func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg
 		require.Error(t, err)
 		require.Nil(t, res)
 	}
+	if res != nil {
+		abciEvents = append(abciEvents, res.Events...)
+	}
 
-	chain.endBlock()
-	chain.beginBlock()
+	if !options.noBlockChange {
+		abciEvents = append(abciEvents, chain.EndBlock()...)
+		abciEvents = append(abciEvents, chain.BeginBlock()...)
+	}
 
-	return gasInfo, res, err
+	return gasInfo, res, abciEvents, err
 }
 
 // ParseSDKResultData converts TX result data into a slice of Msgs.
@@ -325,25 +433,4 @@ func (chain *TestChain) ParseSDKResultData(r *sdk.Result) sdk.TxMsgData {
 	require.NoError(chain.t, proto.Unmarshal(r.Data, &protoResult))
 
 	return protoResult
-}
-
-// beginBlock begins a new block.
-func (chain *TestChain) beginBlock() {
-	const blockDur = 5 * time.Second
-
-	chain.lastHeader = chain.curHeader
-
-	chain.curHeader.Height++
-	chain.curHeader.Time = chain.curHeader.Time.Add(blockDur)
-	chain.curHeader.AppHash = chain.app.LastCommitID().Hash
-	chain.curHeader.ValidatorsHash = chain.valSet.Hash()
-	chain.curHeader.NextValidatorsHash = chain.valSet.Hash()
-
-	chain.app.BeginBlock(abci.RequestBeginBlock{Header: chain.curHeader})
-}
-
-// endBlock finalizes the current block.
-func (chain *TestChain) endBlock() {
-	chain.app.EndBlock(abci.RequestEndBlock{Height: chain.curHeader.Height})
-	chain.app.Commit()
 }

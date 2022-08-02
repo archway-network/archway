@@ -1,0 +1,13 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 70
+        threshold: 1%
+
+    patch:
+      default: false
+ignore:
+  - "**/*.pb.go"
+  - "third_party"
+  - "vendor"

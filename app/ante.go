@@ -2,16 +2,18 @@
 package app
 
 import (
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
-	gastrackerante "github.com/archway-network/archway/x/gastracker/ante"
+	rewardsAnte "github.com/archway-network/archway/x/rewards/ante"
+	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
+	trackingAnte "github.com/archway-network/archway/x/tracking/ante"
+	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
@@ -24,7 +26,8 @@ type HandlerOptions struct {
 
 	TXCounterStoreKey sdk.StoreKey
 
-	GasTrackingKeeper gastrackerante.GasTrackingKeeper
+	TrackingKeeper trackingKeeper.Keeper
+	RewardsKeeper  rewardsKeeper.Keeper
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -63,8 +66,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		// custom archway fee deduction, which splits fees between gastracker and auths fee collector
-		gastrackerante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.GasTrackingKeeper),
+		// Custom Archway interceptor to track new transactions
+		trackingAnte.NewTxGasTrackingDecorator(options.TrackingKeeper),
+		// Custom Archway fee deduction, which splits fees between x/rewards and x/auth fee collector
+		rewardsAnte.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.RewardsKeeper),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
@@ -72,7 +77,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewAnteDecorator(options.IBCKeeper),
-		gastrackerante.NewTxGasTrackingDecorator(options.GasTrackingKeeper),
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil
