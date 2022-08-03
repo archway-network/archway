@@ -13,7 +13,7 @@ import (
 func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the tracking module",
+		Short:                      "Querying commands for the rewards module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
