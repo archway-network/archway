@@ -95,3 +95,25 @@ func (s *QueryServer) RewardsPool(c context.Context, request *types.QueryRewards
 		Funds: s.keeper.UndistributedRewardsPool(ctx),
 	}, nil
 }
+
+// EstimateTxFees implements the types.QueryServer interface.
+func (s *QueryServer) EstimateTxFees(c context.Context, request *types.QueryEstimateTxFeesRequest) (*types.QueryEstimateTxFeesResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	minConsFee := s.keeper.GetMinConsensusFee(ctx)
+	if minConsFee == nil {
+		return nil, status.Errorf(codes.NotFound, "min consensus fee: not found")
+	}
+
+	return &types.QueryEstimateTxFeesResponse{
+		GasUnitPrice: *minConsFee,
+		EstimatedFee: sdk.Coin{
+			Denom:  minConsFee.Denom,
+			Amount: minConsFee.Amount.MulInt64(int64(request.GasLimit)).RoundInt(),
+		},
+	}, nil
+}

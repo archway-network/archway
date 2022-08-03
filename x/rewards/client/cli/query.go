@@ -23,6 +23,7 @@ func GetQueryCmd() *cobra.Command {
 		getQueryBlockRewardsTrackingCmd(),
 		getQueryContractMetadataCmd(),
 		getQueryUndistributedPoolFundsCmd(),
+		getQueryEstimateTxFeesCmd(),
 	)
 
 	return cmd
@@ -126,6 +127,39 @@ func getQueryUndistributedPoolFundsCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.RewardsPool(cmd.Context(), &types.QueryRewardsPoolRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func getQueryEstimateTxFeesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "estimate-fees [gas-limit]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query transaction fees estimation for a give gas limit",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			gasLimit, err := pkg.ParseUint64Arg("gas-limit", args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.EstimateTxFees(cmd.Context(), &types.QueryEstimateTxFeesRequest{
+				GasLimit: gasLimit,
+			})
 			if err != nil {
 				return err
 			}

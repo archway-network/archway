@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -14,4 +15,14 @@ func ParseAccAddressArg(argName, argValue string) (sdk.AccAddress, error) {
 	}
 
 	return addr, nil
+}
+
+// ParseUint64Arg is a helper function to parse uint64 CLI argument.
+func ParseUint64Arg(argName, argValue string) (uint64, error) {
+	v, err := strconv.ParseUint(argValue, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("parsing %s argument: invalid uint64 value: %w", argName, err)
+	}
+
+	return v, nil
 }

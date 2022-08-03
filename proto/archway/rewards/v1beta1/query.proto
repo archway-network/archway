@@ -29,6 +29,12 @@ service Query {
   rpc RewardsPool(QueryRewardsPoolRequest) returns (QueryRewardsPoolResponse) {
     option (google.api.http).get = "/archway/rewards/v1/rewards_pool";
   }
+
+  // EstimateTxFees returns the estimated transaction fees for the given transaction
+  // gas limit using the minimum consensus fee value for the current block.
+  rpc EstimateTxFees(QueryEstimateTxFeesRequest) returns (QueryEstimateTxFeesResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/estimate_tx_fees";
+  }
 }
 
 // QueryParamsRequest is the request for Query.Params.
@@ -70,6 +76,25 @@ message QueryRewardsPoolRequest {}
 // QueryRewardsPoolResponse is the response for Query.RewardsPool.
 message QueryRewardsPoolResponse {
   repeated cosmos.base.v1beta1.Coin funds = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryEstimateTxFeesRequest is the request for Query.EstimateTxFees.
+message QueryEstimateTxFeesRequest {
+  // gas_limit is the transaction gas limit.
+  uint64 gas_limit = 1;
+}
+
+// QueryEstimateTxFeesResponse is the response for Query.EstimateTxFees.
+message QueryEstimateTxFeesResponse {
+  // gas_unit_price defines the minimum transaction fee per gas unit.
+  cosmos.base.v1beta1.DecCoin gas_unit_price = 1 [
+    (gogoproto.nullable) = false
+  ];
+
+  // estimated_fee is the estimated transaction fee for a given gas limit.
+  cosmos.base.v1beta1.Coin estimated_fee = 2 [
     (gogoproto.nullable) = false
   ];
 }

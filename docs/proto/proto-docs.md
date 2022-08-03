@@ -54,6 +54,8 @@
     - [QueryBlockRewardsTrackingResponse](#archway.rewards.v1beta1.QueryBlockRewardsTrackingResponse)
     - [QueryContractMetadataRequest](#archway.rewards.v1beta1.QueryContractMetadataRequest)
     - [QueryContractMetadataResponse](#archway.rewards.v1beta1.QueryContractMetadataResponse)
+    - [QueryEstimateTxFeesRequest](#archway.rewards.v1beta1.QueryEstimateTxFeesRequest)
+    - [QueryEstimateTxFeesResponse](#archway.rewards.v1beta1.QueryEstimateTxFeesResponse)
     - [QueryParamsRequest](#archway.rewards.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#archway.rewards.v1beta1.QueryParamsResponse)
     - [QueryRewardsPoolRequest](#archway.rewards.v1beta1.QueryRewardsPoolRequest)
@@ -712,6 +714,37 @@ QueryContractMetadataResponse is the response for Query.ContractMetadata.
 
 
 
+<a name="archway.rewards.v1beta1.QueryEstimateTxFeesRequest"></a>
+
+### QueryEstimateTxFeesRequest
+QueryEstimateTxFeesRequest is the request for Query.EstimateTxFees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `gas_limit` | [uint64](#uint64) |  | gas_limit is the transaction gas limit. |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.QueryEstimateTxFeesResponse"></a>
+
+### QueryEstimateTxFeesResponse
+QueryEstimateTxFeesResponse is the response for Query.EstimateTxFees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `gas_unit_price` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  | gas_unit_price defines the minimum transaction fee per gas unit. |
+| `estimated_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | estimated_fee is the estimated transaction fee for a given gas limit. |
+
+
+
+
+
+
 <a name="archway.rewards.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -779,6 +812,7 @@ Query service for the tracking module.
 | `ContractMetadata` | [QueryContractMetadataRequest](#archway.rewards.v1beta1.QueryContractMetadataRequest) | [QueryContractMetadataResponse](#archway.rewards.v1beta1.QueryContractMetadataResponse) | ContractMetadata returns the contract rewards parameters (metadata). | GET|/archway/rewards/v1/contract_metadata|
 | `BlockRewardsTracking` | [QueryBlockRewardsTrackingRequest](#archway.rewards.v1beta1.QueryBlockRewardsTrackingRequest) | [QueryBlockRewardsTrackingResponse](#archway.rewards.v1beta1.QueryBlockRewardsTrackingResponse) | BlockRewardsTracking returns block rewards tracking for the current block. | GET|/archway/rewards/v1/block_rewards_tracking|
 | `RewardsPool` | [QueryRewardsPoolRequest](#archway.rewards.v1beta1.QueryRewardsPoolRequest) | [QueryRewardsPoolResponse](#archway.rewards.v1beta1.QueryRewardsPoolResponse) | RewardsPool returns the current undistributed rewards pool funds. | GET|/archway/rewards/v1/rewards_pool|
+| `EstimateTxFees` | [QueryEstimateTxFeesRequest](#archway.rewards.v1beta1.QueryEstimateTxFeesRequest) | [QueryEstimateTxFeesResponse](#archway.rewards.v1beta1.QueryEstimateTxFeesResponse) | EstimateTxFees returns the estimated transaction fees for the given transaction gas limit using the minimum consensus fee value for the current block. | GET|/archway/rewards/v1/estimate_tx_fees|
 
  <!-- end services -->
 
