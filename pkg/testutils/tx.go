@@ -38,6 +38,13 @@ func WithMockFeeTxPayer(payer sdk.AccAddress) MockFeeTxOption {
 	}
 }
 
+// WithMockFeeTxGas option sets the gas limit of the MockFeeTx.
+func WithMockFeeTxGas(gas uint64) MockFeeTxOption {
+	return func(tx *MockFeeTx) {
+		tx.gas = gas
+	}
+}
+
 // NewMockFeeTx creates a new MockFeeTx instance.
 // CONTRACT: tx has no defaults, so it is up to a developer to set options right.
 func NewMockFeeTx(opts ...MockFeeTxOption) MockFeeTx {

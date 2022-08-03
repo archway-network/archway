@@ -2,15 +2,20 @@ package types
 
 import (
 	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/pkg"
 )
 
 // NewGenesisState creates a new GenesisState object.
-func NewGenesisState(params Params, contractsMetadata []ContractMetadata, blockRewards []BlockRewards, txRewards []TxRewards) *GenesisState {
+func NewGenesisState(params Params, contractsMetadata []ContractMetadata, blockRewards []BlockRewards, txRewards []TxRewards, minConsFee sdk.DecCoin) *GenesisState {
 	return &GenesisState{
 		Params:            params,
 		ContractsMetadata: contractsMetadata,
 		BlockRewards:      blockRewards,
 		TxRewards:         txRewards,
+		MinConsensusFee:   minConsFee,
 	}
 }
 
@@ -21,6 +26,7 @@ func DefaultGenesisState() *GenesisState {
 		ContractsMetadata: []ContractMetadata{},
 		BlockRewards:      []BlockRewards{},
 		TxRewards:         []TxRewards{},
+		MinConsensusFee:   sdk.DecCoin{},
 	}
 }
 
@@ -65,6 +71,12 @@ func (m GenesisState) Validate() error {
 			return fmt.Errorf("txRewards [%d]: duplicated txId: %d", i, txRewards.TxId)
 		}
 		txRewardsIdSet[txRewards.TxId] = struct{}{}
+	}
+
+	if !pkg.DecCoinIsZero(m.MinConsensusFee) {
+		if err := pkg.ValidateDecCoin(m.MinConsensusFee); err != nil {
+			return fmt.Errorf("minConsensusFee: %w", err)
+		}
 	}
 
 	return nil

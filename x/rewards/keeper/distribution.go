@@ -102,10 +102,8 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 
 	// Fetch tracked block rewards by the x/rewards module (might not be found in case this reward is disabled)
 	inlfationRewardsEligible := false
-	var blockGasLimit sdk.Dec
 	blockRewards, found := k.state.BlockRewardsState(ctx).GetBlockRewards(blockDistrState.Height)
 	if found && blockRewards.HasRewards() && blockRewards.HasGasLimit() {
-		blockGasLimit = pkg.NewDecFromUint64(blockRewards.MaxGas)
 		inlfationRewardsEligible = true
 	} else {
 		k.Logger(ctx).Debug("No inflation rewards to distribute (no record / empty coin / gas limit not set)", "height", blockDistrState.Height)
@@ -127,7 +125,7 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 		// Estimate contract inflation rewards
 		if inlfationRewardsEligible {
 			gasUsed := pkg.NewDecFromUint64(contractDistrState.BlockGasUsed)
-			rewardsShare := gasUsed.Quo(blockGasLimit)
+			rewardsShare := gasUsed.Quo(pkg.NewDecFromUint64(blockRewards.MaxGas))
 
 			contractDistrState.InflationaryRewards = sdk.NewCoin(
 				blockRewards.InflationRewards.Denom,

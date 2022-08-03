@@ -8,22 +8,64 @@ import (
 	voterTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
+// TestTxFees ensures that a transaction fees paid are less than rewards received.
+// Test configures a chain based on the Archway mainnet parameters.
 func (s *E2ETestSuite) TestTxFees() {
+	const (
+		txGasLimit        = 200_000
+		txFeeAmtIncrement = 1000
+	)
+
+	coinsToStr := func(coins ...sdk.Coin) string {
+		return fmt.Sprintf("%12s", e2eTesting.HumanizeCoins(6, coins...))
+	}
+
+	minConfFeeToStr := func(coin sdk.DecCoin) string {
+		if coin.IsZero() {
+			return "-"
+		}
+		return fmt.Sprintf("%8s", e2eTesting.HumanizeDecCoins(0, coin))
+	}
+
 	// Create a custom chain with fixed inflation (10%) and 10M block gas limit
 	chain := e2eTesting.NewTestChain(s.T(), 1,
-		e2eTesting.WithBlockGasLimit(10_000_000),
+		// Set 1B total supply (10^9 * 10^6) (Archway mainnet param)
+		e2eTesting.WithGenAccounts(1),
+		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		// Set bonded ratio to 30%
+		e2eTesting.WithBondAmount("300000000000000"),
+		// Override the default Tx fee
+		e2eTesting.WithDefaultFeeAmount("10000000"),
+		// Set block gas limit (Archway mainnet param)
+		e2eTesting.WithBlockGasLimit(100_000_000),
+		// x/rewards distribution params
+		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)), // 50 % (Archway mainnet param)
+		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),    // 20 % (Archway mainnet param)
+		// Set constant inflation rate
 		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(1, 1), // 10%
-			sdk.NewDecWithPrec(1, 1), // 10%
-			uint64(60*60*8766/5),     // standard calculation
+			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)
+			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)
+			uint64(60*60*8766/1),      //1 seconds block time (Archway mainnet param)
 		),
 	)
+
+	// Check total supply
+	{
+		ctx := chain.GetContext()
+
+		totalSupplyMaxAmtExpected, ok := sdk.NewIntFromString("1000000050000000") // small gap for minted coins for 2 blocks
+		s.Require().True(ok)
+
+		totalSupplyReceived := chain.GetApp().BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
+		s.Require().True(totalSupplyReceived.Amount.LTE(totalSupplyMaxAmtExpected), "total supply", totalSupplyReceived.String())
+	}
 
 	senderAcc := chain.GetAccount(0)
 	contractAddr := s.VoterUploadAndInstantiate(chain, senderAcc)
@@ -36,11 +78,48 @@ func (s *E2ETestSuite) TestTxFees() {
 		RewardsAddress: rewardsAddr.String(),
 	})
 
-	txFee := sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt())
+	// Get minted inflation amount
+	{
+		ctx := chain.GetContext()
+
+		mintParams := chain.GetApp().MintKeeper.GetParams(ctx)
+		mintedCoin := chain.GetApp().MintKeeper.GetMinter(ctx).BlockProvision(mintParams)
+		s.T().Logf("x/mint minted amount per block: %s", coinsToStr(mintedCoin))
+	}
+
+	var abciEvents []abci.Event
+	txFee := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(0)} // this one gonna increase
 	rewardsAccPrevBalance := chain.GetBalance(rewardsAddr)
-	for i := 0; i < 10; i++ {
+
+	// Generate transactions and check fees (some txs might fail with InsufficientFee error)
+	for i := 0; i < 100; i++ {
+		// Increase next TxFees
+		txFee.Amount = txFee.Amount.AddRaw(txFeeAmtIncrement)
+
+		// Get min consensus fee for the current block and check the update event
+		minConsensusFee := sdk.DecCoin{Amount: sdk.ZeroDec()}
+		{
+			ctx := chain.GetContext()
+
+			if fee := chain.GetApp().RewardsKeeper.GetMinConsensusFee(ctx); fee != nil {
+				minConsensusFee = *fee
+
+				// Check the event from the previous BeginBlocker
+				if len(abciEvents) > 0 {
+					eventFeeBz := e2eTesting.GetStringEventAttribute(abciEvents,
+						"archway.rewards.v1beta1.MinConsensusFeeSetEvent",
+						"fee",
+					)
+
+					var eventFee sdk.DecCoin
+					s.Require().NoError(json.Unmarshal([]byte(eventFeeBz), &eventFee))
+
+					s.Require().Equal(minConsensusFee.String(), eventFee.String())
+				}
+			}
+		}
+
 		// Send Tx
-		var abciEvents []abci.Event
 		var txGasUsed uint64
 		{
 			req := voterTypes.MsgExecute{
@@ -59,12 +138,30 @@ func (s *E2ETestSuite) TestTxFees() {
 				Msg:      reqBz,
 				Funds:    sdk.NewCoins(sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewIntFromUint64(DefNewVotingCostAmt)}),
 			}
-			gasUsed, _, events, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{&msg},
-				e2eTesting.WithMsgFees(txFee),
-			)
 
-			abciEvents, txGasUsed = events, gasUsed.GasUsed
+			gasUsed, res, err := chain.SendMsgsRaw(senderAcc, []sdk.Msg{&msg},
+				e2eTesting.WithMsgFees(txFee),
+				e2eTesting.WithTxGasLimit(txGasLimit),
+			)
+			if err != nil {
+				s.Require().ErrorIs(err, sdkErrors.ErrInsufficientFee)
+
+				s.T().Logf("TxID %03d: %s fees (%s minConsFee): insufficient fees: %v",
+					i,
+					coinsToStr(txFee), minConfFeeToStr(minConsensusFee),
+					err,
+				)
+
+				// Skip the block to avoid "out of gas" for this one
+				abciEvents = chain.NextBlock(0)
+				continue
+			}
+
+			abciEvents, txGasUsed = res.Events, gasUsed.GasUsed
 		}
+
+		// Start a new block to get rewards and tracking for the previous one
+		abciEvents = append(abciEvents, chain.NextBlock(0)...)
 
 		// Get gas tracked for this Tx
 		var txGasTracked uint64
@@ -117,13 +214,16 @@ func (s *E2ETestSuite) TestTxFees() {
 		}
 
 		// Output
-		fmt.Printf("TxID %d (gas %d / %d): \t%s fees (%s infl rewards) -> \t%s rewards taken (%s + %s)\n",
-			i, txGasTracked, txGasUsed,
-			txFee.String(), blockRewards.String(), rewardsAddrBalanceDiff.String(),
-			feeRebateRewards.String(), inflationRewards.String(),
+		s.T().Logf("TxID %03d (gas %06d / %06d / %06d): %s fees (%s inflRewards, %s minConsFee) -> %s rewards taken (%s + %s)",
+			i, txGasTracked, txGasUsed, txGasLimit,
+			coinsToStr(txFee),
+			coinsToStr(blockRewards), minConfFeeToStr(minConsensusFee),
+			coinsToStr(rewardsAddrBalanceDiff...), coinsToStr(feeRebateRewards...), coinsToStr(inflationRewards),
 		)
 
-		// Increase next TxFees
-		txFee.Amount = txFee.Amount.AddRaw(1)
+		// Check rewards are lower than the fee paid
+		{
+			s.Assert().True(rewardsAddrBalanceDiff.IsAllLT(sdk.Coins{txFee}))
+		}
 	}
 }

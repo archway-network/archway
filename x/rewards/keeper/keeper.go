@@ -9,6 +9,7 @@ import (
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/rewards/types"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
 )
@@ -150,6 +151,52 @@ func (k Keeper) TrackInflationRewards(ctx sdk.Context, rewards sdk.Coin) {
 	)
 }
 
+// UpdateMinConsensusFee calculates and updates the minimum consensus fee if eligible emitting an event.
+func (k Keeper) UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin) {
+	// Prepare and verify inputs
+	if inflationRewards.IsZero() {
+		k.Logger(ctx).Info("Minimum consensus fee update skipped: inflation rewards are zero")
+		return
+	}
+	inflationRewardsAmt := inflationRewards.Amount.ToDec()
+
+	blockGasLimit := pkg.NewDecFromUint64(ctx.BlockGasMeter().Limit())
+	if blockGasLimit.IsZero() {
+		k.Logger(ctx).Info("Minimum consensus fee update skipped: block gas limit is not set")
+		return
+	}
+
+	txFeeRebateRatio := k.TxFeeRebateRatio(ctx)
+
+	// Calculate
+	feeAmt := calculateMinConsensusFeeAmt(inflationRewardsAmt, blockGasLimit, txFeeRebateRatio)
+	if feeAmt.IsZero() {
+		k.Logger(ctx).Info("Minimum consensus fee update skipped: calculated amount is zero")
+		return
+	}
+	feeCoin := sdk.DecCoin{
+		Denom:  inflationRewards.Denom,
+		Amount: feeAmt,
+	}
+
+	// Set and emit event
+	k.state.MinConsensusFee(ctx).SetFee(feeCoin)
+	k.Logger(ctx).Info("Minimum consensus fee update", "fee", feeCoin)
+
+	types.EmitMinConsensusFeeSetEvent(ctx, feeCoin)
+}
+
+// GetMinConsensusFee returns the minimum consensus fee.
+// Fee defines the minimum gas unit price for a transaction to be included in a block.
+func (k Keeper) GetMinConsensusFee(ctx sdk.Context) *sdk.DecCoin {
+	fee, found := k.state.MinConsensusFee(ctx).GetFee()
+	if !found {
+		return nil
+	}
+
+	return &fee
+}
+
 // UndistributedRewardsPool returns the current undistributed rewards leftovers.
 func (k Keeper) UndistributedRewardsPool(ctx sdk.Context) sdk.Coins {
 	poolAcc := k.authKeeper.GetModuleAccount(ctx, types.ContractRewardCollector)
@@ -160,4 +207,15 @@ func (k Keeper) UndistributedRewardsPool(ctx sdk.Context) sdk.Coins {
 // Only for testing purposes.
 func (k *Keeper) SetContractInfoViewer(viewer ContractInfoReaderExpected) {
 	k.contractInfoView = viewer
+}
+
+// calculateMinConsensusFee calculates the minimum consensus fee amount using the formula:
+//   -1 * ( BlockRewards / ( GasLimit * (TxFeeRatio - 1) ) )
+// A simplified expression is used, original from specs: -1 * ( BlockRewards / ( GasLimit * TxFeeRatio - GasLimit ) )
+func calculateMinConsensusFeeAmt(blockRewards, gasLimit, txFeeRatio sdk.Dec) sdk.Dec {
+	return blockRewards.Quo(
+		gasLimit.Mul(
+			txFeeRatio.Sub(sdk.OneDec()),
+		),
+	).Neg()
 }

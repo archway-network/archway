@@ -17,6 +17,7 @@ var _ mintTypes.BankKeeper = Keeper{}
 type RewardsKeeperExpected interface {
 	InflationRewardsRatio(ctx sdk.Context) sdk.Dec
 	TrackInflationRewards(ctx sdk.Context, rewards sdk.Coin)
+	UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin)
 }
 
 // Keeper is the x/bank keeper decorator that is used by the x/mint module.
@@ -66,6 +67,8 @@ func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recip
 
 	// Track inflation rewards
 	k.rewardsKeeper.TrackInflationRewards(ctx, dappRewards[0])
+	// Update the minimum consensus fee
+	k.rewardsKeeper.UpdateMinConsensusFee(ctx, dappRewards[0])
 
 	return nil
 }

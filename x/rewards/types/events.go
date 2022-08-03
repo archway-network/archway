@@ -39,3 +39,12 @@ func EmitContractRewardDistributionEvent(ctx sdk.Context, contractAddr, rewardAd
 		panic(fmt.Errorf("sending ContractRewardDistributionEvent event: %w", err))
 	}
 }
+
+func EmitMinConsensusFeeSetEvent(ctx sdk.Context, fee sdk.DecCoin) {
+	err := ctx.EventManager().EmitTypedEvent(&MinConsensusFeeSetEvent{
+		Fee: fee,
+	})
+	if err != nil {
+		panic(fmt.Errorf("sending MinConsensusFeeSetEvent event: %w", err))
+	}
+}

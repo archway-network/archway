@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
@@ -182,6 +183,24 @@ func TestMintBankKeeper(t *testing.T) {
 			assert.Equal(t, ctx.BlockHeight(), rewardsRecordReceived.Height)
 			assert.Equal(t, rewardsDiffExpected.String(), rewardsRecordReceived.InflationRewards.String())
 			assert.Equal(t, maxGasExpected, rewardsRecordReceived.MaxGas)
+
+			// Check minimum consensus fee record
+			minConsFeeReceived, minConfFeeFound := chain.GetApp().RewardsKeeper.GetState().MinConsensusFee(ctx).GetFee()
+			if maxGasExpected == 0 || rewardsDiffExpected.IsZero() {
+				assert.False(t, minConfFeeFound)
+			} else {
+				require.True(t, minConfFeeFound)
+
+				minConsFeeExpected := sdk.DecCoin{
+					Denom: sdk.DefaultBondDenom,
+					Amount: rewardsDiffExpected[0].Amount.ToDec().Quo(
+						pkg.NewDecFromUint64(maxGasExpected).Mul(
+							chain.GetApp().RewardsKeeper.TxFeeRebateRatio(ctx).Sub(sdk.OneDec()),
+						),
+					).Neg(),
+				}
+				assert.Equal(t, minConsFeeExpected.String(), minConsFeeReceived.String())
+			}
 		})
 	}
 }

@@ -42,6 +42,7 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				TxRewards: []rewardsTypes.TxRewards{
 					{TxId: 1, Height: 1},
 				},
+				MinConsensusFee: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.OneInt()),
 			},
 		},
 		{
@@ -126,6 +127,17 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				Params: rewardsTypes.DefaultParams(),
 				TxRewards: []rewardsTypes.TxRewards{
 					{TxId: 1, Height: 1},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid MinConsensusFee",
+			genesisState: rewardsTypes.GenesisState{
+				Params: rewardsTypes.DefaultParams(),
+				MinConsensusFee: sdk.DecCoin{
+					Denom:  sdk.DefaultBondDenom,
+					Amount: sdk.NewDec(-1),
 				},
 			},
 			errExpected: true,

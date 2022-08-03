@@ -51,3 +51,14 @@ var (
 	// Value: None
 	TxRewardsBlockIndexPrefix = []byte{0x01}
 )
+
+// Minimum consensus fee store state keys.
+var (
+	// MinConsFeeStatePrefix defines the state global prefix.
+	MinConsFeeStatePrefix = []byte{0x03}
+
+	// MinConsFeeKey defines the key for storing MinConsFee coin.
+	// Key: MinConsFeeStatePrefix | MinConsFeeKey
+	// Value: sdk.Coin
+	MinConsFeeKey = []byte{0x00}
+)

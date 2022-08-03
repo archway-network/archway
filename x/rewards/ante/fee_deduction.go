@@ -14,8 +14,10 @@ import (
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
-// RewardsKeeperExpected defines the expected interface for the x/rewards keeper.
-type RewardsKeeperExpected interface {
+var _ sdk.AnteDecorator = DeductFeeDecorator{}
+
+// TxFeeRewardsKeeperExpected defines the expected interface for the x/rewards keeper.
+type TxFeeRewardsKeeperExpected interface {
 	TxFeeRebateRatio(ctx sdk.Context) sdk.Dec
 	TrackFeeRebatesRewards(ctx sdk.Context, rewards sdk.Coins)
 }
@@ -28,11 +30,11 @@ type DeductFeeDecorator struct {
 	ak             ante.AccountKeeper
 	bankKeeper     authTypes.BankKeeper
 	feegrantKeeper ante.FeegrantKeeper
-	rewardsKeeper  RewardsKeeperExpected
+	rewardsKeeper  TxFeeRewardsKeeperExpected
 }
 
 // NewDeductFeeDecorator returns a new DeductFeeDecorator instance.
-func NewDeductFeeDecorator(ak ante.AccountKeeper, bk authTypes.BankKeeper, fk ante.FeegrantKeeper, rk RewardsKeeperExpected) DeductFeeDecorator {
+func NewDeductFeeDecorator(ak ante.AccountKeeper, bk authTypes.BankKeeper, fk ante.FeegrantKeeper, rk TxFeeRewardsKeeperExpected) DeductFeeDecorator {
 	return DeductFeeDecorator{
 		ak:             ak,
 		bankKeeper:     bk,
@@ -41,7 +43,7 @@ func NewDeductFeeDecorator(ak ante.AccountKeeper, bk authTypes.BankKeeper, fk an
 	}
 }
 
-// AnteHandle implements the ante.AnteHandler interface.
+// AnteHandle implements the ante.AnteDecorator interface.
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {

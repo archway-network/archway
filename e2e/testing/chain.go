@@ -39,6 +39,7 @@ import (
 type TestChain struct {
 	t *testing.T
 
+	cfg         chainConfig
 	app         *app.ArchwayApp         // main application
 	lastHeader  tmProto.Header          // header for the last committed block
 	curHeader   tmProto.Header          // header for the current block
@@ -72,12 +73,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	}
 
 	// Define chain config
-	chainCfg := chainConfig{
-		ValidatorsNum:    1,
-		GenAccountsNum:   5,
-		GenBalanceAmount: "1000000000",
-		BondAmount:       "1000000",
-	}
+	chainCfg := defaultChainConfig()
 	for _, opt := range chainCfgOpts {
 		opt(&chainCfg)
 	}
@@ -86,8 +82,10 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	encCfg := app.MakeEncodingConfig()
 
 	// Pick your poison here =)
-	//logger := log.TestingLogger()
 	logger := log.NewNopLogger()
+	if chainCfg.LoggerEnabled {
+		logger = log.TestingLogger()
+	}
 
 	archApp := app.NewArchwayApp(
 		logger,
@@ -175,16 +173,20 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	bondedPoolCoins := sdk.NewCoins()
 	balances := make([]bankTypes.Balance, 0, chainCfg.GenAccountsNum)
 	for i := 0; i < chainCfg.GenAccountsNum; i++ {
+		accGenCoins := genCoins
+		// Lower genesis balance for validator account
+		if i < chainCfg.ValidatorsNum {
+			accGenCoins = accGenCoins.Sub(bondCoins)
+			bondedPoolCoins = bondedPoolCoins.Add(bondCoins...)
+		}
+
 		balances = append(balances, bankTypes.Balance{
 			Address: genAccs[i].GetAddress().String(),
-			Coins:   genCoins,
+			Coins:   accGenCoins,
 		})
 		totalSupply = totalSupply.Add(genCoins...)
 	}
-	for i := 0; i < chainCfg.ValidatorsNum; i++ {
-		bondedPoolCoins = bondedPoolCoins.Add(bondCoins...)
-		totalSupply = totalSupply.Add(bondCoins...)
-	}
+
 	balances = append(balances, bankTypes.Balance{
 		Address: authTypes.NewModuleAddress(stakingTypes.BondedPoolName).String(),
 		Coins:   bondedPoolCoins,
@@ -219,6 +221,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	// Create a chain and finalize the 1st block
 	chain := TestChain{
 		t:   t,
+		cfg: chainCfg,
 		app: archApp,
 		curHeader: tmProto.Header{
 			ChainID: chainIDPrefix + strconv.Itoa(chainIdx),
@@ -341,13 +344,15 @@ func (chain *TestChain) EndBlock() []abci.Event {
 	return res.Events
 }
 
-type SendMsgOption func(opt *sendMsgOptions)
+type (
+	SendMsgOption func(opt *sendMsgOptions)
 
-type sendMsgOptions struct {
-	fees          sdk.Coins
-	gasLimit      uint64
-	noBlockChange bool
-}
+	sendMsgOptions struct {
+		fees          sdk.Coins
+		gasLimit      uint64
+		noBlockChange bool
+	}
+)
 
 // WithMsgFees option add fees to the transaction.
 func WithMsgFees(coins ...sdk.Coin) SendMsgOption {
@@ -370,20 +375,36 @@ func WithoutBlockChange() SendMsgOption {
 	}
 }
 
-// SendMsgs sends a series of messages.
+// SendMsgs sends a series of messages, checks for tx failure and starts a new block.
 func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, []abci.Event, error) {
-	options := &sendMsgOptions{
-		fees:          sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)),
-		gasLimit:      10_000_000,
-		noBlockChange: false,
-	}
-
-	for _, o := range opts {
-		o(options)
-	}
+	var abciEvents []abci.Event
 
 	t := chain.t
-	var abciEvents []abci.Event
+
+	gasInfo, res, err := chain.SendMsgsRaw(senderAcc, msgs, opts...)
+	if expPass {
+		require.NoError(t, err)
+		require.NotNil(t, res)
+	} else {
+		require.Error(t, err)
+		require.Nil(t, res)
+	}
+	if res != nil {
+		abciEvents = append(abciEvents, res.Events...)
+	}
+
+	if !chain.buildSendMsgOptions(opts...).noBlockChange {
+		abciEvents = append(abciEvents, chain.EndBlock()...)
+		abciEvents = append(abciEvents, chain.BeginBlock()...)
+	}
+
+	return gasInfo, res, abciEvents, err
+}
+
+// SendMsgsRaw sends a series of messages.
+func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, error) {
+	t := chain.t
+	options := chain.buildSendMsgOptions(opts...)
 
 	// Get the sender account
 	senderAccI := chain.app.AccountKeeper.GetAccount(chain.GetContext(), senderAcc.Address)
@@ -403,24 +424,7 @@ func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg
 	require.NoError(t, err)
 
 	// Send the Tx
-	gasInfo, res, err := chain.app.Deliver(chain.txConfig.TxEncoder(), tx)
-	if expPass {
-		require.NoError(t, err)
-		require.NotNil(t, res)
-	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
-	}
-	if res != nil {
-		abciEvents = append(abciEvents, res.Events...)
-	}
-
-	if !options.noBlockChange {
-		abciEvents = append(abciEvents, chain.EndBlock()...)
-		abciEvents = append(abciEvents, chain.BeginBlock()...)
-	}
-
-	return gasInfo, res, abciEvents, err
+	return chain.app.Deliver(chain.txConfig.TxEncoder(), tx)
 }
 
 // ParseSDKResultData converts TX result data into a slice of Msgs.
@@ -433,4 +437,28 @@ func (chain *TestChain) ParseSDKResultData(r *sdk.Result) sdk.TxMsgData {
 	require.NoError(chain.t, proto.Unmarshal(r.Data, &protoResult))
 
 	return protoResult
+}
+
+// GetDefaultTxFee returns the default transaction fee (that one is used if SendMsgs has no other options).
+func (chain *TestChain) GetDefaultTxFee() sdk.Coins {
+	t := chain.t
+
+	feeAmt, ok := sdk.NewIntFromString(chain.cfg.DefaultFeeAmt)
+	require.True(t, ok)
+
+	return sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, feeAmt))
+}
+
+func (chain *TestChain) buildSendMsgOptions(opts ...SendMsgOption) sendMsgOptions {
+	options := sendMsgOptions{
+		fees:          chain.GetDefaultTxFee(),
+		gasLimit:      10_000_000,
+		noBlockChange: false,
+	}
+
+	for _, o := range opts {
+		o(&options)
+	}
+
+	return options
 }

@@ -16,6 +16,8 @@ type chainConfig struct {
 	GenAccountsNum   int
 	GenBalanceAmount string
 	BondAmount       string
+	LoggerEnabled    bool
+	DefaultFeeAmt    string
 }
 
 type (
@@ -25,6 +27,52 @@ type (
 
 	TestChainConsensusParamsOption func(params *abci.ConsensusParams)
 )
+
+// defaultChainConfig builds chain default config.
+func defaultChainConfig() chainConfig {
+	return chainConfig{
+		ValidatorsNum:    1,
+		GenAccountsNum:   5,
+		GenBalanceAmount: "1000000000",
+		BondAmount:       "1000000",
+		DefaultFeeAmt:    "100",
+	}
+}
+
+// WithGenAccounts sets the number of genesis accounts
+func WithGenAccounts(num int) TestChainConfigOption {
+	return func(cfg *chainConfig) {
+		cfg.GenAccountsNum = num
+	}
+}
+
+// WithGenDefaultCoinBalance sets the genesis account balance for the default token (stake).
+func WithGenDefaultCoinBalance(amount string) TestChainConfigOption {
+	return func(cfg *chainConfig) {
+		cfg.GenBalanceAmount = amount
+	}
+}
+
+// WithDefaultFeeAmount sets the default fee amount which is used for sending Msgs with no fee specified.
+func WithDefaultFeeAmount(amount string) TestChainConfigOption {
+	return func(cfg *chainConfig) {
+		cfg.DefaultFeeAmt = amount
+	}
+}
+
+// WithBondAmount sets the amount of coins to bond for each validator.
+func WithBondAmount(amount string) TestChainConfigOption {
+	return func(cfg *chainConfig) {
+		cfg.BondAmount = amount
+	}
+}
+
+// WithLogger enables the app console logger.
+func WithLogger() TestChainConfigOption {
+	return func(cfg *chainConfig) {
+		cfg.LoggerEnabled = true
+	}
+}
 
 // WithBlockGasLimit sets the block gas limit (not set by default).
 func WithBlockGasLimit(gasLimit int64) TestChainConsensusParamsOption {

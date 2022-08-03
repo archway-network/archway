@@ -37,8 +37,10 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		e2eTesting.WithMintParams(
 			sdk.NewDecWithPrec(8, 1),
 			sdk.NewDecWithPrec(8, 1),
-			1,
+			1000000,
 		),
+		// Set default Tx fee for non-manual transaction like Upload / Instantiate
+		e2eTesting.WithDefaultFeeAmount("10000"),
 	)
 	trackingKeeper, rewardsKeeper := chain.GetApp().TrackingKeeper, chain.GetApp().RewardsKeeper
 
@@ -47,7 +49,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	accAddrs, _ := e2eTesting.GenAccounts(1) // an empty account
 
 	// Inputs
-	txFees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))
+	txFees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)))
 	rewardsAddr := accAddrs[0]
 
 	// Collected values

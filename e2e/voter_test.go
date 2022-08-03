@@ -76,7 +76,8 @@ func (s *E2ETestSuite) TestVoter_ExecuteQueryAndReply() {
 		s.Assert().EqualValues(contractCoinsExp, releasedCoinsRcv)
 
 		acc1BalanceAfter := chain.GetBalance(acc1.Address)
-		s.Assert().EqualValues(acc1BalanceBefore.Add(contractCoinsExp...), acc1BalanceAfter)
+		acc1BalanceExpected := acc1BalanceBefore.Add(contractCoinsExp...).Sub(chain.GetDefaultTxFee())
+		s.Assert().EqualValues(acc1BalanceExpected.String(), acc1BalanceAfter.String())
 
 		releaseStats := s.VoterGetReleaseStats(chain, contractAddr)
 		s.Assert().EqualValues(1, releaseStats.Count)

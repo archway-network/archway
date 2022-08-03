@@ -47,3 +47,11 @@ message ContractRewardDistributionEvent {
     (gogoproto.nullable) = false
   ];
 }
+
+// MinConsensusFeeSetEvent is emitted when the minimum consensus fee is updated.
+message MinConsensusFeeSetEvent {
+  // fee defines the updated minimum gas unit price.
+  cosmos.base.v1beta1.DecCoin fee = 1 [
+    (gogoproto.nullable) = false
+  ];
+}

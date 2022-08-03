@@ -49,7 +49,7 @@ func TestRewardsCollection(t *testing.T) {
 		Msg:      jsonMarshal(t, msg),
 		Funds:    sdk.NewCoins(sdk.NewInt64Coin("stake", 100)),
 	}},
-		e2eTesting.WithMsgFees(txFees),
+		e2eTesting.WithMsgFees(txFees...),
 	)
 
 	balance := chain.GetBalance(authtypes.NewModuleAddress(gastracker.ModuleName))

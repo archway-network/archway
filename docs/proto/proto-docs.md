@@ -44,6 +44,7 @@
     - [ContractMetadataSetEvent](#archway.rewards.v1beta1.ContractMetadataSetEvent)
     - [ContractRewardCalculationEvent](#archway.rewards.v1beta1.ContractRewardCalculationEvent)
     - [ContractRewardDistributionEvent](#archway.rewards.v1beta1.ContractRewardDistributionEvent)
+    - [MinConsensusFeeSetEvent](#archway.rewards.v1beta1.MinConsensusFeeSetEvent)
   
 - [archway/rewards/v1beta1/genesis.proto](#archway/rewards/v1beta1/genesis.proto)
     - [GenesisState](#archway.rewards.v1beta1.GenesisState)
@@ -589,6 +590,21 @@ This event might not follow the ContractRewardCalculationEvent if the contract h
 
 
 
+
+<a name="archway.rewards.v1beta1.MinConsensusFeeSetEvent"></a>
+
+### MinConsensusFeeSetEvent
+MinConsensusFeeSetEvent is emitted when the minimum consensus fee is updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  | fee defines the updated minimum gas unit price. |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -618,6 +634,7 @@ GenesisState defines the initial state of the tracking module.
 | `contracts_metadata` | [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata) | repeated | contracts_metadata defines a list of all contracts metadata. |
 | `block_rewards` | [BlockRewards](#archway.rewards.v1beta1.BlockRewards) | repeated | block_rewards defines a list of all block rewards objects. |
 | `tx_rewards` | [TxRewards](#archway.rewards.v1beta1.TxRewards) | repeated | tx_rewards defines a list of all tx rewards objects. |
+| `min_consensus_fee` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  | min_consensus_fee defines the minimum gas unit price. |
 
 
 

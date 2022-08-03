@@ -75,7 +75,9 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 		},
 	}
 
-	genesisStateImported := types.NewGenesisState(newParams, newMetadata, newBlockRewards, newTxRewards)
+	newMinConsFee := sdk.NewDecCoin("uarch", sdk.NewInt(100))
+
+	genesisStateImported := types.NewGenesisState(newParams, newMetadata, newBlockRewards, newTxRewards, newMinConsFee)
 	s.Run("Check import of an updated genesis", func() {
 		keeper.InitGenesis(ctx, genesisStateImported)
 
@@ -84,6 +86,7 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 			ContractsMetadata: append(genesisStateInitial.ContractsMetadata, newMetadata...),
 			BlockRewards:      append(genesisStateInitial.BlockRewards, newBlockRewards...),
 			TxRewards:         append(genesisStateInitial.TxRewards, newTxRewards...),
+			MinConsensusFee:   newMinConsFee,
 		}
 
 		genesisStateReceived := keeper.ExportGenesis(ctx)
@@ -92,5 +95,6 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 		s.Assert().ElementsMatch(genesisStateExpected.ContractsMetadata, genesisStateReceived.ContractsMetadata)
 		s.Assert().ElementsMatch(genesisStateExpected.BlockRewards, genesisStateReceived.BlockRewards)
 		s.Assert().ElementsMatch(genesisStateExpected.TxRewards, genesisStateReceived.TxRewards)
+		s.Assert().Equal(genesisStateExpected.MinConsensusFee.String(), genesisStateReceived.MinConsensusFee.String())
 	})
 }
