@@ -11,3 +11,4 @@ ignore:
   - "**/*.pb.go"
   - "third_party"
   - "vendor"
+  - "x/gastracker"
