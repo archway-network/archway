@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
+
 	voterPkg "github.com/CosmWasm/cosmwasm-go/example/voter/src/pkg"
 	voterCustomTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/pkg/archway/custom"
 	voterState "github.com/CosmWasm/cosmwasm-go/example/voter/src/state"
@@ -13,12 +15,12 @@ import (
 	cwStd "github.com/CosmWasm/cosmwasm-go/std"
 	cwTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/x/gastracker"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 const (
@@ -74,7 +76,8 @@ func (s *E2ETestSuite) TestVoter_ExecuteQueryAndReply() {
 		s.Assert().EqualValues(contractCoinsExp, releasedCoinsRcv)
 
 		acc1BalanceAfter := chain.GetBalance(acc1.Address)
-		s.Assert().EqualValues(acc1BalanceBefore.Add(contractCoinsExp...), acc1BalanceAfter)
+		acc1BalanceExpected := acc1BalanceBefore.Add(contractCoinsExp...).Sub(chain.GetDefaultTxFee())
+		s.Assert().EqualValues(acc1BalanceExpected.String(), acc1BalanceAfter.String())
 
 		releaseStats := s.VoterGetReleaseStats(chain, contractAddr)
 		s.Assert().EqualValues(1, releaseStats.Count)
@@ -87,11 +90,6 @@ func (s *E2ETestSuite) TestVoter_ExecuteQueryAndReply() {
 //   - api.HumanAddress: called by querying contract Params (OwnerAddr);
 //   - and api.CanonicalAddress: called by instantiate to convert OwnerAddr (string) to canonical address (bytes);
 func (s *E2ETestSuite) TestVoter_Sudo() {
-	// x/wasmd/types/codec.go:
-	//   registry.RegisterImplementations() call:
-	//     "&SudoContractProposal{}" should be added
-	s.T().Skip("Current wasmd dependency doesn't have SudoContractProposal type registered (fixed in 1.0.0, skip for now)")
-
 	chain := s.chainA
 	acc := chain.GetAccount(0)
 	contractAddr := s.VoterUploadAndInstantiate(chain, acc)
@@ -761,54 +759,36 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataQuery() {
 	acc1, acc2 := chain.GetAccount(0), chain.GetAccount(1)
 	contractAddr := s.VoterUploadAndInstantiate(chain, acc1)
 
-	cmpMetas := func(metaExp gastracker.ContractInstanceMetadata, metaRcv voterCustomTypes.ContractMetadataResponse) {
-		s.Assert().EqualValues(metaExp.DeveloperAddress, metaRcv.DeveloperAddress)
-		s.Assert().EqualValues(metaExp.RewardAddress, metaRcv.RewardAddress)
-		s.Assert().EqualValues(metaExp.GasRebateToUser, metaRcv.GasRebateToUserEnabled)
-		s.Assert().EqualValues(metaExp.CollectPremium, metaRcv.PremiumEnabled)
-		s.Assert().EqualValues(metaExp.PremiumPercentageCharged, metaRcv.PremiumPercentage)
+	cmpMetas := func(metaExp rewardsTypes.ContractMetadata, metaRcv voterCustomTypes.ContractMetadataResponse) {
+		s.Assert().EqualValues(metaExp.OwnerAddress, metaRcv.OwnerAddress)
+		s.Assert().EqualValues(metaExp.RewardsAddress, metaRcv.RewardsAddress)
 	}
 
-	getAndCmpMetas := func(metaExp gastracker.ContractInstanceMetadata) {
-		metaRcvStargate := s.VoterGetMetadata(chain, contractAddr, true, true)
-		cmpMetas(metaExp, metaRcvStargate)
+	getAndCmpMetas := func(metaExp rewardsTypes.ContractMetadata) {
+		// wasmvm v1.0.0 (wasmd for us) has disabled the Stargate query, so we skip this case
+		//metaRcvStargate := s.VoterGetMetadata(chain, contractAddr, true, true)
+		//cmpMetas(metaExp, metaRcvStargate)
 
 		metaRcvCustom := s.VoterGetMetadata(chain, contractAddr, false, true)
 		cmpMetas(metaExp, metaRcvCustom)
 	}
 
-	var metaExp gastracker.ContractInstanceMetadata
+	var metaExp rewardsTypes.ContractMetadata
 
 	s.Run("No metadata", func() {
 		s.VoterGetMetadata(chain, contractAddr, true, false)
 	})
 
 	s.Run("Set initial meta", func() {
-		metaExp.DeveloperAddress = acc1.Address.String()
-		metaExp.RewardAddress = acc1.Address.String()
+		metaExp.OwnerAddress = acc1.Address.String()
+		metaExp.RewardsAddress = acc1.Address.String()
 		chain.SetContractMetadata(acc1, contractAddr, metaExp)
 
 		getAndCmpMetas(metaExp)
 	})
 
 	s.Run("Change RewardAddress", func() {
-		metaExp.RewardAddress = acc2.Address.String()
-		chain.SetContractMetadata(acc1, contractAddr, metaExp)
-
-		getAndCmpMetas(metaExp)
-	})
-
-	s.Run("Set GasRebateToUser", func() {
-		metaExp.GasRebateToUser = true
-		chain.SetContractMetadata(acc1, contractAddr, metaExp)
-
-		getAndCmpMetas(metaExp)
-	})
-
-	s.Run("Set Premium", func() {
-		metaExp.GasRebateToUser = false
-		metaExp.CollectPremium = true
-		metaExp.PremiumPercentageCharged = 50
+		metaExp.RewardsAddress = acc2.Address.String()
 		chain.SetContractMetadata(acc1, contractAddr, metaExp)
 
 		getAndCmpMetas(metaExp)
@@ -824,56 +804,56 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
 
 	s.Run("Fail: no metadata", func() {
 		req := voterCustomTypes.UpdateMetadataRequest{
-			DeveloperAddress: acc2.Address.String(),
+			OwnerAddress: acc2.Address.String(),
 		}
 		err := s.VoterUpdateMetadata(chain, contractAddr, acc1, req, false)
-		s.Assert().Contains(err.Error(), "not found")
+		s.Assert().Contains(err.Error(), "unauthorized")
 	})
 
-	// Set initial meta (admin as the DeveloperAddress)
+	// Set initial meta (admin as the OwnerAddress)
 	{
-		meta := gastracker.ContractInstanceMetadata{
-			DeveloperAddress: acc1.Address.String(),
-			RewardAddress:    acc1.Address.String(),
+		meta := rewardsTypes.ContractMetadata{
+			OwnerAddress:   acc1.Address.String(),
+			RewardsAddress: acc1.Address.String(),
 		}
 		chain.SetContractMetadata(acc1, contractAddr, meta)
 	}
 
-	s.Run("Fail: update DeveloperAddress: unauthorized", func() {
+	s.Run("Fail: update OwnerAddress: unauthorized", func() {
 		req := voterCustomTypes.UpdateMetadataRequest{
-			DeveloperAddress: acc2.Address.String(),
+			OwnerAddress: acc2.Address.String(),
 		}
 		err := s.VoterUpdateMetadata(chain, contractAddr, acc1, req, false)
-		s.Assert().Contains(err.Error(), "does not have permission")
+		s.Assert().Contains(err.Error(), "unauthorized")
 	})
 
-	// Update meta (set ContractAddress as the DeveloperAddress)
+	// Update meta (set ContractAddress as the OwnerAddress)
 	{
-		meta := gastracker.ContractInstanceMetadata{
-			DeveloperAddress: contractAddr.String(),
+		meta := rewardsTypes.ContractMetadata{
+			OwnerAddress: contractAddr.String(),
 		}
 		chain.SetContractMetadata(acc1, contractAddr, meta)
 	}
 
 	s.Run("OK: update RewardAddress", func() {
 		req := voterCustomTypes.UpdateMetadataRequest{
-			RewardAddress: acc2.Address.String(),
+			RewardsAddress: acc2.Address.String(),
 		}
 		s.VoterUpdateMetadata(chain, contractAddr, acc1, req, true)
 
 		meta := chain.GetContractMetadata(contractAddr)
-		s.Assert().Equal(contractAddr.String(), meta.DeveloperAddress)
-		s.Assert().Equal(acc2.Address.String(), meta.RewardAddress)
+		s.Assert().Equal(contractAddr.String(), meta.OwnerAddress)
+		s.Assert().Equal(acc2.Address.String(), meta.RewardsAddress)
 	})
 
-	s.Run("OK: update DeveloperAddress (change ownership)", func() {
+	s.Run("OK: update OwnerAddress (change ownership)", func() {
 		req := voterCustomTypes.UpdateMetadataRequest{
-			DeveloperAddress: acc1.Address.String(),
+			OwnerAddress: acc1.Address.String(),
 		}
 		s.VoterUpdateMetadata(chain, contractAddr, acc1, req, true)
 
 		meta := chain.GetContractMetadata(contractAddr)
-		s.Assert().Equal(acc1.Address.String(), meta.DeveloperAddress)
-		s.Assert().Equal(acc2.Address.String(), meta.RewardAddress)
+		s.Assert().Equal(acc1.Address.String(), meta.OwnerAddress)
+		s.Assert().Equal(acc2.Address.String(), meta.RewardsAddress)
 	})
 }

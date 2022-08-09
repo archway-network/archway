@@ -1,0 +1,100 @@
+syntax = "proto3";
+package archway.rewards.v1beta1;
+
+option go_package = "github.com/archway-network/archway/x/rewards/types";
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "archway/rewards/v1beta1/rewards.proto";
+
+// Query service for the tracking module.
+service Query {
+  // Params returns module parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/params";
+  }
+
+  // ContractMetadata returns the contract rewards parameters (metadata).
+  rpc ContractMetadata(QueryContractMetadataRequest) returns (QueryContractMetadataResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/contract_metadata";
+  }
+
+  // BlockRewardsTracking returns block rewards tracking for the current block.
+  rpc BlockRewardsTracking(QueryBlockRewardsTrackingRequest) returns (QueryBlockRewardsTrackingResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/block_rewards_tracking";
+  }
+
+  // RewardsPool returns the current undistributed rewards pool funds.
+  rpc RewardsPool(QueryRewardsPoolRequest) returns (QueryRewardsPoolResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/rewards_pool";
+  }
+
+  // EstimateTxFees returns the estimated transaction fees for the given transaction
+  // gas limit using the minimum consensus fee value for the current block.
+  rpc EstimateTxFees(QueryEstimateTxFeesRequest) returns (QueryEstimateTxFeesResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/estimate_tx_fees";
+  }
+}
+
+// QueryParamsRequest is the request for Query.Params.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response for Query.Params.
+message QueryParamsResponse {
+  Params params = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryContractMetadataRequest is the request for Query.ContractMetadata.
+message QueryContractMetadataRequest {
+  // contract_address is the contract address (bech32 encoded).
+  string contract_address = 1;
+}
+
+// QueryContractMetadataResponse is the response for Query.ContractMetadata.
+message QueryContractMetadataResponse {
+  ContractMetadata metadata = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryBlockRewardsTrackingRequest is the request for Query.BlockRewardsTracking.
+message QueryBlockRewardsTrackingRequest {}
+
+// QueryBlockRewardsTrackingResponse is the response for Query.BlockRewardsTracking.
+message QueryBlockRewardsTrackingResponse {
+  BlockTracking block = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryRewardsPoolRequest is the request for Query.RewardsPool.
+message QueryRewardsPoolRequest {}
+
+// QueryRewardsPoolResponse is the response for Query.RewardsPool.
+message QueryRewardsPoolResponse {
+  repeated cosmos.base.v1beta1.Coin funds = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryEstimateTxFeesRequest is the request for Query.EstimateTxFees.
+message QueryEstimateTxFeesRequest {
+  // gas_limit is the transaction gas limit.
+  uint64 gas_limit = 1;
+}
+
+// QueryEstimateTxFeesResponse is the response for Query.EstimateTxFees.
+message QueryEstimateTxFeesResponse {
+  // gas_unit_price defines the minimum transaction fee per gas unit.
+  cosmos.base.v1beta1.DecCoin gas_unit_price = 1 [
+    (gogoproto.nullable) = false
+  ];
+
+  // estimated_fee is the estimated transaction fee for a given gas limit.
+  cosmos.base.v1beta1.Coin estimated_fee = 2 [
+    (gogoproto.nullable) = false
+  ];
+}

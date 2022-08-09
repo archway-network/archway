@@ -3,7 +3,7 @@ module github.com/archway-network/archway
 go 1.17
 
 require (
-	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220719123407-a0448ffb23f6
+	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220729111547-079232ac0432
 	github.com/CosmWasm/wasmd v0.25.0
 	github.com/CosmWasm/wasmvm v1.0.0
 	github.com/cosmos/cosmos-sdk v0.45.4
@@ -22,6 +22,7 @@ require (
 	github.com/tendermint/tm-db v0.6.7
 	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac
 	google.golang.org/grpc v1.45.0
+	sigs.k8s.io/yaml v1.2.0
 )
 
 require (

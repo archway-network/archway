@@ -1,6 +1,14 @@
 package e2eTesting
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -16,9 +24,73 @@ func GetStringEventAttribute(events []abci.Event, eventType, attrKey string) str
 				continue
 			}
 
-			return string(attr.Value)
+			attrValue := string(attr.Value)
+			if valueUnquoted, err := strconv.Unquote(string(attr.Value)); err == nil {
+				attrValue = valueUnquoted
+			}
+
+			return attrValue
 		}
 	}
 
 	return ""
+}
+
+// GenAccounts generates a list of accounts and private keys for them.
+func GenAccounts(num uint) ([]sdk.AccAddress, []cryptotypes.PrivKey) {
+	addrs := make([]sdk.AccAddress, 0, num)
+	privKeys := make([]cryptotypes.PrivKey, 0, num)
+
+	for i := 0; i < cap(addrs); i++ {
+		privKey := secp256k1.GenPrivKey()
+
+		addrs = append(addrs, sdk.AccAddress(privKey.PubKey().Address()))
+		privKeys = append(privKeys, privKey)
+	}
+
+	return addrs, privKeys
+}
+
+// GenContractAddresses generates a list of contract addresses (codeID and instanceID are sequential).
+func GenContractAddresses(num uint) []sdk.AccAddress {
+	addrs := make([]sdk.AccAddress, 0, num)
+
+	for i := 0; i < cap(addrs); i++ {
+		contractAddr := wasmKeeper.BuildContractAddress(uint64(i), uint64(i))
+		addrs = append(addrs, contractAddr)
+	}
+
+	return addrs
+}
+
+// HumanizeCoins returns the sdk.Coins string representation with a number of decimals specified.
+// 1123000stake -> 1.123stake with 6 decimals (3 numbers after the dot is hardcoded).
+func HumanizeCoins(decimals uint8, coins ...sdk.Coin) string {
+	baseDec := sdk.NewDecWithPrec(1, int64(decimals))
+
+	strs := make([]string, 0, len(coins))
+	for _, coin := range coins {
+		amtDec := coin.Amount.ToDec().Mul(baseDec)
+		amtFloat, _ := amtDec.Float64()
+
+		strs = append(strs, fmt.Sprintf("%.03f%s", amtFloat, coin.Denom))
+	}
+
+	return strings.Join(strs, ",")
+}
+
+// HumanizeDecCoins returns the sdk.DecCoins string representation.
+// 1000.123456789stake -> 1.123456stake with 3 decimals (6 numbers after the dot is hardcoded).
+func HumanizeDecCoins(decimals uint8, coins ...sdk.DecCoin) string {
+	baseDec := sdk.NewDecWithPrec(1, int64(decimals))
+
+	strs := make([]string, 0, len(coins))
+	for _, coin := range coins {
+		amtDec := coin.Amount.Mul(baseDec)
+		amtFloat, _ := amtDec.Float64()
+
+		strs = append(strs, fmt.Sprintf("%.06f%s", amtFloat, coin.Denom))
+	}
+
+	return strings.Join(strs, ",")
 }

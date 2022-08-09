@@ -297,7 +297,7 @@ func (e *IBCEndpoint) createIBCClient() {
 	)
 	require.NoError(t, err)
 
-	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
+	_, res, _, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	clientID := GetStringEventAttribute(res.Events, clientTypes.EventTypeCreateClient, clientTypes.AttributeKeyClientID)
 	require.NotEmpty(t, clientID)
@@ -346,7 +346,7 @@ func (e *IBCEndpoint) sendConnectionOpenInit() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
+	_, res, _, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	e.connectionID = GetStringEventAttribute(res.Events, connectionTypes.EventTypeConnectionOpenInit, connectionTypes.AttributeKeyConnectionID)
 	require.NotEmpty(t, e.connectionID)
@@ -386,7 +386,7 @@ func (e *IBCEndpoint) sendConnectionOpenTry() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
+	_, res, _, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	if srcChainConnectionID == "" {
 		e.connectionID = GetStringEventAttribute(res.Events, connectionTypes.EventTypeConnectionOpenTry, connectionTypes.AttributeKeyConnectionID)
@@ -460,7 +460,7 @@ func (e *IBCEndpoint) sendChannelOpenInit() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
+	_, res, _, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	e.channelID = GetStringEventAttribute(res.Events, channelTypes.EventTypeChannelOpenInit, channelTypes.AttributeKeyChannelID)
 	require.NotEmpty(t, e.channelID)
@@ -491,7 +491,7 @@ func (e *IBCEndpoint) sendChannelOpenTry() {
 		srcChainSenderAcc.Address.String(),
 	)
 
-	_, res, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
+	_, res, _, _ := srcChain.SendMsgs(srcChainSenderAcc, true, []sdk.Msg{msg})
 
 	if e.channelID == "" {
 		e.channelID = GetStringEventAttribute(res.Events, channelTypes.EventTypeChannelOpenTry, channelTypes.AttributeKeyChannelID)

@@ -1,0 +1,28 @@
+syntax = "proto3";
+package archway.rewards.v1beta1;
+
+option go_package = "github.com/archway-network/archway/x/rewards/types";
+
+import "gogoproto/gogo.proto";
+import "archway/rewards/v1beta1/rewards.proto";
+
+// Msg defines the module messaging service.
+service Msg {
+  // SetContractMetadata creates or updates an existing contract metadata.
+  // Method is authorized to the contract owner (admin if no metadata exists).
+  rpc SetContractMetadata(MsgSetContractMetadata) returns (MsgSetContractMetadataResponse);
+}
+
+// MsgSetContractMetadata is the request for Msg.SetContractMetadata.
+message MsgSetContractMetadata {
+  // sender_address is the msg sender address (bech32 encoded).
+  string sender_address = 1;
+  // metadata is the contract metadata to set / update.
+  // If metadata exists, non-empty fields will be updated.
+  ContractMetadata metadata = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// MsgSetContractMetadataResponse is the response for Msg.SetContractMetadata.
+message MsgSetContractMetadataResponse {}
