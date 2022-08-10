@@ -1,6 +1,6 @@
 module github.com/archway-network/archway
 
-go 1.17
+go 1.18
 
 require (
 	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220729111547-079232ac0432
