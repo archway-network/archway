@@ -15,7 +15,7 @@ import (
 //var _ wasmKeeper.CustomQuerier = (*QueryPlugin)(nil).DispatchQuery
 
 // CustomQueryPlugin creates a new custom query plugin for WASM bindings.
-func CustomQueryPlugin(gtKeeper ContractMetadataReader) *wasmKeeper.QueryPlugins {
+func CustomQueryPlugin(gtKeeper RewardsReader) *wasmKeeper.QueryPlugins {
 	qp := NewQueryPlugin(gtKeeper)
 
 	return &wasmKeeper.QueryPlugins{
@@ -25,11 +25,11 @@ func CustomQueryPlugin(gtKeeper ContractMetadataReader) *wasmKeeper.QueryPlugins
 
 // QueryPlugin provides custom WASM queries.
 type QueryPlugin struct {
-	rewardsKeeper ContractMetadataReader
+	rewardsKeeper RewardsReader
 }
 
 // NewQueryPlugin creates a new QueryPlugin.
-func NewQueryPlugin(rk ContractMetadataReader) *QueryPlugin {
+func NewQueryPlugin(rk RewardsReader) *QueryPlugin {
 	return &QueryPlugin{
 		rewardsKeeper: rk,
 	}
@@ -52,8 +52,10 @@ func (qp QueryPlugin) DispatchQuery(ctx sdk.Context, request json.RawMessage) ([
 	switch {
 	case req.Metadata != nil:
 		resData, resErr = qp.getContractMetadata(ctx, req.Metadata.MustGetContractAddress())
+	case req.CurrentRewards != nil:
+		resData, resErr = qp.getCurrentRewards(ctx, req.CurrentRewards.MustGetRewardsAddress())
 	default:
-		resErr = sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "unknown request")
+		return nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "unknown request")
 	}
 	if resErr != nil {
 		return nil, resErr
@@ -76,4 +78,11 @@ func (qp QueryPlugin) getContractMetadata(ctx sdk.Context, contractAddr sdk.AccA
 	}
 
 	return types.NewContractMetadataResponse(*meta), nil
+}
+
+// getCurrentRewards returns the current rewards for a given account address.
+func (qp QueryPlugin) getCurrentRewards(ctx sdk.Context, rewardsAddr sdk.AccAddress) (types.CurrentRewardsResponse, error) {
+	rewards := qp.rewardsKeeper.GetCurrentRewards(ctx, rewardsAddr)
+
+	return types.NewCurrentRewardsResponse(rewards), nil
 }

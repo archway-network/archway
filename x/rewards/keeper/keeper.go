@@ -203,6 +203,17 @@ func (k Keeper) UndistributedRewardsPool(ctx sdk.Context) sdk.Coins {
 	return k.bankKeeper.GetAllBalances(ctx, poolAcc.GetAddress())
 }
 
+// GetCurrentRewards returns the current rewards eligible for withdraw for the given address.
+func (k Keeper) GetCurrentRewards(ctx sdk.Context, rewardsAddr sdk.AccAddress) sdk.Coins {
+	totalRewards := sdk.NewCoins()
+	records := k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddress(rewardsAddr)
+	for _, record := range records {
+		totalRewards = totalRewards.Add(record.Rewards...)
+	}
+
+	return totalRewards
+}
+
 // SetContractInfoViewer sets the contract info view dependency.
 // Only for testing purposes.
 func (k *Keeper) SetContractInfoViewer(viewer ContractInfoReaderExpected) {

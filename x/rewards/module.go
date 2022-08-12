@@ -1,7 +1,6 @@
 // Package rewards defines a module that tracks dApp rewards (fee rebate and inflation rewards) and
 // distributes them to contracts' rewards addresses (if set).
 // CONTRACT: module's Ante handler must be called after the x/tracking Ante since it relies on transaction ID tracking generates.
-// TODO: collected tracking data should be pruned.
 package rewards
 
 import (
@@ -102,7 +101,9 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 }
 
 // RegisterInvariants registers the module invariants.
-func (a AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+func (a AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	keeper.RegisterInvariants(ir, a.keeper)
+}
 
 // Route returns the message routing key for the module.
 // Deprecated.

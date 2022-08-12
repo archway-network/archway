@@ -45,7 +45,7 @@ func (s *QueryServer) ContractMetadata(c context.Context, request *types.QueryCo
 
 	contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid contract address")
+		return nil, status.Error(codes.InvalidArgument, "invalid contract address: "+err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -115,5 +115,23 @@ func (s *QueryServer) EstimateTxFees(c context.Context, request *types.QueryEsti
 			Denom:  minConsFee.Denom,
 			Amount: minConsFee.Amount.MulInt64(int64(request.GasLimit)).RoundInt(),
 		},
+	}, nil
+}
+
+// CurrentRewards implements the types.QueryServer interface.
+func (s *QueryServer) CurrentRewards(c context.Context, request *types.QueryCurrentRewardsRequest) (*types.QueryCurrentRewardsResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	rewardsAddr, err := sdk.AccAddressFromBech32(request.RewardsAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid rewards address: "+err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	return &types.QueryCurrentRewardsResponse{
+		Rewards: s.keeper.GetCurrentRewards(ctx, rewardsAddr),
 	}, nil
 }

@@ -35,25 +35,28 @@
   
 - [archway/rewards/v1beta1/rewards.proto](#archway/rewards/v1beta1/rewards.proto)
     - [BlockRewards](#archway.rewards.v1beta1.BlockRewards)
-    - [BlockTracking](#archway.rewards.v1beta1.BlockTracking)
     - [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata)
     - [Params](#archway.rewards.v1beta1.Params)
+    - [RewardsRecord](#archway.rewards.v1beta1.RewardsRecord)
     - [TxRewards](#archway.rewards.v1beta1.TxRewards)
   
 - [archway/rewards/v1beta1/events.proto](#archway/rewards/v1beta1/events.proto)
     - [ContractMetadataSetEvent](#archway.rewards.v1beta1.ContractMetadataSetEvent)
     - [ContractRewardCalculationEvent](#archway.rewards.v1beta1.ContractRewardCalculationEvent)
-    - [ContractRewardDistributionEvent](#archway.rewards.v1beta1.ContractRewardDistributionEvent)
     - [MinConsensusFeeSetEvent](#archway.rewards.v1beta1.MinConsensusFeeSetEvent)
+    - [RewardsWithdrawEvent](#archway.rewards.v1beta1.RewardsWithdrawEvent)
   
 - [archway/rewards/v1beta1/genesis.proto](#archway/rewards/v1beta1/genesis.proto)
     - [GenesisState](#archway.rewards.v1beta1.GenesisState)
   
 - [archway/rewards/v1beta1/query.proto](#archway/rewards/v1beta1/query.proto)
+    - [BlockTracking](#archway.rewards.v1beta1.BlockTracking)
     - [QueryBlockRewardsTrackingRequest](#archway.rewards.v1beta1.QueryBlockRewardsTrackingRequest)
     - [QueryBlockRewardsTrackingResponse](#archway.rewards.v1beta1.QueryBlockRewardsTrackingResponse)
     - [QueryContractMetadataRequest](#archway.rewards.v1beta1.QueryContractMetadataRequest)
     - [QueryContractMetadataResponse](#archway.rewards.v1beta1.QueryContractMetadataResponse)
+    - [QueryCurrentRewardsRequest](#archway.rewards.v1beta1.QueryCurrentRewardsRequest)
+    - [QueryCurrentRewardsResponse](#archway.rewards.v1beta1.QueryCurrentRewardsResponse)
     - [QueryEstimateTxFeesRequest](#archway.rewards.v1beta1.QueryEstimateTxFeesRequest)
     - [QueryEstimateTxFeesResponse](#archway.rewards.v1beta1.QueryEstimateTxFeesResponse)
     - [QueryParamsRequest](#archway.rewards.v1beta1.QueryParamsRequest)
@@ -66,6 +69,8 @@
 - [archway/rewards/v1beta1/tx.proto](#archway/rewards/v1beta1/tx.proto)
     - [MsgSetContractMetadata](#archway.rewards.v1beta1.MsgSetContractMetadata)
     - [MsgSetContractMetadataResponse](#archway.rewards.v1beta1.MsgSetContractMetadataResponse)
+    - [MsgWithdrawRewards](#archway.rewards.v1beta1.MsgWithdrawRewards)
+    - [MsgWithdrawRewardsResponse](#archway.rewards.v1beta1.MsgWithdrawRewardsResponse)
   
     - [Msg](#archway.rewards.v1beta1.Msg)
   
@@ -458,22 +463,6 @@ BlockRewards defines block related rewards distribution data.
 
 
 
-<a name="archway.rewards.v1beta1.BlockTracking"></a>
-
-### BlockTracking
-BlockTracking is the tracking information for a block.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `inflation_rewards` | [BlockRewards](#archway.rewards.v1beta1.BlockRewards) |  | inflation_rewards defines the inflation rewards for the block. |
-| `tx_rewards` | [TxRewards](#archway.rewards.v1beta1.TxRewards) | repeated | tx_rewards defines the transaction rewards for the block. |
-
-
-
-
-
-
 <a name="archway.rewards.v1beta1.ContractMetadata"></a>
 
 ### ContractMetadata
@@ -501,6 +490,29 @@ Params defines the module parameters.
 | ----- | ---- | ----- | ----------- |
 | `inflation_rewards_ratio` | [string](#string) |  | inflation_rewards_ratio defines the percentage of minted inflation tokens that are used for dApp rewards [0.0, 1.0]. If set to 0.0, no inflation rewards are distributed. |
 | `tx_fee_rebate_ratio` | [string](#string) |  | tx_fee_rebate_ratio defines the percentage of tx fees that are used for dApp rewards [0.0, 1.0]. If set to 0.0, no fee rewards are distributed. |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.RewardsRecord"></a>
+
+### RewardsRecord
+RewardsRecord defines a record that is used to distribute rewards later (lazy distribution).
+This record is being created by the x/rewards EndBlocker and pruned after the rewards are distributed.
+An actual rewards x/bank transfer might be triggered by a Tx (via CLI for example) or by a contract via WASM bindings.
+For a contract to trigger rewards transfer, contract address must be set as the rewards_address in a
+corresponding ContractMetadata.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  | id is the unique ID of the record. |
+| `rewards_address` | [string](#string) |  | rewards_address is the address to distribute rewards to (bech32 encoded). |
+| `rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | rewards are the rewards to be transferred later. |
+| `calculated_height` | [int64](#int64) |  | calculated_height defines the block height of rewards calculation event. |
+| `calculated_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | calculated_time defines the block time of rewards calculation event. |
 
 
 
@@ -575,24 +587,6 @@ ContractRewardCalculationEvent is emitted when the contract reward is calculated
 
 
 
-<a name="archway.rewards.v1beta1.ContractRewardDistributionEvent"></a>
-
-### ContractRewardDistributionEvent
-ContractRewardDistributionEvent is emitted when the contract reward is distributed to the corresponding rewards address.
-This event might not follow the ContractRewardCalculationEvent if the contract has no metadata set or rewards address is empty.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `contract_address` | [string](#string) |  | contract_address defines the contract address. |
-| `reward_address` | [string](#string) |  | rewards_address defines the rewards address rewards are distributed to. |
-| `rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | rewards defines the total rewards being distributed. |
-
-
-
-
-
-
 <a name="archway.rewards.v1beta1.MinConsensusFeeSetEvent"></a>
 
 ### MinConsensusFeeSetEvent
@@ -602,6 +596,23 @@ MinConsensusFeeSetEvent is emitted when the minimum consensus fee is updated.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `fee` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  | fee defines the updated minimum gas unit price. |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.RewardsWithdrawEvent"></a>
+
+### RewardsWithdrawEvent
+RewardsWithdrawEvent is emitted when credited rewards for a specific rewards_address are distributed.
+Event could be triggered by a transaction (via CLI for example) or by a contract via WASM bindings.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `reward_address` | [string](#string) |  | rewards_address defines the rewards address rewards are distributed to. |
+| `rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | rewards defines the total rewards being distributed. |
 
 
 
@@ -637,6 +648,7 @@ GenesisState defines the initial state of the tracking module.
 | `block_rewards` | [BlockRewards](#archway.rewards.v1beta1.BlockRewards) | repeated | block_rewards defines a list of all block rewards objects. |
 | `tx_rewards` | [TxRewards](#archway.rewards.v1beta1.TxRewards) | repeated | tx_rewards defines a list of all tx rewards objects. |
 | `min_consensus_fee` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  | min_consensus_fee defines the minimum gas unit price. |
+| `rewards_records` | [RewardsRecord](#archway.rewards.v1beta1.RewardsRecord) | repeated | rewards_records defines a list of all active (undistributed) rewards records. |
 
 
 
@@ -656,6 +668,22 @@ GenesisState defines the initial state of the tracking module.
 <p align="right"><a href="#top">Top</a></p>
 
 ## archway/rewards/v1beta1/query.proto
+
+
+
+<a name="archway.rewards.v1beta1.BlockTracking"></a>
+
+### BlockTracking
+BlockTracking is the tracking information for a block.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `inflation_rewards` | [BlockRewards](#archway.rewards.v1beta1.BlockRewards) |  | inflation_rewards defines the inflation rewards for the block. |
+| `tx_rewards` | [TxRewards](#archway.rewards.v1beta1.TxRewards) | repeated | tx_rewards defines the transaction rewards for the block. |
+
+
+
 
 
 
@@ -708,6 +736,36 @@ QueryContractMetadataResponse is the response for Query.ContractMetadata.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `metadata` | [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata) |  |  |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.QueryCurrentRewardsRequest"></a>
+
+### QueryCurrentRewardsRequest
+QueryCurrentRewardsRequest is the request for Query.CurrentRewards.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `rewards_address` | [string](#string) |  | rewards_address is the target address to query calculated rewards for (bech32 encoded). |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.QueryCurrentRewardsResponse"></a>
+
+### QueryCurrentRewardsResponse
+QueryCurrentRewardsResponse is the response for Query.CurrentRewards.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | rewards is the total rewards credited to the rewards_address. |
 
 
 
@@ -813,6 +871,7 @@ Query service for the tracking module.
 | `BlockRewardsTracking` | [QueryBlockRewardsTrackingRequest](#archway.rewards.v1beta1.QueryBlockRewardsTrackingRequest) | [QueryBlockRewardsTrackingResponse](#archway.rewards.v1beta1.QueryBlockRewardsTrackingResponse) | BlockRewardsTracking returns block rewards tracking for the current block. | GET|/archway/rewards/v1/block_rewards_tracking|
 | `RewardsPool` | [QueryRewardsPoolRequest](#archway.rewards.v1beta1.QueryRewardsPoolRequest) | [QueryRewardsPoolResponse](#archway.rewards.v1beta1.QueryRewardsPoolResponse) | RewardsPool returns the current undistributed rewards pool funds. | GET|/archway/rewards/v1/rewards_pool|
 | `EstimateTxFees` | [QueryEstimateTxFeesRequest](#archway.rewards.v1beta1.QueryEstimateTxFeesRequest) | [QueryEstimateTxFeesResponse](#archway.rewards.v1beta1.QueryEstimateTxFeesResponse) | EstimateTxFees returns the estimated transaction fees for the given transaction gas limit using the minimum consensus fee value for the current block. | GET|/archway/rewards/v1/estimate_tx_fees|
+| `CurrentRewards` | [QueryCurrentRewardsRequest](#archway.rewards.v1beta1.QueryCurrentRewardsRequest) | [QueryCurrentRewardsResponse](#archway.rewards.v1beta1.QueryCurrentRewardsResponse) | CurrentRewards returns total rewards credited from different contracts for the provided rewards_address. | GET|/archway/rewards/v1/current_rewards|
 
  <!-- end services -->
 
@@ -850,6 +909,36 @@ MsgSetContractMetadataResponse is the response for Msg.SetContractMetadata.
 
 
 
+
+<a name="archway.rewards.v1beta1.MsgWithdrawRewards"></a>
+
+### MsgWithdrawRewards
+MsgWithdrawRewards is the request for Msg.WithdrawRewards.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `rewards_address` | [string](#string) |  | rewards_address is the address to distribute rewards to (bech32 encoded). |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.MsgWithdrawRewardsResponse"></a>
+
+### MsgWithdrawRewardsResponse
+MsgWithdrawRewardsResponse is the response for Msg.WithdrawRewards.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | rewards are the total rewards transferred. |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -865,6 +954,7 @@ Msg defines the module messaging service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SetContractMetadata` | [MsgSetContractMetadata](#archway.rewards.v1beta1.MsgSetContractMetadata) | [MsgSetContractMetadataResponse](#archway.rewards.v1beta1.MsgSetContractMetadataResponse) | SetContractMetadata creates or updates an existing contract metadata. Method is authorized to the contract owner (admin if no metadata exists). | |
+| `WithdrawRewards` | [MsgWithdrawRewards](#archway.rewards.v1beta1.MsgWithdrawRewards) | [MsgWithdrawRewardsResponse](#archway.rewards.v1beta1.MsgWithdrawRewardsResponse) | WithdrawRewards performs collected rewards distribution. Rewards might be credited from multiple contracts (rewards_address must be set in the corresponding contract metadata). | |
 
  <!-- end services -->
 

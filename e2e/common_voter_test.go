@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -13,8 +14,10 @@ import (
 	cwSdkTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	wasmBindingTypes "github.com/archway-network/archway/x/rewards/wasmbinding/types"
 )
 
 // Voter contract related helpers.
@@ -300,6 +303,20 @@ func (s *E2ETestSuite) VoterGetIBCStats(chain *e2eTesting.TestChain, contractAdd
 	return resp.Stats
 }
 
+// VoterGetWithdrawStats returns the withdraw stats (updated via Reply endpoint).
+func (s *E2ETestSuite) VoterGetWithdrawStats(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress) voterTypes.QueryWithdrawStatsResponse {
+	req := voterTypes.MsgQuery{
+		WithdrawStats: &struct{}{},
+	}
+
+	res, _ := chain.SmartQueryContract(contractAddr, true, req)
+
+	var resp voterTypes.QueryWithdrawStatsResponse
+	s.Require().NoError(resp.UnmarshalJSON(res))
+
+	return resp
+}
+
 // VoterGetMetadata returns the contract metadata queried via Custom querier plugin.
 func (s *E2ETestSuite) VoterGetMetadata(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, useStargate, expPass bool) voterCustomTypes.ContractMetadataResponse {
 	req := voterTypes.MsgQuery{
@@ -319,7 +336,7 @@ func (s *E2ETestSuite) VoterGetMetadata(chain *e2eTesting.TestChain, contractAdd
 	return resp.ContractMetadataResponse
 }
 
-// VoterUpdateMetadata sends the contract metadata update request.
+// VoterUpdateMetadata sends the contract metadata update request via Custom message plugin.
 func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, metaReq voterCustomTypes.UpdateMetadataRequest, expPass bool) error {
 	req := voterTypes.MsgExecute{
 		UpdateMetadata: &metaReq,
@@ -336,4 +353,38 @@ func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contract
 	_, _, _, err = chain.SendMsgs(acc, expPass, []sdk.Msg{&msg})
 
 	return err
+}
+
+// VoterGetCurrentRewards returns the current contract rewards (for the contractAddress as a rewardsAddress) via Custom querier plugin.
+func (s *E2ETestSuite) VoterGetCurrentRewards(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress) sdk.Coins {
+	req := voterTypes.MsgQuery{
+		CustomCurrentRewards: &NilStruct,
+	}
+
+	res, _ := chain.SmartQueryContract(contractAddr, true, req)
+
+	var resp wasmBindingTypes.CurrentRewardsResponse
+	s.Require().NoError(json.Unmarshal(res, &resp))
+
+	rewards, err := sdk.ParseCoinsNormalized(resp.Rewards)
+	s.Require().NoError(err)
+
+	return rewards
+}
+
+// VoterWithdrawRewards sends the contract rewards withdrawal request via Custom message plugin.
+func (s *E2ETestSuite) VoterWithdrawRewards(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account) {
+	req := voterTypes.MsgExecute{
+		WithdrawRewards: &NilStruct,
+	}
+	reqBz, err := req.MarshalJSON()
+	s.Require().NoError(err)
+
+	msg := wasmdTypes.MsgExecuteContract{
+		Sender:   acc.Address.String(),
+		Contract: contractAddr.String(),
+		Msg:      reqBz,
+	}
+
+	chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 }

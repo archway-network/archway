@@ -62,3 +62,24 @@ var (
 	// Value: sdk.Coin
 	MinConsFeeKey = []byte{0x00}
 )
+
+// RewardsRecord prefixed store state keys.
+var (
+	// RewardsRecordStatePrefix defines the state global prefix.
+	RewardsRecordStatePrefix = []byte{0x04}
+
+	// RewardsRecordIDKey defines the key for storing last unique RewardsRecord's ID.
+	// Key: RewardsRecordStatePrefix | RewardsRecordIDKey
+	// Value: uint64
+	RewardsRecordIDKey = []byte{0x00}
+
+	// RewardsRecordPrefix defines the prefix for storing RewardsRecord objects.
+	// Key: RewardsRecordStatePrefix | RewardsRecordPrefix | {ID}
+	// Value: RewardsRecord
+	RewardsRecordPrefix = []byte{0x01}
+
+	// RewardsRecordAddressIndexPrefix defines the prefix for storing RewardsRecord's RewardsAddress index.
+	// Key: RewardsRecordStatePrefix | RewardsRecordAddressIndexPrefix | {RewardsAddress} | {ID}
+	// Value: None
+	RewardsRecordAddressIndexPrefix = []byte{0x02}
+)

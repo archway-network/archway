@@ -64,3 +64,41 @@ func TestMsgSetContractMetadataValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgWithdrawRewardsValidateBasic(t *testing.T) {
+	type testCase struct {
+		name        string
+		msg         rewardsTypes.MsgWithdrawRewards
+		errExpected bool
+	}
+
+	accAddrs, _ := e2eTesting.GenAccounts(1)
+	accAddr := accAddrs[0]
+
+	testCases := []testCase{
+		{
+			name: "OK",
+			msg: rewardsTypes.MsgWithdrawRewards{
+				RewardsAddress: accAddr.String(),
+			},
+		},
+		{
+			name: "Fail: invalid RewardsAddress",
+			msg: rewardsTypes.MsgWithdrawRewards{
+				RewardsAddress: "invalid",
+			},
+			errExpected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.errExpected {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}

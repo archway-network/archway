@@ -77,8 +77,8 @@ github.com/BurntSushi/toml v1.1.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbi
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d h1:nalkkPQcITbvhmL4+C4cKA87NW0tfm3Kl9VXRoPywFg=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d/go.mod h1:URdX5+vg25ts3aCh8H5IFZybJYKWhJHYMTnf+ULtoC4=
-github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220729111547-079232ac0432 h1:51VJ/RwtL5rm+vAovcxAray9B4zQuBGzfxmnhQXIhCY=
-github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220729111547-079232ac0432/go.mod h1:qCTzr8cQYwoYdA9AT4azEVbiYGjULS1nrUgw6YScXks=
+github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220812150945-5a075164191c h1:NECYanZgK+Nf1jS5Z6/HYXwVwXOHjrGUinzF2QSfKHU=
+github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220812150945-5a075164191c/go.mod h1:qCTzr8cQYwoYdA9AT4azEVbiYGjULS1nrUgw6YScXks=
 github.com/CosmWasm/tinyjson v0.9.0 h1:sPjgikATp5W0vD/v/Qz99uQ6G/lh/SuK0Wfskqua4Co=
 github.com/CosmWasm/tinyjson v0.9.0/go.mod h1:5+7QnSKrkIWnpIdhUT2t2EYzXnII3/3MlM0oDsBSbc8=
 github.com/CosmWasm/wasmvm v1.0.0 h1:NRmnHe3xXsKn2uEcB1F5Ha323JVAhON+BI6L177dlKc=

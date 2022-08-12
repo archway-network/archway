@@ -48,3 +48,23 @@ func (s MsgServer) SetContractMetadata(c context.Context, request *types.MsgSetC
 
 	return &types.MsgSetContractMetadataResponse{}, nil
 }
+
+// WithdrawRewards implements the types.MsgServer interface.
+func (s MsgServer) WithdrawRewards(c context.Context, request *types.MsgWithdrawRewards) (*types.MsgWithdrawRewardsResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	rewardsAddr, err := sdk.AccAddressFromBech32(request.RewardsAddress)
+	if err != nil {
+		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
+	}
+
+	totalRewards := s.keeper.WithdrawRewards(ctx, rewardsAddr)
+
+	return &types.MsgWithdrawRewardsResponse{
+		Rewards: totalRewards,
+	}, nil
+}

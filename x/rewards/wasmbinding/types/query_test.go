@@ -15,10 +15,18 @@ func TestQueryValidate(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "OK",
+			name: "OK 1",
 			query: Query{
 				Metadata: &ContractMetadataRequest{
 					ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				},
+			},
+		},
+		{
+			name: "OK 2",
+			query: Query{
+				CurrentRewards: &CurrentRewardsRequest{
+					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 				},
 			},
 		},
@@ -30,8 +38,27 @@ func TestQueryValidate(t *testing.T) {
 			errExpected: true,
 		},
 		{
+			name: "Fail: invalid CurrentRewards",
+			query: Query{
+				CurrentRewards: &CurrentRewardsRequest{},
+			},
+			errExpected: true,
+		},
+		{
 			name:        "Fail: empty",
 			query:       Query{},
+			errExpected: true,
+		},
+		{
+			name: "Fail: not one of",
+			query: Query{
+				Metadata: &ContractMetadataRequest{
+					ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				},
+				CurrentRewards: &CurrentRewardsRequest{
+					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				},
+			},
 			errExpected: true,
 		},
 	}

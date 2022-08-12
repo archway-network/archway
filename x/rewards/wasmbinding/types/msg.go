@@ -8,11 +8,37 @@ import (
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
+// Msg is a container for custom WASM messages (one of).
 type Msg struct {
 	// UpdateMetadata is a request to update the contract metadata.
 	// Request is authorized only if the contract address is set as the DeveloperAddress (metadata field).
 	UpdateMetadata *UpdateMetadataRequest `json:"update_metadata"`
+
+	// WithdrawRewards is a request to withdraw rewards for the contract.
+	// Contract address is used as the rewards address (metadata field).
+	WithdrawRewards *WithdrawRewardsRequest `json:"withdraw_rewards"`
 }
+
+type (
+	// UpdateMetadataRequest is the Msg.SetMetadata request.
+	UpdateMetadataRequest struct {
+		// OwnerAddress if not empty, changes the contract metadata ownership.
+		OwnerAddress string `json:"owner_address"`
+		// RewardsAddress if not empty, changes the rewards distribution destination address.
+		RewardsAddress string `json:"rewards_address"`
+	}
+)
+
+type (
+	// WithdrawRewardsRequest is the Msg.WithdrawRewards request.
+	WithdrawRewardsRequest struct{}
+
+	// WithdrawRewardsResponse is the Msg.WithdrawRewards response.
+	WithdrawRewardsResponse struct {
+		// Rewards are the total rewards distributed [serialized to string sdk.Coins].
+		Rewards string `json:"rewards"`
+	}
+)
 
 // Validate validates the msg fields.
 func (m Msg) Validate() error {
@@ -25,19 +51,15 @@ func (m Msg) Validate() error {
 		cnt++
 	}
 
-	if cnt == 0 {
-		return fmt.Errorf("empty msg")
+	if m.WithdrawRewards != nil {
+		cnt++
+	}
+
+	if cnt != 1 {
+		return fmt.Errorf("one and only one field must be set")
 	}
 
 	return nil
-}
-
-// UpdateMetadataRequest is the Msg.SetMetadata request.
-type UpdateMetadataRequest struct {
-	// OwnerAddress if not empty, changes the contract metadata ownership.
-	OwnerAddress string `json:"owner_address"`
-	// RewardsAddress if not empty, changes the rewards distribution destination address.
-	RewardsAddress string `json:"rewards_address"`
 }
 
 // Validate performs request fields validation.
@@ -102,4 +124,11 @@ func (r UpdateMetadataRequest) MustGetRewardsAddressOk() (*sdk.AccAddress, bool)
 	}
 
 	return &addr, true
+}
+
+// NewWithdrawRewardsResponse creates a new WithdrawRewardsResponse.
+func NewWithdrawRewardsResponse(rewards sdk.Coins) WithdrawRewardsResponse {
+	return WithdrawRewardsResponse{
+		Rewards: rewards.String(),
+	}
 }

@@ -15,12 +15,18 @@ func TestMsgValidate(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "OK",
+			name: "OK 1",
 			msg: Msg{
 				UpdateMetadata: &UpdateMetadataRequest{
 					OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 				},
+			},
+		},
+		{
+			name: "OK 2",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{},
 			},
 		},
 		{
@@ -51,6 +57,17 @@ func TestMsgValidate(t *testing.T) {
 		{
 			name:        "Fail: empty",
 			msg:         Msg{},
+			errExpected: true,
+		},
+		{
+			name: "Fail: not one of",
+			msg: Msg{
+				UpdateMetadata: &UpdateMetadataRequest{
+					OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				},
+				WithdrawRewards: &WithdrawRewardsRequest{},
+			},
 			errExpected: true,
 		},
 	}

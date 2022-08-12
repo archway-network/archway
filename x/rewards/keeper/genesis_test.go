@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
@@ -24,6 +26,7 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 		s.Assert().Empty(genesisState.ContractsMetadata)
 		s.Assert().NotEmpty(genesisState.BlockRewards) // height is 2 so we have some inflation rewards already
 		s.Assert().Empty(genesisState.TxRewards)
+		s.Assert().Empty(genesisState.RewardsRecords)
 
 		genesisStateInitial = *genesisState
 	})
@@ -77,7 +80,24 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 
 	newMinConsFee := sdk.NewDecCoin("uarch", sdk.NewInt(100))
 
-	genesisStateImported := types.NewGenesisState(newParams, newMetadata, newBlockRewards, newTxRewards, newMinConsFee)
+	newRewardsRecords := []types.RewardsRecord{
+		{
+			Id:               1,
+			RewardsAddress:   accAddrs[0].String(),
+			Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+			CalculatedHeight: ctx.BlockHeight(),
+			CalculatedTime:   ctx.BlockTime(),
+		},
+		{
+			Id:               2,
+			RewardsAddress:   accAddrs[1].String(),
+			Rewards:          sdk.NewCoins(sdk.NewCoin("uarch", sdk.NewInt(1))),
+			CalculatedHeight: ctx.BlockHeight() + 1,
+			CalculatedTime:   ctx.BlockTime().Add(5 * time.Second),
+		},
+	}
+
+	genesisStateImported := types.NewGenesisState(newParams, newMetadata, newBlockRewards, newTxRewards, newMinConsFee, newRewardsRecords)
 	s.Run("Check import of an updated genesis", func() {
 		keeper.InitGenesis(ctx, genesisStateImported)
 
@@ -87,6 +107,7 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 			BlockRewards:      append(genesisStateInitial.BlockRewards, newBlockRewards...),
 			TxRewards:         append(genesisStateInitial.TxRewards, newTxRewards...),
 			MinConsensusFee:   newMinConsFee,
+			RewardsRecords:    append(genesisStateInitial.RewardsRecords, newRewardsRecords...),
 		}
 
 		genesisStateReceived := keeper.ExportGenesis(ctx)
@@ -96,5 +117,6 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 		s.Assert().ElementsMatch(genesisStateExpected.BlockRewards, genesisStateReceived.BlockRewards)
 		s.Assert().ElementsMatch(genesisStateExpected.TxRewards, genesisStateReceived.TxRewards)
 		s.Assert().Equal(genesisStateExpected.MinConsensusFee.String(), genesisStateReceived.MinConsensusFee.String())
+		s.Assert().ElementsMatch(genesisStateExpected.RewardsRecords, genesisStateReceived.RewardsRecords)
 	})
 }

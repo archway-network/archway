@@ -21,6 +21,7 @@ func GetTxCmd() *cobra.Command {
 	}
 	cmd.AddCommand(
 		getTxSetContractMetadataCmd(),
+		getTxWithdrawRewardsCmd(),
 	)
 
 	return cmd
@@ -63,6 +64,30 @@ func getTxSetContractMetadataCmd() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 	addOwnerAddressFlag(cmd)
 	addRewardsAddressFlag(cmd)
+
+	return cmd
+}
+
+func getTxWithdrawRewardsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-rewards",
+		Args:  cobra.NoArgs,
+		Short: "Withdraw all current credited rewards for a given rewards address",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			senderAddr := clientCtx.GetFromAddress()
+
+			msg := types.NewMsgWithdrawRewards(senderAddr)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

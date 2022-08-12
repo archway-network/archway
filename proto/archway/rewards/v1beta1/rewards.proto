@@ -4,6 +4,7 @@ package archway.rewards.v1beta1;
 option go_package = "github.com/archway-network/archway/x/rewards/types";
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 // Params defines the module parameters.
@@ -67,17 +68,27 @@ message TxRewards {
   ];
 }
 
-// BlockTracking is the tracking information for a block.
-message BlockTracking {
+// RewardsRecord defines a record that is used to distribute rewards later (lazy distribution).
+// This record is being created by the x/rewards EndBlocker and pruned after the rewards are distributed.
+// An actual rewards x/bank transfer might be triggered by a Tx (via CLI for example) or by a contract via WASM bindings.
+// For a contract to trigger rewards transfer, contract address must be set as the rewards_address in a
+// corresponding ContractMetadata.
+message RewardsRecord {
   option (gogoproto.goproto_stringer) = false;
 
-  // inflation_rewards defines the inflation rewards for the block.
-  BlockRewards inflation_rewards = 1 [
+  // id is the unique ID of the record.
+  uint64 id = 1;
+  // rewards_address is the address to distribute rewards to (bech32 encoded).
+  string rewards_address = 2;
+  // rewards are the rewards to be transferred later.
+  repeated cosmos.base.v1beta1.Coin rewards = 3 [
     (gogoproto.nullable) = false
   ];
-
-  // tx_rewards defines the transaction rewards for the block.
-  repeated TxRewards tx_rewards = 2 [
-    (gogoproto.nullable) = false
+  // calculated_height defines the block height of rewards calculation event.
+  int64 calculated_height = 4;
+  // calculated_time defines the block time of rewards calculation event.
+  google.protobuf.Timestamp calculated_time = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
   ];
 }

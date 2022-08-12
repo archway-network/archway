@@ -857,3 +857,59 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
 		s.Assert().Equal(acc2.Address.String(), meta.RewardsAddress)
 	})
 }
+
+// TestVoter_WASMBindingsRewards tests rewards query and withdrawal via WASM bindings (Custom message).
+func (s *E2ETestSuite) TestVoter_WASMBindingsRewards() {
+	chain := s.chainA
+
+	acc := chain.GetAccount(0)
+	contractAddr := s.VoterUploadAndInstantiate(chain, acc)
+
+	// Set initial meta (admin as the OwnerAddress and the contract itself as the RewardsAddress)
+	{
+		meta := rewardsTypes.ContractMetadata{
+			OwnerAddress:   acc.Address.String(),
+			RewardsAddress: contractAddr.String(),
+		}
+		chain.SetContractMetadata(acc, contractAddr, meta)
+	}
+
+	// Check there are no rewards yet
+	s.Run("Query current rewards via WASM bindings (empty)", func() {
+		rewards := s.VoterGetCurrentRewards(chain, contractAddr)
+		s.Assert().Empty(rewards)
+
+		stats := s.VoterGetWithdrawStats(chain, contractAddr)
+		s.Assert().Empty(stats.Count)
+	})
+
+	// Create a new voting to get some rewards
+	{
+		s.VoterNewVoting(chain, contractAddr, acc, "Test", []string{"Yes", "No"}, 1*time.Hour)
+	}
+
+	// Check there are rewards calculated
+	var rewardsDistributed sdk.Coins
+	s.Run("Query current rewards via WASM bindings (not empty)", func() {
+		rewards := s.VoterGetCurrentRewards(chain, contractAddr)
+		s.Assert().NotEmpty(rewards)
+
+		rewardsDistributed = rewards
+	})
+
+	// Withdraw rewards
+	s.Run("Withdraw rewards via WASM bindings", func() {
+		s.VoterWithdrawRewards(chain, contractAddr, acc)
+
+		stats := s.VoterGetWithdrawStats(chain, contractAddr)
+		s.Assert().EqualValues(stats.Count, 1)
+		s.Assert().EqualValues(rewardsDistributed.String(), s.CosmWasmCoinsToSDK(stats.TotalAmount...).String())
+	})
+
+	// Check CustomMsg Reply handled
+	s.Run("Check CustomMsg Reply handled", func() {
+		stats := s.VoterGetWithdrawStats(chain, contractAddr)
+		s.Assert().EqualValues(stats.Count, 1)
+		s.Assert().EqualValues(rewardsDistributed.String(), s.CosmWasmCoinsToSDK(stats.TotalAmount...).String())
+	})
+}

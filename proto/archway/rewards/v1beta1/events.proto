@@ -35,15 +35,13 @@ message ContractRewardCalculationEvent {
   ContractMetadata metadata = 5;
 }
 
-// ContractRewardDistributionEvent is emitted when the contract reward is distributed to the corresponding rewards address.
-// This event might not follow the ContractRewardCalculationEvent if the contract has no metadata set or rewards address is empty.
-message ContractRewardDistributionEvent {
-  // contract_address defines the contract address.
-  string contract_address = 1;
+// RewardsWithdrawEvent is emitted when credited rewards for a specific rewards_address are distributed.
+// Event could be triggered by a transaction (via CLI for example) or by a contract via WASM bindings.
+message RewardsWithdrawEvent {
   // rewards_address defines the rewards address rewards are distributed to.
-  string reward_address = 2;
+  string reward_address = 1;
   // rewards defines the total rewards being distributed.
-  repeated cosmos.base.v1beta1.Coin rewards = 3 [
+  repeated cosmos.base.v1beta1.Coin rewards = 2 [
     (gogoproto.nullable) = false
   ];
 }

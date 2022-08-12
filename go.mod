@@ -3,7 +3,7 @@ module github.com/archway-network/archway
 go 1.18
 
 require (
-	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220729111547-079232ac0432
+	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220812150945-5a075164191c
 	github.com/CosmWasm/wasmd v0.25.0
 	github.com/CosmWasm/wasmvm v1.0.0
 	github.com/cosmos/cosmos-sdk v0.45.4
@@ -22,6 +22,7 @@ require (
 	github.com/tendermint/tm-db v0.6.7
 	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac
 	google.golang.org/grpc v1.45.0
+	google.golang.org/protobuf v1.28.0
 	sigs.k8s.io/yaml v1.2.0
 )
 
@@ -121,7 +122,6 @@ require (
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

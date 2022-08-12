@@ -6,17 +6,19 @@ import (
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
-// ContractMetadataReader defines the GasTrackerKeeper expected operations.
-type ContractMetadataReader interface {
+// RewardsReader defines the x/rewards keeper expected read operations.
+type RewardsReader interface {
 	GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress) *rewardsTypes.ContractMetadata
+	GetCurrentRewards(ctx sdk.Context, rewardsAddr sdk.AccAddress) sdk.Coins
 }
 
-// ContractMetadataWriter defines the GasTrackerKeeper expected operations.
-type ContractMetadataWriter interface {
+// RewardsWriter defines the x/rewards keeper expected write operations.
+type RewardsWriter interface {
 	SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sdk.AccAddress, metaUpdates rewardsTypes.ContractMetadata) error
+	WithdrawRewards(ctx sdk.Context, rewardsAddr sdk.AccAddress) sdk.Coins
 }
 
-type ContractMetadataReaderWriter interface {
-	ContractMetadataReader
-	ContractMetadataWriter
+type RewardsReaderWriter interface {
+	RewardsReader
+	RewardsWriter
 }

@@ -9,13 +9,21 @@ import (
 )
 
 // NewGenesisState creates a new GenesisState object.
-func NewGenesisState(params Params, contractsMetadata []ContractMetadata, blockRewards []BlockRewards, txRewards []TxRewards, minConsFee sdk.DecCoin) *GenesisState {
+func NewGenesisState(
+	params Params,
+	contractsMetadata []ContractMetadata,
+	blockRewards []BlockRewards, txRewards []TxRewards,
+	minConsFee sdk.DecCoin,
+	rewardsRecords []RewardsRecord,
+) *GenesisState {
+
 	return &GenesisState{
 		Params:            params,
 		ContractsMetadata: contractsMetadata,
 		BlockRewards:      blockRewards,
 		TxRewards:         txRewards,
 		MinConsensusFee:   minConsFee,
+		RewardsRecords:    rewardsRecords,
 	}
 }
 
@@ -27,6 +35,7 @@ func DefaultGenesisState() *GenesisState {
 		BlockRewards:      []BlockRewards{},
 		TxRewards:         []TxRewards{},
 		MinConsensusFee:   sdk.DecCoin{},
+		RewardsRecords:    []RewardsRecord{},
 	}
 }
 
@@ -77,6 +86,17 @@ func (m GenesisState) Validate() error {
 		if err := pkg.ValidateDecCoin(m.MinConsensusFee); err != nil {
 			return fmt.Errorf("minConsensusFee: %w", err)
 		}
+	}
+
+	rewardsRecordsIdSet := make(map[uint64]struct{})
+	for i, rewardsRecord := range m.RewardsRecords {
+		if err := rewardsRecord.Validate(); err != nil {
+			return fmt.Errorf("rewardsRecords [%d]: %w", i, err)
+		}
+		if _, ok := rewardsRecordsIdSet[rewardsRecord.Id]; ok {
+			return fmt.Errorf("rewardsRecords [%d]: duplicated id: %d", i, rewardsRecord.Id)
+		}
+		rewardsRecordsIdSet[rewardsRecord.Id] = struct{}{}
 	}
 
 	return nil

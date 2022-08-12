@@ -35,6 +35,11 @@ service Query {
   rpc EstimateTxFees(QueryEstimateTxFeesRequest) returns (QueryEstimateTxFeesResponse) {
     option (google.api.http).get = "/archway/rewards/v1/estimate_tx_fees";
   }
+
+  // CurrentRewards returns total rewards credited from different contracts for the provided rewards_address.
+  rpc CurrentRewards(QueryCurrentRewardsRequest) returns (QueryCurrentRewardsResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/current_rewards";
+  }
 }
 
 // QueryParamsRequest is the request for Query.Params.
@@ -95,6 +100,35 @@ message QueryEstimateTxFeesResponse {
 
   // estimated_fee is the estimated transaction fee for a given gas limit.
   cosmos.base.v1beta1.Coin estimated_fee = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// BlockTracking is the tracking information for a block.
+message BlockTracking {
+  option (gogoproto.goproto_stringer) = false;
+
+  // inflation_rewards defines the inflation rewards for the block.
+  BlockRewards inflation_rewards = 1 [
+    (gogoproto.nullable) = false
+  ];
+
+  // tx_rewards defines the transaction rewards for the block.
+  repeated TxRewards tx_rewards = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryCurrentRewardsRequest is the request for Query.CurrentRewards.
+message QueryCurrentRewardsRequest {
+  // rewards_address is the target address to query calculated rewards for (bech32 encoded).
+  string rewards_address = 1;
+}
+
+// QueryCurrentRewardsResponse is the response for Query.CurrentRewards.
+message QueryCurrentRewardsResponse {
+  // rewards is the total rewards credited to the rewards_address.
+  repeated cosmos.base.v1beta1.Coin rewards = 1 [
     (gogoproto.nullable) = false
   ];
 }
