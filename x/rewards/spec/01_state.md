@@ -16,7 +16,7 @@ Refer to the [rewards.proto](../../../proto/archway/rewards/v1beta1/rewards.prot
 
 ## Pool
 
-**Rewards** module account is used to aggregate tx fee rebate and inflation rewards tokens and transfer those tokens to a corresponding rewards address during the *withdraw* operation.
+**Rewards** module account is used to aggregate tx fee rebate and inflation rewards tokens and transfer those tokens to a corresponding rewards address during the *withdrawal* operation.
 
 ## ContractMetadata
 
@@ -39,12 +39,12 @@ where:
   * Only the owner is authorized to change the metadata.
   * This field could be an account or a contract address.
   * If it is a contract address, the contract itself could modify the metadata on its own via the WASM bindings functionality.
-* `rewards_address` - bech32-encoded account address to receive the contract's rewards via the *withdraw* operation.
+* `rewards_address` - bech32-encoded account address to receive the contract's rewards via the *withdrawal* operation.
 
-> Contract metadata is not created automatically, it is created by the `MsgSetContractMetadata` transaction which must be signed by a contract admin.
+> Contract metadata is not created automatically; it is created by the `MsgSetContractMetadata` transaction which must be signed by a contract admin.
 > A contract admin is set by the CosmWasm *Instantiate* operation.
 
-> If the `rewards_address` field is not set (metadata has not being created or the field is empty), a contract won't receive any rewards.
+> If the `rewards_address` field is not set (metadata has not been created or the field is empty), a contract won't receive any rewards.
 
 Storage keys:
 
@@ -114,7 +114,7 @@ The *minimum consensus fee* is a price for one transaction gas unit. Value is us
 
 Value is updated by the **MintBankKeeper** for each block.
 
-This mechanism was introduced to the Archway protocol to avoid cases where one transaction with low fees (or without fees at all) could cause higher dApp rewards breaking the protocol economic model.
+This mechanism was introduced to the Archway protocol to avoid cases where one transaction with low fees (or without fees at all) could cause higher dApp rewards, breaking the protocol economic model.
 
 Storage keys:
 
@@ -147,7 +147,7 @@ Example:
 
 This mechanism was introduced to the Archway protocol to reduce the CPU load on the module's **BeginBlocker** and to give a contract control over its rewards (refer to WASM bindings section).
 
-Entries are pruned on a successful *withdraw* operation.
+Entries are pruned on a successful *withdrawal* operation.
 
 Storage keys:
 

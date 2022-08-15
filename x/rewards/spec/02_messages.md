@@ -34,5 +34,5 @@ Returns:
 
 * The message [response](https://github.com/archway-network/archway/blob/e130d74bd456be037b4e60dea7dada5d7a8760b5/proto/archway/rewards/v1beta1/tx.proto#L42) contains the total amount of rewards tokens transferred (empty if this rewards address has no rewards yet);
 
-This *withdraw* operation can also be triggered by a contract (refer to WASM bindings section).
+This *withdrawal* operation can also be triggered by a contract (refer to WASM bindings section).
 

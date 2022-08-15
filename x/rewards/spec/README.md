@@ -9,17 +9,17 @@ parent:
 
 ## Overview
 
-The module enables Cosmos-SDK based blockchain to calculate and distribute dApp rewards within the Archway protocol.
+The module enables Cosmos SDK-based blockchain to calculate and distribute dApp rewards within the Archway protocol.
 Module also introduces a concept of *minimal consensus fee* to set the lower bound of a transaction fee.
 
 ### dApp rewards
 
 Contract rewards are estimated based on a particular contract usage within one block using gas tracking data from the `x/tracking` module.
-Basically, the more gas a contract use (by its own or by other contracts calling it), the more rewards it gets.
+Basically, the more gas a contract uses (by its own or by other contracts calling it), the more rewards it gets.
 
 To configure rewards specific parameters for a contract, the [ContractMetadata](01_state.md#ContractMetadata) object is used.
 
-There are two types of dApp rewards a contract could receive.
+There are two types of dApp rewards a contract can receive.
 
 #### Transaction fee rebate rewards
 
@@ -31,16 +31,16 @@ $$
 
 where:
 
-* *TxFees* - transaction fees payed by a user;
+* *TxFees* - transaction fees paid by a user;
 * *TxFeeRebateRatio* - `x/rewards` module parameter that defines the ratio to split fees between the **FeeCollector** and the **Rewards** module accounts (`[0..1)`);
 * *ContractTxGasUsed* - total gas used by a contract within this transaction;
 * *TxGasUsed* - total gas used by all contracts within this transaction;
 
-> **FeeCollector**'s part of fees is used to reward validators and delegators as it is done in a "standard" Cosmos-SDK based chain. The same applies to the inflationary rewards.
+> **FeeCollector**'s part of fees is used to reward validators and delegators as it is done in a "standard" Cosmos SDK-based chain. The same applies to inflationary rewards.
 
-#### Inflationary rewareds
+#### Inflationary rewards
 
-A portion of minted by the `x/mint` module tokens is used as a source of this rewards. Rewards estimation formula:
+A portion of minted by the `x/mint` module tokens is used as a source of these rewards. Rewards estimation formula:
 
 $$
 ContractInflationRewards = (MintedTokens * InflationRewardsRatio) * \frac{ContractTotalGasUsed}{BlockGasLimit}
@@ -55,7 +55,7 @@ where:
 
 #### Minimum consensus fee
 
-The *minimum consensus fee* is a price for one gas unit. That value limits the minimum fee payed by a user in respect to the provided transaction gas limit:
+The *minimum consensus fee* is a price for one gas unit. That value limits the minimum fee paid by a user in respect to the provided transaction gas limit:
 
 $$
 MinimumTxFee = MinConsensusFee * TxGasLimit
@@ -68,8 +68,8 @@ MinConsensusFee = -\frac{InflationBlockRewards}{BlockGasLimit * TxFeeRebateRatio
 InflationBlockRewards = MintedTokens * InflationRewardsRatio
 }$$
 
-> If the provided transaction fee is less then MinConsensusFee x TxGasLimit, transaction is rejected.
-> User could estimate a transaction fee using the `x/rewards` query.
+> If the provided transaction fee is less, then MinConsensusFee x TxGasLimit, transaction is rejected.
+> User can estimate a transaction fee using the `x/rewards` query.
 
 ## Contents
 
@@ -80,3 +80,4 @@ InflationBlockRewards = MintedTokens * InflationRewardsRatio
 5. **[Events](05_events.md)**
 6. **[Parameters](06_params.md)**
 7. **[Client](07_client.md)**
+8. [WASM bindings](08_wasm_bindings.md)

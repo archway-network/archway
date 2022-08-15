@@ -84,7 +84,7 @@ rewards_address: archway12reqvcenxgv5s7z96pkytzajtl4lf2epyfman2
 
 #### rewards
 
-Get the current credited dApp rewards for an account. Those rewards are "ready" for the *withdraw* operation.
+Get the current credited dApp rewards for an account. Those rewards are "ready" for the *withdrawal* operation.
 
 Usage:
 

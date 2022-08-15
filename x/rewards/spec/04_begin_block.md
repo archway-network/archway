@@ -41,7 +41,7 @@ Processing steps:
    * Create a new `RewardsRecord` for a contract if:
      * A contract metadata is set;
      * The `rewards_address` metadata field is set;
-   * Multiple `RewardsRecords` could be created for a single rewards address if that address is used by multiple contract metadatas.
+   * Multiple `RewardsRecords` could be created for a single rewards address if that address is used by multiple contract metadata.
 
 4. Cleanup
 
