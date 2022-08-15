@@ -62,10 +62,11 @@ MinimumTxFee = MinConsensusFee * TxGasLimit
 $$
 
 The *minimum consensus fee* value is updated each block using the formula:
-$$
+
+$$\displaylines{
 MinConsensusFee = -\frac{InflationBlockRewards}{BlockGasLimit * TxFeeRebateRatio - BlockGasLimit} \\
 InflationBlockRewards = MintedTokens * InflationRewardsRatio
-$$
+}$$
 
 > If the provided transaction fee is less then MinConsensusFee x TxGasLimit, transaction is rejected.
 > User could estimate a transaction fee using the `x/rewards` query.
