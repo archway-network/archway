@@ -22,17 +22,19 @@ Processing steps:
 2. Estimate contract rewards
 
    * Transactions fee rebate rewards for a contract (sum of all block transaction fee rewards contract had operations in):
-     $$
+     
+     $$\displaylines{
      TxRewardsShare_i = \frac{ContractTxGasUsed_i}{TxGasUsed} \\
      TxRewards_i = TxFees * TxRewardsShare_i \\
      ContractRewards = \sum_{i=1}^n TxRewards_i
-     $$
+     }$$
 
    * Block inflation rewards for a contract:
-     $$
+     
+     $$\displaylines{
      InflationShare = \frac{ContractGasUsed}{BlockGasLimit} \\
      ContractRewards = BlockRewards * InflationShare
-     $$
+     }$$
 
 3. Create reward records
 
