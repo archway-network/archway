@@ -5,16 +5,16 @@ parent:
   title: "rewards"
 -->
 
-# `Rewards`
+# Rewards
 
-## Overview
+## Abstract
 
 The module enables Cosmos SDK-based blockchain to calculate and distribute dApp rewards within the Archway protocol.
 Module also introduces a concept of *minimal consensus fee* to set the lower bound of a transaction fee.
 
 ### dApp rewards
 
-Contract rewards are estimated based on a particular contract usage within one block using gas tracking data from the `x/tracking` module.
+dApp rewards are estimated based on a particular contract usage within one block using gas tracking data from the `x/tracking` module.
 Basically, the more gas a contract uses (by its own or by other contracts calling it), the more rewards it gets.
 
 To configure rewards specific parameters for a contract, the [ContractMetadata](01_state.md#ContractMetadata) object is used.

@@ -8,9 +8,7 @@ Section describes the module state change on the ABCI begin block call.
 
 ## Rewards calculation
 
-The calculation is skipped for the blocks 0 and 1.
-
-Processing steps:
+dApp rewards are calculated as follows:
 
 1. Estimate gas usage by contracts
 
@@ -47,3 +45,4 @@ Processing steps:
 
    * Remove `x/tracking` and `x/rewards` tracking entries for the `(currentHeight - 10)` block height.
 
+> Due to querying the previous block tracking data, the calculation is skipped for the blocks 0 and 1.

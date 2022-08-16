@@ -10,9 +10,11 @@ Section describes the module ante handlers.
 
 The [MinFeeDecorator](https://github.com/archway-network/archway/blob/e130d74bd456be037b4e60dea7dada5d7a8760b5/x/rewards/ante/min_cons_fee.go#L19) checks if a transaction fees are greater or equal to a calculated value.
 The handler declines the transaction if the provided fees do not match the condition:
+
 $$
 TxFees < TxGasLimit * MinConsensusFee
 $$
+
 where:
 
 * *TxFees* - transaction fees provided by a user;
