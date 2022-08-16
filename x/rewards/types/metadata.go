@@ -44,18 +44,18 @@ func (m ContractMetadata) MustGetRewardsAddress() sdk.AccAddress {
 // genesisValidation flag perform strict validation of the genesis state (some field must be set).
 func (m ContractMetadata) Validate(genesisValidation bool) error {
 	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
-		return sdkErrors.Wrap(sdkErrors.ErrInvalidAddress, "invalid contract address")
+		return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid contract address: %v", err)
 	}
 
 	if genesisValidation || m.OwnerAddress != "" {
 		if _, err := sdk.AccAddressFromBech32(m.OwnerAddress); err != nil {
-			return sdkErrors.Wrap(sdkErrors.ErrInvalidAddress, "invalid owner address")
+			return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid owner address: %v", err)
 		}
 	}
 
 	if m.RewardsAddress != "" {
 		if _, err := sdk.AccAddressFromBech32(m.RewardsAddress); err != nil {
-			return sdkErrors.Wrap(sdkErrors.ErrInvalidAddress, "invalid rewards address")
+			return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid rewards address: %v", err)
 		}
 	}
 

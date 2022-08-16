@@ -118,8 +118,8 @@ func (s *QueryServer) EstimateTxFees(c context.Context, request *types.QueryEsti
 	}, nil
 }
 
-// CurrentRewards implements the types.QueryServer interface.
-func (s *QueryServer) CurrentRewards(c context.Context, request *types.QueryCurrentRewardsRequest) (*types.QueryCurrentRewardsResponse, error) {
+// OutstandingRewards implements the types.QueryServer interface.
+func (s *QueryServer) OutstandingRewards(c context.Context, request *types.QueryOutstandingRewardsRequest) (*types.QueryOutstandingRewardsResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -131,7 +131,38 @@ func (s *QueryServer) CurrentRewards(c context.Context, request *types.QueryCurr
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	return &types.QueryCurrentRewardsResponse{
-		Rewards: s.keeper.GetCurrentRewards(ctx, rewardsAddr),
+	totalRewards := sdk.NewCoins()
+	records := s.keeper.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddress(rewardsAddr)
+	for _, record := range records {
+		totalRewards = totalRewards.Add(record.Rewards...)
+	}
+
+	return &types.QueryOutstandingRewardsResponse{
+		TotalRewards: totalRewards,
+		RecordsNum:   uint64(len(records)),
+	}, nil
+}
+
+// RewardsRecords implements the types.QueryServer interface.
+func (s *QueryServer) RewardsRecords(c context.Context, request *types.QueryRewardsRecordsRequest) (*types.QueryRewardsRecordsResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	rewardsAddr, err := sdk.AccAddressFromBech32(request.RewardsAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid rewards address: "+err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	records, pageResp, err := s.keeper.GetRewardsRecords(ctx, rewardsAddr, request.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "pagination request: "+err.Error())
+	}
+
+	return &types.QueryRewardsRecordsResponse{
+		Records:    records,
+		Pagination: pageResp,
 	}, nil
 }

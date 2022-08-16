@@ -7,6 +7,7 @@ import (
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	"github.com/archway-network/archway/x/rewards/wasmbinding/types"
@@ -52,8 +53,14 @@ func (qp QueryPlugin) DispatchQuery(ctx sdk.Context, request json.RawMessage) ([
 	switch {
 	case req.Metadata != nil:
 		resData, resErr = qp.getContractMetadata(ctx, req.Metadata.MustGetContractAddress())
-	case req.CurrentRewards != nil:
-		resData, resErr = qp.getCurrentRewards(ctx, req.CurrentRewards.MustGetRewardsAddress())
+	case req.RewardsRecords != nil:
+		var pageReq *query.PageRequest
+		if req.RewardsRecords.Pagination != nil {
+			req := req.RewardsRecords.Pagination.ToSDK()
+			pageReq = &req
+		}
+
+		resData, resErr = qp.getRewardsRecords(ctx, req.RewardsRecords.MustGetRewardsAddress(), pageReq)
 	default:
 		return nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "unknown request")
 	}
@@ -80,9 +87,23 @@ func (qp QueryPlugin) getContractMetadata(ctx sdk.Context, contractAddr sdk.AccA
 	return types.NewContractMetadataResponse(*meta), nil
 }
 
-// getCurrentRewards returns the current rewards for a given account address.
-func (qp QueryPlugin) getCurrentRewards(ctx sdk.Context, rewardsAddr sdk.AccAddress) (types.CurrentRewardsResponse, error) {
-	rewards := qp.rewardsKeeper.GetCurrentRewards(ctx, rewardsAddr)
+// getRewardsRecords returns the paginated list of types.RewardsRecord objects for a given account address.
+func (qp QueryPlugin) getRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, pageReq *query.PageRequest) (types.RewardsRecordsResponse, error) {
+	maxWithdrawRecords := qp.rewardsKeeper.MaxWithdrawRecords(ctx)
 
-	return types.NewCurrentRewardsResponse(rewards), nil
+	if pageReq == nil {
+		pageReq = &query.PageRequest{
+			Limit: maxWithdrawRecords,
+		}
+	}
+	if pageReq.Limit > maxWithdrawRecords {
+		return types.RewardsRecordsResponse{}, sdkErrors.Wrapf(rewardsTypes.ErrInvalidRequest, "max records (%d) query limit exceeded", maxWithdrawRecords)
+	}
+
+	records, pageResp, err := qp.rewardsKeeper.GetRewardsRecords(ctx, rewardsAddr, pageReq)
+	if err != nil {
+		return types.RewardsRecordsResponse{}, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, err.Error())
+	}
+
+	return types.NewRewardsRecordsResponse(records, *pageResp), nil
 }

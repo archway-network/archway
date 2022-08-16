@@ -126,7 +126,13 @@ var xxx_messageInfo_MsgSetContractMetadataResponse proto.InternalMessageInfo
 // MsgWithdrawRewards is the request for Msg.WithdrawRewards.
 type MsgWithdrawRewards struct {
 	// rewards_address is the address to distribute rewards to (bech32 encoded).
-	RewardsAddress string `protobuf:"bytes,2,opt,name=rewards_address,json=rewardsAddress,proto3" json:"rewards_address,omitempty"`
+	RewardsAddress string `protobuf:"bytes,1,opt,name=rewards_address,json=rewardsAddress,proto3" json:"rewards_address,omitempty"`
+	// mode defines the operation type.
+	//
+	// Types that are valid to be assigned to Mode:
+	//	*MsgWithdrawRewards_RecordsLimit_
+	//	*MsgWithdrawRewards_RecordIds
+	Mode isMsgWithdrawRewards_Mode `protobuf_oneof:"mode"`
 }
 
 func (m *MsgWithdrawRewards) Reset()         { *m = MsgWithdrawRewards{} }
@@ -162,6 +168,29 @@ func (m *MsgWithdrawRewards) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawRewards proto.InternalMessageInfo
 
+type isMsgWithdrawRewards_Mode interface {
+	isMsgWithdrawRewards_Mode()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type MsgWithdrawRewards_RecordsLimit_ struct {
+	RecordsLimit *MsgWithdrawRewards_RecordsLimit `protobuf:"bytes,2,opt,name=records_limit,json=recordsLimit,proto3,oneof" json:"records_limit,omitempty"`
+}
+type MsgWithdrawRewards_RecordIds struct {
+	RecordIds *MsgWithdrawRewards_RecordIDs `protobuf:"bytes,3,opt,name=record_ids,json=recordIds,proto3,oneof" json:"record_ids,omitempty"`
+}
+
+func (*MsgWithdrawRewards_RecordsLimit_) isMsgWithdrawRewards_Mode() {}
+func (*MsgWithdrawRewards_RecordIds) isMsgWithdrawRewards_Mode()     {}
+
+func (m *MsgWithdrawRewards) GetMode() isMsgWithdrawRewards_Mode {
+	if m != nil {
+		return m.Mode
+	}
+	return nil
+}
+
 func (m *MsgWithdrawRewards) GetRewardsAddress() string {
 	if m != nil {
 		return m.RewardsAddress
@@ -169,10 +198,122 @@ func (m *MsgWithdrawRewards) GetRewardsAddress() string {
 	return ""
 }
 
+func (m *MsgWithdrawRewards) GetRecordsLimit() *MsgWithdrawRewards_RecordsLimit {
+	if x, ok := m.GetMode().(*MsgWithdrawRewards_RecordsLimit_); ok {
+		return x.RecordsLimit
+	}
+	return nil
+}
+
+func (m *MsgWithdrawRewards) GetRecordIds() *MsgWithdrawRewards_RecordIDs {
+	if x, ok := m.GetMode().(*MsgWithdrawRewards_RecordIds); ok {
+		return x.RecordIds
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*MsgWithdrawRewards) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*MsgWithdrawRewards_RecordsLimit_)(nil),
+		(*MsgWithdrawRewards_RecordIds)(nil),
+	}
+}
+
+type MsgWithdrawRewards_RecordsLimit struct {
+	Limit uint64 `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"`
+}
+
+func (m *MsgWithdrawRewards_RecordsLimit) Reset()         { *m = MsgWithdrawRewards_RecordsLimit{} }
+func (m *MsgWithdrawRewards_RecordsLimit) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawRewards_RecordsLimit) ProtoMessage()    {}
+func (*MsgWithdrawRewards_RecordsLimit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cda0f3b1281e62e0, []int{2, 0}
+}
+func (m *MsgWithdrawRewards_RecordsLimit) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawRewards_RecordsLimit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawRewards_RecordsLimit.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawRewards_RecordsLimit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawRewards_RecordsLimit.Merge(m, src)
+}
+func (m *MsgWithdrawRewards_RecordsLimit) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawRewards_RecordsLimit) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawRewards_RecordsLimit.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawRewards_RecordsLimit proto.InternalMessageInfo
+
+func (m *MsgWithdrawRewards_RecordsLimit) GetLimit() uint64 {
+	if m != nil {
+		return m.Limit
+	}
+	return 0
+}
+
+type MsgWithdrawRewards_RecordIDs struct {
+	Ids []uint64 `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
+}
+
+func (m *MsgWithdrawRewards_RecordIDs) Reset()         { *m = MsgWithdrawRewards_RecordIDs{} }
+func (m *MsgWithdrawRewards_RecordIDs) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawRewards_RecordIDs) ProtoMessage()    {}
+func (*MsgWithdrawRewards_RecordIDs) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cda0f3b1281e62e0, []int{2, 1}
+}
+func (m *MsgWithdrawRewards_RecordIDs) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawRewards_RecordIDs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawRewards_RecordIDs.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawRewards_RecordIDs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawRewards_RecordIDs.Merge(m, src)
+}
+func (m *MsgWithdrawRewards_RecordIDs) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawRewards_RecordIDs) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawRewards_RecordIDs.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawRewards_RecordIDs proto.InternalMessageInfo
+
+func (m *MsgWithdrawRewards_RecordIDs) GetIds() []uint64 {
+	if m != nil {
+		return m.Ids
+	}
+	return nil
+}
+
 // MsgWithdrawRewardsResponse is the response for Msg.WithdrawRewards.
 type MsgWithdrawRewardsResponse struct {
+	// records_num is the number of RewardsRecord objects processed.
+	RecordsNum uint64 `protobuf:"varint,1,opt,name=records_num,json=recordsNum,proto3" json:"records_num,omitempty"`
 	// rewards are the total rewards transferred.
-	Rewards []types.Coin `protobuf:"bytes,3,rep,name=rewards,proto3" json:"rewards"`
+	TotalRewards []types.Coin `protobuf:"bytes,2,rep,name=total_rewards,json=totalRewards,proto3" json:"total_rewards"`
 }
 
 func (m *MsgWithdrawRewardsResponse) Reset()         { *m = MsgWithdrawRewardsResponse{} }
@@ -208,9 +349,16 @@ func (m *MsgWithdrawRewardsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawRewardsResponse proto.InternalMessageInfo
 
-func (m *MsgWithdrawRewardsResponse) GetRewards() []types.Coin {
+func (m *MsgWithdrawRewardsResponse) GetRecordsNum() uint64 {
 	if m != nil {
-		return m.Rewards
+		return m.RecordsNum
+	}
+	return 0
+}
+
+func (m *MsgWithdrawRewardsResponse) GetTotalRewards() []types.Coin {
+	if m != nil {
+		return m.TotalRewards
 	}
 	return nil
 }
@@ -219,38 +367,47 @@ func init() {
 	proto.RegisterType((*MsgSetContractMetadata)(nil), "archway.rewards.v1beta1.MsgSetContractMetadata")
 	proto.RegisterType((*MsgSetContractMetadataResponse)(nil), "archway.rewards.v1beta1.MsgSetContractMetadataResponse")
 	proto.RegisterType((*MsgWithdrawRewards)(nil), "archway.rewards.v1beta1.MsgWithdrawRewards")
+	proto.RegisterType((*MsgWithdrawRewards_RecordsLimit)(nil), "archway.rewards.v1beta1.MsgWithdrawRewards.RecordsLimit")
+	proto.RegisterType((*MsgWithdrawRewards_RecordIDs)(nil), "archway.rewards.v1beta1.MsgWithdrawRewards.RecordIDs")
 	proto.RegisterType((*MsgWithdrawRewardsResponse)(nil), "archway.rewards.v1beta1.MsgWithdrawRewardsResponse")
 }
 
 func init() { proto.RegisterFile("archway/rewards/v1beta1/tx.proto", fileDescriptor_cda0f3b1281e62e0) }
 
 var fileDescriptor_cda0f3b1281e62e0 = []byte{
-	// 393 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x4f, 0x6b, 0xe2, 0x40,
-	0x18, 0xc6, 0x33, 0xba, 0xec, 0x9f, 0x91, 0x55, 0xc8, 0x2e, 0xbb, 0x6e, 0x0e, 0xb3, 0x21, 0x20,
-	0xeb, 0xb2, 0xec, 0x0c, 0xc6, 0x43, 0xe9, 0xa1, 0x87, 0xda, 0x63, 0x9b, 0x4b, 0x7a, 0x10, 0x7a,
-	0x29, 0x93, 0x64, 0x88, 0xa1, 0x98, 0x91, 0x99, 0x69, 0xa3, 0xa7, 0x7e, 0x81, 0x1e, 0xfa, 0xb1,
-	0x3c, 0x7a, 0xec, 0xa9, 0x14, 0xfd, 0x18, 0xbd, 0x14, 0x93, 0x49, 0x28, 0x56, 0x0b, 0xde, 0xf4,
-	0xcd, 0xef, 0x7d, 0x9e, 0xe7, 0x7d, 0x18, 0x68, 0x53, 0x11, 0x8e, 0x32, 0x3a, 0x23, 0x82, 0x65,
-	0x54, 0x44, 0x92, 0xdc, 0xf4, 0x02, 0xa6, 0x68, 0x8f, 0xa8, 0x29, 0x9e, 0x08, 0xae, 0xb8, 0xf9,
-	0x53, 0x13, 0x58, 0x13, 0x58, 0x13, 0xd6, 0xf7, 0x98, 0xc7, 0x3c, 0x67, 0xc8, 0xfa, 0x57, 0x81,
-	0x5b, 0x28, 0xe4, 0x72, 0xcc, 0x25, 0x09, 0xa8, 0x64, 0x95, 0x58, 0xc8, 0x93, 0x54, 0x7f, 0xef,
-	0xec, 0x32, 0x2c, 0xe5, 0x73, 0xcc, 0xb9, 0x03, 0xf0, 0x87, 0x27, 0xe3, 0x73, 0xa6, 0x4e, 0x78,
-	0xaa, 0x04, 0x0d, 0x95, 0xc7, 0x14, 0x8d, 0xa8, 0xa2, 0x66, 0x07, 0x36, 0x25, 0x4b, 0x23, 0x26,
-	0x2e, 0x69, 0x14, 0x09, 0x26, 0x65, 0x1b, 0xd8, 0xa0, 0xfb, 0xc5, 0xff, 0x5a, 0x4c, 0x8f, 0x8b,
-	0xa1, 0x79, 0x0a, 0x3f, 0x8f, 0xf5, 0x4a, 0xbb, 0x66, 0x83, 0x6e, 0xc3, 0xfd, 0x8b, 0x77, 0x9c,
-	0x82, 0x37, 0x3d, 0x06, 0x1f, 0xe6, 0x8f, 0xbf, 0x0d, 0xbf, 0x12, 0x70, 0x6c, 0x88, 0xb6, 0xa7,
-	0xf1, 0x99, 0x9c, 0xf0, 0x54, 0x32, 0xe7, 0x08, 0x9a, 0x9e, 0x8c, 0x87, 0x89, 0x1a, 0x45, 0x82,
-	0x66, 0x7e, 0x61, 0x60, 0xfe, 0x81, 0x2d, 0xed, 0x55, 0x85, 0xad, 0xe5, 0x61, 0x9b, 0x7a, 0xac,
-	0xd3, 0x3a, 0x43, 0x68, 0xbd, 0x5d, 0x2f, 0xc5, 0xcd, 0x43, 0xf8, 0x49, 0xf3, 0xed, 0xba, 0x5d,
-	0xef, 0x36, 0xdc, 0x5f, 0xb8, 0xa8, 0x19, 0xaf, 0x6b, 0x7e, 0x75, 0x46, 0x92, 0xea, 0xe8, 0x25,
-	0xef, 0x3e, 0x03, 0x58, 0xf7, 0x64, 0x6c, 0xde, 0xc2, 0x6f, 0xdb, 0xca, 0x24, 0x3b, 0x3b, 0xd9,
-	0x7e, 0xaf, 0x75, 0xb0, 0xe7, 0x42, 0x75, 0x83, 0x84, 0xad, 0xcd, 0x76, 0xfe, 0xbd, 0xa7, 0xb5,
-	0x01, 0x5b, 0xfd, 0x3d, 0xe0, 0xd2, 0x74, 0x70, 0x36, 0x5f, 0x22, 0xb0, 0x58, 0x22, 0xf0, 0xb4,
-	0x44, 0xe0, 0x7e, 0x85, 0x8c, 0xc5, 0x0a, 0x19, 0x0f, 0x2b, 0x64, 0x5c, 0xb8, 0x71, 0xa2, 0x46,
-	0xd7, 0x01, 0x0e, 0xf9, 0x98, 0x68, 0xe1, 0xff, 0x29, 0x53, 0x19, 0x17, 0x57, 0xe5, 0x7f, 0x32,
-	0xad, 0x1e, 0xa9, 0x9a, 0x4d, 0x98, 0x0c, 0x3e, 0xe6, 0x6f, 0xb3, 0xff, 0x12, 0x00, 0x00, 0xff,
-	0xff, 0x47, 0xd2, 0x31, 0x94, 0x35, 0x03, 0x00, 0x00,
+	// 511 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0x3f, 0x6f, 0xd3, 0x40,
+	0x14, 0xf7, 0xc5, 0xa1, 0x22, 0x2f, 0x49, 0x2b, 0x1d, 0x55, 0x09, 0x1e, 0x5c, 0x2b, 0x50, 0x11,
+	0x84, 0xb0, 0xd5, 0x54, 0x08, 0x56, 0x42, 0x87, 0x56, 0x34, 0x0c, 0x46, 0x02, 0x89, 0x25, 0xba,
+	0xd8, 0x27, 0xc7, 0xa2, 0xf6, 0x45, 0x77, 0x17, 0xd2, 0x4e, 0x0c, 0xac, 0x0c, 0x7c, 0xac, 0xb2,
+	0x75, 0x64, 0x42, 0x28, 0xf9, 0x18, 0x2c, 0xc8, 0xbe, 0xb3, 0x15, 0xe5, 0x4f, 0xa5, 0x6c, 0x79,
+	0x2f, 0xbf, 0xf7, 0xfb, 0xf3, 0xfc, 0x0e, 0x1c, 0xc2, 0x83, 0xd1, 0x94, 0x5c, 0x7b, 0x9c, 0x4e,
+	0x09, 0x0f, 0x85, 0xf7, 0xf5, 0x78, 0x48, 0x25, 0x39, 0xf6, 0xe4, 0x95, 0x3b, 0xe6, 0x4c, 0x32,
+	0xfc, 0x50, 0x23, 0x5c, 0x8d, 0x70, 0x35, 0xc2, 0xda, 0x8f, 0x58, 0xc4, 0x72, 0x8c, 0x97, 0xfd,
+	0x52, 0x70, 0xcb, 0x0e, 0x98, 0x48, 0x98, 0xf0, 0x86, 0x44, 0xd0, 0x92, 0x2c, 0x60, 0x71, 0xaa,
+	0xff, 0x3f, 0xda, 0x24, 0x58, 0xd0, 0xe7, 0xb0, 0xf6, 0x0f, 0x04, 0x07, 0x7d, 0x11, 0x7d, 0xa0,
+	0xf2, 0x2d, 0x4b, 0x25, 0x27, 0x81, 0xec, 0x53, 0x49, 0x42, 0x22, 0x09, 0x3e, 0x82, 0x5d, 0x41,
+	0xd3, 0x90, 0xf2, 0x01, 0x09, 0x43, 0x4e, 0x85, 0x68, 0x21, 0x07, 0x75, 0x6a, 0x7e, 0x53, 0x75,
+	0xdf, 0xa8, 0x26, 0x7e, 0x07, 0xf7, 0x13, 0x3d, 0xd2, 0xaa, 0x38, 0xa8, 0x53, 0xef, 0x3e, 0x73,
+	0x37, 0x44, 0x71, 0x97, 0x35, 0x7a, 0xd5, 0x9b, 0x3f, 0x87, 0x86, 0x5f, 0x12, 0xb4, 0x1d, 0xb0,
+	0xd7, 0xbb, 0xf1, 0xa9, 0x18, 0xb3, 0x54, 0xd0, 0xf6, 0xaf, 0x0a, 0xe0, 0xbe, 0x88, 0x3e, 0xc5,
+	0x72, 0x14, 0x72, 0x32, 0xf5, 0x95, 0x02, 0x7e, 0x0a, 0x7b, 0x5a, 0x6c, 0xc9, 0xed, 0xae, 0x6e,
+	0x17, 0x76, 0x07, 0xd0, 0xe4, 0x34, 0x60, 0x19, 0xf0, 0x32, 0x4e, 0x62, 0xa9, 0x3d, 0xbf, 0xde,
+	0xe8, 0x79, 0x55, 0xcc, 0xf5, 0x15, 0xc1, 0x45, 0x36, 0x7f, 0x66, 0xf8, 0x0d, 0xbe, 0x50, 0xe3,
+	0x8f, 0x00, 0xaa, 0x1e, 0xc4, 0xa1, 0x68, 0x99, 0x39, 0xfb, 0xcb, 0xed, 0xd9, 0xcf, 0x4f, 0xc5,
+	0x99, 0xe1, 0xd7, 0x14, 0xd5, 0x79, 0x28, 0xac, 0x27, 0xd0, 0x58, 0xd4, 0xc5, 0xfb, 0x70, 0x4f,
+	0x05, 0xc8, 0x72, 0x56, 0x7d, 0x55, 0x58, 0x8f, 0xa1, 0x56, 0xce, 0xe3, 0x03, 0x30, 0x33, 0x0f,
+	0xc8, 0x31, 0x3b, 0x55, 0xbd, 0xea, 0xac, 0xd1, 0xdb, 0x81, 0x6a, 0xc2, 0x42, 0xda, 0xfe, 0x8e,
+	0xc0, 0x5a, 0x35, 0x50, 0xac, 0x1a, 0x1f, 0x42, 0xbd, 0x58, 0x55, 0x3a, 0x49, 0xb4, 0x8e, 0x0e,
+	0x27, 0xde, 0x4f, 0x12, 0x7c, 0x0a, 0x4d, 0xc9, 0x24, 0xb9, 0x1c, 0xe8, 0x54, 0xad, 0x8a, 0x63,
+	0x76, 0xea, 0xdd, 0x47, 0xae, 0xba, 0x4d, 0x37, 0xbb, 0xcd, 0x85, 0x6f, 0x1f, 0xa7, 0xda, 0x44,
+	0x23, 0x9f, 0xd2, 0x72, 0xdd, 0x7f, 0x08, 0xcc, 0xbe, 0x88, 0xf0, 0x37, 0x78, 0xb0, 0xee, 0x0c,
+	0xbd, 0xbb, 0x76, 0xb7, 0x66, 0xc0, 0x7a, 0xb5, 0xe5, 0x40, 0x99, 0x57, 0xc0, 0xde, 0xf2, 0x59,
+	0x3d, 0xdf, 0xe2, 0xc3, 0x59, 0x27, 0x5b, 0x80, 0x0b, 0xd1, 0xde, 0xc5, 0xcd, 0xcc, 0x46, 0xb7,
+	0x33, 0x1b, 0xfd, 0x9d, 0xd9, 0xe8, 0xe7, 0xdc, 0x36, 0x6e, 0xe7, 0xb6, 0xf1, 0x7b, 0x6e, 0x1b,
+	0x9f, 0xbb, 0x51, 0x2c, 0x47, 0x93, 0xa1, 0x1b, 0xb0, 0xc4, 0xd3, 0xc4, 0x2f, 0x52, 0x2a, 0xa7,
+	0x8c, 0x7f, 0x29, 0x6a, 0xef, 0xaa, 0x7c, 0xde, 0xf2, 0x7a, 0x4c, 0xc5, 0x70, 0x27, 0x7f, 0xd5,
+	0x27, 0xff, 0x03, 0x00, 0x00, 0xff, 0xff, 0xad, 0xe4, 0xef, 0x6d, 0x6f, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -460,12 +617,132 @@ func (m *MsgWithdrawRewards) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Mode != nil {
+		{
+			size := m.Mode.Size()
+			i -= size
+			if _, err := m.Mode.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
 	if len(m.RewardsAddress) > 0 {
 		i -= len(m.RewardsAddress)
 		copy(dAtA[i:], m.RewardsAddress)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.RewardsAddress)))
 		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawRewards_RecordsLimit_) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawRewards_RecordsLimit_) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RecordsLimit != nil {
+		{
+			size, err := m.RecordsLimit.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
 		dAtA[i] = 0x12
+	}
+	return len(dAtA) - i, nil
+}
+func (m *MsgWithdrawRewards_RecordIds) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawRewards_RecordIds) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RecordIds != nil {
+		{
+			size, err := m.RecordIds.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *MsgWithdrawRewards_RecordsLimit) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawRewards_RecordsLimit) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawRewards_RecordsLimit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Limit != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Limit))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawRewards_RecordIDs) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawRewards_RecordIDs) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawRewards_RecordIDs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Ids) > 0 {
+		dAtA5 := make([]byte, len(m.Ids)*10)
+		var j4 int
+		for _, num := range m.Ids {
+			for num >= 1<<7 {
+				dAtA5[j4] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j4++
+			}
+			dAtA5[j4] = uint8(num)
+			j4++
+		}
+		i -= j4
+		copy(dAtA[i:], dAtA5[:j4])
+		i = encodeVarintTx(dAtA, i, uint64(j4))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -490,10 +767,10 @@ func (m *MsgWithdrawRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	_ = i
 	var l int
 	_ = l
-	if len(m.Rewards) > 0 {
-		for iNdEx := len(m.Rewards) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.TotalRewards) > 0 {
+		for iNdEx := len(m.TotalRewards) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Rewards[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.TotalRewards[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -501,8 +778,13 @@ func (m *MsgWithdrawRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 				i = encodeVarintTx(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x12
 		}
+	}
+	if m.RecordsNum != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.RecordsNum))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -552,6 +834,61 @@ func (m *MsgWithdrawRewards) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
+	if m.Mode != nil {
+		n += m.Mode.Size()
+	}
+	return n
+}
+
+func (m *MsgWithdrawRewards_RecordsLimit_) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RecordsLimit != nil {
+		l = m.RecordsLimit.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+func (m *MsgWithdrawRewards_RecordIds) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RecordIds != nil {
+		l = m.RecordIds.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+func (m *MsgWithdrawRewards_RecordsLimit) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Limit != 0 {
+		n += 1 + sovTx(uint64(m.Limit))
+	}
+	return n
+}
+
+func (m *MsgWithdrawRewards_RecordIDs) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Ids) > 0 {
+		l = 0
+		for _, e := range m.Ids {
+			l += sovTx(uint64(e))
+		}
+		n += 1 + sovTx(uint64(l)) + l
+	}
 	return n
 }
 
@@ -561,8 +898,11 @@ func (m *MsgWithdrawRewardsResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.Rewards) > 0 {
-		for _, e := range m.Rewards {
+	if m.RecordsNum != 0 {
+		n += 1 + sovTx(uint64(m.RecordsNum))
+	}
+	if len(m.TotalRewards) > 0 {
+		for _, e := range m.TotalRewards {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
@@ -770,7 +1110,7 @@ func (m *MsgWithdrawRewards) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgWithdrawRewards: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 2:
+		case 1:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RewardsAddress", wireType)
 			}
@@ -802,6 +1142,271 @@ func (m *MsgWithdrawRewards) Unmarshal(dAtA []byte) error {
 			}
 			m.RewardsAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordsLimit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &MsgWithdrawRewards_RecordsLimit{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Mode = &MsgWithdrawRewards_RecordsLimit_{v}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordIds", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &MsgWithdrawRewards_RecordIDs{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Mode = &MsgWithdrawRewards_RecordIds{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawRewards_RecordsLimit) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RecordsLimit: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RecordsLimit: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
+			}
+			m.Limit = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Limit |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawRewards_RecordIDs) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RecordIDs: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RecordIDs: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Ids = append(m.Ids, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTx
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTx
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.Ids) == 0 {
+					m.Ids = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTx
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Ids = append(m.Ids, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ids", wireType)
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -852,9 +1457,28 @@ func (m *MsgWithdrawRewardsResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgWithdrawRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 3:
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RecordsNum", wireType)
+			}
+			m.RecordsNum = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RecordsNum |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Rewards", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalRewards", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -881,8 +1505,8 @@ func (m *MsgWithdrawRewardsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Rewards = append(m.Rewards, types.Coin{})
-			if err := m.Rewards[len(m.Rewards)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.TotalRewards = append(m.TotalRewards, types.Coin{})
+			if err := m.TotalRewards[len(m.TotalRewards)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

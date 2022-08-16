@@ -1,9 +1,12 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
 	"github.com/archway-network/archway/pkg"
@@ -32,6 +35,10 @@ func getTxSetContractMetadataCmd() *cobra.Command {
 		Use:   "set-contract-metadata [contract-address]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Create / modify contract metadata (contract rewards parameters)",
+		Long: fmt.Sprintf(`Create / modify contract metadata (contract rewards parameters).
+Use the %q and / or the %q flag to specify which metadata field to set / update.`,
+			flagOwnerAddress, flagRewardsAddress,
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -72,7 +79,7 @@ func getTxWithdrawRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards",
 		Args:  cobra.NoArgs,
-		Short: "Withdraw all current credited rewards for a given rewards address",
+		Short: "Withdraw current credited rewards for the transaction sender",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -81,12 +88,33 @@ func getTxWithdrawRewardsCmd() *cobra.Command {
 
 			senderAddr := clientCtx.GetFromAddress()
 
-			msg := types.NewMsgWithdrawRewards(senderAddr)
+			recordsLimit, err := pkg.GetUint64Flag(cmd, flagRecordsLimit, true)
+			if err != nil {
+				return err
+			}
+
+			recordIDs, err := pkg.GetUint64SliceFlag(cmd, flagRecordIDs, true)
+			if err != nil {
+				return err
+			}
+
+			if (len(recordIDs) > 0 && recordsLimit > 0) || (len(recordIDs) == 0 && recordsLimit == 0) {
+				return fmt.Errorf("one of (%q, %q) flags must be set", flagRecordIDs, flagRecordsLimit)
+			}
+
+			var msg sdk.Msg
+			if recordsLimit > 0 {
+				msg = types.NewMsgWithdrawRewardsByLimit(senderAddr, recordsLimit)
+			} else {
+				msg = types.NewMsgWithdrawRewardsByIDs(senderAddr, recordIDs)
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
+	addRecordsLimitFlag(cmd)
+	addRecordIDsFlag(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

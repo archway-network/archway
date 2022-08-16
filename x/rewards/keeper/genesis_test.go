@@ -34,6 +34,7 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 	newParams := types.NewParams(
 		sdk.NewDecWithPrec(99, 2),
 		sdk.NewDecWithPrec(98, 2),
+		1001,
 	)
 
 	newMetadata := []types.ContractMetadata{

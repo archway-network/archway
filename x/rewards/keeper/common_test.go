@@ -3,9 +3,12 @@ package keeper_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 type KeeperTestSuite struct {
@@ -14,8 +17,68 @@ type KeeperTestSuite struct {
 	chain *e2eTesting.TestChain
 }
 
+// withdrawTestRecordData is a helper struct to store RewardsRecord data for Withdraw tests.
+type withdrawTestRecordData struct {
+	RecordID    uint64         // expected recordID to be created
+	RewardsAddr sdk.AccAddress // rewards address
+	Rewards     sdk.Coins      // record rewards
+}
+
 func (s *KeeperTestSuite) SetupTest() {
 	s.chain = e2eTesting.NewTestChain(s.T(), 1)
+}
+
+// SetupWithdrawTest is a helper function to setup the test environment for Withdraw tests.
+func (s *KeeperTestSuite) SetupWithdrawTest(testData []withdrawTestRecordData) {
+	// Mint rewards for the later withdrawal
+	rewardsToMint := sdk.NewCoins()
+	for _, testRecord := range testData {
+		rewardsToMint = rewardsToMint.Add(testRecord.Rewards...)
+	}
+
+	ctx := s.chain.GetContext()
+	s.Require().NoError(s.chain.GetApp().MintKeeper.MintCoins(ctx, rewardsToMint))
+	s.Require().NoError(s.chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ModuleName, rewardsToMint))
+
+	// Create test records
+	for _, testRecord := range testData {
+		ctx := s.chain.GetContext()
+		s.chain.GetApp().RewardsKeeper.GetState().RewardsRecord(ctx).
+			CreateRewardsRecord(
+				testRecord.RewardsAddr,
+				testRecord.Rewards,
+				ctx.BlockHeight(), ctx.BlockTime(),
+			)
+		s.chain.NextBlock(0)
+	}
+}
+
+// CheckWithdrawResults is a helper function to check the results of a Withdraw operation.
+func (s *KeeperTestSuite) CheckWithdrawResults(rewardsAddr sdk.AccAddress, recordsUsed []withdrawTestRecordData, withdraw func() (sdk.Coins, int, error)) {
+	// Estimate the expected rewards amount and get the current account balance
+	totalRewardsExpected := sdk.NewCoins()
+	for _, testRecord := range recordsUsed {
+		totalRewardsExpected = totalRewardsExpected.Add(testRecord.Rewards...)
+	}
+
+	accBalanceBefore := s.chain.GetBalance(rewardsAddr)
+
+	// Withdraw and check the output
+	totalRewardsReceived, recordsUsedReceived, err := withdraw()
+	s.Require().NoError(err)
+	s.Assert().Equal(totalRewardsExpected.String(), totalRewardsReceived.String())
+	s.Assert().EqualValues(len(recordsUsed), recordsUsedReceived)
+
+	// Check the account balance diff
+	accBalanceAfter := s.chain.GetBalance(rewardsAddr)
+	s.Assert().Equal(totalRewardsExpected.String(), accBalanceAfter.Sub(accBalanceBefore).String())
+
+	// Check records pruning
+	recordsState := s.chain.GetApp().RewardsKeeper.GetState().RewardsRecord(s.chain.GetContext())
+	for _, testRecord := range recordsUsed {
+		_, found := recordsState.GetRewardsRecord(testRecord.RecordID)
+		s.Assert().False(found, "recordID (%d): found", testRecord.RecordID)
+	}
 }
 
 func TestRewardsKeeper(t *testing.T) {

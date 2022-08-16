@@ -9,6 +9,7 @@ import (
 	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/archway-network/archway/x/rewards/types"
 )
@@ -70,6 +71,32 @@ func (s RewardsRecordState) GetRewardsRecordByRewardsAddress(rewardsAddr sdk.Acc
 	}
 
 	return
+}
+
+// GetRewardsRecordByRewardsAddressPaginated returns a list of types.RewardsRecord objects by rewardsAddress paginated.
+func (s RewardsRecordState) GetRewardsRecordByRewardsAddressPaginated(rewardsAddr sdk.AccAddress, pageReq *query.PageRequest) ([]types.RewardsRecord, *query.PageResponse, error) {
+	store := prefix.NewStore(
+		prefix.NewStore(s.stateStore, types.RewardsRecordAddressIndexPrefix),
+		s.buildAddressIndexPrefix(rewardsAddr),
+	)
+
+	var objs []types.RewardsRecord
+	pageRes, err := query.Paginate(store, pageReq, func(key, _ []byte) error {
+		id := s.parseIdKey(key)
+
+		obj, found := s.GetRewardsRecord(id)
+		if !found {
+			panic(fmt.Errorf("invalid RewardsRecord RewardsAddress index state: id (%d): not found", id))
+		}
+		objs = append(objs, obj)
+
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return objs, pageRes, nil
 }
 
 // DeleteRewardsRecords deletes a list of types.RewardsRecord objects updating indexes.
@@ -180,6 +207,18 @@ func (s RewardsRecordState) parseAddressIndexKey(key []byte) (rewardsAddr sdk.Ac
 	id = sdk.BigEndianToUint64(key[1+addrLen:])
 
 	return
+}
+
+// parseIdKey parses the 2nd part of the types.RewardsRecord's RewardsAddress index key (ID).
+func (s RewardsRecordState) parseIdKey(key []byte) uint64 {
+	// Check min length
+	if len(key) != 8 {
+		panic(fmt.Errorf("invalid RewardsRecord RewardsAddress index key min length (ID): %d", len(key)))
+	}
+
+	id := sdk.BigEndianToUint64(key)
+
+	return id
 }
 
 // setAddressIndex adds the types.RewardsRecord's RewardsAddress index entry.

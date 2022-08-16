@@ -22,6 +22,7 @@ func TestRewardsParamsValidate(t *testing.T) {
 			params: rewardsTypes.Params{
 				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
 				TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
+				MaxWithdrawRecords:    1,
 			},
 		},
 		{
@@ -29,6 +30,7 @@ func TestRewardsParamsValidate(t *testing.T) {
 			params: rewardsTypes.Params{
 				InflationRewardsRatio: sdk.NewDecWithPrec(-2, 2),
 				TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
+				MaxWithdrawRecords:    1,
 			},
 			errExpected: true,
 		},
@@ -37,6 +39,7 @@ func TestRewardsParamsValidate(t *testing.T) {
 			params: rewardsTypes.Params{
 				InflationRewardsRatio: sdk.NewDecWithPrec(1, 0),
 				TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
+				MaxWithdrawRecords:    1,
 			},
 			errExpected: true,
 		},
@@ -45,6 +48,7 @@ func TestRewardsParamsValidate(t *testing.T) {
 			params: rewardsTypes.Params{
 				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
 				TxFeeRebateRatio:      sdk.NewDecWithPrec(-1, 2),
+				MaxWithdrawRecords:    1,
 			},
 			errExpected: true,
 		},
@@ -53,6 +57,16 @@ func TestRewardsParamsValidate(t *testing.T) {
 			params: rewardsTypes.Params{
 				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
 				TxFeeRebateRatio:      sdk.NewDecWithPrec(1, 0),
+				MaxWithdrawRecords:    1,
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: MaxWithdrawRecords: empty",
+			params: rewardsTypes.Params{
+				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
+				TxFeeRebateRatio:      sdk.NewDecWithPrec(1, 0),
+				MaxWithdrawRecords:    0,
 			},
 			errExpected: true,
 		},

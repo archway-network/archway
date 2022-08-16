@@ -2,6 +2,9 @@ package types
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 
@@ -13,8 +16,9 @@ type Query struct {
 	// Metadata returns the contract metadata.
 	Metadata *ContractMetadataRequest `json:"metadata"`
 
-	// CurrentRewards returns the total amount of credited and ready for withdrawal rewards for an account.
-	CurrentRewards *CurrentRewardsRequest `json:"current_rewards"`
+	// RewardsRecords returns a list of RewardsRecord objects that are credited for the account and are ready to be withdrawn.
+	// Request is paginated. If the limit field is not set, the MaxWithdrawRecords param is used.
+	RewardsRecords *RewardsRecordsRequest `json:"rewards_records"`
 }
 
 type (
@@ -34,15 +38,36 @@ type (
 )
 
 type (
-	CurrentRewardsRequest struct {
+	// RewardsRecordsRequest is the Query.RewardsRecords request.
+	RewardsRecordsRequest struct {
 		// RewardsAddress is the bech32 encoded account address (might be the contract address as well).
 		RewardsAddress string `json:"rewards_address"`
+		// Pagination is an optional pagination options for the request.
+		// Limit should not exceed the MaxWithdrawRecords param value.
+		Pagination *PageRequest `json:"pagination"`
 	}
 
-	// CurrentRewardsResponse is the Query.CurrentRewards response.
-	CurrentRewardsResponse struct {
-		// Rewards are the total rewards eligible for withdrawal [serialized to string sdk.Coins].
-		Rewards string `json:"rewards"`
+	// RewardsRecordsResponse is the Query.RewardsRecords response.
+	RewardsRecordsResponse struct {
+		// Records is the list of rewards records returned by the query.
+		Records []RewardsRecord `json:"records"`
+		// Pagination is the pagination details in the response.
+		Pagination PageResponse `json:"pagination"`
+	}
+
+	// RewardsRecord is the WASM binding representation of a rewardsTypes.RewardsRecord object.
+	RewardsRecord struct {
+		// ID is the unique ID of the record.
+		ID uint64 `json:"id"`
+		// RewardsAddress is the address to distribute rewards to (bech32 encoded).
+		RewardsAddress string `json:"rewards_address"`
+		// Rewards are the rewards to be transferred later.
+		Rewards Coins `json:"rewards"`
+		// CalculatedHeight defines the block height of rewards calculation event.
+		CalculatedHeight int64 `json:"calculated_height"`
+		// CalculatedTime defines the block time of rewards calculation event.
+		// RFC3339Nano is used to represent the time.
+		CalculatedTime string `json:"calculated_time"`
 	}
 )
 
@@ -57,9 +82,9 @@ func (q Query) Validate() error {
 		cnt++
 	}
 
-	if q.CurrentRewards != nil {
-		if err := q.CurrentRewards.Validate(); err != nil {
-			return fmt.Errorf("currentRewards: %w", err)
+	if q.RewardsRecords != nil {
+		if err := q.RewardsRecords.Validate(); err != nil {
+			return fmt.Errorf("rewardsRecords: %w", err)
 		}
 		cnt++
 	}
@@ -100,15 +125,49 @@ func (r ContractMetadataRequest) MustGetContractAddress() sdk.AccAddress {
 	return addr
 }
 
-// NewCurrentRewardsResponse builds a new CurrentRewardsResponse.
-func NewCurrentRewardsResponse(rewards sdk.Coins) CurrentRewardsResponse {
-	return CurrentRewardsResponse{
-		Rewards: rewards.String(),
+// ToSDK converts the RewardsRecord to rewardsTypes.RewardsRecord.
+func (r RewardsRecord) ToSDK() (rewardsTypes.RewardsRecord, error) {
+	rewards, err := r.Rewards.ToSDK()
+	if err != nil {
+		return rewardsTypes.RewardsRecord{}, fmt.Errorf("rewards: %w", err)
 	}
+
+	calculatedTime, err := time.Parse(time.RFC3339Nano, r.CalculatedTime)
+	if err != nil {
+		return rewardsTypes.RewardsRecord{}, fmt.Errorf("calculatedTime: %w", err)
+	}
+
+	return rewardsTypes.RewardsRecord{
+		Id:               r.ID,
+		RewardsAddress:   r.RewardsAddress,
+		Rewards:          rewards,
+		CalculatedHeight: r.CalculatedHeight,
+		CalculatedTime:   calculatedTime,
+	}, nil
+}
+
+// NewRewardsRecordsResponse builds a new RewardsRecordsResponse.
+func NewRewardsRecordsResponse(records []rewardsTypes.RewardsRecord, pageResp query.PageResponse) RewardsRecordsResponse {
+	resp := RewardsRecordsResponse{
+		Records:    make([]RewardsRecord, 0, len(records)),
+		Pagination: NewPageResponseFromSDK(pageResp),
+	}
+
+	for _, record := range records {
+		resp.Records = append(resp.Records, RewardsRecord{
+			ID:               record.Id,
+			RewardsAddress:   record.RewardsAddress,
+			Rewards:          NewCoinsFromSDK(record.Rewards),
+			CalculatedHeight: record.CalculatedHeight,
+			CalculatedTime:   record.CalculatedTime.Format(time.RFC3339Nano),
+		})
+	}
+
+	return resp
 }
 
 // Validate performs request fields validation.
-func (r CurrentRewardsRequest) Validate() error {
+func (r RewardsRecordsRequest) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(r.RewardsAddress); err != nil {
 		return fmt.Errorf("rewardsAddress: parsing: %w", err)
 	}
@@ -118,11 +177,11 @@ func (r CurrentRewardsRequest) Validate() error {
 
 // MustGetRewardsAddress returns the rewards address as sdk.AccAddress.
 // CONTRACT: panics in case of an error (should not happen since we validate the request).
-func (r CurrentRewardsRequest) MustGetRewardsAddress() sdk.AccAddress {
+func (r RewardsRecordsRequest) MustGetRewardsAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(r.RewardsAddress)
 	if err != nil {
 		// Should not happen since we validate the request before this call
-		panic(fmt.Errorf("wasm bindings: currentRewards request: parsing rewardsAddress: %w", err))
+		panic(fmt.Errorf("wasm bindings: rewardsRecordsRequest request: parsing rewardsAddress: %w", err))
 	}
 
 	return addr

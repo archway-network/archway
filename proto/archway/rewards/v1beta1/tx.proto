@@ -34,14 +34,33 @@ message MsgSetContractMetadataResponse {}
 
 // MsgWithdrawRewards is the request for Msg.WithdrawRewards.
 message MsgWithdrawRewards {
+  message RecordsLimit {
+    uint64 limit = 1;
+  }
+
+  message RecordIDs {
+    repeated uint64 ids = 1 [
+      (gogoproto.nullable) = false
+    ];
+  }
+
   // rewards_address is the address to distribute rewards to (bech32 encoded).
-  string rewards_address = 2;
+  string rewards_address = 1;
+  // mode defines the operation type.
+  oneof mode {
+    // records_limit defines the maximum number of RewardsRecord objects to process.
+    RecordsLimit records_limit = 2;
+    // record_ids defines specific RewardsRecord object IDs to process.
+    RecordIDs record_ids = 3;
+  }
 }
 
 // MsgWithdrawRewardsResponse is the response for Msg.WithdrawRewards.
 message MsgWithdrawRewardsResponse {
+  // records_num is the number of RewardsRecord objects processed.
+  uint64 records_num = 1;
   // rewards are the total rewards transferred.
-  repeated cosmos.base.v1beta1.Coin rewards = 3 [
+  repeated cosmos.base.v1beta1.Coin total_rewards = 2 [
     (gogoproto.nullable) = false
   ];
 }

@@ -53,7 +53,7 @@ func (p MsgPlugin) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, con
 		case customMsg.UpdateMetadata != nil:
 			return p.updateContractMetadata(ctx, contractAddr, *customMsg.UpdateMetadata)
 		case customMsg.WithdrawRewards != nil:
-			return p.withdrawContractRewards(ctx, contractAddr)
+			return p.withdrawContractRewards(ctx, contractAddr, *customMsg.WithdrawRewards)
 		default:
 			return nil, nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "unknown request")
 		}
@@ -64,7 +64,7 @@ func (p MsgPlugin) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, con
 
 // updateContractMetadata updates the contract metadata.
 func (p MsgPlugin) updateContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress, req types.UpdateMetadataRequest) ([]sdk.Event, [][]byte, error) {
-	if err := p.rewardsKeeper.SetContractMetadata(ctx, contractAddr, contractAddr, req.ToMetadata()); err != nil {
+	if err := p.rewardsKeeper.SetContractMetadata(ctx, contractAddr, contractAddr, req.ToSDK()); err != nil {
 		return nil, nil, err
 	}
 
@@ -72,10 +72,22 @@ func (p MsgPlugin) updateContractMetadata(ctx sdk.Context, contractAddr sdk.AccA
 }
 
 // withdrawContractRewards withdraws the rewards for the contract address.
-func (p MsgPlugin) withdrawContractRewards(ctx sdk.Context, contractAddr sdk.AccAddress) ([]sdk.Event, [][]byte, error) {
-	rewards := p.rewardsKeeper.WithdrawRewards(ctx, contractAddr)
+func (p MsgPlugin) withdrawContractRewards(ctx sdk.Context, contractAddr sdk.AccAddress, req types.WithdrawRewardsRequest) ([]sdk.Event, [][]byte, error) {
+	var totalRewards sdk.Coins
+	var recordsUsed int
+	var err error
 
-	resBz, err := json.Marshal(types.NewWithdrawRewardsResponse(rewards))
+	if req.RecordsLimit > 0 {
+		totalRewards, recordsUsed, err = p.rewardsKeeper.WithdrawRewardsByRecordsLimit(ctx, contractAddr, req.RecordsLimit)
+	}
+	if len(req.RecordIDs) > 0 {
+		totalRewards, recordsUsed, err = p.rewardsKeeper.WithdrawRewardsByRecordIDs(ctx, contractAddr, req.RecordIDs)
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resBz, err := json.Marshal(types.NewWithdrawRewardsResponse(totalRewards, recordsUsed))
 	if err != nil {
 		return nil, nil, fmt.Errorf("result JSON marshal: %w", err)
 	}

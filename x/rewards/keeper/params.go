@@ -18,11 +18,18 @@ func (k Keeper) TxFeeRebateRatio(ctx sdk.Context) (res sdk.Dec) {
 	return
 }
 
+// MaxWithdrawRecords return the maximum number of types.RewardsRecord objects used for the withdrawal operation.
+func (k Keeper) MaxWithdrawRecords(ctx sdk.Context) (res uint64) {
+	k.paramStore.Get(ctx, types.MaxWithdrawRecordsParamKey, &res)
+	return
+}
+
 // GetParams return all module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
 		k.InflationRewardsRatio(ctx),
 		k.TxFeeRebateRatio(ctx),
+		k.MaxWithdrawRecords(ctx),
 	)
 }
 
