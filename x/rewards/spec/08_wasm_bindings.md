@@ -12,12 +12,13 @@ Section describes interaction with the module by a contract using CosmWasm custo
 
 This query is expected to fail if:
 
-* Query has no request specified (`metadata` and `current_rewards` fields are not defined);
+* Query has no request specified (`metadata` and `rewards_records` fields are not defined);
 * Query has more than one request specified;
 
 ### Metadata
 
-The `metadata` request returns a contract metadata state. A contract can query its own or any other contract's metadata.
+The [metadata](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/query.go#L26) request returns a contract metadata state.
+A contract can query its own or any other contract's metadata.
 
 Query example:
 
@@ -38,16 +39,29 @@ Example response:
 }
 ```
 
-### Current rewards
+### Rewards records
 
-The `current_rewards` request returns the current credited to an account address rewards. A contract can query any account address rewards state.
+The [rewards_records](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/query.go#L42) request returns the paginated list of `RewardsRecord` objects credited to an account address.
+A [RewardsRecord](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/query.go#L59) entry contains a portion of credited rewards by a specific contract at a block height.
+A contract can query any account address rewards state.
+
+This query is paginated to limit the size of the response.
+Refer to the [PageRequest](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/pagination.go#L8) structure description to learn more about the pagination options.
+The query response contains the [PageResponse](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/pagination.go#L28) structure that should be used to query the next page.
+
+> The maximum page limit is bounded by the `MaxWithdrawRecords` parameter.
+> 
+> If the page limit is not set, the default value is `MaxWithdrawRecords`.
 
 Query example:
 
 ```json
 {
-  "current_rewards": {
-    "rewards_address": "archway12reqvcenxgv5s7z96pkytzajtl4lf2epyfman2"
+  "rewards_records": {
+    "rewards_address": "archway1allzevxuve88s75pjmcupxhy95qrvjlgvjtf0n",
+    "pagination": {
+      "limit": 100
+    }
   }
 }
 ```
@@ -56,11 +70,25 @@ Example response:
 
 ```json
 {
-  "rewards": "6460uarch"
+  "records": [
+    {
+      "id": 3,
+      "rewards_address": "archway1allzevxuve88s75pjmcupxhy95qrvjlgvjtf0n",
+      "rewards": [
+        {
+          "amount": "6463",
+          "denom": "uarch"
+        }
+      ],
+      "calculated_height": 38,
+      "calculated_time": "2022-08-17T05:07:35.462087Z"
+    }
+  ],
+  "pagination": {
+    "total": 200
+  }
 }
 ```
-
-> The `rewards` response field is a string serialized `sdk.Coins` object.
 
 ## Custom message
 
@@ -73,7 +101,7 @@ This message is expected to fail if:
 
 ### Update metadata
 
-The `update_metadata` request is used to update an existing contract metadata.
+The [update_metadata](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/msg.go#L24) request is used to update an existing contract metadata.
 
 Message example (CosmWasm's `CosmosMsg`):
 
@@ -104,29 +132,50 @@ This sub-message is expected to fail if:
 
 ### Withdraw rewards
 
-The `withdraw_rewards` request is used to withdraw the current credited to a contract address reward tokens.
+The [withdraw_rewards](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/msg.go#L34) request is used to withdraw the current credited to a contract address reward tokens.
 
 > Contract address is used as the `rewards_address` for this sub-message: a contract can only request withdrawal of funds, credited for his own address.
+
+This sub-message uses `RewardsRecord` objects that are created for a specific `rewards_address` during the dApp rewards distribution.
+The `withdraw-rewards` command has two operation modes, which defines which `RewardsRecord` objects to process:
+
+* *Records by limit* - select the first N `RewardsRecord` objects available;
+* *Records by IDs* - select specific `RewardsRecord` objects by their IDs;
+
+Sub-message is expected to fail if:
+
+* Specified `records_limit` field value or the length of `record_ids` exceeds the `MaxWithdrawRecords` module parameter;
+* The `records_limit` and the `record_ids` fields are both set (one of is allowed);
+* Provided record ID is not found;
+* Provided record ID is not linked to the `contract_address`;
 
 Message example (CosmWasm's `CosmosMsg`):
 
 ```json
 {
   "custom": {
-    "withdraw_rewards": {}
+    "withdraw_rewards": {
+      "records_limit": 100
+    }
   }
 }
 ```
 
-Sub-message example response:
+Sub-message returns the [response](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/msg.go#L45) that can be handled with the *Reply* CosmWasm functionality.
+
+Response example:
 
 ```json
 {
-  "rewards": "6460uarch"
+  "records_num": 100,
+  "total_rewards": [
+    {
+      "amount": "6463",
+      "denom": "uarch"
+    }
+  ]
 }
 ```
-
-> The `rewards` response field is a string serialized `sdk.Coins` object.
 
 ## Usage examples
 
@@ -136,10 +185,10 @@ The [cosmwasm-go repository](https://github.com/CosmWasm/cosmwasm-go) has the `V
 
 #### Custom message send and reply handling
 
-The [handleMsgWithdrawRewards](https://github.com/CosmWasm/cosmwasm-go/blob/5a075164191c7f55912cbaaca5e0f1ccc5e53348/example/voter/src/handler.go#L362) CosmWasm *Execute* handler sends the custom `withdraw_rewards` message using the WASM bindings.
+The [handleMsgWithdrawRewards](https://github.com/CosmWasm/cosmwasm-go/blob/45b9f015c12e75f12c0bb4b9c2a27da606a58f4e/example/voter/src/handler.go#L362) CosmWasm *Execute* handler sends the custom `withdraw_rewards` message using the WASM bindings.
 
-The [handleReplyCustomWithdrawMsg](https://github.com/CosmWasm/cosmwasm-go/blob/5a075164191c7f55912cbaaca5e0f1ccc5e53348/example/voter/src/handler.go#L390) CosmWasm *Reply* handler parses the `withdraw_rewards` message response.
+The [handleReplyCustomWithdrawMsg](https://github.com/CosmWasm/cosmwasm-go/blob/45b9f015c12e75f12c0bb4b9c2a27da606a58f4e/example/voter/src/handler.go#L390) CosmWasm *Reply* handler parses the `withdraw_rewards` message response.
 
 #### Custom query
 
-The [queryCustomMetadataCustom](https://github.com/CosmWasm/cosmwasm-go/blob/5a075164191c7f55912cbaaca5e0f1ccc5e53348/example/voter/src/querier.go#L192) CosmWasm *Query* handler sends and parses the `metadata` custom query.
+The [queryCustomMetadataCustom](https://github.com/CosmWasm/cosmwasm-go/blob/45b9f015c12e75f12c0bb4b9c2a27da606a58f4e/example/voter/src/querier.go#L192) CosmWasm *Query* handler sends and parses the `metadata` custom query.

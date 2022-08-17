@@ -225,7 +225,7 @@ func getQueryRewardsRecordsCmd() *cobra.Command {
 				return err
 			}
 
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			pageReq, err := pkg.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}

@@ -4,9 +4,51 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/dvsekhvalnov/jose2go/base64url"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
+
+// ReadPageRequest reads and builds the necessary page request flags for pagination.
+// This is fixed version of the client.ReadPageRequest function.
+// The original version uses the "--page-key" flag as is, instead of base64 decoding it.
+func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
+	pageKeyBz, _ := flagSet.GetString(flags.FlagPageKey)
+	offset, _ := flagSet.GetUint64(flags.FlagOffset)
+	limit, _ := flagSet.GetUint64(flags.FlagLimit)
+	countTotal, _ := flagSet.GetBool(flags.FlagCountTotal)
+	page, _ := flagSet.GetUint64(flags.FlagPage)
+	reverse, _ := flagSet.GetBool(flags.FlagReverse)
+
+	if page > 1 && offset > 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "page and offset cannot be used together")
+	}
+
+	if page > 1 {
+		offset = (page - 1) * limit
+	}
+
+	var pageKey []byte
+	if pageKeyBz != "" {
+		key, err := base64url.Decode(pageKeyBz)
+		if err != nil {
+			return nil, fmt.Errorf("parsing page key: %w", err)
+		}
+		pageKey = key
+	}
+
+	return &query.PageRequest{
+		Key:        pageKey,
+		Offset:     offset,
+		Limit:      limit,
+		CountTotal: countTotal,
+		Reverse:    reverse,
+	}, nil
+}
 
 // ParseAccAddressFlag is a helper function to parse an account address CLI flag.
 func ParseAccAddressFlag(cmd *cobra.Command, flagName string, isRequired bool) (*sdk.AccAddress, error) {

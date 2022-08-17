@@ -145,7 +145,7 @@ Example:
 }
 ```
 
-This mechanism was introduced to the Archway protocol to reduce the CPU load on the module's **BeginBlocker** and to give a contract control over its rewards (refer to WASM bindings section).
+This mechanism was introduced to the Archway protocol to reduce the CPU load on the module's **BeginBlocker** and to give a contract control over its rewards ([WASM bindings section](08_wasm_bindings.md)).
 
 Entries are pruned on a successful *withdrawal* operation.
 
