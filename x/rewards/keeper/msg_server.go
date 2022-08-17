@@ -62,9 +62,25 @@ func (s MsgServer) WithdrawRewards(c context.Context, request *types.MsgWithdraw
 		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
 	}
 
-	totalRewards := s.keeper.WithdrawRewards(ctx, rewardsAddr)
+	var totalRewards sdk.Coins
+	var recordsUsed int
+
+	switch modeReq := request.Mode.(type) {
+	case *types.MsgWithdrawRewards_RecordsLimit_:
+		totalRewards, recordsUsed, err = s.keeper.WithdrawRewardsByRecordsLimit(ctx, rewardsAddr, modeReq.RecordsLimit.Limit)
+	case *types.MsgWithdrawRewards_RecordIds:
+		totalRewards, recordsUsed, err = s.keeper.WithdrawRewardsByRecordIDs(ctx, rewardsAddr, modeReq.RecordIds.Ids)
+	default:
+		// Should never happen since the BasicValidate function checks this case
+		return nil, status.Error(codes.InvalidArgument, "invalid request mode")
+	}
+
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
 
 	return &types.MsgWithdrawRewardsResponse{
-		Rewards: totalRewards,
+		RecordsNum:   uint64(recordsUsed),
+		TotalRewards: totalRewards,
 	}, nil
 }

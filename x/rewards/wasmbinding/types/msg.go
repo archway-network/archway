@@ -31,12 +31,22 @@ type (
 
 type (
 	// WithdrawRewardsRequest is the Msg.WithdrawRewards request.
-	WithdrawRewardsRequest struct{}
+	WithdrawRewardsRequest struct {
+		// RecordsLimit defines the maximum number of RewardsRecord objects to process.
+		// Limit should not exceed the MaxWithdrawRecords param value.
+		// Only one of (RecordsLimit, RecordIDs) should be set.
+		RecordsLimit uint64 `json:"records_limit"`
+		// RecordIDs defines specific RewardsRecord object IDs to process.
+		// Only one of (RecordsLimit, RecordIDs) should be set.
+		RecordIDs []uint64 `json:"record_ids"`
+	}
 
 	// WithdrawRewardsResponse is the Msg.WithdrawRewards response.
 	WithdrawRewardsResponse struct {
-		// Rewards are the total rewards distributed [serialized to string sdk.Coins].
-		Rewards string `json:"rewards"`
+		// RecordsNum is the number of RewardsRecord objects processed by the request.
+		RecordsNum uint64 `json:"records_num"`
+		// TotalRewards are the total rewards distributed.
+		TotalRewards Coins `json:"total_rewards"`
 	}
 )
 
@@ -52,6 +62,9 @@ func (m Msg) Validate() error {
 	}
 
 	if m.WithdrawRewards != nil {
+		if err := m.WithdrawRewards.Validate(); err != nil {
+			return fmt.Errorf("withdrawRewards: %w", err)
+		}
 		cnt++
 	}
 
@@ -87,8 +100,8 @@ func (r UpdateMetadataRequest) Validate() error {
 	return nil
 }
 
-// ToMetadata convert the UpdateMetadataRequest to a rewardsTypes.Metadata.
-func (r UpdateMetadataRequest) ToMetadata() rewardsTypes.ContractMetadata {
+// ToSDK convert the UpdateMetadataRequest to a rewardsTypes.Metadata.
+func (r UpdateMetadataRequest) ToSDK() rewardsTypes.ContractMetadata {
 	return rewardsTypes.ContractMetadata{
 		OwnerAddress:   r.OwnerAddress,
 		RewardsAddress: r.RewardsAddress,
@@ -126,9 +139,31 @@ func (r UpdateMetadataRequest) MustGetRewardsAddressOk() (*sdk.AccAddress, bool)
 	return &addr, true
 }
 
+// Validate performs request fields validation.
+func (r WithdrawRewardsRequest) Validate() error {
+	if (r.RecordsLimit == 0 && len(r.RecordIDs) == 0) || (r.RecordsLimit > 0 && len(r.RecordIDs) > 0) {
+		return fmt.Errorf("one of (RecordsLimit, RecordIDs) fields must be set")
+	}
+
+	idsSet := make(map[uint64]struct{})
+	for _, id := range r.RecordIDs {
+		if id == 0 {
+			return fmt.Errorf("recordIDs: ID must be GT 0")
+		}
+
+		if _, ok := idsSet[id]; ok {
+			return fmt.Errorf("recordIDs: duplicate ID (%d)", id)
+		}
+		idsSet[id] = struct{}{}
+	}
+
+	return nil
+}
+
 // NewWithdrawRewardsResponse creates a new WithdrawRewardsResponse.
-func NewWithdrawRewardsResponse(rewards sdk.Coins) WithdrawRewardsResponse {
+func NewWithdrawRewardsResponse(totalRewards sdk.Coins, recordsUsed int) WithdrawRewardsResponse {
 	return WithdrawRewardsResponse{
-		Rewards: rewards.String(),
+		RecordsNum:   uint64(recordsUsed),
+		TotalRewards: NewCoinsFromSDK(totalRewards),
 	}
 }

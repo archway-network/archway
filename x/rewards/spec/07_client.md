@@ -82,22 +82,62 @@ owner_address: archway12reqvcenxgv5s7z96pkytzajtl4lf2epyfman2
 rewards_address: archway12reqvcenxgv5s7z96pkytzajtl4lf2epyfman2
 ```
 
-#### rewards
+#### outstanding-rewards
 
-Get the current credited dApp rewards for an account. Those rewards are "ready" for the *withdrawal* operation.
+Get the current credited dApp rewards and the current total amount of `RewardsRecord` object created for an account.
+Those rewards are "ready" for the *withdrawal* operation.
 
 Usage:
 
 ```bash
-archwayd q rewards rewards [rewards-address] [flags]
+archwayd q rewards outstanding-rewards [rewards-address] [flags]
 ```
 
 Example output:
 
 ```yaml
-rewards:
-- amount: "6460"
-  denom: uarch
+records_num: "1"
+total_rewards:
+  - amount: "6460"
+    denom: uarch
+```
+
+#### rewards-records
+
+Get the paginated list of `RewardsRecord` object created for an account.
+Those rewards are "ready" for the *withdrawal* operation.
+
+Usage:
+
+```bash
+archwayd q rewards rewards-records [rewards-address] [flags]
+```
+
+> The default page limit is 100, if not provided.
+
+Example:
+
+```bash
+archwayd rewards rewards-records archway1allzevxuve88s75pjmcupxhy95qrvjlgvjtf0n \
+  --limit 1 \
+  --page-key AAAAAAAAAAM= \
+  --count-total
+```
+
+Example output:
+
+```yaml
+pagination:
+  next_key: AAAAAAAAAAQ=
+  total: "0"
+records:
+  - calculated_height: "38"
+    calculated_time: "2022-08-17T05:07:35.462087Z"
+    id: "3"
+    rewards:
+      - amount: "6463"
+        denom: uarch
+    rewards_address: archway1allzevxuve88s75pjmcupxhy95qrvjlgvjtf0n
 ```
 
 #### block-rewards-tracking
@@ -129,11 +169,11 @@ block:
       denom: uarch
     max_gas: "100000000"
   tx_rewards:
-  - fee_rewards:
-    - amount: "6337"
-      denom: uarch
-    height: "3189"
-    tx_id: "9"
+    - fee_rewards:
+        - amount: "6337"
+          denom: uarch
+      height: "3189"
+      tx_id: "9"
 ```
 
 #### pool
@@ -150,8 +190,8 @@ Example output:
 
 ```yaml
 funds:
-- amount: "2038832654"
-  denom: uarch
+  - amount: "2038832654"
+    denom: uarch
 ```
 
 ### Transactions
@@ -195,6 +235,12 @@ archwayd tx rewards set-contract-metadata archway14hj2tavq8fpesdwxxcu44rty3hh90v
 #### withdraw-rewards
 
 Withdraw the current credited dApp rewards to a sender account.
+This transaction uses `RewardsRecord` objects that are created for a specific `rewards_address` during the dApp rewards distribution.
+A `RewardsRecord` entry contains a portion of credited rewards by a specific contract at a block height.
+The `withdraw-rewards` command has two operation modes, which defines which `RewardsRecord` objects to process:
+
+* *Records by limit* - select the first N `RewardsRecord` objects available;
+* *Records by IDs* - select specific `RewardsRecord` objects by their IDs;
 
 Usage:
 
@@ -202,12 +248,20 @@ Usage:
 archwayd tx rewards withdraw-rewards [flags]
 ```
 
+Command specific flags:
+
+* `--records-limit` - the maximum number of `RewardsRecord` objects to process;
+* `--record-ids` - the list of `RewardsRecord` object IDs to process;
+
+> `records-limit` value / `record-ids` length must be equal or less than the `MaxWithdrawRecords` parameter value.
+> 
+> One of (`records-limit`, `record-ids`) modes must be provided.
+
 Example:
 
 ```bash
-archwayd tx rewards withdraw-rewards \
-  --from myAccountKey
-  --fees 1500uarch
+carcarchwaydh1_tx rewards withdraw-rewards \
+  --records-limit 1000 \
+  --from myAccountKey \
+  --fees 3000uarch
 ```
-
-#### 

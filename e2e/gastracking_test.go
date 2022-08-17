@@ -272,7 +272,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 
 	// Withdraw rewards and check x/rewards withdraw event (spend all account coins as fees)
 	s.Run("Withdraw rewards and check distribution event", func() {
-		msg := rewardsTypes.NewMsgWithdrawRewards(rewardsAcc.Address)
+		msg := rewardsTypes.NewMsgWithdrawRewardsByLimit(rewardsAcc.Address, 1000)
 		_, _, msgEvents, _ := chain.SendMsgs(rewardsAcc, true, []sdk.Msg{msg}, e2eTesting.WithMsgFees(rewardsAccInitialBalance...))
 
 		eventRewardsAddr := e2eTesting.GetStringEventAttribute(msgEvents,

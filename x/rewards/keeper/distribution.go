@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,38 +29,6 @@ type (
 		InflationaryRewards sdk.Coin  // inflation rewards for this contract (for the block)
 	}
 )
-
-// WithdrawRewards performs the rewards distribution for the given rewards address, emits distribution event and
-// prunes rewards records.
-func (k Keeper) WithdrawRewards(ctx sdk.Context, rewardsAddr sdk.AccAddress) sdk.Coins {
-	rewardsRecordState := k.state.RewardsRecord(ctx)
-
-	// Get all rewards records for the given address
-	rewardsRecords := rewardsRecordState.GetRewardsRecordByRewardsAddress(rewardsAddr)
-	if len(rewardsRecords) == 0 {
-		return sdk.Coins{}
-	}
-
-	// Aggregate total rewards to distribute
-	totalRewards := sdk.NewCoins()
-	for _, record := range rewardsRecords {
-		totalRewards = totalRewards.Add(record.Rewards...)
-	}
-
-	// Transfer rewards and emit distribution event
-	if !totalRewards.IsZero() {
-		if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ContractRewardCollector, rewardsAddr, totalRewards); err != nil {
-			panic(fmt.Errorf("sending rewards (%s) to the rewards address (%s): %w", totalRewards, rewardsAddr, err))
-		}
-
-		types.EmitRewardsWithdrawEvent(ctx, rewardsAddr, totalRewards)
-	}
-
-	// Clean up (safe if there were no rewards)
-	rewardsRecordState.DeleteRewardsRecords(rewardsRecords...)
-
-	return totalRewards
-}
 
 // CalculateRewards creates rewards records for the given block height.
 func (k Keeper) CalculateRewards(ctx sdk.Context, height int64) {

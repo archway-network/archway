@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/rewards/types"
@@ -232,6 +233,69 @@ func (s *KeeperTestSuite) TestStates() {
 			addr := accAddrs[2]
 
 			s.Assert().Empty(rewardsRecordState.GetRewardsRecordByRewardsAddress(addr))
+		}
+	})
+
+	// Check RewardsRecord search via RewardsAddress index with pagination
+	// We don't cover all the pagination cases here because the pagination is tested already
+	s.Run("Check RewardsRecord RewardsAddress index with pagination", func() {
+		// 2nd address
+		addr := accAddrs[1]
+
+		// Limit 1
+		{
+			page := &query.PageRequest{
+				Limit:      1,
+				CountTotal: true,
+			}
+			recordExpected := testDataExpected.RewardsRecords[1:2]
+
+			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			s.Require().NoError(err)
+			s.Assert().ElementsMatch(recordExpected, recordReceived)
+
+			s.Require().NotNil(pageResp)
+			s.Assert().NotNil(pageResp.NextKey)
+			s.Assert().EqualValues(2, pageResp.Total)
+		}
+
+		// Limit 1, Offset 1
+		{
+			page := &query.PageRequest{
+				Offset:     1,
+				Limit:      1,
+				CountTotal: true,
+			}
+			recordExpected := testDataExpected.RewardsRecords[2:3]
+
+			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			s.Require().NoError(err)
+			s.Assert().ElementsMatch(recordExpected, recordReceived)
+
+			s.Require().NotNil(pageResp)
+			s.Assert().Nil(pageResp.NextKey)
+			s.Assert().EqualValues(2, pageResp.Total)
+		}
+
+		// Limit 1, Using NextKey
+		{
+			page := &query.PageRequest{
+				Limit: 1,
+			}
+			recordExpected := testDataExpected.RewardsRecords[2:3]
+
+			_, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			s.Require().NoError(err)
+			s.Require().NotNil(pageResp)
+			s.Assert().NotNil(pageResp.NextKey)
+
+			page.Key = pageResp.NextKey
+			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			s.Require().NoError(err)
+			s.Require().NotNil(pageResp)
+			s.Assert().Nil(pageResp.NextKey)
+
+			s.Assert().ElementsMatch(recordExpected, recordReceived)
 		}
 	})
 

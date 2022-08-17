@@ -75,9 +75,9 @@ InflationBlockRewards = MintedTokens * InflationRewardsRatio
 
 1. **[State](01_state.md)**
 2. **[Messages](02_messages.md)**
-3. [Ante Handlers](03_ante_handlers.md)
+3. **[Ante Handlers](03_ante_handlers.md)**
 4. **[Begin-Block](04_begin_block.md)**
 5. **[Events](05_events.md)**
 6. **[Parameters](06_params.md)**
 7. **[Client](07_client.md)**
-8. [WASM bindings](08_wasm_bindings.md)
+8. **[WASM bindings](08_wasm_bindings.md)**

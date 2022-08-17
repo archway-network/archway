@@ -229,7 +229,7 @@ func (s *E2ETestSuite) TestTxFees() {
 
 			withdrawTxFees.Amount = minConsFee.Amount.MulInt64(withdrawGas).RoundInt()
 
-			msg := rewardsTypes.NewMsgWithdrawRewards(rewardsAcc.Address)
+			msg := rewardsTypes.NewMsgWithdrawRewardsByLimit(rewardsAcc.Address, 1000)
 			_, _, err := chain.SendMsgsRaw(rewardsAcc, []sdk.Msg{msg},
 				e2eTesting.WithMsgFees(withdrawTxFees),
 				e2eTesting.WithTxGasLimit(withdrawGas),

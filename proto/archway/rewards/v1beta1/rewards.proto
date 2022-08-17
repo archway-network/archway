@@ -23,6 +23,8 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+  // max_withdraw_records defines the maximum number of RewardsRecord objects used for the withdrawal operation.
+  uint64 max_withdraw_records = 3;
 }
 
 // ContractMetadata defines the contract rewards distribution options for a particular contract.

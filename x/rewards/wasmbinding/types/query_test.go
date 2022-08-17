@@ -25,7 +25,7 @@ func TestQueryValidate(t *testing.T) {
 		{
 			name: "OK 2",
 			query: Query{
-				CurrentRewards: &CurrentRewardsRequest{
+				RewardsRecords: &RewardsRecordsRequest{
 					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 				},
 			},
@@ -38,9 +38,9 @@ func TestQueryValidate(t *testing.T) {
 			errExpected: true,
 		},
 		{
-			name: "Fail: invalid CurrentRewards",
+			name: "Fail: invalid RewardsRecords",
 			query: Query{
-				CurrentRewards: &CurrentRewardsRequest{},
+				RewardsRecords: &RewardsRecordsRequest{},
 			},
 			errExpected: true,
 		},
@@ -55,7 +55,7 @@ func TestQueryValidate(t *testing.T) {
 				Metadata: &ContractMetadataRequest{
 					ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 				},
-				CurrentRewards: &CurrentRewardsRequest{
+				RewardsRecords: &RewardsRecordsRequest{
 					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 				},
 			},

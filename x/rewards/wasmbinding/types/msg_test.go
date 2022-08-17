@@ -26,7 +26,17 @@ func TestMsgValidate(t *testing.T) {
 		{
 			name: "OK 2",
 			msg: Msg{
-				WithdrawRewards: &WithdrawRewardsRequest{},
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordsLimit: 1,
+				},
+			},
+		},
+		{
+			name: "OK 3",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordIDs: []uint64{1},
+				},
 			},
 		},
 		{
@@ -50,6 +60,41 @@ func TestMsgValidate(t *testing.T) {
 			msg: Msg{
 				UpdateMetadata: &UpdateMetadataRequest{
 					RewardsAddress: "invalid",
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid WithdrawRewards: empty",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid WithdrawRewards: one of failed",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordsLimit: 1,
+					RecordIDs:    []uint64{1},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid WithdrawRewards: RecordIDs: invalid ID",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordIDs: []uint64{1, 0},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid WithdrawRewards: RecordIDs: duplicated IDs",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordIDs: []uint64{1, 2, 1},
 				},
 			},
 			errExpected: true,
