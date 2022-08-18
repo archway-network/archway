@@ -104,13 +104,13 @@ func (s *QueryServer) EstimateTxFees(c context.Context, request *types.QueryEsti
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	minConsFee := s.keeper.GetMinConsensusFee(ctx)
-	if minConsFee == nil {
+	minConsFee, found := s.keeper.GetMinConsensusFee(ctx)
+	if !found {
 		return nil, status.Errorf(codes.NotFound, "min consensus fee: not found")
 	}
 
 	return &types.QueryEstimateTxFeesResponse{
-		GasUnitPrice: *minConsFee,
+		GasUnitPrice: minConsFee,
 		EstimatedFee: sdk.Coin{
 			Denom:  minConsFee.Denom,
 			Amount: minConsFee.Amount.MulInt64(int64(request.GasLimit)).RoundInt(),

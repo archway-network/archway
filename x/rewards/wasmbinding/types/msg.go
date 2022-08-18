@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 
+	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
@@ -46,7 +48,7 @@ type (
 		// RecordsNum is the number of RewardsRecord objects processed by the request.
 		RecordsNum uint64 `json:"records_num"`
 		// TotalRewards are the total rewards distributed.
-		TotalRewards Coins `json:"total_rewards"`
+		TotalRewards wasmVmTypes.Coins `json:"total_rewards"`
 	}
 )
 
@@ -164,6 +166,6 @@ func (r WithdrawRewardsRequest) Validate() error {
 func NewWithdrawRewardsResponse(totalRewards sdk.Coins, recordsUsed int) WithdrawRewardsResponse {
 	return WithdrawRewardsResponse{
 		RecordsNum:   uint64(recordsUsed),
-		TotalRewards: NewCoinsFromSDK(totalRewards),
+		TotalRewards: wasmdTypes.NewWasmCoins(totalRewards),
 	}
 }

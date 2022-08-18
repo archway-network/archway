@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/pkg/testutils"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	wasmBindings "github.com/archway-network/archway/x/rewards/wasmbinding"
@@ -205,7 +206,7 @@ func TestWASMBindings(t *testing.T) {
 		assert.Equal(t, contractAddr.String(), res.Records[0].RewardsAddress)
 		assert.Equal(t, ctx.BlockHeight(), res.Records[0].CalculatedHeight)
 		assert.Equal(t, ctx.BlockTime().Format(time.RFC3339Nano), res.Records[0].CalculatedTime)
-		record1RewardsReceived, err := res.Records[0].Rewards.ToSDK()
+		record1RewardsReceived, err := pkg.WasmCoinsToSDK(res.Records[0].Rewards)
 		require.NoError(t, err)
 		assert.Equal(t, record1RewardsExpected.String(), record1RewardsReceived.String())
 		// Record 2
@@ -213,7 +214,7 @@ func TestWASMBindings(t *testing.T) {
 		assert.Equal(t, contractAddr.String(), res.Records[1].RewardsAddress)
 		assert.Equal(t, ctx.BlockHeight(), res.Records[1].CalculatedHeight)
 		assert.Equal(t, ctx.BlockTime().Format(time.RFC3339Nano), res.Records[1].CalculatedTime)
-		record2RewardsReceived, err := res.Records[1].Rewards.ToSDK()
+		record2RewardsReceived, err := pkg.WasmCoinsToSDK(res.Records[1].Rewards)
 		require.NoError(t, err)
 		assert.Equal(t, record2RewardsExpected.String(), record2RewardsReceived.String())
 	})
@@ -235,7 +236,7 @@ func TestWASMBindings(t *testing.T) {
 		require.NoError(t, json.Unmarshal(resData[0], &res))
 
 		assert.EqualValues(t, 1, res.RecordsNum)
-		totalRewardsReceived, err := res.TotalRewards.ToSDK()
+		totalRewardsReceived, err := pkg.WasmCoinsToSDK(res.TotalRewards)
 		require.NoError(t, err)
 		assert.EqualValues(t, record1RewardsExpected.String(), totalRewardsReceived.String())
 
@@ -259,7 +260,7 @@ func TestWASMBindings(t *testing.T) {
 		require.NoError(t, json.Unmarshal(resData[0], &res))
 
 		assert.EqualValues(t, 1, res.RecordsNum)
-		totalRewardsReceived, err := res.TotalRewards.ToSDK()
+		totalRewardsReceived, err := pkg.WasmCoinsToSDK(res.TotalRewards)
 		require.NoError(t, err)
 		assert.EqualValues(t, record2RewardsExpected.String(), totalRewardsReceived.String())
 

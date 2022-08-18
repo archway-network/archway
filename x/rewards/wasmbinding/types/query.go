@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/archway-network/archway/pkg"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,7 +65,7 @@ type (
 		// RewardsAddress is the address to distribute rewards to (bech32 encoded).
 		RewardsAddress string `json:"rewards_address"`
 		// Rewards are the rewards to be transferred later.
-		Rewards Coins `json:"rewards"`
+		Rewards wasmVmTypes.Coins `json:"rewards"`
 		// CalculatedHeight defines the block height of rewards calculation event.
 		CalculatedHeight int64 `json:"calculated_height"`
 		// CalculatedTime defines the block time of rewards calculation event.
@@ -127,7 +130,7 @@ func (r ContractMetadataRequest) MustGetContractAddress() sdk.AccAddress {
 
 // ToSDK converts the RewardsRecord to rewardsTypes.RewardsRecord.
 func (r RewardsRecord) ToSDK() (rewardsTypes.RewardsRecord, error) {
-	rewards, err := r.Rewards.ToSDK()
+	rewards, err := pkg.WasmCoinsToSDK(r.Rewards)
 	if err != nil {
 		return rewardsTypes.RewardsRecord{}, fmt.Errorf("rewards: %w", err)
 	}
@@ -157,7 +160,7 @@ func NewRewardsRecordsResponse(records []rewardsTypes.RewardsRecord, pageResp qu
 		resp.Records = append(resp.Records, RewardsRecord{
 			ID:               record.Id,
 			RewardsAddress:   record.RewardsAddress,
-			Rewards:          NewCoinsFromSDK(record.Rewards),
+			Rewards:          wasmdTypes.NewWasmCoins(record.Rewards),
 			CalculatedHeight: record.CalculatedHeight,
 			CalculatedTime:   record.CalculatedTime.Format(time.RFC3339Nano),
 		})

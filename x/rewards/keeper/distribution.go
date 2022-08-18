@@ -30,8 +30,8 @@ type (
 	}
 )
 
-// CalculateRewards creates rewards records for the given block height.
-func (k Keeper) CalculateRewards(ctx sdk.Context, height int64) {
+// AllocateBlockRewards creates rewards records for the given block height.
+func (k Keeper) AllocateBlockRewards(ctx sdk.Context, height int64) {
 	blockDistrState := k.estimateBlockGasUsage(ctx, height)
 	blockDistrState = k.estimateBlockRewards(ctx, blockDistrState)
 	k.createRewardsRecords(ctx, blockDistrState)

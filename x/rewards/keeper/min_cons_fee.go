@@ -44,13 +44,13 @@ func (k Keeper) UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin
 
 // GetMinConsensusFee returns the minimum consensus fee.
 // Fee defines the minimum gas unit price for a transaction to be included in a block.
-func (k Keeper) GetMinConsensusFee(ctx sdk.Context) *sdk.DecCoin {
+func (k Keeper) GetMinConsensusFee(ctx sdk.Context) (sdk.DecCoin, bool) {
 	fee, found := k.state.MinConsensusFee(ctx).GetFee()
 	if !found {
-		return nil
+		return sdk.DecCoin{}, false
 	}
 
-	return &fee
+	return fee, true
 }
 
 // calculateMinConsensusFee calculates the minimum consensus fee amount using the formula:

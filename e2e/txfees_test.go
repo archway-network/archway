@@ -117,8 +117,8 @@ func (s *E2ETestSuite) TestTxFees() {
 		{
 			ctx := chain.GetContext()
 
-			if fee := chain.GetApp().RewardsKeeper.GetMinConsensusFee(ctx); fee != nil {
-				minConsensusFee = *fee
+			if fee, found := chain.GetApp().RewardsKeeper.GetMinConsensusFee(ctx); found {
+				minConsensusFee = fee
 
 				// Check the event from the previous BeginBlocker
 				if len(abciEvents) > 0 {
@@ -224,8 +224,8 @@ func (s *E2ETestSuite) TestTxFees() {
 		{
 			const withdrawGas = 100_000
 
-			minConsFee := chain.GetApp().RewardsKeeper.GetMinConsensusFee(chain.GetContext())
-			s.Require().NotNil(minConsFee)
+			minConsFee, found := chain.GetApp().RewardsKeeper.GetMinConsensusFee(chain.GetContext())
+			s.Require().True(found)
 
 			withdrawTxFees.Amount = minConsFee.Amount.MulInt64(withdrawGas).RoundInt()
 

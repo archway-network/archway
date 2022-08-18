@@ -19,5 +19,5 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		return
 	}
 
-	k.CalculateRewards(ctx, curBlockHeight-1)
+	k.AllocateBlockRewards(ctx, curBlockHeight-1)
 }
