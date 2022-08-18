@@ -7,6 +7,7 @@ import (
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	"github.com/archway-network/archway/x/rewards/wasmbinding/types"
@@ -15,7 +16,7 @@ import (
 //var _ wasmKeeper.CustomQuerier = (*QueryPlugin)(nil).DispatchQuery
 
 // CustomQueryPlugin creates a new custom query plugin for WASM bindings.
-func CustomQueryPlugin(gtKeeper ContractMetadataReader) *wasmKeeper.QueryPlugins {
+func CustomQueryPlugin(gtKeeper RewardsReader) *wasmKeeper.QueryPlugins {
 	qp := NewQueryPlugin(gtKeeper)
 
 	return &wasmKeeper.QueryPlugins{
@@ -25,11 +26,11 @@ func CustomQueryPlugin(gtKeeper ContractMetadataReader) *wasmKeeper.QueryPlugins
 
 // QueryPlugin provides custom WASM queries.
 type QueryPlugin struct {
-	rewardsKeeper ContractMetadataReader
+	rewardsKeeper RewardsReader
 }
 
 // NewQueryPlugin creates a new QueryPlugin.
-func NewQueryPlugin(rk ContractMetadataReader) *QueryPlugin {
+func NewQueryPlugin(rk RewardsReader) *QueryPlugin {
 	return &QueryPlugin{
 		rewardsKeeper: rk,
 	}
@@ -52,8 +53,16 @@ func (qp QueryPlugin) DispatchQuery(ctx sdk.Context, request json.RawMessage) ([
 	switch {
 	case req.Metadata != nil:
 		resData, resErr = qp.getContractMetadata(ctx, req.Metadata.MustGetContractAddress())
+	case req.RewardsRecords != nil:
+		var pageReq *query.PageRequest
+		if req.RewardsRecords.Pagination != nil {
+			req := req.RewardsRecords.Pagination.ToSDK()
+			pageReq = &req
+		}
+
+		resData, resErr = qp.getRewardsRecords(ctx, req.RewardsRecords.MustGetRewardsAddress(), pageReq)
 	default:
-		resErr = sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "unknown request")
+		return nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "unknown request")
 	}
 	if resErr != nil {
 		return nil, resErr
@@ -76,4 +85,25 @@ func (qp QueryPlugin) getContractMetadata(ctx sdk.Context, contractAddr sdk.AccA
 	}
 
 	return types.NewContractMetadataResponse(*meta), nil
+}
+
+// getRewardsRecords returns the paginated list of types.RewardsRecord objects for a given account address.
+func (qp QueryPlugin) getRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, pageReq *query.PageRequest) (types.RewardsRecordsResponse, error) {
+	maxWithdrawRecords := qp.rewardsKeeper.MaxWithdrawRecords(ctx)
+
+	if pageReq == nil {
+		pageReq = &query.PageRequest{
+			Limit: maxWithdrawRecords,
+		}
+	}
+	if pageReq.Limit > maxWithdrawRecords {
+		return types.RewardsRecordsResponse{}, sdkErrors.Wrapf(rewardsTypes.ErrInvalidRequest, "max records (%d) query limit exceeded", maxWithdrawRecords)
+	}
+
+	records, pageResp, err := qp.rewardsKeeper.GetRewardsRecords(ctx, rewardsAddr, pageReq)
+	if err != nil {
+		return types.RewardsRecordsResponse{}, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, err.Error())
+	}
+
+	return types.NewRewardsRecordsResponse(records, *pageResp), nil
 }

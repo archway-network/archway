@@ -29,14 +29,13 @@ func EmitContractRewardCalculationEvent(ctx sdk.Context, contractAddr sdk.AccAdd
 	}
 }
 
-func EmitContractRewardDistributionEvent(ctx sdk.Context, contractAddr, rewardAddress sdk.AccAddress, rewards sdk.Coins) {
-	err := ctx.EventManager().EmitTypedEvent(&ContractRewardDistributionEvent{
-		ContractAddress: contractAddr.String(),
-		RewardAddress:   rewardAddress.String(),
-		Rewards:         rewards,
+func EmitRewardsWithdrawEvent(ctx sdk.Context, rewardAddress sdk.AccAddress, rewards sdk.Coins) {
+	err := ctx.EventManager().EmitTypedEvent(&RewardsWithdrawEvent{
+		RewardAddress: rewardAddress.String(),
+		Rewards:       rewards,
 	})
 	if err != nil {
-		panic(fmt.Errorf("sending ContractRewardDistributionEvent event: %w", err))
+		panic(fmt.Errorf("sending RewardsWithdrawEvent event: %w", err))
 	}
 }
 

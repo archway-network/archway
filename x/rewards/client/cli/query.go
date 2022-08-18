@@ -24,6 +24,8 @@ func GetQueryCmd() *cobra.Command {
 		getQueryContractMetadataCmd(),
 		getQueryUndistributedPoolFundsCmd(),
 		getQueryEstimateTxFeesCmd(),
+		getQueryOutstandingRewardsCmd(),
+		getQueryRewardsRecordsCmd(),
 	)
 
 	return cmd
@@ -169,6 +171,79 @@ func getQueryEstimateTxFeesCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func getQueryOutstandingRewardsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "outstanding-rewards [rewards-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query current credited rewards for a given address (the address set in contract(s) metadata rewards_address field)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			rewardsAddr, err := pkg.ParseAccAddressArg("rewards-address", args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.OutstandingRewards(cmd.Context(), &types.QueryOutstandingRewardsRequest{
+				RewardsAddress: rewardsAddr.String(),
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func getQueryRewardsRecordsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rewards-records [rewards-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query rewards records stored for a given address (the address set in contract(s) metadata rewards_address field) with pagination",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			rewardsAddr, err := pkg.ParseAccAddressArg("rewards-address", args[0])
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := pkg.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.RewardsRecords(cmd.Context(), &types.QueryRewardsRecordsRequest{
+				RewardsAddress: rewardsAddr.String(),
+				Pagination:     pageReq,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "rewards-records")
 
 	return cmd
 }

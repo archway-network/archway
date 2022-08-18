@@ -9,7 +9,7 @@ import (
 
 // MinConsensusFeeReaderExpected defines the expected interface for the x/rewards keeper.
 type MinConsensusFeeReaderExpected interface {
-	GetMinConsensusFee(ctx sdk.Context) *sdk.DecCoin
+	GetMinConsensusFee(ctx sdk.Context) (sdk.DecCoin, bool)
 }
 
 // MinFeeDecorator rejects transaction if its fees are less than minimum fees defined by the x/rewards module.
@@ -35,8 +35,8 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 	}
 
 	// Skip the check if min gas unit price is not defined (not yet set or is zero)
-	gasUnitPrice := mfd.rewardsKeeper.GetMinConsensusFee(ctx)
-	if gasUnitPrice == nil || gasUnitPrice.IsZero() {
+	gasUnitPrice, found := mfd.rewardsKeeper.GetMinConsensusFee(ctx)
+	if !found || gasUnitPrice.IsZero() {
 		return next(ctx, tx, simulate)
 	}
 

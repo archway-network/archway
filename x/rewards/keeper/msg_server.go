@@ -48,3 +48,39 @@ func (s MsgServer) SetContractMetadata(c context.Context, request *types.MsgSetC
 
 	return &types.MsgSetContractMetadataResponse{}, nil
 }
+
+// WithdrawRewards implements the types.MsgServer interface.
+func (s MsgServer) WithdrawRewards(c context.Context, request *types.MsgWithdrawRewards) (*types.MsgWithdrawRewardsResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	rewardsAddr, err := sdk.AccAddressFromBech32(request.RewardsAddress)
+	if err != nil {
+		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
+	}
+
+	var totalRewards sdk.Coins
+	var recordsUsed int
+
+	switch modeReq := request.Mode.(type) {
+	case *types.MsgWithdrawRewards_RecordsLimit_:
+		totalRewards, recordsUsed, err = s.keeper.WithdrawRewardsByRecordsLimit(ctx, rewardsAddr, modeReq.RecordsLimit.Limit)
+	case *types.MsgWithdrawRewards_RecordIds:
+		totalRewards, recordsUsed, err = s.keeper.WithdrawRewardsByRecordIDs(ctx, rewardsAddr, modeReq.RecordIds.Ids)
+	default:
+		// Should never happen since the BasicValidate function checks this case
+		return nil, status.Error(codes.InvalidArgument, "invalid request mode")
+	}
+
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	return &types.MsgWithdrawRewardsResponse{
+		RecordsNum:   uint64(recordsUsed),
+		TotalRewards: totalRewards,
+	}, nil
+}

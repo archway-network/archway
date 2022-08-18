@@ -12,4 +12,5 @@ ignore:
   - "**/*.pb.gw.go"
   - "third_party"
   - "vendor"
-  - "x/gastracker"
+  - "pkg/"
+

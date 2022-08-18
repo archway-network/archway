@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types/query"
+
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 
 	voterPkg "github.com/CosmWasm/cosmwasm-go/example/voter/src/pkg"
@@ -752,7 +754,7 @@ func (s *E2ETestSuite) TestVoter_APIVerifyEd25519Signatures() {
 	}
 }
 
-// TestVoter_WASMBindingsMetadataQuery tests querying contract metadata via WASM bindings (Custom plugin & Stargate query).
+// TestVoter_WASMBindingsMetadataQuery tests querying contract metadata via WASM bindings (Custom query plugin & Stargate query).
 func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataQuery() {
 	chain := s.chainA
 
@@ -857,3 +859,255 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
 		s.Assert().Equal(acc2.Address.String(), meta.RewardsAddress)
 	})
 }
+
+// TestVoter_WASMBindingsRewardsRecordsQuery tests rewards records query via WASM bindings (Custom query plugin).
+func (s *E2ETestSuite) TestVoter_WASMBindingsRewardsRecordsQuery() {
+	chain := s.chainA
+
+	acc := chain.GetAccount(0)
+	contractAddr := s.VoterUploadAndInstantiate(chain, acc)
+
+	// Set initial meta (admin as the OwnerAddress and the contract itself as the RewardsAddress)
+	{
+		meta := rewardsTypes.ContractMetadata{
+			OwnerAddress:   acc.Address.String(),
+			RewardsAddress: contractAddr.String(),
+		}
+		chain.SetContractMetadata(acc, contractAddr, meta)
+	}
+
+	// Check there are no rewards yet
+	s.Run("Query empty records", func() {
+		records, pageResp, _ := s.VoterGetRewardsRecords(chain, contractAddr, nil, true)
+		s.Assert().Empty(records)
+		s.Assert().Empty(pageResp.NextKey)
+		s.Assert().Empty(pageResp.Total)
+	})
+
+	// Check invalid input
+	s.Run("Query over the limit", func() {
+		_, _, err := s.VoterGetRewardsRecords(
+			chain, contractAddr,
+			&query.PageRequest{
+				Limit: 10000,
+			},
+			false)
+		s.Assert().Contains(err.Error(), "code: 4")
+	})
+
+	// Create a new voting and add a vote to get some rewards
+	var recordsExpected []rewardsTypes.RewardsRecord
+	{
+		s.VoterNewVoting(chain, contractAddr, acc, "Test", []string{"a", "b"}, 1*time.Hour)
+		s.VoterVote(chain, contractAddr, acc, 0, "a", true)
+
+		recordsExpected = chain.GetApp().RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+		s.Require().Len(recordsExpected, 2)
+	}
+
+	// Check existing rewards
+	s.Run("Query all records", func() {
+		recordsReceived, pageRespReceived, _ := s.VoterGetRewardsRecords(
+			chain, contractAddr,
+			&query.PageRequest{
+				CountTotal: true,
+			},
+			true,
+		)
+
+		s.Assert().ElementsMatch(recordsExpected, recordsReceived)
+
+		s.Assert().Empty(pageRespReceived.NextKey)
+		s.Assert().EqualValues(2, pageRespReceived.Total)
+	})
+
+	s.Run("Query records with 2 pages", func() {
+		// Page 1
+		var nextKey []byte
+		{
+			recordsReceived, pageRespReceived, _ := s.VoterGetRewardsRecords(
+				chain, contractAddr,
+				&query.PageRequest{
+					Limit:      1,
+					CountTotal: true,
+				},
+				true,
+			)
+
+			s.Assert().ElementsMatch(recordsExpected[:1], recordsReceived)
+
+			s.Assert().NotEmpty(pageRespReceived.NextKey)
+			s.Assert().EqualValues(2, pageRespReceived.Total)
+			nextKey = pageRespReceived.NextKey
+		}
+
+		// Page 2
+		{
+			recordsReceived, pageRespReceived, _ := s.VoterGetRewardsRecords(
+				chain, contractAddr,
+				&query.PageRequest{
+					Key:        nextKey,
+					CountTotal: true,
+				},
+				true,
+			)
+
+			s.Assert().ElementsMatch(recordsExpected[1:2], recordsReceived)
+
+			s.Assert().Empty(pageRespReceived.NextKey)
+			s.Assert().EqualValues(0, pageRespReceived.Total)
+		}
+	})
+}
+
+// TestVoter_WASMBindingsWithdrawRewards tests rewards withdrawal via WASM bindings (Custom message) using both modes.
+// Test also check the Custom message Reply handling.
+func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
+	chain := s.chainA
+
+	acc1, acc2, acc3 := chain.GetAccount(0), chain.GetAccount(1), chain.GetAccount(2)
+	contractAddr := s.VoterUploadAndInstantiate(chain, acc1)
+
+	// Set initial meta (admin as the OwnerAddress and the contract itself as the RewardsAddress)
+	{
+		meta := rewardsTypes.ContractMetadata{
+			OwnerAddress:   acc1.Address.String(),
+			RewardsAddress: contractAddr.String(),
+		}
+		chain.SetContractMetadata(acc1, contractAddr, meta)
+	}
+
+	// Check there are no rewards processed yet
+	s.Run("Check Withdraw Reply stats are empty", func() {
+		stats := s.VoterGetWithdrawStats(chain, contractAddr)
+		s.Assert().Empty(stats.Count)
+		s.Assert().Empty(stats.TotalAmount)
+		s.Assert().Empty(stats.TotalRecordsUsed)
+	})
+
+	// Check invalid input
+	s.Run("Invalid withdraw request", func() {
+		err := s.VoterWithdrawRewards(
+			chain, contractAddr, acc1,
+			2,
+			[]uint64{1},
+			false,
+		)
+		s.Assert().Contains(err.Error(), "msg validation")
+	})
+
+	// Create a new voting and add a few votes to get some rewards
+	var recordsExpected []rewardsTypes.RewardsRecord
+	var totalRewardsExpected sdk.Coins
+	{
+		s.VoterNewVoting(chain, contractAddr, acc1, "Test", []string{"a", "b", "c"}, 1*time.Hour)
+		s.VoterVote(chain, contractAddr, acc1, 0, "a", true)
+		s.VoterVote(chain, contractAddr, acc2, 0, "b", false)
+		s.VoterVote(chain, contractAddr, acc3, 0, "c", true)
+
+		recordsExpected = chain.GetApp().RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+		s.Require().Len(recordsExpected, 4)
+
+		for _, record := range recordsExpected {
+			totalRewardsExpected = totalRewardsExpected.Add(record.Rewards...)
+		}
+	}
+
+	// Get the rewardsAddr initial balance to check it after all the withdrawals are done
+	rewardsAddrBalanceBefore := chain.GetBalance(contractAddr)
+
+	// Withdraw using records limit
+	s.Run("Withdraw using records limit and check Reply stats", func() {
+		s.VoterWithdrawRewards(
+			chain, contractAddr, acc1,
+			2,
+			nil,
+			true,
+		)
+
+		rewardsExpected := sdk.NewCoins()
+		rewardsExpected = rewardsExpected.Add(recordsExpected[0].Rewards...)
+		rewardsExpected = rewardsExpected.Add(recordsExpected[1].Rewards...)
+
+		stats := s.VoterGetWithdrawStats(chain, contractAddr)
+		s.Assert().EqualValues(1, stats.Count)
+		s.Assert().Equal(rewardsExpected.String(), s.CosmWasmCoinsToSDK(stats.TotalAmount...).String())
+		s.Assert().EqualValues(2, stats.TotalRecordsUsed)
+	})
+
+	// Withdraw the rest using record IDs
+	s.Run("Withdraw using record IDs and check Reply stats", func() {
+		s.VoterWithdrawRewards(
+			chain, contractAddr, acc1,
+			0,
+			[]uint64{recordsExpected[2].Id, recordsExpected[3].Id},
+			true,
+		)
+
+		stats := s.VoterGetWithdrawStats(chain, contractAddr)
+		s.Assert().EqualValues(2, stats.Count)
+		s.Assert().Equal(totalRewardsExpected.String(), s.CosmWasmCoinsToSDK(stats.TotalAmount...).String())
+		s.Assert().EqualValues(4, stats.TotalRecordsUsed)
+	})
+
+	s.Run("Check rewardsAddr balance changed", func() {
+		rewardsAddrBalanceDiff := chain.GetBalance(contractAddr).Sub(rewardsAddrBalanceBefore)
+		s.Assert().Equal(totalRewardsExpected.String(), rewardsAddrBalanceDiff.String())
+	})
+}
+
+// TestVoter_WASMBindingsRewards tests rewards query and withdrawal via WASM bindings (Custom message).
+//func (s *E2ETestSuite) TestVoter_WASMBindingsRewards() {
+//	chain := s.chainA
+//
+//	acc := chain.GetAccount(0)
+//	contractAddr := s.VoterUploadAndInstantiate(chain, acc)
+//
+//	// Set initial meta (admin as the OwnerAddress and the contract itself as the RewardsAddress)
+//	{
+//		meta := rewardsTypes.ContractMetadata{
+//			OwnerAddress:   acc.Address.String(),
+//			RewardsAddress: contractAddr.String(),
+//		}
+//		chain.SetContractMetadata(acc, contractAddr, meta)
+//	}
+//
+//	// Check there are no rewards yet
+//	s.Run("Query current rewards via WASM bindings (empty)", func() {
+//		rewards := s.VoterGetCurrentRewards(chain, contractAddr)
+//		s.Assert().Empty(rewards)
+//
+//		stats := s.VoterGetWithdrawStats(chain, contractAddr)
+//		s.Assert().Empty(stats.Count)
+//	})
+//
+//	// Create a new voting to get some rewards
+//	{
+//		s.VoterNewVoting(chain, contractAddr, acc, "Test", []string{"Yes", "No"}, 1*time.Hour)
+//	}
+//
+//	// Check there are rewards calculated
+//	var rewardsDistributed sdk.Coins
+//	s.Run("Query current rewards via WASM bindings (not empty)", func() {
+//		rewards := s.VoterGetCurrentRewards(chain, contractAddr)
+//		s.Assert().NotEmpty(rewards)
+//
+//		rewardsDistributed = rewards
+//	})
+//
+//	// Withdraw rewards
+//	s.Run("Withdraw rewards via WASM bindings", func() {
+//		s.VoterWithdrawRewards(chain, contractAddr, acc)
+//
+//		stats := s.VoterGetWithdrawStats(chain, contractAddr)
+//		s.Assert().EqualValues(stats.Count, 1)
+//		s.Assert().EqualValues(rewardsDistributed.String(), s.CosmWasmCoinsToSDK(stats.TotalAmount...).String())
+//	})
+//
+//	// Check CustomMsg Reply handled
+//	s.Run("Check CustomMsg Reply handled", func() {
+//		stats := s.VoterGetWithdrawStats(chain, contractAddr)
+//		s.Assert().EqualValues(stats.Count, 1)
+//		s.Assert().EqualValues(rewardsDistributed.String(), s.CosmWasmCoinsToSDK(stats.TotalAmount...).String())
+//	})
+//}

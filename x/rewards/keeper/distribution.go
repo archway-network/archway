@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,11 +30,11 @@ type (
 	}
 )
 
-// DistributeRewards distributes rewards for the given block height.
-func (k Keeper) DistributeRewards(ctx sdk.Context, height int64) {
+// AllocateBlockRewards creates rewards records for the given block height.
+func (k Keeper) AllocateBlockRewards(ctx sdk.Context, height int64) {
 	blockDistrState := k.estimateBlockGasUsage(ctx, height)
 	blockDistrState = k.estimateBlockRewards(ctx, blockDistrState)
-	k.distributeBlockRewards(ctx, blockDistrState)
+	k.createRewardsRecords(ctx, blockDistrState)
 	k.cleanupTracking(ctx, height)
 }
 
@@ -155,10 +154,14 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 	return blockDistrState
 }
 
-// distributeBlockRewards distributes block rewards to respective reward addresses if set (otherwise, skip) and emit events.
+// createRewardsRecords creates types.RewardsRecord entries for a respective reward addresses if set (otherwise, skip)
+// and emit calculation events. An actual distribution (x/bank transfer) is performed later.
 // Leftovers caused by Int truncation or by a tx-less block (inflation rewards are tracked even if there were no transactions)
 // stay in the pool.
-func (k Keeper) distributeBlockRewards(ctx sdk.Context, blockDistrState *blockRewardsDistributionState) {
+func (k Keeper) createRewardsRecords(ctx sdk.Context, blockDistrState *blockRewardsDistributionState) {
+	rewardsRecordState := k.state.RewardsRecord(ctx)
+	calculationHeight, calculationTime := ctx.BlockHeight(), ctx.BlockTime()
+
 	// Convert contract distribution states to a sorted slice preventing the consensus failure due to x/bank operations order.
 	// Filter out contracts without: rewards, metadata or rewardsAddress.
 	// Emit calculation events for each contract.
@@ -202,17 +205,8 @@ func (k Keeper) distributeBlockRewards(ctx sdk.Context, blockDistrState *blockRe
 			Add(contractDistrState.InflationaryRewards).
 			Add(contractDistrState.FeeRewards...)
 
-		if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ContractRewardCollector, rewardsAddr, rewards); err != nil {
-			panic(fmt.Errorf("sending rewards (%s) to the rewards address (%s) for the contract (%s): %w", rewards, rewardsAddr, contractDistrState.ContractAddress, err))
-		}
-
-		// Emit distribution event
-		types.EmitContractRewardDistributionEvent(
-			ctx,
-			contractDistrState.ContractAddress,
-			rewardsAddr,
-			rewards,
-		)
+		// Create a new record
+		rewardsRecordState.CreateRewardsRecord(rewardsAddr, rewards, calculationHeight, calculationTime)
 	}
 }
 
@@ -220,7 +214,7 @@ func (k Keeper) distributeBlockRewards(ctx sdk.Context, blockDistrState *blockRe
 func (k Keeper) cleanupTracking(ctx sdk.Context, height int64) {
 	// We can prune the previous block ({height}), but that makes tracking CLI queries useless as there won't be any data.
 	// Pruning history block also makes e2e tests possible.
-	// TODO: this should be replaced with a param
+	// TODO: this should be replaced with a param?
 	heightToPrune := height - 10
 	if heightToPrune <= 0 {
 		return

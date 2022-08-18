@@ -15,11 +15,27 @@ func TestMsgValidate(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "OK",
+			name: "OK 1",
 			msg: Msg{
 				UpdateMetadata: &UpdateMetadataRequest{
 					OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				},
+			},
+		},
+		{
+			name: "OK 2",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordsLimit: 1,
+				},
+			},
+		},
+		{
+			name: "OK 3",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordIDs: []uint64{1},
 				},
 			},
 		},
@@ -49,8 +65,54 @@ func TestMsgValidate(t *testing.T) {
 			errExpected: true,
 		},
 		{
+			name: "Fail: invalid WithdrawRewards: empty",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid WithdrawRewards: one of failed",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordsLimit: 1,
+					RecordIDs:    []uint64{1},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid WithdrawRewards: RecordIDs: invalid ID",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordIDs: []uint64{1, 0},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid WithdrawRewards: RecordIDs: duplicated IDs",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordIDs: []uint64{1, 2, 1},
+				},
+			},
+			errExpected: true,
+		},
+		{
 			name:        "Fail: empty",
 			msg:         Msg{},
+			errExpected: true,
+		},
+		{
+			name: "Fail: not one of",
+			msg: Msg{
+				UpdateMetadata: &UpdateMetadataRequest{
+					OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				},
+				WithdrawRewards: &WithdrawRewardsRequest{},
+			},
 			errExpected: true,
 		},
 	}

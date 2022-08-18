@@ -69,6 +69,16 @@ func (s State) MinConsensusFee(ctx sdk.Context) MinConsFeeState {
 	}
 }
 
+// RewardsRecord returns types.RewardsRecord repository.
+func (s State) RewardsRecord(ctx sdk.Context) RewardsRecordState {
+	baseStore := ctx.KVStore(s.key)
+	return RewardsRecordState{
+		stateStore: prefix.NewStore(baseStore, types.RewardsRecordStatePrefix),
+		cdc:        s.cdc,
+		ctx:        ctx,
+	}
+}
+
 // GetState returns the module storage state.
 // Only for testing purposes.
 func (k Keeper) GetState() State {

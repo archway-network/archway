@@ -1,13 +1,16 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/rewards/types"
 )
 
-// TestStates tests ContractMetadata, BlockRewards and TxRewards state storages.
+// TestStates tests ContractMetadata, BlockRewards, TxRewards and RewardsRecord state storages.
 // Test append multiple objects for different blocks to make sure there are no namespace
 // collisions (prefixed store keys) and state indexes work as expected.
 // Final test stage is the cascade delete of reward objects.
@@ -18,16 +21,20 @@ func (s *KeeperTestSuite) TestStates() {
 	}
 
 	type testData struct {
-		Metadata []types.ContractMetadata
-		Blocks   []testBlockData
+		Metadata       []types.ContractMetadata
+		Blocks         []testBlockData
+		RewardsRecords []types.RewardsRecord
 	}
 
 	chain := s.chain
 	ctx, keeper := chain.GetContext(), chain.GetApp().RewardsKeeper
-	metaState, blockState, txState := keeper.GetState().ContractMetadataState(ctx), keeper.GetState().BlockRewardsState(ctx), keeper.GetState().TxRewardsState(ctx)
+	metaState := keeper.GetState().ContractMetadataState(ctx)
+	blockState := keeper.GetState().BlockRewardsState(ctx)
+	txState := keeper.GetState().TxRewardsState(ctx)
+	rewardsRecordState := keeper.GetState().RewardsRecord(ctx)
 
 	// Fixtures
-	startBlock := ctx.BlockHeight()
+	startBlock, startTime := ctx.BlockHeight(), ctx.BlockTime()
 	contractAddrs := e2eTesting.GenContractAddresses(3)
 	accAddrs, _ := e2eTesting.GenAccounts(3)
 	coin1 := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(100)}
@@ -84,6 +91,29 @@ func (s *KeeperTestSuite) TestStates() {
 				},
 			},
 		},
+		RewardsRecords: []types.RewardsRecord{
+			{
+				Id:               1,
+				RewardsAddress:   accAddrs[0].String(),
+				Rewards:          []sdk.Coin{coin1},
+				CalculatedHeight: startBlock,
+				CalculatedTime:   startTime,
+			},
+			{
+				Id:               2,
+				RewardsAddress:   accAddrs[1].String(),
+				Rewards:          []sdk.Coin{coin1},
+				CalculatedHeight: startBlock + 1,
+				CalculatedTime:   startTime.Add(5 * time.Second),
+			},
+			{
+				Id:               3,
+				RewardsAddress:   accAddrs[1].String(),
+				Rewards:          []sdk.Coin{coin2},
+				CalculatedHeight: startBlock + 1,
+				CalculatedTime:   startTime.Add(5 * time.Second),
+			},
+		},
 	}
 
 	// Upload fixtures
@@ -98,6 +128,7 @@ func (s *KeeperTestSuite) TestStates() {
 			txState.CreateTxRewards(txRewards.TxId, txRewards.Height, txRewards.FeeRewards)
 		}
 	}
+	rewardsRecordState.Import(testDataExpected.RewardsRecords)
 
 	// Check non-existing records
 	s.Run("Check non-existing metadata record", func() {
@@ -110,6 +141,10 @@ func (s *KeeperTestSuite) TestStates() {
 
 		_, txRewardsFound := txState.GetTxRewards(10)
 		s.Assert().False(txRewardsFound)
+	})
+	s.Run("Check non-existing RewardsRecord", func() {
+		_, recordFound := rewardsRecordState.GetRewardsRecord(10)
+		s.Assert().False(recordFound)
 	})
 
 	// Check that the states are as expected
@@ -137,6 +172,12 @@ func (s *KeeperTestSuite) TestStates() {
 				s.Assert().Equal(txRewardsExpected, txRewardsReceived, "TxRewards [%d][%d]: wrong value", i, j)
 			}
 		}
+
+		for i, recordExpected := range testDataExpected.RewardsRecords {
+			recordReceived, found := rewardsRecordState.GetRewardsRecord(recordExpected.Id)
+			s.Require().True(found, "RewardsRecord [%d]: not found", i)
+			s.Assert().Equal(recordExpected, recordReceived, "RewardsRecord [%d]: wrong value", i)
+		}
 	})
 
 	// Check TxRewards search via block index
@@ -157,6 +198,104 @@ func (s *KeeperTestSuite) TestStates() {
 
 			txRewardsReceived := txState.GetTxRewardsByBlock(height)
 			s.Assert().ElementsMatch(txRewardsExpected, txRewardsReceived, "TxRewardsByBlock (%d): wrong value", height)
+		}
+
+		// 3rd block (non-existing)
+		{
+			height := testDataExpected.Blocks[1].BlockRewards.Height + 1
+
+			s.Assert().Empty(txState.GetTxRewardsByBlock(height))
+		}
+	})
+
+	// Check RewardsRecord search via RewardsAddress index
+	s.Run("Check RewardsRecord RewardsAddress index", func() {
+		// 1st address
+		{
+			addr := accAddrs[0]
+			recordExpected := testDataExpected.RewardsRecords[:1]
+
+			recordReceived := rewardsRecordState.GetRewardsRecordByRewardsAddress(addr)
+			s.Assert().ElementsMatch(recordExpected, recordReceived, "RewardsRecordsByAddress (%s): wrong value", addr)
+		}
+
+		// 2nd address
+		{
+			addr := accAddrs[1]
+			recordExpected := testDataExpected.RewardsRecords[1:3]
+
+			recordReceived := rewardsRecordState.GetRewardsRecordByRewardsAddress(addr)
+			s.Assert().ElementsMatch(recordExpected, recordReceived, "RewardsRecordsByAddress (%s): wrong value", addr)
+		}
+
+		// 3rd address (non-existing)
+		{
+			addr := accAddrs[2]
+
+			s.Assert().Empty(rewardsRecordState.GetRewardsRecordByRewardsAddress(addr))
+		}
+	})
+
+	// Check RewardsRecord search via RewardsAddress index with pagination
+	// We don't cover all the pagination cases here because the pagination is tested already
+	s.Run("Check RewardsRecord RewardsAddress index with pagination", func() {
+		// 2nd address
+		addr := accAddrs[1]
+
+		// Limit 1
+		{
+			page := &query.PageRequest{
+				Limit:      1,
+				CountTotal: true,
+			}
+			recordExpected := testDataExpected.RewardsRecords[1:2]
+
+			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			s.Require().NoError(err)
+			s.Assert().ElementsMatch(recordExpected, recordReceived)
+
+			s.Require().NotNil(pageResp)
+			s.Assert().NotNil(pageResp.NextKey)
+			s.Assert().EqualValues(2, pageResp.Total)
+		}
+
+		// Limit 1, Offset 1
+		{
+			page := &query.PageRequest{
+				Offset:     1,
+				Limit:      1,
+				CountTotal: true,
+			}
+			recordExpected := testDataExpected.RewardsRecords[2:3]
+
+			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			s.Require().NoError(err)
+			s.Assert().ElementsMatch(recordExpected, recordReceived)
+
+			s.Require().NotNil(pageResp)
+			s.Assert().Nil(pageResp.NextKey)
+			s.Assert().EqualValues(2, pageResp.Total)
+		}
+
+		// Limit 1, Using NextKey
+		{
+			page := &query.PageRequest{
+				Limit: 1,
+			}
+			recordExpected := testDataExpected.RewardsRecords[2:3]
+
+			_, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			s.Require().NoError(err)
+			s.Require().NotNil(pageResp)
+			s.Assert().NotNil(pageResp.NextKey)
+
+			page.Key = pageResp.NextKey
+			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			s.Require().NoError(err)
+			s.Require().NotNil(pageResp)
+			s.Assert().Nil(pageResp.NextKey)
+
+			s.Assert().ElementsMatch(recordExpected, recordReceived)
 		}
 	})
 
@@ -190,5 +329,15 @@ func (s *KeeperTestSuite) TestStates() {
 
 		_, block2Found := blockState.GetBlockRewards(height2)
 		s.Assert().False(block2Found)
+	})
+
+	// Check records removal
+	s.Run("Check rewards records removal", func() {
+		rewardsRecordState.DeleteRewardsRecords(testDataExpected.RewardsRecords...)
+
+		for i, recordExpected := range testDataExpected.RewardsRecords {
+			_, found := rewardsRecordState.GetRewardsRecord(recordExpected.Id)
+			s.Assert().False(found, "RewardsRecord [%d]: found", i)
+		}
 	})
 }

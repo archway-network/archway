@@ -93,7 +93,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		nil,
 		true, map[int64]bool{},
 		app.DefaultNodeHome,
-		5,
+		1,
 		encCfg,
 		app.GetEnabledProposals(),
 		app.EmptyBaseAppOptions{},

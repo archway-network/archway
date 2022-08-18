@@ -46,11 +46,14 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 
 	senderAcc := chain.GetAccount(0)
 	contractAddr := s.VoterUploadAndInstantiate(chain, senderAcc)
-	accAddrs, _ := e2eTesting.GenAccounts(1) // an empty account
+	accAddrs, accPrivKeys := e2eTesting.GenAccounts(1) // an empty account
 
 	// Inputs
 	txFees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)))
-	rewardsAddr := accAddrs[0]
+	rewardsAcc := e2eTesting.Account{
+		Address: accAddrs[0],
+		PrivKey: accPrivKeys[0],
+	}
 
 	// Collected values
 	var abciEvents []abci.Event        // all ABCI events from Tx execution, BeginBlocker and EndBlockers
@@ -61,7 +64,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	contractMetadataExpected := rewardsTypes.ContractMetadata{
 		ContractAddress: contractAddr.String(),
 		OwnerAddress:    senderAcc.Address.String(),
-		RewardsAddress:  rewardsAddr.String(),
+		RewardsAddress:  rewardsAcc.Address.String(),
 	}
 	var contractTxRewardsExpected sdk.Coins       // contract tx fee rebate rewards expected
 	var contractInflationRewardsExpected sdk.Coin // contract inflation rewards expected
@@ -70,10 +73,23 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 
 	// Set metadata and fetch ABCI events
 	{
-		msg := rewardsTypes.NewMsgSetContractMetadata(senderAcc.Address, contractAddr, &senderAcc.Address, &rewardsAddr)
+		msg := rewardsTypes.NewMsgSetContractMetadata(senderAcc.Address, contractAddr, &senderAcc.Address, &rewardsAcc.Address)
 		_, _, events, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{msg})
 
 		abciEvents = append(abciEvents, events...)
+	}
+
+	// Send some coins to the rewardsAcc to pay withdraw Tx fees
+	rewardsAccInitialBalance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000)))
+	{
+		s.Require().NoError(
+			chain.GetApp().BankKeeper.SendCoins(
+				chain.GetContext(),
+				senderAcc.Address,
+				rewardsAcc.Address,
+				rewardsAccInitialBalance,
+			),
+		)
 	}
 
 	// Check x/rewards metadata set event
@@ -254,32 +270,30 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		s.Assert().Equal(contractMetadataExpected, metadataReceived)
 	})
 
-	// Check x/rewards distribution event
-	s.Run("Check distribution event", func() {
-		eventContractAddr := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1beta1.ContractRewardDistributionEvent",
-			"contract_address",
-		)
-		eventRewardsAddr := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1beta1.ContractRewardDistributionEvent",
+	// Withdraw rewards and check x/rewards withdraw event (spend all account coins as fees)
+	s.Run("Withdraw rewards and check distribution event", func() {
+		msg := rewardsTypes.NewMsgWithdrawRewardsByLimit(rewardsAcc.Address, 1000)
+		_, _, msgEvents, _ := chain.SendMsgs(rewardsAcc, true, []sdk.Msg{msg}, e2eTesting.WithMsgFees(rewardsAccInitialBalance...))
+
+		eventRewardsAddr := e2eTesting.GetStringEventAttribute(msgEvents,
+			"archway.rewards.v1beta1.RewardsWithdrawEvent",
 			"reward_address",
 		)
-		eventRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1beta1.ContractRewardDistributionEvent",
+		eventRewardsBz := e2eTesting.GetStringEventAttribute(msgEvents,
+			"archway.rewards.v1beta1.RewardsWithdrawEvent",
 			"rewards",
 		)
 
 		var rewardsReceived sdk.Coins
 		s.Require().NoError(json.Unmarshal([]byte(eventRewardsBz), &rewardsReceived))
 
-		s.Assert().Equal(contractAddr.String(), eventContractAddr)
-		s.Assert().Equal(contractMetadataExpected.RewardsAddress, eventRewardsAddr)
+		s.Assert().Equal(rewardsAcc.Address.String(), eventRewardsAddr)
 		s.Assert().Equal(contractTotalRewardsExpected.String(), rewardsReceived.String())
 	})
 
 	// Check rewards address balance
 	s.Run("Check funds transferred", func() {
-		accCoins := chain.GetBalance(rewardsAddr)
+		accCoins := chain.GetBalance(rewardsAcc.Address)
 		s.Assert().Equal(contractTotalRewardsExpected.String(), accCoins.String())
 	})
 }

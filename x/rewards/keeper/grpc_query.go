@@ -45,7 +45,7 @@ func (s *QueryServer) ContractMetadata(c context.Context, request *types.QueryCo
 
 	contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid contract address")
+		return nil, status.Error(codes.InvalidArgument, "invalid contract address: "+err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -104,16 +104,65 @@ func (s *QueryServer) EstimateTxFees(c context.Context, request *types.QueryEsti
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	minConsFee := s.keeper.GetMinConsensusFee(ctx)
-	if minConsFee == nil {
+	minConsFee, found := s.keeper.GetMinConsensusFee(ctx)
+	if !found {
 		return nil, status.Errorf(codes.NotFound, "min consensus fee: not found")
 	}
 
 	return &types.QueryEstimateTxFeesResponse{
-		GasUnitPrice: *minConsFee,
+		GasUnitPrice: minConsFee,
 		EstimatedFee: sdk.Coin{
 			Denom:  minConsFee.Denom,
 			Amount: minConsFee.Amount.MulInt64(int64(request.GasLimit)).RoundInt(),
 		},
+	}, nil
+}
+
+// OutstandingRewards implements the types.QueryServer interface.
+func (s *QueryServer) OutstandingRewards(c context.Context, request *types.QueryOutstandingRewardsRequest) (*types.QueryOutstandingRewardsResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	rewardsAddr, err := sdk.AccAddressFromBech32(request.RewardsAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid rewards address: "+err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	totalRewards := sdk.NewCoins()
+	records := s.keeper.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddress(rewardsAddr)
+	for _, record := range records {
+		totalRewards = totalRewards.Add(record.Rewards...)
+	}
+
+	return &types.QueryOutstandingRewardsResponse{
+		TotalRewards: totalRewards,
+		RecordsNum:   uint64(len(records)),
+	}, nil
+}
+
+// RewardsRecords implements the types.QueryServer interface.
+func (s *QueryServer) RewardsRecords(c context.Context, request *types.QueryRewardsRecordsRequest) (*types.QueryRewardsRecordsResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	rewardsAddr, err := sdk.AccAddressFromBech32(request.RewardsAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid rewards address: "+err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	records, pageResp, err := s.keeper.GetRewardsRecords(ctx, rewardsAddr, request.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "pagination request: "+err.Error())
+	}
+
+	return &types.QueryRewardsRecordsResponse{
+		Records:    records,
+		Pagination: pageResp,
 	}, nil
 }

@@ -79,3 +79,46 @@ func (m BlockTracking) String() string {
 	bz, _ := yaml.Marshal(m)
 	return string(bz)
 }
+
+// String implements the fmt.Stringer interface.
+func (m RewardsRecord) String() string {
+	bz, _ := yaml.Marshal(m)
+	return string(bz)
+}
+
+// MustGetRewardsAddress returns the rewards address.
+// CONTRACT: panics in case of an error.
+func (m RewardsRecord) MustGetRewardsAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(m.RewardsAddress)
+	if err != nil {
+		panic(fmt.Errorf("parsing rewardsRecord rewardsAddress: %w", err))
+	}
+	return addr
+}
+
+// Validate performs object fields validation.
+func (m RewardsRecord) Validate() error {
+	if m.Id <= 0 {
+		return fmt.Errorf("id: must be GT 0")
+	}
+
+	if _, err := sdk.AccAddressFromBech32(m.RewardsAddress); err != nil {
+		return fmt.Errorf("rewardsAddress: %w", err)
+	}
+
+	for i, coin := range m.Rewards {
+		if err := pkg.ValidateCoin(coin); err != nil {
+			return fmt.Errorf("rewards [%d]: %w", i, err)
+		}
+	}
+
+	if m.CalculatedHeight < 0 {
+		return fmt.Errorf("calculatedHeight: must be GTE 0")
+	}
+
+	if m.CalculatedTime.IsZero() {
+		return fmt.Errorf("calculatedTime: must be non-zero")
+	}
+
+	return nil
+}

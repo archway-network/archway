@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -13,8 +14,12 @@ import (
 	cwSdkTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
+	wasmBindingTypes "github.com/archway-network/archway/x/rewards/wasmbinding/types"
 )
 
 // Voter contract related helpers.
@@ -300,6 +305,20 @@ func (s *E2ETestSuite) VoterGetIBCStats(chain *e2eTesting.TestChain, contractAdd
 	return resp.Stats
 }
 
+// VoterGetWithdrawStats returns the withdraw stats (updated via Reply endpoint).
+func (s *E2ETestSuite) VoterGetWithdrawStats(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress) voterTypes.QueryWithdrawStatsResponse {
+	req := voterTypes.MsgQuery{
+		WithdrawStats: &struct{}{},
+	}
+
+	res, _ := chain.SmartQueryContract(contractAddr, true, req)
+
+	var resp voterTypes.QueryWithdrawStatsResponse
+	s.Require().NoError(resp.UnmarshalJSON(res))
+
+	return resp
+}
+
 // VoterGetMetadata returns the contract metadata queried via Custom querier plugin.
 func (s *E2ETestSuite) VoterGetMetadata(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, useStargate, expPass bool) voterCustomTypes.ContractMetadataResponse {
 	req := voterTypes.MsgQuery{
@@ -319,10 +338,10 @@ func (s *E2ETestSuite) VoterGetMetadata(chain *e2eTesting.TestChain, contractAdd
 	return resp.ContractMetadataResponse
 }
 
-// VoterUpdateMetadata sends the contract metadata update request.
+// VoterUpdateMetadata sends the contract metadata update request via Custom message plugin.
 func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, metaReq voterCustomTypes.UpdateMetadataRequest, expPass bool) error {
 	req := voterTypes.MsgExecute{
-		UpdateMetadata: &metaReq,
+		CustomUpdateMetadata: &metaReq,
 	}
 	reqBz, err := req.MarshalJSON()
 	s.Require().NoError(err)
@@ -336,4 +355,68 @@ func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contract
 	_, _, _, err = chain.SendMsgs(acc, expPass, []sdk.Msg{&msg})
 
 	return err
+}
+
+// VoterGetRewardsRecords returns the current contract rewards records (for the contractAddress as a rewardsAddress) paginated via Custom querier plugin.
+func (s *E2ETestSuite) VoterGetRewardsRecords(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, pageReq *query.PageRequest, expPass bool) ([]rewardsTypes.RewardsRecord, query.PageResponse, error) {
+	req := voterTypes.MsgQuery{
+		CustomRewardsRecords: &voterTypes.CustomRewardsRecordsRequest{},
+	}
+	if pageReq != nil {
+		r := wasmBindingTypes.NewPageRequestFromSDK(*pageReq)
+		req.CustomRewardsRecords.Pagination = &voterCustomTypes.PageRequest{
+			Key:        r.Key,
+			Offset:     r.Offset,
+			Limit:      r.Limit,
+			CountTotal: r.CountTotal,
+			Reverse:    r.Reverse,
+		}
+	}
+
+	res, err := chain.SmartQueryContract(contractAddr, expPass, req)
+	if !expPass {
+		s.Require().Error(err)
+		return nil, query.PageResponse{}, err
+	}
+	s.Require().NoError(err)
+
+	var resp wasmBindingTypes.RewardsRecordsResponse
+	s.Require().NoError(json.Unmarshal(res, &resp))
+
+	records := make([]rewardsTypes.RewardsRecord, 0, len(resp.Records))
+	for _, record := range resp.Records {
+		r, err := record.ToSDK()
+		s.Require().NoError(err)
+
+		records = append(records, r)
+	}
+
+	return records, resp.Pagination.ToSDK(), nil
+}
+
+// VoterWithdrawRewards sends the contract rewards withdrawal request via Custom message plugin.
+func (s *E2ETestSuite) VoterWithdrawRewards(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, recordsLimit uint64, recordIDs []uint64, expPass bool) error {
+	req := voterTypes.MsgExecute{
+		CustomWithdrawRewards: &voterCustomTypes.WithdrawRewardsRequest{
+			RecordsLimit: recordsLimit,
+			RecordIds:    recordIDs,
+		},
+	}
+	reqBz, err := req.MarshalJSON()
+	s.Require().NoError(err)
+
+	msg := wasmdTypes.MsgExecuteContract{
+		Sender:   acc.Address.String(),
+		Contract: contractAddr.String(),
+		Msg:      reqBz,
+	}
+
+	_, _, _, err = chain.SendMsgs(acc, expPass, []sdk.Msg{&msg})
+	if !expPass {
+		s.Require().Error(err)
+		return err
+	}
+	s.Require().NoError(err)
+
+	return nil
 }

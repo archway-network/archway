@@ -29,4 +29,8 @@ message GenesisState {
   cosmos.base.v1beta1.DecCoin min_consensus_fee = 5 [
     (gogoproto.nullable) = false
   ];
+  // rewards_records defines a list of all active (undistributed) rewards records.
+  repeated RewardsRecord rewards_records = 6 [
+    (gogoproto.nullable) = false
+  ];
 }

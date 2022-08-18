@@ -69,13 +69,29 @@ func (s *E2ETestSuite) TestTxFees() {
 
 	senderAcc := chain.GetAccount(0)
 	contractAddr := s.VoterUploadAndInstantiate(chain, senderAcc)
-	accAddrs, _ := e2eTesting.GenAccounts(1) // an empty account
-	rewardsAddr := accAddrs[0]
+
+	accAddrs, accPrivKeys := e2eTesting.GenAccounts(1) // an empty account
+	rewardsAcc := e2eTesting.Account{
+		Address: accAddrs[0],
+		PrivKey: accPrivKeys[0],
+	}
+
+	// Send some coins to the rewardsAcc to pay withdraw Tx fees
+	{
+		s.Require().NoError(
+			chain.GetApp().BankKeeper.SendCoins(
+				chain.GetContext(),
+				senderAcc.Address,
+				rewardsAcc.Address,
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))), // 100.0
+			),
+		)
+	}
 
 	// Set metadata
 	chain.SetContractMetadata(senderAcc, contractAddr, rewardsTypes.ContractMetadata{
 		OwnerAddress:   senderAcc.Address.String(),
-		RewardsAddress: rewardsAddr.String(),
+		RewardsAddress: rewardsAcc.Address.String(),
 	})
 
 	// Get minted inflation amount
@@ -89,7 +105,7 @@ func (s *E2ETestSuite) TestTxFees() {
 
 	var abciEvents []abci.Event
 	txFee := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(0)} // this one gonna increase
-	rewardsAccPrevBalance := chain.GetBalance(rewardsAddr)
+	rewardsAccPrevBalance := chain.GetBalance(rewardsAcc.Address)
 
 	// Generate transactions and check fees (some txs might fail with InsufficientFee error)
 	for i := 0; i < 100; i++ {
@@ -101,8 +117,8 @@ func (s *E2ETestSuite) TestTxFees() {
 		{
 			ctx := chain.GetContext()
 
-			if fee := chain.GetApp().RewardsKeeper.GetMinConsensusFee(ctx); fee != nil {
-				minConsensusFee = *fee
+			if fee, found := chain.GetApp().RewardsKeeper.GetMinConsensusFee(ctx); found {
+				minConsensusFee = fee
 
 				// Check the event from the previous BeginBlocker
 				if len(abciEvents) > 0 {
@@ -170,7 +186,7 @@ func (s *E2ETestSuite) TestTxFees() {
 			txInfosState := chain.GetApp().TrackingKeeper.GetState().TxInfoState(ctx)
 
 			txInfos := txInfosState.GetTxInfosByBlock(ctx.BlockHeight() - 1)
-			s.Require().Len(txInfos, 1)
+			s.Require().GreaterOrEqual(len(txInfos), 1) // at least one Tx in the previous block (+1 for the withdrawal operation)
 			txGasTracked = txInfos[0].TotalGas
 		}
 
@@ -203,10 +219,30 @@ func (s *E2ETestSuite) TestTxFees() {
 			s.Require().NoError(json.Unmarshal([]byte(eventFeeRebateRewardsBz), &feeRebateRewards))
 		}
 
-		// Get rewards address balance diff
+		// Withdraw rewards
+		withdrawTxFees := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.ZeroInt()}
+		{
+			const withdrawGas = 100_000
+
+			minConsFee, found := chain.GetApp().RewardsKeeper.GetMinConsensusFee(chain.GetContext())
+			s.Require().True(found)
+
+			withdrawTxFees.Amount = minConsFee.Amount.MulInt64(withdrawGas).RoundInt()
+
+			msg := rewardsTypes.NewMsgWithdrawRewardsByLimit(rewardsAcc.Address, 1000)
+			_, _, err := chain.SendMsgsRaw(rewardsAcc, []sdk.Msg{msg},
+				e2eTesting.WithMsgFees(withdrawTxFees),
+				e2eTesting.WithTxGasLimit(withdrawGas),
+			)
+			s.Require().NoError(err)
+		}
+
+		// Get rewards address balance diff (adjusting prev balance with fees payed)
 		var rewardsAddrBalanceDiff sdk.Coins
 		{
-			curBalance := chain.GetBalance(rewardsAddr)
+			rewardsAccPrevBalance = rewardsAccPrevBalance.Sub(sdk.Coins{withdrawTxFees})
+
+			curBalance := chain.GetBalance(rewardsAcc.Address)
 			rewardsAddrBalanceDiff = curBalance.Sub(rewardsAccPrevBalance)
 			rewardsAccPrevBalance = curBalance
 
