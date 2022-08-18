@@ -12,7 +12,7 @@ Refer to the [rewards.proto](../../../proto/archway/rewards/v1beta1/rewards.prot
 
 - Params: `Paramsspace("rewards") -> legacy_amino(params)`
 
-[Params](https://github.com/archway-network/archway/blob/e130d74bd456be037b4e60dea7dada5d7a8760b5/proto/archway/rewards/v1beta1/rewards.proto#L11) is a module-wide configuration structure.
+[Params](../../../proto/archway/rewards/v1beta1/rewards.proto#L11) is a module-wide configuration structure.
 
 ## Pool
 
@@ -20,7 +20,7 @@ Refer to the [rewards.proto](../../../proto/archway/rewards/v1beta1/rewards.prot
 
 ## ContractMetadata
 
-[ContractMetadata](https://github.com/archway-network/archway/blob/e130d74bd456be037b4e60dea7dada5d7a8760b5/proto/archway/rewards/v1beta1/rewards.proto#L29) object is used to store per contract rewards specific parameters.
+[ContractMetadata](../../../proto/archway/rewards/v1beta1/rewards.proto#L31) object is used to store per contract rewards specific parameters.
 
 Example:
 
@@ -52,7 +52,7 @@ Storage keys:
 
 ## BlockRewards
 
-[BlockRewards](https://github.com/archway-network/archway/blob/e130d74bd456be037b4e60dea7dada5d7a8760b5/proto/archway/rewards/v1beta1/rewards.proto#L44) object is used to track the inflationary rewards per block that are distributed to dApps in the **BeginBlocker**.
+[BlockRewards](../../../proto/archway/rewards/v1beta1/rewards.proto#L46) object is used to track the inflationary rewards per block that are distributed to dApps in the **BeginBlocker**.
 
 Example:
 
@@ -67,7 +67,7 @@ Example:
 }
 ```
 
-Entry is created by the [MintBankKeeper](https://github.com/archway-network/archway/blob/e130d74bd456be037b4e60dea7dada5d7a8760b5/x/rewards/mintbankkeeper/keeper.go#L25).
+Entry is created by the [MintBankKeeper](../mintbankkeeper/keeper.go#L25).
 This keeper is a wrapper around the standart `x/bank` keeper that transfers tokens between modules and is used by the `x/mint` keeper as a dependency.
 Keeper's task is to split minted inflation tokens between the **FeeCollector** (`x/auth`) and the **Rewards** (`x/rewards`) modules using the *InflationRewardsRatio* parameter.
 
@@ -80,7 +80,7 @@ Storage keys:
 
 ## TxRewards
 
-[TxRewards](https://github.com/archway-network/archway/blob/e130d74bd456be037b4e60dea7dada5d7a8760b5/proto/archway/rewards/v1beta1/rewards.proto#L58) object is used to track the tx fee rebate rewards per transaction that are distributed to dApps in the BeginBlocker.
+[TxRewards](../../../proto/archway/rewards/v1beta1/rewards.proto#L60) object is used to track the tx fee rebate rewards per transaction that are distributed to dApps in the BeginBlocker.
 
 Example:
 
@@ -122,7 +122,7 @@ Storage keys:
 
 ## RewardsRecord
 
-[RewardsRecord](https://github.com/archway-network/archway/blob/e130d74bd456be037b4e60dea7dada5d7a8760b5/proto/archway/rewards/v1beta1/rewards.proto#L76) object is used to track calculated rewards for a particular rewards account within the **BeginBlocker**.
+[RewardsRecord](../../../proto/archway/rewards/v1beta1/rewards.proto#L78) object is used to track calculated rewards for a particular rewards account within the **BeginBlocker**.
 Those records are used later to withdraw calculated rewards for a particular address.
 
 Example:

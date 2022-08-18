@@ -1,10 +1,10 @@
 <!--
-order: 5
+order: 4
 -->
 
 # Client
 
-Section describes interaction with the module
+Section describes interaction with the module by a user.
 
 ## CLI
 
@@ -20,10 +20,9 @@ archwayd q tracking -h
 
 > You can add the `-o json` for the JSON output format.
 
+### block-gas-tracking
 
-### Block Gas Tracking
-
-Get the current gas trcaking data
+Get the current gas tracking data.
 
 ```bash
 archwayd q tracking block-gas-tracking [flags]

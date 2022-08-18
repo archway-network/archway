@@ -8,7 +8,7 @@ Section describes interaction with the module by a contract using CosmWasm custo
 
 ## Custom query
 
-[The custom query structure](https://github.com/archway-network/archway/blob/4220b9a643fc37840674a261552f26ec4699a32b/x/rewards/wasmbinding/types/query.go#L12) is used to query the `x/rewards` specific data by a contract.
+[The custom query structure](../wasmbinding/types/query.go#L18) is used to query the `x/rewards` specific data by a contract.
 
 This query is expected to fail if:
 
@@ -17,7 +17,7 @@ This query is expected to fail if:
 
 ### Metadata
 
-The [metadata](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/query.go#L26) request returns a contract metadata state.
+The [metadata](../wasmbinding/types/query.go#L29) request returns a contract metadata state.
 A contract can query its own or any other contract's metadata.
 
 Query example:
@@ -41,13 +41,13 @@ Example response:
 
 ### Rewards records
 
-The [rewards_records](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/query.go#L42) request returns the paginated list of `RewardsRecord` objects credited to an account address.
-A [RewardsRecord](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/query.go#L59) entry contains a portion of credited rewards by a specific contract at a block height.
+The [rewards_records](../wasmbinding/types/query.go#L45) request returns the paginated list of `RewardsRecord` objects credited to an account address.
+A [RewardsRecord](../wasmbinding/types/query.go#L62) entry contains a portion of credited rewards by a specific contract at a block height.
 A contract can query any account address rewards state.
 
 This query is paginated to limit the size of the response.
-Refer to the [PageRequest](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/pagination.go#L8) structure description to learn more about the pagination options.
-The query response contains the [PageResponse](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/pagination.go#L28) structure that should be used to query the next page.
+Refer to the [PageRequest](../wasmbinding/types/pagination.go#L8) structure description to learn more about the pagination options.
+The query response contains the [PageResponse](../wasmbinding/types/pagination.go#L28) structure that should be used to query the next page.
 
 > The maximum page limit is bounded by the `MaxWithdrawRecords` parameter.
 > 
@@ -92,7 +92,7 @@ Example response:
 
 ## Custom message
 
-[The custom message structure](https://github.com/archway-network/archway/blob/4220b9a643fc37840674a261552f26ec4699a32b/x/rewards/wasmbinding/types/msg.go#L12) is used to send the `x/rewards` state change messages by a contract.
+[The custom message structure](../wasmbinding/types/msg.go#L14) is used to send the `x/rewards` state change messages by a contract.
 
 This message is expected to fail if:
 
@@ -101,7 +101,7 @@ This message is expected to fail if:
 
 ### Update metadata
 
-The [update_metadata](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/msg.go#L24) request is used to update an existing contract metadata.
+The [update_metadata](../wasmbinding/types/msg.go#L26) request is used to update an existing contract metadata.
 
 Message example (CosmWasm's `CosmosMsg`):
 
@@ -132,7 +132,7 @@ This sub-message is expected to fail if:
 
 ### Withdraw rewards
 
-The [withdraw_rewards](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/msg.go#L34) request is used to withdraw the current credited to a contract address reward tokens.
+The [withdraw_rewards](../wasmbinding/types/msg.go#L36) request is used to withdraw the current credited to a contract address reward tokens.
 
 > Contract address is used as the `rewards_address` for this sub-message: a contract can only request withdrawal of funds, credited for his own address.
 
@@ -161,7 +161,7 @@ Message example (CosmWasm's `CosmosMsg`):
 }
 ```
 
-Sub-message returns the [response](https://github.com/archway-network/archway/blob/b027aa56eac2880c03a7bbe85ab9366cd0b59269/x/rewards/wasmbinding/types/msg.go#L45) that can be handled with the *Reply* CosmWasm functionality.
+Sub-message returns the [response](../wasmbinding/types/msg.go#L47) that can be handled with the *Reply* CosmWasm functionality.
 
 Response example:
 
