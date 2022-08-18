@@ -26,6 +26,7 @@ In order to accurately measure gas consumption, each tracked transaction must ha
   - a unique ID increased sequentially;
   - height related to the block height of the transaction;
   - total gas represented by the sum of gas consumed in all contract operations:
+  
       $$
         TotalGas  = GasSDK + GasVM
       $$
@@ -37,9 +38,9 @@ In order to accurately measure gas consumption, each tracked transaction must ha
 
 ### Tracking engine
 
-The Archway protocol uses a CosmWasm modified `WasmerEngine` which utilizes a custom [Gas Processor](README.md#GasProcessor) and is able to keep a record of a contract execution and subsequent executions.
+The Archway protocol uses a CosmWasm modified `WasmerEngine` which utilizes a custom [Gas Processor](README.md#Gas processor) and is able to keep a record of a contract execution and subsequent executions.
 
-### Gas Processor
+### Gas processor
 
 Intercepts smart contract operations and initializes the tracking of contract operation gas usage.
 
@@ -49,12 +50,12 @@ Tx tracking happens as follows:
 
 1. Tx is received by [ante handler](02_ante_handlers.md).
 2. An empty [TxInfo](01_state.md#TxInfo) is created.
-3. [Gas Processor](README.md#GasProcessor) creates a new [ContractOperationInfo](01_state.md#ContractOperationInfo).
+3. [Gas processor](README.md#Gas processor) creates a new [ContractOperationInfo](01_state.md#ContractOperationInfo).
 4. [EndBlocker](03_end_block.md) finalizes tx tracking for the current block.
 
 ## Contents
 
 1. **[State](01_state.md)**
 2. **[Ante Handlers](02_ante_handlers.md)**
-3. **[Begin-Block](03_end_block.md)**
+3. **[End-Block](03_end_block.md)**
 4. **[Client](04_client.md)**
