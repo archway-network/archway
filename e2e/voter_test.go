@@ -10,10 +10,6 @@ import (
 
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 
-	voterPkg "github.com/CosmWasm/cosmwasm-go/example/voter/src/pkg"
-	voterCustomTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/pkg/archway/custom"
-	voterState "github.com/CosmWasm/cosmwasm-go/example/voter/src/state"
-	voterTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/types"
 	cwStd "github.com/CosmWasm/cosmwasm-go/std"
 	cwTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -22,11 +18,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 
+	voterPkg "github.com/archway-network/voter/src/pkg"
+	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
+	voterState "github.com/archway-network/voter/src/state"
+	voterTypes "github.com/archway-network/voter/src/types"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 const (
-	VoterWasmPath       = "contracts/voter.wasm"
+	VoterWasmPath       = "../contracts/go/voter/code.wasm"
 	DefNewVotingCostAmt = 1000
 	DefNewVoteCostAmt   = 100
 )

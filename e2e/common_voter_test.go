@@ -7,15 +7,16 @@ import (
 	"strings"
 	"time"
 
-	voterCustomTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/pkg/archway/custom"
-	voterState "github.com/CosmWasm/cosmwasm-go/example/voter/src/state"
-	voterTypes "github.com/CosmWasm/cosmwasm-go/example/voter/src/types"
 	cwMath "github.com/CosmWasm/cosmwasm-go/std/math"
 	cwSdkTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+
+	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
+	voterState "github.com/archway-network/voter/src/state"
+	voterTypes "github.com/archway-network/voter/src/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"

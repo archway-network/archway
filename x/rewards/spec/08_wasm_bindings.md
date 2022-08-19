@@ -181,14 +181,15 @@ Response example:
 
 ### Go contract
 
-The [cosmwasm-go repository](https://github.com/CosmWasm/cosmwasm-go) has the `Voter` example contract. This contract utilizes all the features of the CosmWasm API and the `x/rewards` WASM bindings.
+This repository has the [Voter](../../../contracts/go/voter) example contract.
+This contract utilizes all the features of the CosmWasm API and the `x/rewards` WASM bindings.
 
 #### Custom message send and reply handling
 
-The [handleMsgWithdrawRewards](https://github.com/CosmWasm/cosmwasm-go/blob/45b9f015c12e75f12c0bb4b9c2a27da606a58f4e/example/voter/src/handler.go#L362) CosmWasm *Execute* handler sends the custom `withdraw_rewards` message using the WASM bindings.
+The [handleMsgWithdrawRewards](../../../contracts/go/voter/src/handler.go#L363) CosmWasm *Execute* handler sends the custom `withdraw_rewards` message using the WASM bindings.
 
-The [handleReplyCustomWithdrawMsg](https://github.com/CosmWasm/cosmwasm-go/blob/45b9f015c12e75f12c0bb4b9c2a27da606a58f4e/example/voter/src/handler.go#L390) CosmWasm *Reply* handler parses the `withdraw_rewards` message response.
+The [handleReplyCustomWithdrawMsg](../../../contracts/go/voter/src/handler.go#L391) CosmWasm *Reply* handler parses the `withdraw_rewards` message response.
 
 #### Custom query
 
-The [queryCustomMetadataCustom](https://github.com/CosmWasm/cosmwasm-go/blob/45b9f015c12e75f12c0bb4b9c2a27da606a58f4e/example/voter/src/querier.go#L192) CosmWasm *Query* handler sends and parses the `metadata` custom query.
+The [queryCustomMetadataCustom](../../../contracts/go/voter/src/querier.go#L193) CosmWasm *Query* handler sends and parses the `metadata` custom query.
