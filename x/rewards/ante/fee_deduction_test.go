@@ -122,7 +122,7 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 
 			// Fetch initial balances
 			feeCollectorBalanceBefore := chain.GetModuleBalance(authTypes.FeeCollectorName)
-			rewardsBalanceBefore := chain.GetModuleBalance(rewardsTypes.ModuleName)
+			rewardsBalanceBefore := chain.GetModuleBalance(rewardsTypes.ContractRewardCollector)
 
 			// Build transaction
 			tx := testutils.NewMockFeeTx(
@@ -142,7 +142,7 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 
 			// Check final balances
 			feeCollectorBalanceAfter := chain.GetModuleBalance(authTypes.FeeCollectorName)
-			rewardsBalanceAfter := chain.GetModuleBalance(rewardsTypes.ModuleName)
+			rewardsBalanceAfter := chain.GetModuleBalance(rewardsTypes.ContractRewardCollector)
 
 			feeCollectorBalanceDiffReceived := feeCollectorBalanceAfter.Sub(feeCollectorBalanceBefore) // positive
 			rewardsBalanceDiffReceived := rewardsBalanceAfter.Sub(rewardsBalanceBefore)                // positive

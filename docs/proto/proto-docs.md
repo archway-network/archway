@@ -479,7 +479,8 @@ QueryRewardsPoolResponse is the response for Query.RewardsPool.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `funds` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `undistributed_funds` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | undistributed_funds are undistributed yet tokens (ready for withdrawal). |
+| `treasury_funds` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | treasury_funds are treasury tokens available (no mechanism is available to withdraw ATM). Treasury tokens are collected on a block basis. Those tokens are unused block rewards. |
 
 
 

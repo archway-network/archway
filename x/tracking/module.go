@@ -1,6 +1,6 @@
 // Package tracking defines a module that tracks WASM contracts gas usage per transaction.
 // Module is not configurable and tracking is always enabled.
-// TODO: collected tracking data should be pruned.
+// Collected tracking data is pruned by the x/rewards module's EndBlocker.
 package tracking
 
 import (

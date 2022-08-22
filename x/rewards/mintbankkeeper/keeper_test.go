@@ -128,7 +128,7 @@ func TestMintBankKeeper(t *testing.T) {
 			// Fetch initial balances
 			srcBalanceBefore := chain.GetModuleBalance(tc.srcModule)
 			dstBalanceBefore := chain.GetModuleBalance(tc.dstModule)
-			rewardsBalanceBefore := chain.GetModuleBalance(rewardsTypes.ModuleName)
+			rewardsBalanceBefore := chain.GetModuleBalance(rewardsTypes.ContractRewardCollector)
 
 			// Mint funds for the source module
 			transferCoins, err := sdk.ParseCoinsNormalized(tc.transferCoins)
@@ -152,7 +152,7 @@ func TestMintBankKeeper(t *testing.T) {
 			// Check final balances
 			srcBalanceAfter := chain.GetModuleBalance(tc.srcModule)
 			dstBalanceAfter := chain.GetModuleBalance(tc.dstModule)
-			rewardsBalanceAfter := chain.GetModuleBalance(rewardsTypes.ModuleName)
+			rewardsBalanceAfter := chain.GetModuleBalance(rewardsTypes.ContractRewardCollector)
 
 			srcBalanceDiffReceived := srcBalanceBefore.Sub(srcBalanceAfter)             // negative
 			dstBalanceDiffReceived := dstBalanceAfter.Sub(dstBalanceBefore)             // positive

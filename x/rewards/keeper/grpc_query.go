@@ -92,7 +92,8 @@ func (s *QueryServer) RewardsPool(c context.Context, request *types.QueryRewards
 	ctx := sdk.UnwrapSDKContext(c)
 
 	return &types.QueryRewardsPoolResponse{
-		Funds: s.keeper.UndistributedRewardsPool(ctx),
+		UndistributedFunds: s.keeper.UndistributedRewardsPool(ctx),
+		TreasuryFunds:      s.keeper.TreasuryPool(ctx),
 	}, nil
 }
 

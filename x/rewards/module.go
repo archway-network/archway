@@ -1,5 +1,6 @@
-// Package rewards defines a module that tracks dApp rewards (fee rebate and inflation rewards) and
-// distributes them to contracts' rewards addresses (if set).
+// Package rewards defines a module that tracks dApp rewards (fee rebate and inflation rewards).
+// Rewards distribution to contract's rewardsAddress (if set) is done via the Withdrawal operation triggered by a Tx or by a contract (WASM bindings).
+// Collected rewards tracking data is pruned by the x/rewards module's EndBlocker.
 // CONTRACT: module's Ante handler must be called after the x/tracking Ante since it relies on transaction ID tracking generates.
 package rewards
 
@@ -147,13 +148,11 @@ func (a AppModule) ConsensusVersion() uint64 {
 }
 
 // BeginBlock returns the begin blocker for the module.
-func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {
-	BeginBlocker(ctx, a.keeper)
-}
+func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the module. It returns no validator updates.
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+	return EndBlocker(ctx, a.keeper)
 }
 
 // AppModuleSimulation functions

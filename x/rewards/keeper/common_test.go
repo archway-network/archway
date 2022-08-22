@@ -30,25 +30,30 @@ func (s *KeeperTestSuite) SetupTest() {
 
 // SetupWithdrawTest is a helper function to setup the test environment for Withdraw tests.
 func (s *KeeperTestSuite) SetupWithdrawTest(testData []withdrawTestRecordData) {
-	// Mint rewards for the later withdrawal
-	rewardsToMint := sdk.NewCoins()
-	for _, testRecord := range testData {
-		rewardsToMint = rewardsToMint.Add(testRecord.Rewards...)
-	}
-
-	ctx := s.chain.GetContext()
-	s.Require().NoError(s.chain.GetApp().MintKeeper.MintCoins(ctx, rewardsToMint))
-	s.Require().NoError(s.chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ModuleName, rewardsToMint))
-
 	// Create test records
 	for _, testRecord := range testData {
 		ctx := s.chain.GetContext()
+
+		// Get rid of the current inflationary rewards for the current block (otherwise the invariant fails)
+		blockRewards, found := s.chain.GetApp().RewardsKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
+		s.Require().True(found)
+		s.Require().NoError(s.chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, sdk.Coins{blockRewards.InflationRewards}))
+		s.chain.GetApp().RewardsKeeper.GetState().BlockRewardsState(ctx).CreateBlockRewards(ctx.BlockHeight(), sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()), 0)
+
+		// Mint rewards for the current record
+		rewardsToMint := testRecord.Rewards
+		s.Require().NoError(s.chain.GetApp().MintKeeper.MintCoins(ctx, rewardsToMint))
+		s.Require().NoError(s.chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, rewardsToMint))
+
+		// Create the record
 		s.chain.GetApp().RewardsKeeper.GetState().RewardsRecord(ctx).
 			CreateRewardsRecord(
 				testRecord.RewardsAddr,
 				testRecord.Rewards,
 				ctx.BlockHeight(), ctx.BlockTime(),
 			)
+
+		// Switch to the next block
 		s.chain.NextBlock(0)
 	}
 }

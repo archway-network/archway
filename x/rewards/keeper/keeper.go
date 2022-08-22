@@ -34,6 +34,7 @@ type AuthKeeperExpected interface {
 type BankKeeperExpected interface {
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
 }
 
 // Keeper provides module state operations.
@@ -75,9 +76,15 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// UndistributedRewardsPool returns the current undistributed rewards leftovers.
+// UndistributedRewardsPool returns the current undistributed rewards (yet to be withdrawn).
 func (k Keeper) UndistributedRewardsPool(ctx sdk.Context) sdk.Coins {
 	poolAcc := k.authKeeper.GetModuleAccount(ctx, types.ContractRewardCollector)
+	return k.bankKeeper.GetAllBalances(ctx, poolAcc.GetAddress())
+}
+
+// TreasuryPool returns the current undistributed treasury rewards.
+func (k Keeper) TreasuryPool(ctx sdk.Context) sdk.Coins {
+	poolAcc := k.authKeeper.GetModuleAccount(ctx, types.TreasuryCollector)
 	return k.bankKeeper.GetAllBalances(ctx, poolAcc.GetAddress())
 }
 

@@ -5,7 +5,7 @@ import (
 )
 
 // CustomQuery defines the Archway custom plugin query.
-// TODO: this should be a part of Archway CW SDK. Added here as an example of how to use Custom queries.
+// This should be a part of Archway CW SDK. Added here as an example of how to use Custom queries.
 type CustomQuery struct {
 	// Metadata returns the contract rewards metadata.
 	Metadata *ContractMetadataRequest
