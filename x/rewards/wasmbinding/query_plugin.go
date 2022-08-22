@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -38,7 +39,7 @@ func NewQueryPlugin(rk RewardsReader) *QueryPlugin {
 
 // DispatchQuery validates and executes a custom WASM query.
 func (qp QueryPlugin) DispatchQuery(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
-	// Parse and validate the input
+	// Parse and validate the input (should not fail if this is not module-related query)
 	var req types.Query
 	if err := json.Unmarshal(request, &req); err != nil {
 		return nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, fmt.Sprintf("request JSON unmarshal: %v", err))
@@ -47,22 +48,27 @@ func (qp QueryPlugin) DispatchQuery(ctx sdk.Context, request json.RawMessage) ([
 		return nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, fmt.Sprintf("request validation: %v", err))
 	}
 
+	// Skip non module-related sub-query
+	if req.Rewards == nil {
+		return nil, wasmVmTypes.UnsupportedRequest{Kind: "unknown RewardsCustomQuery variant"}
+	}
+
 	// Execute the custom query (one of)
 	var resData interface{}
 	var resErr error
 	switch {
-	case req.Metadata != nil:
-		resData, resErr = qp.getContractMetadata(ctx, req.Metadata.MustGetContractAddress())
-	case req.RewardsRecords != nil:
+	case req.Rewards.Metadata != nil:
+		resData, resErr = qp.getContractMetadata(ctx, req.Rewards.Metadata.MustGetContractAddress())
+	case req.Rewards.RewardsRecords != nil:
 		var pageReq *query.PageRequest
-		if req.RewardsRecords.Pagination != nil {
-			req := req.RewardsRecords.Pagination.ToSDK()
+		if req.Rewards.RewardsRecords.Pagination != nil {
+			req := req.Rewards.RewardsRecords.Pagination.ToSDK()
 			pageReq = &req
 		}
 
-		resData, resErr = qp.getRewardsRecords(ctx, req.RewardsRecords.MustGetRewardsAddress(), pageReq)
+		resData, resErr = qp.getRewardsRecords(ctx, req.Rewards.RewardsRecords.MustGetRewardsAddress(), pageReq)
 	default:
-		return nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "unknown request")
+		return nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "unknown x/rewards custom query")
 	}
 	if resErr != nil {
 		return nil, resErr

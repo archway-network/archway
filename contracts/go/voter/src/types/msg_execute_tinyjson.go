@@ -519,6 +519,10 @@ func tinyjson8d55ca79DecodeGithubComArchwayNetworkVoterSrcTypes5(in *jlexer.Lexe
 				}
 				(*out.SendIBCVote).UnmarshalTinyJSON(in)
 			}
+		case "custom_custom":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CustomCustom).UnmarshalJSON(data))
+			}
 		case "custom_update_metadata":
 			if in.IsNull() {
 				in.Skip()
@@ -588,6 +592,16 @@ func tinyjson8d55ca79EncodeGithubComArchwayNetworkVoterSrcTypes5(out *jwriter.Wr
 			out.RawString(prefix)
 		}
 		(*in.SendIBCVote).MarshalTinyJSON(out)
+	}
+	if len(in.CustomCustom) != 0 {
+		const prefix string = ",\"custom_custom\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Raw((in.CustomCustom).MarshalJSON())
 	}
 	if in.CustomUpdateMetadata != nil {
 		const prefix string = ",\"custom_update_metadata\":"

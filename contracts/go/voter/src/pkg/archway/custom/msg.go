@@ -4,17 +4,23 @@ import (
 	stdTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 )
 
-// CustomMsg defines the Archway custom plugin message.
 // TODO: this should be a part of Archway CW SDK. Added here as an example of how to use Custom msg.
-type CustomMsg struct {
-	// UpdateMetadata updates the contract rewards metadata.
-	// Authorized if metadata exists for this contract and the contract address is set for the meta's DeveloperAddress field.
-	UpdateMetadata *UpdateMetadataRequest
+type (
+	// CustomMsg defines the Archway custom plugin message.
+	CustomMsg struct {
+		Rewards *RewardsMsg `json:",omitempty"`
+	}
 
-	// WithdrawRewards is a request to withdraw rewards for the contract.
-	// Contract address is used as the rewards address (metadata field).
-	WithdrawRewards *WithdrawRewardsRequest
-}
+	RewardsMsg struct {
+		// UpdateMetadata updates the contract rewards metadata.
+		// Authorized if metadata exists for this contract and the contract address is set for the meta's DeveloperAddress field.
+		UpdateMetadata *UpdateMetadataRequest
+
+		// WithdrawRewards is a request to withdraw rewards for the contract.
+		// Contract address is used as the rewards address (metadata field).
+		WithdrawRewards *WithdrawRewardsRequest
+	}
+)
 
 type (
 	UpdateMetadataRequest struct {

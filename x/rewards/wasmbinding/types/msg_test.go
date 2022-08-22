@@ -15,42 +15,56 @@ func TestMsgValidate(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "OK 1",
+			name: "OK: rewards sub-msg not used",
+			msg:  Msg{},
+		},
+		{
+			name: "OK: UpdateMetadata",
 			msg: Msg{
-				UpdateMetadata: &UpdateMetadataRequest{
-					OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
-					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				Rewards: &RewardsMsg{
+					UpdateMetadata: &UpdateMetadataRequest{
+						OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+						RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+					},
 				},
 			},
 		},
 		{
-			name: "OK 2",
+			name: "OK: WithdrawRewards 1",
 			msg: Msg{
-				WithdrawRewards: &WithdrawRewardsRequest{
-					RecordsLimit: 1,
+				Rewards: &RewardsMsg{
+					WithdrawRewards: &WithdrawRewardsRequest{
+						RecordsLimit: 1,
+					},
 				},
 			},
 		},
 		{
-			name: "OK 3",
+			name: "OK: WithdrawRewards 2",
 			msg: Msg{
-				WithdrawRewards: &WithdrawRewardsRequest{
-					RecordIDs: []uint64{1},
+				Rewards: &RewardsMsg{
+					WithdrawRewards: &WithdrawRewardsRequest{
+						RecordIDs: []uint64{1},
+					},
 				},
 			},
 		},
 		{
 			name: "Fail: invalid UpdateMetadataRequest: no changes",
 			msg: Msg{
-				UpdateMetadata: &UpdateMetadataRequest{},
+				Rewards: &RewardsMsg{
+					UpdateMetadata: &UpdateMetadataRequest{},
+				},
 			},
 			errExpected: true,
 		},
 		{
 			name: "Fail: invalid UpdateMetadataRequest: invalid OwnerAddress",
 			msg: Msg{
-				UpdateMetadata: &UpdateMetadataRequest{
-					OwnerAddress: "invalid",
+				Rewards: &RewardsMsg{
+					UpdateMetadata: &UpdateMetadataRequest{
+						OwnerAddress: "invalid",
+					},
 				},
 			},
 			errExpected: true,
@@ -58,8 +72,10 @@ func TestMsgValidate(t *testing.T) {
 		{
 			name: "Fail: invalid UpdateMetadataRequest: invalid RewardsAddress",
 			msg: Msg{
-				UpdateMetadata: &UpdateMetadataRequest{
-					RewardsAddress: "invalid",
+				Rewards: &RewardsMsg{
+					UpdateMetadata: &UpdateMetadataRequest{
+						RewardsAddress: "invalid",
+					},
 				},
 			},
 			errExpected: true,
@@ -67,16 +83,20 @@ func TestMsgValidate(t *testing.T) {
 		{
 			name: "Fail: invalid WithdrawRewards: empty",
 			msg: Msg{
-				WithdrawRewards: &WithdrawRewardsRequest{},
+				Rewards: &RewardsMsg{
+					WithdrawRewards: &WithdrawRewardsRequest{},
+				},
 			},
 			errExpected: true,
 		},
 		{
 			name: "Fail: invalid WithdrawRewards: one of failed",
 			msg: Msg{
-				WithdrawRewards: &WithdrawRewardsRequest{
-					RecordsLimit: 1,
-					RecordIDs:    []uint64{1},
+				Rewards: &RewardsMsg{
+					WithdrawRewards: &WithdrawRewardsRequest{
+						RecordsLimit: 1,
+						RecordIDs:    []uint64{1},
+					},
 				},
 			},
 			errExpected: true,
@@ -84,8 +104,10 @@ func TestMsgValidate(t *testing.T) {
 		{
 			name: "Fail: invalid WithdrawRewards: RecordIDs: invalid ID",
 			msg: Msg{
-				WithdrawRewards: &WithdrawRewardsRequest{
-					RecordIDs: []uint64{1, 0},
+				Rewards: &RewardsMsg{
+					WithdrawRewards: &WithdrawRewardsRequest{
+						RecordIDs: []uint64{1, 0},
+					},
 				},
 			},
 			errExpected: true,
@@ -93,25 +115,31 @@ func TestMsgValidate(t *testing.T) {
 		{
 			name: "Fail: invalid WithdrawRewards: RecordIDs: duplicated IDs",
 			msg: Msg{
-				WithdrawRewards: &WithdrawRewardsRequest{
-					RecordIDs: []uint64{1, 2, 1},
+				Rewards: &RewardsMsg{
+					WithdrawRewards: &WithdrawRewardsRequest{
+						RecordIDs: []uint64{1, 2, 1},
+					},
 				},
 			},
 			errExpected: true,
 		},
 		{
-			name:        "Fail: empty",
-			msg:         Msg{},
+			name: "Fail: empty",
+			msg: Msg{
+				Rewards: &RewardsMsg{},
+			},
 			errExpected: true,
 		},
 		{
 			name: "Fail: not one of",
 			msg: Msg{
-				UpdateMetadata: &UpdateMetadataRequest{
-					OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
-					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				Rewards: &RewardsMsg{
+					UpdateMetadata: &UpdateMetadataRequest{
+						OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+						RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+					},
+					WithdrawRewards: &WithdrawRewardsRequest{},
 				},
-				WithdrawRewards: &WithdrawRewardsRequest{},
 			},
 			errExpected: true,
 		},

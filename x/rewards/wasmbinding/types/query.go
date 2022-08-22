@@ -14,15 +14,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Query is a container for custom WASM queries (one of).
-type Query struct {
-	// Metadata returns the contract metadata.
-	Metadata *ContractMetadataRequest `json:"metadata"`
+type (
+	// Query is a container for custom WASM query.
+	Query struct {
+		// Rewards defines the x/rewards module specific query.
+		Rewards *RewardsQuery `json:"rewards,omitempty"`
+	}
 
-	// RewardsRecords returns a list of RewardsRecord objects that are credited for the account and are ready to be withdrawn.
-	// Request is paginated. If the limit field is not set, the MaxWithdrawRecords param is used.
-	RewardsRecords *RewardsRecordsRequest `json:"rewards_records"`
-}
+	// RewardsQuery is a container for custom WASM query for the x/rewards module (one of).
+	RewardsQuery struct {
+		// Metadata returns the contract metadata.
+		Metadata *ContractMetadataRequest `json:"metadata"`
+
+		// RewardsRecords returns a list of RewardsRecord objects that are credited for the account and are ready to be withdrawn.
+		// Request is paginated. If the limit field is not set, the MaxWithdrawRecords param is used.
+		RewardsRecords *RewardsRecordsRequest `json:"rewards_records"`
+	}
+)
 
 type (
 	// ContractMetadataRequest is the Query.Metadata request.
@@ -78,22 +86,26 @@ type (
 func (q Query) Validate() error {
 	cnt := 0
 
-	if q.Metadata != nil {
-		if err := q.Metadata.Validate(); err != nil {
-			return fmt.Errorf("metadata: %w", err)
+	if q.Rewards == nil {
+		return nil
+	}
+
+	if q.Rewards.Metadata != nil {
+		if err := q.Rewards.Metadata.Validate(); err != nil {
+			return fmt.Errorf("rewards: metadata: %w", err)
 		}
 		cnt++
 	}
 
-	if q.RewardsRecords != nil {
-		if err := q.RewardsRecords.Validate(); err != nil {
-			return fmt.Errorf("rewardsRecords: %w", err)
+	if q.Rewards.RewardsRecords != nil {
+		if err := q.Rewards.RewardsRecords.Validate(); err != nil {
+			return fmt.Errorf("rewards: rewardsRecords: %w", err)
 		}
 		cnt++
 	}
 
 	if cnt != 1 {
-		return fmt.Errorf("one and only one field must be set")
+		return fmt.Errorf("rewards: one and only one field must be set")
 	}
 
 	return nil

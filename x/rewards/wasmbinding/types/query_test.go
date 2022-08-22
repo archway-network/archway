@@ -15,48 +15,64 @@ func TestQueryValidate(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "OK 1",
+			name:  "OK: rewards query not used",
+			query: Query{},
+		},
+		{
+			name: "OK: Metadata",
 			query: Query{
-				Metadata: &ContractMetadataRequest{
-					ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				Rewards: &RewardsQuery{
+					Metadata: &ContractMetadataRequest{
+						ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+					},
 				},
 			},
 		},
 		{
-			name: "OK 2",
+			name: "OK: RewardsRecords",
 			query: Query{
-				RewardsRecords: &RewardsRecordsRequest{
-					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				Rewards: &RewardsQuery{
+					RewardsRecords: &RewardsRecordsRequest{
+						RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+					},
 				},
 			},
 		},
 		{
 			name: "Fail: invalid Metadata",
 			query: Query{
-				Metadata: &ContractMetadataRequest{},
+				Rewards: &RewardsQuery{
+					Metadata: &ContractMetadataRequest{},
+				},
 			},
 			errExpected: true,
 		},
 		{
 			name: "Fail: invalid RewardsRecords",
 			query: Query{
-				RewardsRecords: &RewardsRecordsRequest{},
+				Rewards: &RewardsQuery{
+					RewardsRecords: &RewardsRecordsRequest{},
+				},
 			},
 			errExpected: true,
 		},
 		{
-			name:        "Fail: empty",
-			query:       Query{},
+			name: "Fail: empty",
+			query: Query{
+				Rewards: &RewardsQuery{},
+			},
 			errExpected: true,
 		},
 		{
 			name: "Fail: not one of",
 			query: Query{
-				Metadata: &ContractMetadataRequest{
-					ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
-				},
-				RewardsRecords: &RewardsRecordsRequest{
-					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				Rewards: &RewardsQuery{
+					Metadata: &ContractMetadataRequest{
+						ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+					},
+					RewardsRecords: &RewardsRecordsRequest{
+						RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+					},
 				},
 			},
 			errExpected: true,

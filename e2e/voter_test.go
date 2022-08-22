@@ -755,6 +755,19 @@ func (s *E2ETestSuite) TestVoter_APIVerifyEd25519Signatures() {
 	}
 }
 
+// TestVoter_WASMBindigsQueryNonRewardsQuery sends an empty custom query via WASM bindings.
+// Since there is only one module supporting custom WASM query, this should fail.
+func (s *E2ETestSuite) TestVoter_WASMBindigsQueryNonRewardsQuery() {
+	chain := s.chainA
+
+	acc := chain.GetAccount(0)
+	contractAddr := s.VoterUploadAndInstantiate(chain, acc)
+
+	customEmptyQuery := []byte("{}")
+	_, err := s.VoterGetCustomQuery(chain, contractAddr, customEmptyQuery, false)
+	s.Assert().Contains(err.Error(), "unsupported request") // due to CosmWasm error obfuscation, we can't assert for a specific error here
+}
+
 // TestVoter_WASMBindingsMetadataQuery tests querying contract metadata via WASM bindings (Custom query plugin & Stargate query).
 func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataQuery() {
 	chain := s.chainA
@@ -796,6 +809,19 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataQuery() {
 
 		getAndCmpMetas(metaExp)
 	})
+}
+
+// TestVoter_WASMBindingsSendNonRewardsMsg sends an empty custom message via WASM bindings.
+// Since there is only one module supporting custom WASM messages, this should fail.
+func (s *E2ETestSuite) TestVoter_WASMBindingsSendNonRewardsMsg() {
+	chain := s.chainA
+
+	acc := chain.GetAccount(0)
+	contractAddr := s.VoterUploadAndInstantiate(chain, acc)
+
+	customEmptyMsg := []byte("{}")
+	err := s.VoterSendCustomMsg(chain, contractAddr, acc, customEmptyMsg, false)
+	s.Assert().ErrorIs(err, wasmdTypes.ErrUnknownMsg)
 }
 
 // TestVoter_WASMBindingsMetadataUpdate tests updating contract metadata via WASM bindings (Custom message).
@@ -1056,59 +1082,3 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
 		s.Assert().Equal(totalRewardsExpected.String(), rewardsAddrBalanceDiff.String())
 	})
 }
-
-// TestVoter_WASMBindingsRewards tests rewards query and withdrawal via WASM bindings (Custom message).
-//func (s *E2ETestSuite) TestVoter_WASMBindingsRewards() {
-//	chain := s.chainA
-//
-//	acc := chain.GetAccount(0)
-//	contractAddr := s.VoterUploadAndInstantiate(chain, acc)
-//
-//	// Set initial meta (admin as the OwnerAddress and the contract itself as the RewardsAddress)
-//	{
-//		meta := rewardsTypes.ContractMetadata{
-//			OwnerAddress:   acc.Address.String(),
-//			RewardsAddress: contractAddr.String(),
-//		}
-//		chain.SetContractMetadata(acc, contractAddr, meta)
-//	}
-//
-//	// Check there are no rewards yet
-//	s.Run("Query current rewards via WASM bindings (empty)", func() {
-//		rewards := s.VoterGetCurrentRewards(chain, contractAddr)
-//		s.Assert().Empty(rewards)
-//
-//		stats := s.VoterGetWithdrawStats(chain, contractAddr)
-//		s.Assert().Empty(stats.Count)
-//	})
-//
-//	// Create a new voting to get some rewards
-//	{
-//		s.VoterNewVoting(chain, contractAddr, acc, "Test", []string{"Yes", "No"}, 1*time.Hour)
-//	}
-//
-//	// Check there are rewards calculated
-//	var rewardsDistributed sdk.Coins
-//	s.Run("Query current rewards via WASM bindings (not empty)", func() {
-//		rewards := s.VoterGetCurrentRewards(chain, contractAddr)
-//		s.Assert().NotEmpty(rewards)
-//
-//		rewardsDistributed = rewards
-//	})
-//
-//	// Withdraw rewards
-//	s.Run("Withdraw rewards via WASM bindings", func() {
-//		s.VoterWithdrawRewards(chain, contractAddr, acc)
-//
-//		stats := s.VoterGetWithdrawStats(chain, contractAddr)
-//		s.Assert().EqualValues(stats.Count, 1)
-//		s.Assert().EqualValues(rewardsDistributed.String(), s.CosmWasmCoinsToSDK(stats.TotalAmount...).String())
-//	})
-//
-//	// Check CustomMsg Reply handled
-//	s.Run("Check CustomMsg Reply handled", func() {
-//		stats := s.VoterGetWithdrawStats(chain, contractAddr)
-//		s.Assert().EqualValues(stats.Count, 1)
-//		s.Assert().EqualValues(rewardsDistributed.String(), s.CosmWasmCoinsToSDK(stats.TotalAmount...).String())
-//	})
-//}

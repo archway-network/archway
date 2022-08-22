@@ -8,7 +8,7 @@ Section describes interaction with the module by a contract using CosmWasm custo
 
 ## Custom query
 
-[The custom query structure](../wasmbinding/types/query.go#L18) is used to query the `x/rewards` specific data by a contract.
+[The custom query structure](../wasmbinding/types/query.go#L19) is used to query the `x/rewards` specific data by a contract.
 
 This query is expected to fail if:
 
@@ -17,15 +17,17 @@ This query is expected to fail if:
 
 ### Metadata
 
-The [metadata](../wasmbinding/types/query.go#L29) request returns a contract metadata state.
+The [metadata](../wasmbinding/types/query.go#L37) request returns a contract metadata state.
 A contract can query its own or any other contract's metadata.
 
 Query example:
 
 ```json
 {
-  "metadata": {
-    "contract_address": "archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u"
+  "rewards": {
+    "metadata": {
+      "contract_address": "archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u"
+    }
   }
 }
 ```
@@ -41,8 +43,8 @@ Example response:
 
 ### Rewards records
 
-The [rewards_records](../wasmbinding/types/query.go#L45) request returns the paginated list of `RewardsRecord` objects credited to an account address.
-A [RewardsRecord](../wasmbinding/types/query.go#L62) entry contains a portion of credited rewards by a specific contract at a block height.
+The [rewards_records](../wasmbinding/types/query.go#L53) request returns the paginated list of `RewardsRecord` objects credited to an account address.
+A [RewardsRecord](../wasmbinding/types/query.go#L70) entry contains a portion of credited rewards by a specific contract at a block height.
 A contract can query any account address rewards state.
 
 This query is paginated to limit the size of the response.
@@ -57,10 +59,12 @@ Query example:
 
 ```json
 {
-  "rewards_records": {
-    "rewards_address": "archway1allzevxuve88s75pjmcupxhy95qrvjlgvjtf0n",
-    "pagination": {
-      "limit": 100
+  "rewards": {
+    "rewards_records": {
+      "rewards_address": "archway1allzevxuve88s75pjmcupxhy95qrvjlgvjtf0n",
+      "pagination": {
+        "limit": 100
+      }
     }
   }
 }
@@ -92,7 +96,7 @@ Example response:
 
 ## Custom message
 
-[The custom message structure](../wasmbinding/types/msg.go#L14) is used to send the `x/rewards` state change messages by a contract.
+[The custom message structure](../wasmbinding/types/msg.go#L15) is used to send the `x/rewards` state change messages by a contract.
 
 This message is expected to fail if:
 
@@ -101,16 +105,18 @@ This message is expected to fail if:
 
 ### Update metadata
 
-The [update_metadata](../wasmbinding/types/msg.go#L26) request is used to update an existing contract metadata.
+The [update_metadata](../wasmbinding/types/msg.go#L34) request is used to update an existing contract metadata.
 
 Message example (CosmWasm's `CosmosMsg`):
 
 ```json
 {
   "custom": {
-    "update_metadata": {
-      "owner_address": "archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u",
-      "rewards_address": "archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u"
+    "rewards": {
+      "update_metadata": {
+        "owner_address": "archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u",
+        "rewards_address": "archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u"
+      }
     }
   }
 }
@@ -132,7 +138,7 @@ This sub-message is expected to fail if:
 
 ### Withdraw rewards
 
-The [withdraw_rewards](../wasmbinding/types/msg.go#L36) request is used to withdraw the current credited to a contract address reward tokens.
+The [withdraw_rewards](../wasmbinding/types/msg.go#L44) request is used to withdraw the current credited to a contract address reward tokens.
 
 > Contract address is used as the `rewards_address` for this sub-message: a contract can only request withdrawal of funds, credited for his own address.
 
@@ -154,14 +160,16 @@ Message example (CosmWasm's `CosmosMsg`):
 ```json
 {
   "custom": {
-    "withdraw_rewards": {
-      "records_limit": 100
+    "rewards": {
+      "withdraw_rewards": {
+        "records_limit": 100
+      }
     }
   }
 }
 ```
 
-Sub-message returns the [response](../wasmbinding/types/msg.go#L47) that can be handled with the *Reply* CosmWasm functionality.
+Sub-message returns the [response](../wasmbinding/types/msg.go#L55) that can be handled with the *Reply* CosmWasm functionality.
 
 Response example:
 
@@ -186,10 +194,10 @@ This contract utilizes all the features of the CosmWasm API and the `x/rewards` 
 
 #### Custom message send and reply handling
 
-The [handleMsgWithdrawRewards](../../../contracts/go/voter/src/handler.go#L363) CosmWasm *Execute* handler sends the custom `withdraw_rewards` message using the WASM bindings.
+The [handleMsgWithdrawRewards](../../../contracts/go/voter/src/handler.go#L378) CosmWasm *Execute* handler sends the custom `withdraw_rewards` message using the WASM bindings.
 
-The [handleReplyCustomWithdrawMsg](../../../contracts/go/voter/src/handler.go#L391) CosmWasm *Reply* handler parses the `withdraw_rewards` message response.
+The [handleReplyCustomWithdrawMsg](../../../contracts/go/voter/src/handler.go#L408) CosmWasm *Reply* handler parses the `withdraw_rewards` message response.
 
 #### Custom query
 
-The [queryCustomMetadataCustom](../../../contracts/go/voter/src/querier.go#L193) CosmWasm *Query* handler sends and parses the `metadata` custom query.
+The [queryCustomMetadataCustom](../../../contracts/go/voter/src/querier.go#L213) CosmWasm *Query* handler sends and parses the `metadata` custom query.

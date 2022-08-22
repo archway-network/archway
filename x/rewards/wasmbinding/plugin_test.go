@@ -40,8 +40,10 @@ func TestWASMBindings(t *testing.T) {
 	// Helpers
 	buildQuery := func(metaReq *wasmBindingsTypes.ContractMetadataRequest, rewardsReq *wasmBindingsTypes.RewardsRecordsRequest) []byte {
 		query := wasmBindingsTypes.Query{
-			Metadata:       metaReq,
-			RewardsRecords: rewardsReq,
+			Rewards: &wasmBindingsTypes.RewardsQuery{
+				Metadata:       metaReq,
+				RewardsRecords: rewardsReq,
+			},
 		}
 		bz, err := json.Marshal(query)
 		require.NoError(t, err)
@@ -50,8 +52,10 @@ func TestWASMBindings(t *testing.T) {
 
 	buildMsg := func(updateMetaReq *wasmBindingsTypes.UpdateMetadataRequest, withdrawReq *wasmBindingsTypes.WithdrawRewardsRequest) wasmVmTypes.CosmosMsg {
 		msg := wasmBindingsTypes.Msg{
-			UpdateMetadata:  updateMetaReq,
-			WithdrawRewards: withdrawReq,
+			Rewards: &wasmBindingsTypes.RewardsMsg{
+				UpdateMetadata:  updateMetaReq,
+				WithdrawRewards: withdrawReq,
+			},
 		}
 		msgBz, err := json.Marshal(msg)
 		require.NoError(t, err)

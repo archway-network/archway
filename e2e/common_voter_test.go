@@ -339,6 +339,30 @@ func (s *E2ETestSuite) VoterGetMetadata(chain *e2eTesting.TestChain, contractAdd
 	return resp.ContractMetadataResponse
 }
 
+// VoterSendCustomMsg sends the Custom plugin message (should be serialized by the caller).
+func (s *E2ETestSuite) VoterSendCustomMsg(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, customMsg []byte, expPass bool) error {
+	req := voterTypes.MsgExecute{
+		CustomCustom: customMsg,
+	}
+	reqBz, err := req.MarshalJSON()
+	s.Require().NoError(err)
+
+	msg := wasmdTypes.MsgExecuteContract{
+		Sender:   acc.Address.String(),
+		Contract: contractAddr.String(),
+		Msg:      reqBz,
+	}
+
+	_, _, _, err = chain.SendMsgs(acc, expPass, []sdk.Msg{&msg})
+	if !expPass {
+		s.Require().Error(err)
+		return err
+	}
+	s.Require().NoError(err)
+
+	return nil
+}
+
 // VoterUpdateMetadata sends the contract metadata update request via Custom message plugin.
 func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, metaReq voterCustomTypes.UpdateMetadataRequest, expPass bool) error {
 	req := voterTypes.MsgExecute{
@@ -420,4 +444,21 @@ func (s *E2ETestSuite) VoterWithdrawRewards(chain *e2eTesting.TestChain, contrac
 	s.Require().NoError(err)
 
 	return nil
+}
+
+// VoterGetCustomQuery returns the custom query result queried via Custom querier plugin.
+func (s *E2ETestSuite) VoterGetCustomQuery(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, customQuery []byte, expPass bool) ([]byte, error) {
+	req := voterTypes.MsgQuery{
+		CustomCustom: customQuery,
+	}
+
+	res, err := chain.SmartQueryContract(contractAddr, expPass, req)
+	if !expPass {
+		return nil, err
+	}
+
+	var resp voterTypes.CustomCustomResponse
+	s.Require().NoError(resp.UnmarshalJSON(res))
+
+	return resp.Response, nil
 }

@@ -10,16 +10,24 @@ import (
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
-// Msg is a container for custom WASM messages (one of).
-type Msg struct {
-	// UpdateMetadata is a request to update the contract metadata.
-	// Request is authorized only if the contract address is set as the DeveloperAddress (metadata field).
-	UpdateMetadata *UpdateMetadataRequest `json:"update_metadata"`
+type (
+	// Msg is a container for custom WASM messages.
+	Msg struct {
+		// Rewards defines the x/rewards module specific sub-message.
+		Rewards *RewardsMsg `json:"rewards,omitempty"`
+	}
 
-	// WithdrawRewards is a request to withdraw rewards for the contract.
-	// Contract address is used as the rewards address (metadata field).
-	WithdrawRewards *WithdrawRewardsRequest `json:"withdraw_rewards"`
-}
+	// RewardsMsg is a container for custom WASM messages for the x/rewards module (one of).
+	RewardsMsg struct {
+		// UpdateMetadata is a request to update the contract metadata.
+		// Request is authorized only if the contract address is set as the DeveloperAddress (metadata field).
+		UpdateMetadata *UpdateMetadataRequest `json:"update_metadata"`
+
+		// WithdrawRewards is a request to withdraw rewards for the contract.
+		// Contract address is used as the rewards address (metadata field).
+		WithdrawRewards *WithdrawRewardsRequest `json:"withdraw_rewards"`
+	}
+)
 
 type (
 	// UpdateMetadataRequest is the Msg.SetMetadata request.
@@ -56,22 +64,26 @@ type (
 func (m Msg) Validate() error {
 	cnt := 0
 
-	if m.UpdateMetadata != nil {
-		if err := m.UpdateMetadata.Validate(); err != nil {
-			return fmt.Errorf("updateMetadata: %w", err)
+	if m.Rewards == nil {
+		return nil
+	}
+
+	if m.Rewards.UpdateMetadata != nil {
+		if err := m.Rewards.UpdateMetadata.Validate(); err != nil {
+			return fmt.Errorf("rewards: updateMetadata: %w", err)
 		}
 		cnt++
 	}
 
-	if m.WithdrawRewards != nil {
-		if err := m.WithdrawRewards.Validate(); err != nil {
-			return fmt.Errorf("withdrawRewards: %w", err)
+	if m.Rewards.WithdrawRewards != nil {
+		if err := m.Rewards.WithdrawRewards.Validate(); err != nil {
+			return fmt.Errorf("rewards: withdrawRewards: %w", err)
 		}
 		cnt++
 	}
 
 	if cnt != 1 {
-		return fmt.Errorf("one and only one field must be set")
+		return fmt.Errorf("rewards: one and only one field must be set")
 	}
 
 	return nil

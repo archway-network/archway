@@ -38,28 +38,34 @@ func NewMsgPlugin(wrappedMessenger wasmKeeper.Messenger, rk RewardsWriter) *MsgP
 
 // DispatchMsg validates and executes a custom WASM msg.
 func (p MsgPlugin) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmVmTypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
-	if msg.Custom != nil {
-		// Parse and validate the input
-		var customMsg types.Msg
-		if err := json.Unmarshal(msg.Custom, &customMsg); err != nil {
-			return nil, nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, fmt.Sprintf("custom msg JSON unmarshal: %v", err))
-		}
-		if err := customMsg.Validate(); err != nil {
-			return nil, nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, fmt.Sprintf("custom msg validation: %v", err))
-		}
-
-		// Execute custom msg (one of)
-		switch {
-		case customMsg.UpdateMetadata != nil:
-			return p.updateContractMetadata(ctx, contractAddr, *customMsg.UpdateMetadata)
-		case customMsg.WithdrawRewards != nil:
-			return p.withdrawContractRewards(ctx, contractAddr, *customMsg.WithdrawRewards)
-		default:
-			return nil, nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "unknown request")
-		}
+	// Skip non-custom message
+	if msg.Custom == nil {
+		return p.wrappedMessenger.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
 	}
 
-	return p.wrappedMessenger.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
+	// Parse and validate the input (should not fail if this is not module-related msg)
+	var customMsg types.Msg
+	if err := json.Unmarshal(msg.Custom, &customMsg); err != nil {
+		return nil, nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, fmt.Sprintf("custom msg JSON unmarshal: %v", err))
+	}
+	if err := customMsg.Validate(); err != nil {
+		return nil, nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, fmt.Sprintf("custom msg validation: %v", err))
+	}
+
+	// Skip non module-related sub-message
+	if customMsg.Rewards == nil {
+		return p.wrappedMessenger.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
+	}
+
+	// Execute custom msg (one of)
+	switch {
+	case customMsg.Rewards.UpdateMetadata != nil:
+		return p.updateContractMetadata(ctx, contractAddr, *customMsg.Rewards.UpdateMetadata)
+	case customMsg.Rewards.WithdrawRewards != nil:
+		return p.withdrawContractRewards(ctx, contractAddr, *customMsg.Rewards.WithdrawRewards)
+	default:
+		return nil, nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "unknown x/rewards custom message")
+	}
 }
 
 // updateContractMetadata updates the contract metadata.

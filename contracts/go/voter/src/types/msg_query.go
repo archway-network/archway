@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/CosmWasm/cosmwasm-go/std"
+	stdTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 
 	archwayCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	"github.com/archway-network/voter/src/state"
@@ -33,6 +34,8 @@ type MsgQuery struct {
 	// APIVerifyEd25519Signatures calls api.VerifyEd25519Signatures and returns verification result.
 	APIVerifyEd25519Signatures *QueryAPIVerifyEd25519SignaturesRequest `json:",omitempty"`
 
+	// CustomCustom calls WASM bindings custom query.
+	CustomCustom stdTypes.RawMessage
 	// CustomMetadata calls WASM bindings Metadata query.
 	CustomMetadata *CustomMetadataRequest `json:",omitempty"`
 	// CustomRewardsRecords calls WASM bindings RewardsRecords query (using contractAddress as the rewardsAddress).
@@ -157,6 +160,11 @@ type (
 		Valid bool
 	}
 )
+
+// CustomCustomResponse defines MsgQuery.CustomCustom response.
+type CustomCustomResponse struct {
+	Response stdTypes.RawMessage
+}
 
 type (
 	// CustomMetadataRequest defines MsgQuery.CustomMetadata request.

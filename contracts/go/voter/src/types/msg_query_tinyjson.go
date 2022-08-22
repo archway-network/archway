@@ -1904,6 +1904,10 @@ func tinyjson8354aa0cDecodeGithubComArchwayNetworkVoterSrcTypes19(in *jlexer.Lex
 				}
 				(*out.APIVerifyEd25519Signatures).UnmarshalTinyJSON(in)
 			}
+		case "custom_custom":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CustomCustom).UnmarshalJSON(data))
+			}
 		case "custom_metadata":
 			if in.IsNull() {
 				in.Skip()
@@ -2044,24 +2048,24 @@ func tinyjson8354aa0cEncodeGithubComArchwayNetworkVoterSrcTypes19(out *jwriter.W
 		}
 		(*in.APIVerifyEd25519Signatures).MarshalTinyJSON(out)
 	}
-	if in.CustomMetadata != nil {
-		const prefix string = ",\"custom_metadata\":"
+	{
+		const prefix string = ",\"custom_custom\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
+		out.Raw((in.CustomCustom).MarshalJSON())
+	}
+	if in.CustomMetadata != nil {
+		const prefix string = ",\"custom_metadata\":"
+		out.RawString(prefix)
 		(*in.CustomMetadata).MarshalTinyJSON(out)
 	}
 	if in.CustomRewardsRecords != nil {
 		const prefix string = ",\"custom_rewards_records\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		out.RawString(prefix)
 		(*in.CustomRewardsRecords).MarshalTinyJSON(out)
 	}
 	out.RawByte('}')
@@ -2446,4 +2450,72 @@ func (v *CustomMetadataRequest) UnmarshalJSON(data []byte) error {
 // UnmarshalTinyJSON supports tinyjson.Unmarshaler interface
 func (v *CustomMetadataRequest) UnmarshalTinyJSON(l *jlexer.Lexer) {
 	tinyjson8354aa0cDecodeGithubComArchwayNetworkVoterSrcTypes23(l, v)
+}
+func tinyjson8354aa0cDecodeGithubComArchwayNetworkVoterSrcTypes24(in *jlexer.Lexer, out *CustomCustomResponse) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "response":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.Response).UnmarshalJSON(data))
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func tinyjson8354aa0cEncodeGithubComArchwayNetworkVoterSrcTypes24(out *jwriter.Writer, in CustomCustomResponse) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"response\":"
+		out.RawString(prefix[1:])
+		out.Raw((in.Response).MarshalJSON())
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v CustomCustomResponse) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	tinyjson8354aa0cEncodeGithubComArchwayNetworkVoterSrcTypes24(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalTinyJSON supports tinyjson.Marshaler interface
+func (v CustomCustomResponse) MarshalTinyJSON(w *jwriter.Writer) {
+	tinyjson8354aa0cEncodeGithubComArchwayNetworkVoterSrcTypes24(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *CustomCustomResponse) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	tinyjson8354aa0cDecodeGithubComArchwayNetworkVoterSrcTypes24(&r, v)
+	return r.Error()
+}
+
+// UnmarshalTinyJSON supports tinyjson.Unmarshaler interface
+func (v *CustomCustomResponse) UnmarshalTinyJSON(l *jlexer.Lexer) {
+	tinyjson8354aa0cDecodeGithubComArchwayNetworkVoterSrcTypes24(l, v)
 }
