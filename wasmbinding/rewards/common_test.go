@@ -1,26 +1,25 @@
-package wasmbinding_test
+package rewards_test
 
 import (
 	"encoding/json"
 	"testing"
 	"time"
 
-	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/pkg/testutils"
+	"github.com/archway-network/archway/wasmbinding/pkg"
+	"github.com/archway-network/archway/wasmbinding/rewards"
+	rewardsWbTypes "github.com/archway-network/archway/wasmbinding/rewards/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
-	wasmBindings "github.com/archway-network/archway/x/rewards/wasmbinding"
-	wasmBindingsTypes "github.com/archway-network/archway/x/rewards/wasmbinding/types"
 )
 
-// TestWASMBindings tests the custom querier and custom message handler for WASM bindings.
-func TestWASMBindings(t *testing.T) {
+// TestRewardsWASMBindings tests the custom querier and custom message handler for the x/rewards WASM bindings.
+func TestRewardsWASMBindings(t *testing.T) {
 	// Setup
 	chain := e2eTesting.NewTestChain(t, 1)
 	acc := chain.GetAccount(0)
@@ -34,47 +33,19 @@ func TestWASMBindings(t *testing.T) {
 	ctx, keeper := chain.GetContext(), chain.GetApp().RewardsKeeper
 
 	// Create custom plugins
-	queryPlugin := wasmBindings.NewQueryPlugin(keeper)
-	msgPlugin := wasmBindings.NewMsgPlugin(testutils.NewMockMessenger(), keeper)
-
-	// Helpers
-	buildQuery := func(metaReq *wasmBindingsTypes.ContractMetadataRequest, rewardsReq *wasmBindingsTypes.RewardsRecordsRequest) []byte {
-		query := wasmBindingsTypes.Query{
-			Rewards: &wasmBindingsTypes.RewardsQuery{
-				Metadata:       metaReq,
-				RewardsRecords: rewardsReq,
-			},
-		}
-		bz, err := json.Marshal(query)
-		require.NoError(t, err)
-		return bz
-	}
-
-	buildMsg := func(updateMetaReq *wasmBindingsTypes.UpdateMetadataRequest, withdrawReq *wasmBindingsTypes.WithdrawRewardsRequest) wasmVmTypes.CosmosMsg {
-		msg := wasmBindingsTypes.Msg{
-			Rewards: &wasmBindingsTypes.RewardsMsg{
-				UpdateMetadata:  updateMetaReq,
-				WithdrawRewards: withdrawReq,
-			},
-		}
-		msgBz, err := json.Marshal(msg)
-		require.NoError(t, err)
-
-		return wasmVmTypes.CosmosMsg{
-			Custom: msgBz,
-		}
-	}
+	queryPlugin := rewards.NewQueryHandler(keeper)
+	msgPlugin := rewards.NewRewardsMsgHandler(keeper)
 
 	// Invalid inputs
 	t.Run("Invalid query input", func(t *testing.T) {
-		queryBz := buildQuery(nil, nil)
+		query := rewardsWbTypes.Query{}
 
-		_, err := queryPlugin.DispatchQuery(ctx, queryBz)
+		_, err := queryPlugin.DispatchQuery(ctx, query)
 		assert.ErrorIs(t, err, rewardsTypes.ErrInvalidRequest)
 	})
 
 	t.Run("Invalid msg input", func(t *testing.T) {
-		msg := buildMsg(nil, nil)
+		msg := rewardsWbTypes.Msg{}
 
 		_, _, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
 		assert.ErrorIs(t, err, rewardsTypes.ErrInvalidRequest)
@@ -82,60 +53,56 @@ func TestWASMBindings(t *testing.T) {
 
 	// Query empty / non-existing data
 	t.Run("Query non-existing metadata", func(t *testing.T) {
-		queryBz := buildQuery(
-			&wasmBindingsTypes.ContractMetadataRequest{
+		query := rewardsWbTypes.Query{
+			Metadata: &rewardsWbTypes.ContractMetadataRequest{
 				ContractAddress: contractAddr.String(),
 			},
-			nil,
-		)
+		}
 
-		_, err := queryPlugin.DispatchQuery(ctx, queryBz)
+		_, err := queryPlugin.DispatchQuery(ctx, query)
 		assert.ErrorIs(t, err, rewardsTypes.ErrMetadataNotFound)
 	})
 
 	t.Run("Query empty rewards", func(t *testing.T) {
-		queryBz := buildQuery(
-			nil,
-			&wasmBindingsTypes.RewardsRecordsRequest{
+		query := rewardsWbTypes.Query{
+			RewardsRecords: &rewardsWbTypes.RewardsRecordsRequest{
 				RewardsAddress: contractAddr.String(),
 			},
-		)
+		}
 
-		resBz, err := queryPlugin.DispatchQuery(ctx, queryBz)
+		resObj, err := queryPlugin.DispatchQuery(ctx, query)
 		require.NoError(t, err)
 
-		var res wasmBindingsTypes.RewardsRecordsResponse
-		require.NoError(t, json.Unmarshal(resBz, &res))
+		res, ok := resObj.(rewardsWbTypes.RewardsRecordsResponse)
+		require.True(t, ok)
 		assert.Empty(t, res.Records)
 	})
 
 	// Handle no-op msg
 	t.Run("Update non-existing metadata (unauthorized create operation)", func(t *testing.T) {
-		msg := buildMsg(
-			&wasmBindingsTypes.UpdateMetadataRequest{
+		msg := rewardsWbTypes.Msg{
+			UpdateMetadata: &rewardsWbTypes.UpdateMetadataRequest{
 				OwnerAddress:   acc.Address.String(),
 				RewardsAddress: acc.Address.String(),
 			},
-			nil,
-		)
+		}
 
 		_, _, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
 		assert.ErrorIs(t, err, rewardsTypes.ErrUnauthorized)
 	})
 
 	t.Run("Withdraw empty rewards", func(t *testing.T) {
-		msg := buildMsg(
-			nil,
-			&wasmBindingsTypes.WithdrawRewardsRequest{
+		msg := rewardsWbTypes.Msg{
+			WithdrawRewards: &rewardsWbTypes.WithdrawRewardsRequest{
 				RecordsLimit: 1000,
 			},
-		)
+		}
 
 		_, resData, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
 		require.NoError(t, err)
-
 		require.Len(t, resData, 1)
-		var res wasmBindingsTypes.WithdrawRewardsResponse
+
+		var res rewardsWbTypes.WithdrawRewardsResponse
 		require.NoError(t, json.Unmarshal(resData[0], &res))
 		assert.Empty(t, res.TotalRewards)
 	})
@@ -149,32 +116,29 @@ func TestWASMBindings(t *testing.T) {
 
 	// Update metadata
 	t.Run("Update metadata (set contractAddr as the rewardsAddr)", func(t *testing.T) {
-		msg := buildMsg(
-			&wasmBindingsTypes.UpdateMetadataRequest{
+		msg := rewardsWbTypes.Msg{
+			UpdateMetadata: &rewardsWbTypes.UpdateMetadataRequest{
 				OwnerAddress:   contractAddr.String(),
 				RewardsAddress: contractAddr.String(),
 			},
-			nil,
-		)
+		}
 
 		_, _, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
 		require.NoError(t, err)
 	})
 
 	t.Run("Check metadata updated", func(t *testing.T) {
-		queryBz := buildQuery(
-			&wasmBindingsTypes.ContractMetadataRequest{
+		query := rewardsWbTypes.Query{
+			Metadata: &rewardsWbTypes.ContractMetadataRequest{
 				ContractAddress: contractAddr.String(),
 			},
-			nil,
-		)
+		}
 
-		resBz, err := queryPlugin.DispatchQuery(ctx, queryBz)
+		resObj, err := queryPlugin.DispatchQuery(ctx, query)
 		require.NoError(t, err)
 
-		var res wasmBindingsTypes.ContractMetadataResponse
-		require.NoError(t, json.Unmarshal(resBz, &res))
-
+		res, ok := resObj.(rewardsWbTypes.ContractMetadataResponse)
+		require.True(t, ok)
 		assert.Equal(t, contractAddr.String(), res.OwnerAddress)
 		assert.Equal(t, contractAddr.String(), res.RewardsAddress)
 	})
@@ -191,18 +155,17 @@ func TestWASMBindings(t *testing.T) {
 
 	// Query available rewards
 	t.Run("Query new rewards", func(t *testing.T) {
-		queryBz := buildQuery(
-			nil,
-			&wasmBindingsTypes.RewardsRecordsRequest{
+		query := rewardsWbTypes.Query{
+			RewardsRecords: &rewardsWbTypes.RewardsRecordsRequest{
 				RewardsAddress: contractAddr.String(),
 			},
-		)
+		}
 
-		resBz, err := queryPlugin.DispatchQuery(ctx, queryBz)
+		resObj, err := queryPlugin.DispatchQuery(ctx, query)
 		require.NoError(t, err)
 
-		var res wasmBindingsTypes.RewardsRecordsResponse
-		require.NoError(t, json.Unmarshal(resBz, &res))
+		res, ok := resObj.(rewardsWbTypes.RewardsRecordsResponse)
+		require.True(t, ok)
 
 		require.Len(t, res.Records, 2)
 		// Record 1
@@ -225,18 +188,17 @@ func TestWASMBindings(t *testing.T) {
 
 	// Withdraw rewards using the limit mode
 	t.Run("Withdraw 1st reward using limit", func(t *testing.T) {
-		msg := buildMsg(
-			nil,
-			&wasmBindingsTypes.WithdrawRewardsRequest{
+		msg := rewardsWbTypes.Msg{
+			WithdrawRewards: &rewardsWbTypes.WithdrawRewardsRequest{
 				RecordsLimit: 1,
 			},
-		)
+		}
 
 		_, resData, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
 		require.NoError(t, err)
-
 		require.Len(t, resData, 1)
-		var res wasmBindingsTypes.WithdrawRewardsResponse
+
+		var res rewardsWbTypes.WithdrawRewardsResponse
 		require.NoError(t, json.Unmarshal(resData[0], &res))
 
 		assert.EqualValues(t, 1, res.RecordsNum)
@@ -249,18 +211,17 @@ func TestWASMBindings(t *testing.T) {
 
 	// Withdraw rewards using the record IDs mode
 	t.Run("Withdraw 2nd reward using record ID", func(t *testing.T) {
-		msg := buildMsg(
-			nil,
-			&wasmBindingsTypes.WithdrawRewardsRequest{
+		msg := rewardsWbTypes.Msg{
+			WithdrawRewards: &rewardsWbTypes.WithdrawRewardsRequest{
 				RecordIDs: []uint64{2},
 			},
-		)
+		}
 
 		_, resData, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
 		require.NoError(t, err)
-
 		require.Len(t, resData, 1)
-		var res wasmBindingsTypes.WithdrawRewardsResponse
+
+		var res rewardsWbTypes.WithdrawRewardsResponse
 		require.NoError(t, json.Unmarshal(resData[0], &res))
 
 		assert.EqualValues(t, 1, res.RecordsNum)

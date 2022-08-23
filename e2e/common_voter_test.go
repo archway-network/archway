@@ -14,13 +14,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 
+	"github.com/archway-network/archway/wasmbinding/pkg"
+	rewardsWbTypes "github.com/archway-network/archway/wasmbinding/rewards/types"
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	voterState "github.com/archway-network/voter/src/state"
 	voterTypes "github.com/archway-network/voter/src/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
-	wasmBindingTypes "github.com/archway-network/archway/x/rewards/wasmbinding/types"
 )
 
 // Voter contract related helpers.
@@ -388,7 +389,7 @@ func (s *E2ETestSuite) VoterGetRewardsRecords(chain *e2eTesting.TestChain, contr
 		CustomRewardsRecords: &voterTypes.CustomRewardsRecordsRequest{},
 	}
 	if pageReq != nil {
-		r := wasmBindingTypes.NewPageRequestFromSDK(*pageReq)
+		r := pkg.NewPageRequestFromSDK(*pageReq)
 		req.CustomRewardsRecords.Pagination = &voterCustomTypes.PageRequest{
 			Key:        r.Key,
 			Offset:     r.Offset,
@@ -405,7 +406,7 @@ func (s *E2ETestSuite) VoterGetRewardsRecords(chain *e2eTesting.TestChain, contr
 	}
 	s.Require().NoError(err)
 
-	var resp wasmBindingTypes.RewardsRecordsResponse
+	var resp rewardsWbTypes.RewardsRecordsResponse
 	s.Require().NoError(json.Unmarshal(res, &resp))
 
 	records := make([]rewardsTypes.RewardsRecord, 0, len(resp.Records))

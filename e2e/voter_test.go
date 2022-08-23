@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
@@ -765,7 +766,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindigsQueryNonRewardsQuery() {
 
 	customEmptyQuery := []byte("{}")
 	_, err := s.VoterGetCustomQuery(chain, contractAddr, customEmptyQuery, false)
-	s.Assert().Contains(err.Error(), "unsupported request") // due to CosmWasm error obfuscation, we can't assert for a specific error here
+	s.Assert().Contains(err.Error(), "code: 18") // due to CosmWasm error obfuscation, we can't assert for a specific error here
 }
 
 // TestVoter_WASMBindingsMetadataQuery tests querying contract metadata via WASM bindings (Custom query plugin & Stargate query).
@@ -821,7 +822,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsSendNonRewardsMsg() {
 
 	customEmptyMsg := []byte("{}")
 	err := s.VoterSendCustomMsg(chain, contractAddr, acc, customEmptyMsg, false)
-	s.Assert().ErrorIs(err, wasmdTypes.ErrUnknownMsg)
+	s.Assert().ErrorIs(err, sdkErrors.ErrInvalidRequest)
 }
 
 // TestVoter_WASMBindingsMetadataUpdate tests updating contract metadata via WASM bindings (Custom message).
