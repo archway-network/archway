@@ -299,7 +299,7 @@ func (v *UpdateMetadataRequest) UnmarshalJSON(data []byte) error {
 func (v *UpdateMetadataRequest) UnmarshalTinyJSON(l *jlexer.Lexer) {
 	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(l, v)
 }
-func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(in *jlexer.Lexer, out *CustomMsg) {
+func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(in *jlexer.Lexer, out *RewardsMsg) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -348,7 +348,7 @@ func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(in *
 		in.Consumed()
 	}
 }
-func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(out *jwriter.Writer, in CustomMsg) {
+func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(out *jwriter.Writer, in RewardsMsg) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -374,25 +374,100 @@ func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(out 
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v CustomMsg) MarshalJSON() ([]byte, error) {
+func (v RewardsMsg) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalTinyJSON supports tinyjson.Marshaler interface
-func (v CustomMsg) MarshalTinyJSON(w *jwriter.Writer) {
+func (v RewardsMsg) MarshalTinyJSON(w *jwriter.Writer) {
 	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *CustomMsg) UnmarshalJSON(data []byte) error {
+func (v *RewardsMsg) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(&r, v)
 	return r.Error()
 }
 
 // UnmarshalTinyJSON supports tinyjson.Unmarshaler interface
-func (v *CustomMsg) UnmarshalTinyJSON(l *jlexer.Lexer) {
+func (v *RewardsMsg) UnmarshalTinyJSON(l *jlexer.Lexer) {
 	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(l, v)
+}
+func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(in *jlexer.Lexer, out *CustomMsg) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "rewards":
+			if in.IsNull() {
+				in.Skip()
+				out.Rewards = nil
+			} else {
+				if out.Rewards == nil {
+					out.Rewards = new(RewardsMsg)
+				}
+				(*out.Rewards).UnmarshalTinyJSON(in)
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(out *jwriter.Writer, in CustomMsg) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	if in.Rewards != nil {
+		const prefix string = ",\"rewards\":"
+		first = false
+		out.RawString(prefix[1:])
+		(*in.Rewards).MarshalTinyJSON(out)
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v CustomMsg) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalTinyJSON supports tinyjson.Marshaler interface
+func (v CustomMsg) MarshalTinyJSON(w *jwriter.Writer) {
+	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *CustomMsg) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(&r, v)
+	return r.Error()
+}
+
+// UnmarshalTinyJSON supports tinyjson.Unmarshaler interface
+func (v *CustomMsg) UnmarshalTinyJSON(l *jlexer.Lexer) {
+	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(l, v)
 }

@@ -1,4 +1,4 @@
-package types
+package pkg
 
 import (
 	"github.com/cosmos/cosmos-sdk/types/query"

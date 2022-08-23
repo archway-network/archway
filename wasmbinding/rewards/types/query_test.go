@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestQueryValidate(t *testing.T) {
+func TestRewardsQueryValidate(t *testing.T) {
 	type testCase struct {
 		name        string
 		query       Query
@@ -15,7 +15,7 @@ func TestQueryValidate(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "OK 1",
+			name: "OK: Metadata",
 			query: Query{
 				Metadata: &ContractMetadataRequest{
 					ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
@@ -23,7 +23,7 @@ func TestQueryValidate(t *testing.T) {
 			},
 		},
 		{
-			name: "OK 2",
+			name: "OK: RewardsRecords",
 			query: Query{
 				RewardsRecords: &RewardsRecordsRequest{
 					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",

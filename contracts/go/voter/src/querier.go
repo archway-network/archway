@@ -180,6 +180,26 @@ func queryAPIVerifyEd25519Signatures(deps *std.Deps, req types.QueryAPIVerifyEd2
 	}, nil
 }
 
+// queryCustomCustom defines CustomQuery.Custom query.
+func queryCustomCustom(deps *std.Deps, req stdTypes.RawMessage) (*types.CustomCustomResponse, error) {
+	reqRaw := stdTypes.QueryRequest{
+		Custom: req,
+	}
+	reqRawBz, err := reqRaw.MarshalJSON()
+	if err != nil {
+		return nil, types.NewErrInternal("query JSON marshal: " + err.Error())
+	}
+
+	resBz, err := deps.Querier.RawQuery(reqRawBz)
+	if err != nil {
+		return nil, types.NewErrInternal("raw query: " + err.Error())
+	}
+
+	return &types.CustomCustomResponse{
+		Response: resBz,
+	}, nil
+}
+
 // queryCustomMetadata defines CustomQuery.Metadata query.
 func queryCustomMetadata(deps *std.Deps, env stdTypes.Env, req types.CustomMetadataRequest) (*types.CustomMetadataResponse, error) {
 	if req.UseStargateQuery {
@@ -192,8 +212,10 @@ func queryCustomMetadata(deps *std.Deps, env stdTypes.Env, req types.CustomMetad
 // queryCustomMetadataCustom returns a contract metadata using Custom plugin query.
 func queryCustomMetadataCustom(deps *std.Deps, env stdTypes.Env) (*types.CustomMetadataResponse, error) {
 	customReq := archwayCustomTypes.CustomQuery{
-		Metadata: &archwayCustomTypes.ContractMetadataRequest{
-			ContractAddress: env.Contract.Address,
+		Rewards: &archwayCustomTypes.RewardsQuery{
+			Metadata: &archwayCustomTypes.ContractMetadataRequest{
+				ContractAddress: env.Contract.Address,
+			},
 		},
 	}
 
@@ -269,9 +291,11 @@ func queryCustomMetadataStargate(deps *std.Deps, env stdTypes.Env) (*types.Custo
 // queryCustomRewardsRecords defines CustomQuery.RewardsRecords query.
 func queryCustomRewardsRecords(deps *std.Deps, env stdTypes.Env, req types.CustomRewardsRecordsRequest) (*types.CustomRewardsRecordsResponse, error) {
 	customReq := archwayCustomTypes.CustomQuery{
-		RewardsRecords: &archwayCustomTypes.RewardsRecordsRequest{
-			RewardsAddress: env.Contract.Address,
-			Pagination:     req.Pagination,
+		Rewards: &archwayCustomTypes.RewardsQuery{
+			RewardsRecords: &archwayCustomTypes.RewardsRecordsRequest{
+				RewardsAddress: env.Contract.Address,
+				Pagination:     req.Pagination,
+			},
 		},
 	}
 

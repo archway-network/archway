@@ -98,11 +98,11 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/archway-network/archway/wasmbinding"
 	"github.com/archway-network/archway/x/rewards"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
-	"github.com/archway-network/archway/x/rewards/wasmbinding"
 	"github.com/archway-network/archway/x/tracking"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
@@ -483,7 +483,8 @@ func NewArchwayApp(
 	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
 
 	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
-	wasmOpts = append(wasmOpts, wasmbinding.GetCustomWasmOptions(&app.RewardsKeeper)...) // using a pointer as the keeper is initialized below
+	// Archway specific options (using a pointer as the keeper is post-initialized below)
+	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.RewardsKeeper)...)
 
 	app.WASMKeeper = wasm.NewKeeper(
 		appCodec,

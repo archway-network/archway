@@ -14,13 +14,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 
+	"github.com/archway-network/archway/wasmbinding/pkg"
+	rewardsWbTypes "github.com/archway-network/archway/wasmbinding/rewards/types"
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	voterState "github.com/archway-network/voter/src/state"
 	voterTypes "github.com/archway-network/voter/src/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
-	wasmBindingTypes "github.com/archway-network/archway/x/rewards/wasmbinding/types"
 )
 
 // Voter contract related helpers.
@@ -339,6 +340,30 @@ func (s *E2ETestSuite) VoterGetMetadata(chain *e2eTesting.TestChain, contractAdd
 	return resp.ContractMetadataResponse
 }
 
+// VoterSendCustomMsg sends the Custom plugin message (should be serialized by the caller).
+func (s *E2ETestSuite) VoterSendCustomMsg(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, customMsg []byte, expPass bool) error {
+	req := voterTypes.MsgExecute{
+		CustomCustom: customMsg,
+	}
+	reqBz, err := req.MarshalJSON()
+	s.Require().NoError(err)
+
+	msg := wasmdTypes.MsgExecuteContract{
+		Sender:   acc.Address.String(),
+		Contract: contractAddr.String(),
+		Msg:      reqBz,
+	}
+
+	_, _, _, err = chain.SendMsgs(acc, expPass, []sdk.Msg{&msg})
+	if !expPass {
+		s.Require().Error(err)
+		return err
+	}
+	s.Require().NoError(err)
+
+	return nil
+}
+
 // VoterUpdateMetadata sends the contract metadata update request via Custom message plugin.
 func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, metaReq voterCustomTypes.UpdateMetadataRequest, expPass bool) error {
 	req := voterTypes.MsgExecute{
@@ -364,7 +389,7 @@ func (s *E2ETestSuite) VoterGetRewardsRecords(chain *e2eTesting.TestChain, contr
 		CustomRewardsRecords: &voterTypes.CustomRewardsRecordsRequest{},
 	}
 	if pageReq != nil {
-		r := wasmBindingTypes.NewPageRequestFromSDK(*pageReq)
+		r := pkg.NewPageRequestFromSDK(*pageReq)
 		req.CustomRewardsRecords.Pagination = &voterCustomTypes.PageRequest{
 			Key:        r.Key,
 			Offset:     r.Offset,
@@ -381,7 +406,7 @@ func (s *E2ETestSuite) VoterGetRewardsRecords(chain *e2eTesting.TestChain, contr
 	}
 	s.Require().NoError(err)
 
-	var resp wasmBindingTypes.RewardsRecordsResponse
+	var resp rewardsWbTypes.RewardsRecordsResponse
 	s.Require().NoError(json.Unmarshal(res, &resp))
 
 	records := make([]rewardsTypes.RewardsRecord, 0, len(resp.Records))
@@ -420,4 +445,21 @@ func (s *E2ETestSuite) VoterWithdrawRewards(chain *e2eTesting.TestChain, contrac
 	s.Require().NoError(err)
 
 	return nil
+}
+
+// VoterGetCustomQuery returns the custom query result queried via Custom querier plugin.
+func (s *E2ETestSuite) VoterGetCustomQuery(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, customQuery []byte, expPass bool) ([]byte, error) {
+	req := voterTypes.MsgQuery{
+		CustomCustom: customQuery,
+	}
+
+	res, err := chain.SmartQueryContract(contractAddr, expPass, req)
+	if !expPass {
+		return nil, err
+	}
+
+	var resp voterTypes.CustomCustomResponse
+	s.Require().NoError(resp.UnmarshalJSON(res))
+
+	return resp.Response, nil
 }

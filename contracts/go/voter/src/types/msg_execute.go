@@ -20,6 +20,9 @@ type MsgExecute struct {
 	Vote *VoteRequest `json:",omitempty"`
 	// SendIBCVote append a new vote to an existing voting over IBC.
 	SendIBCVote *SendIBCVoteRequest `json:",omitempty"`
+
+	// CustomCustom calls WASM bindings with a custom msg.
+	CustomCustom stdTypes.RawMessage `json:",omitempty"`
 	// CustomUpdateMetadata calls WASM bindings UpdateMetadata custom msg.
 	CustomUpdateMetadata *archwayCustomTypes.UpdateMetadataRequest `json:",omitempty"`
 	// CustomWithdrawRewards calls WASM bindings WithdrawRewards custom msg.
