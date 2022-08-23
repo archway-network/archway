@@ -183,7 +183,7 @@ func TestWASMBindings(t *testing.T) {
 	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record1RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
 	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record2RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
 	require.NoError(t, chain.GetApp().MintKeeper.MintCoins(ctx, recordsRewards))
-	require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ModuleName, recordsRewards))
+	require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, recordsRewards))
 
 	// Query available rewards
 	t.Run("Query new rewards", func(t *testing.T) {

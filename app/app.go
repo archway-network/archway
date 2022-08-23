@@ -78,7 +78,7 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
@@ -219,6 +219,7 @@ var (
 		govtypes.ModuleName:                  {authtypes.Burner},
 		ibctransfertypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
 		wasm.ModuleName:                      {authtypes.Burner},
+		rewardsTypes.TreasuryCollector:       {authtypes.Burner},
 	}
 )
 
@@ -614,7 +615,6 @@ func NewArchwayApp(
 
 	app.mm.SetOrderEndBlockers(
 		// we have to specify all modules here (Cosmos's order is taken as a reference)
-		crisistypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -637,6 +637,8 @@ func NewArchwayApp(
 		// wasm gas tracking
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
+		// invariants checks are always the last to run
+		crisistypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are

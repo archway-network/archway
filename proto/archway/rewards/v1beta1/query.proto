@@ -86,7 +86,13 @@ message QueryRewardsPoolRequest {}
 
 // QueryRewardsPoolResponse is the response for Query.RewardsPool.
 message QueryRewardsPoolResponse {
-  repeated cosmos.base.v1beta1.Coin funds = 1 [
+  // undistributed_funds are undistributed yet tokens (ready for withdrawal).
+  repeated cosmos.base.v1beta1.Coin undistributed_funds = 1 [
+    (gogoproto.nullable) = false
+  ];
+  // treasury_funds are treasury tokens available (no mechanism is available to withdraw ATM).
+  // Treasury tokens are collected on a block basis. Those tokens are unused block rewards.
+  repeated cosmos.base.v1beta1.Coin treasury_funds = 2 [
     (gogoproto.nullable) = false
   ];
 }

@@ -120,7 +120,7 @@ func getQueryUndistributedPoolFundsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool",
 		Args:  cobra.NoArgs,
-		Short: "Query undistributed rewards pool funds",
+		Short: "Query the undistributed rewards pool (ready for withdrawal) and the treasury pool funds",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {

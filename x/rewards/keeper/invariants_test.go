@@ -34,13 +34,6 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 			rewardsRecords: nil,
 		},
 		{
-			name: "OK: non-empty pool, no records",
-			poolCoins: sdk.NewCoins(
-				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
-			),
-			rewardsRecords: nil,
-		},
-		{
 			name: "OK: pool == records tokens",
 			poolCoins: sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
@@ -70,7 +63,15 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 			},
 		},
 		{
-			name: "OK: pool > records tokens",
+			name: "Fail: non-empty pool, no records",
+			poolCoins: sdk.NewCoins(
+				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+			),
+			rewardsRecords: nil,
+			brokenExpected: true,
+		},
+		{
+			name: "Fail: pool > records tokens",
 			poolCoins: []sdk.Coin{
 				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 				sdk.NewCoin("uarch", sdk.NewInt(200)),
@@ -86,6 +87,7 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 					CalculatedTime:   mockTime,
 				},
 			},
+			brokenExpected: true,
 		},
 		{
 			name: "Fail: pool < records tokens",
@@ -141,12 +143,12 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 
 			// Remove all pool coins (not empty due to inflation rewards for previous blocks)
 			poolInitial := chain.GetApp().RewardsKeeper.UndistributedRewardsPool(ctx)
-			require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, mintTypes.ModuleName, poolInitial))
+			require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, types.ContractRewardCollector, mintTypes.ModuleName, poolInitial))
 
 			// Mint coins for module account
 			if tc.poolCoins != nil {
 				require.NoError(t, chain.GetApp().BankKeeper.MintCoins(ctx, mintTypes.ModuleName, tc.poolCoins))
-				require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, types.ModuleName, tc.poolCoins))
+				require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, types.ContractRewardCollector, tc.poolCoins))
 			}
 
 			// Store rewards records

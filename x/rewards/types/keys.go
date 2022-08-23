@@ -10,8 +10,11 @@ const (
 	// RouterKey is the msg router key for the module.
 	RouterKey = ModuleName
 
-	// ContractRewardCollector is the module holding rewards collected by dApps.
+	// ContractRewardCollector is the module account holding rewards collected by dApps that can be withdrawn.
 	ContractRewardCollector = ModuleName
+
+	// TreasuryCollector is the module account name to keep undistributed rewards in.
+	TreasuryCollector = "treasury"
 )
 
 // ContractMetadata prefixed store state keys.

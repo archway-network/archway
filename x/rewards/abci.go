@@ -5,19 +5,17 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/types"
 )
 
-// BeginBlocker calculates and distributes dApp rewards for the previous block.
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+// EndBlocker calculates and distributes dApp rewards for the current block updating the treasury.
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
-	curBlockHeight := ctx.BlockHeight()
-	if curBlockHeight <= 1 {
-		return
-	}
+	k.AllocateBlockRewards(ctx, ctx.BlockHeight())
 
-	k.AllocateBlockRewards(ctx, curBlockHeight-1)
+	return []abci.ValidatorUpdate{}
 }

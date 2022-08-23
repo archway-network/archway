@@ -24,13 +24,13 @@ func ModuleAccountBalanceInvariant(k Keeper) sdk.Invariant {
 			poolExpected = poolExpected.Add(record.Rewards...)
 		}
 
-		broken := !poolExpected.IsZero() && poolCurrent.IsZero() // extra check since poolExpected.IsAnyGT(poolCurrent) returns true if poolCurrent is empty
-		broken = broken || poolExpected.IsAnyGT(poolCurrent)
+		broken := !poolExpected.IsEqual(poolCurrent)
 
 		return sdk.FormatInvariant(types.ModuleName, "module account and total rewards records coins", fmt.Sprintf(
 			"\tPool's tokens: %v\n"+
-				"\tsum of rewards records tokens expected: %v\n",
-			poolCurrent, poolExpected),
+				"\tSum of rewards records tokens expected: %v\n"+
+				"\tHeight: %d\n",
+			poolCurrent, poolExpected, ctx.BlockHeight()),
 		), broken
 	}
 }

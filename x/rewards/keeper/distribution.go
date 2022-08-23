@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,9 +13,11 @@ import (
 type (
 	// blockRewardsDistributionState is used to gather gas usage and rewards for a block on a contract basis.
 	blockRewardsDistributionState struct {
-		Height    int64                                        // block height
-		Txs       map[uint64]uint64                            // gas usage per transaction [key: txID, value: total gas]
-		Contracts map[string]*contractRewardsDistributionState // contract rewards state [key: contract address]
+		Height             int64                                        // block height
+		Txs                map[uint64]uint64                            // gas usage per transaction [key: txID, value: total gas]
+		Contracts          map[string]*contractRewardsDistributionState // contract rewards state [key: contract address]
+		RewardsTotal       sdk.Coins                                    // total rewards for the block (inflationary + txs rewards)
+		RewardsDistributed sdk.Coins                                    // total rewards distributed for the block
 	}
 
 	// contractRewardsDistributionState is used to gather gas usage and rewards for a contract.
@@ -35,6 +38,7 @@ func (k Keeper) AllocateBlockRewards(ctx sdk.Context, height int64) {
 	blockDistrState := k.estimateBlockGasUsage(ctx, height)
 	blockDistrState = k.estimateBlockRewards(ctx, blockDistrState)
 	k.createRewardsRecords(ctx, blockDistrState)
+	k.cleanupRewardsPool(ctx, blockDistrState)
 	k.cleanupTracking(ctx, height)
 }
 
@@ -48,9 +52,11 @@ func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewar
 
 	// Create a new block rewards distribution state and fill it up
 	blockDistrState := &blockRewardsDistributionState{
-		Height:    height,
-		Txs:       make(map[uint64]uint64, len(blockGasTrackingInfo.Txs)),
-		Contracts: make(map[string]*contractRewardsDistributionState, 0),
+		Height:             height,
+		Txs:                make(map[uint64]uint64, len(blockGasTrackingInfo.Txs)),
+		Contracts:          make(map[string]*contractRewardsDistributionState, 0),
+		RewardsTotal:       sdk.NewCoins(),
+		RewardsDistributed: sdk.NewCoins(),
 	}
 
 	// Fill up gas usage iterating over all tracked transactions and contract operations
@@ -102,8 +108,11 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 	// Fetch tracked block rewards by the x/rewards module (might not be found in case this reward is disabled)
 	inlfationRewardsEligible := false
 	blockRewards, found := k.state.BlockRewardsState(ctx).GetBlockRewards(blockDistrState.Height)
-	if found && blockRewards.HasRewards() && blockRewards.HasGasLimit() {
-		inlfationRewardsEligible = true
+	if found && blockRewards.HasRewards() {
+		blockDistrState.RewardsTotal = blockDistrState.RewardsTotal.Add(blockRewards.InflationRewards)
+		if blockRewards.HasGasLimit() {
+			inlfationRewardsEligible = true
+		}
 	} else {
 		k.Logger(ctx).Debug("No inflation rewards to distribute (no record / empty coin / gas limit not set)", "height", blockDistrState.Height)
 	}
@@ -114,6 +123,7 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 		txRewards, found := txRewardsState.GetTxRewards(txID)
 		if found && txRewards.HasRewards() {
 			txsRewards[txID] = txRewards.FeeRewards
+			blockDistrState.RewardsTotal = blockDistrState.RewardsTotal.Add(txRewards.FeeRewards...)
 		} else {
 			k.Logger(ctx).Debug("No tx fee rebate rewards to distribute (no record / empty coins)", "txID", txID)
 		}
@@ -126,10 +136,11 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 			gasUsed := pkg.NewDecFromUint64(contractDistrState.BlockGasUsed)
 			rewardsShare := gasUsed.Quo(pkg.NewDecFromUint64(blockRewards.MaxGas))
 
-			contractDistrState.InflationaryRewards = sdk.NewCoin(
+			inflationRewards := sdk.NewCoin(
 				blockRewards.InflationRewards.Denom,
 				blockRewards.InflationRewards.Amount.ToDec().Mul(rewardsShare).TruncateInt(),
 			)
+			contractDistrState.InflationaryRewards = inflationRewards
 		}
 
 		// Estimate contract tx fee rebate rewards (sum of all transactions involved)
@@ -143,10 +154,11 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 			rewardsShare := pkg.NewDecFromUint64(gasUsed).Quo(gasTotal)
 
 			for _, feeCoin := range txFees {
-				contractDistrState.FeeRewards = contractDistrState.FeeRewards.Add(sdk.NewCoin(
+				feeRewards := sdk.NewCoin(
 					feeCoin.Denom,
 					feeCoin.Amount.ToDec().Mul(rewardsShare).TruncateInt(),
-				))
+				)
+				contractDistrState.FeeRewards = contractDistrState.FeeRewards.Add(feeRewards)
 			}
 		}
 	}
@@ -207,6 +219,9 @@ func (k Keeper) createRewardsRecords(ctx sdk.Context, blockDistrState *blockRewa
 
 		// Create a new record
 		rewardsRecordState.CreateRewardsRecord(rewardsAddr, rewards, calculationHeight, calculationTime)
+
+		// Update the total rewards distributed counter
+		blockDistrState.RewardsDistributed = blockDistrState.RewardsDistributed.Add(rewards...)
 	}
 }
 
@@ -214,7 +229,6 @@ func (k Keeper) createRewardsRecords(ctx sdk.Context, blockDistrState *blockRewa
 func (k Keeper) cleanupTracking(ctx sdk.Context, height int64) {
 	// We can prune the previous block ({height}), but that makes tracking CLI queries useless as there won't be any data.
 	// Pruning history block also makes e2e tests possible.
-	// TODO: this should be replaced with a param?
 	heightToPrune := height - 10
 	if heightToPrune <= 0 {
 		return
@@ -222,4 +236,16 @@ func (k Keeper) cleanupTracking(ctx sdk.Context, height int64) {
 
 	k.trackingKeeper.RemoveBlockTrackingInfo(ctx, heightToPrune)
 	k.state.DeleteBlockRewardsCascade(ctx, heightToPrune)
+}
+
+// cleanupRewardsPool transfers all undistributed block rewards to the treasury pool.
+func (k Keeper) cleanupRewardsPool(ctx sdk.Context, blockDistrState *blockRewardsDistributionState) {
+	rewardsLeftovers := blockDistrState.RewardsTotal.Sub(blockDistrState.RewardsDistributed)
+	if rewardsLeftovers.Empty() {
+		return
+	}
+
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ContractRewardCollector, types.TreasuryCollector, rewardsLeftovers); err != nil {
+		panic(fmt.Errorf("failed to transfer undistributed rewards (%s) to %s: %w", rewardsLeftovers, types.TreasuryCollector, err))
+	}
 }

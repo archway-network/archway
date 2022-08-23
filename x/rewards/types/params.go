@@ -14,6 +14,12 @@ var (
 	MaxWithdrawRecordsParamKey    = []byte("MaxWithdrawRecords")
 )
 
+var (
+	DefaultInflationRatio     = sdk.MustNewDecFromStr("0.20") // 20%
+	DefaultTxFeeRebateRatio   = sdk.MustNewDecFromStr("0.50") // 50%
+	DefaultMaxWithdrawRecords = uint64(1000)
+)
+
 var _ paramTypes.ParamSet = (*Params)(nil)
 
 // ParamKeyTable creates a new params table.
@@ -32,10 +38,11 @@ func NewParams(inflationRewardsRatio, txFeeRebateRatio sdk.Dec, maxwithdrawRecor
 
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
-	defInflationRatio := sdk.MustNewDecFromStr("0.20")   // 20%
-	defTxFeeRebateRatio := sdk.MustNewDecFromStr("0.50") // 50%
-
-	return NewParams(defInflationRatio, defTxFeeRebateRatio, 1000)
+	return NewParams(
+		DefaultInflationRatio,
+		DefaultTxFeeRebateRatio,
+		DefaultMaxWithdrawRecords,
+	)
 }
 
 // ParamSetPairs Implements the paramTypes.ParamSet interface.
