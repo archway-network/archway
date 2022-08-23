@@ -4,10 +4,11 @@ name: Build and Publish Docker image
 on:
   push:
     branches: [main]
-    tags: ["v*"]
+    tags: [v*]
 
   pull_request:
     branches: [main]
+    types: [closed]
 
 jobs:
   build-docker-image:
@@ -71,7 +72,7 @@ jobs:
 
   deploy-titus:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && endsWith(github.ref, github.event.repository.default_branch) }}
+    if: ${{ github.event.pull_request.merged }}
 
     needs:
       - build-docker-image
