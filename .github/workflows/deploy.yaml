@@ -115,7 +115,7 @@ jobs:
 
       - name: Update NODE_VERSION
         run: |
-          sed -i -e "s|NODE_VERSION|${{ teps.latesttag.outputs.tag }}|g" ci/constantine-1.yaml
+          sed -i -e "s|NODE_VERSION|${{ steps.latesttag.outputs.tag }}|g" ci/constantine-1.yaml
 
       - name: Deploy Chain
         uses: steebchen/kubectl@v2.0.0
