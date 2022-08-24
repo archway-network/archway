@@ -11,7 +11,7 @@ on:
     types: [closed]
 
   workflow_dispatch:
-    branches: [main, refactor_github_actions]
+    branches: [main, refactor_github_action]
 
 jobs:
   build-docker-image:
