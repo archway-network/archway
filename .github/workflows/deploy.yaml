@@ -75,7 +75,7 @@ jobs:
 
   deploy-titus:
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.merged }}
+    # if: ${{ github.event.pull_request.merged }}
 
     needs:
       - build-docker-image
@@ -98,7 +98,7 @@ jobs:
 
   deploy-constantine:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+    # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
 
     needs:
       - build-docker-image
