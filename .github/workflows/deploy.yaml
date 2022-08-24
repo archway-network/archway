@@ -111,7 +111,7 @@ jobs:
 
       - name: Set release tag
         id: release
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+        run: echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//v*}
       
       - name: Check release tag
         env:
