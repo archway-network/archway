@@ -9,6 +9,9 @@ on:
   pull_request:
     branches: [main]
 
+  workflow_dispatch:
+    branches: [main]  
+
 jobs:
   build-docker-image:
     runs-on: ubuntu-latest
