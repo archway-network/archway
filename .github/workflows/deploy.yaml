@@ -109,20 +109,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get release tag
-        id: previoustag
+      - name: Get latest release tag
+        id: latesttag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
-      
-      - name: Check release tag
-        env:
-          RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
-        run: |
-          echo $RELEASE_VERSION
-          echo ${{ steps.previoustag.outputs.tag }}
 
       - name: Update NODE_VERSION
         run: |
-          sed -i -e "s|NODE_VERSION|${{ needs.build-docker-image.outputs.image-version }}|g" ci/constantine-1.yaml
+          sed -i -e "s|NODE_VERSION|${{ teps.latesttag.outputs.tag }}|g" ci/constantine-1.yaml
 
       - name: Deploy Chain
         uses: steebchen/kubectl@v2.0.0
