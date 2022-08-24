@@ -110,15 +110,15 @@ jobs:
           fetch-depth: 0
 
       - name: Set release tag
-        id: variable
+        id: release
         run: echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
       
       - name: Check release tag
         env:
-          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.tag }}
         run: |
           echo $RELEASE_VERSION
-          echo ${{ steps.vars.outputs.tag }}
+          echo ${{ steps.release.outputs.tag }}
 
       - name: Update NODE_VERSION
         run: |
