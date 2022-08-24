@@ -109,6 +109,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set release tag
+        id: variable
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+      
+      - name: Check release tag
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+        run: |
+          echo $RELEASE_VERSION
+          echo ${{ steps.vars.outputs.tag }}
+
       - name: Update NODE_VERSION
         run: |
           sed -i -e "s|NODE_VERSION|${{ needs.build-docker-image.outputs.image-version }}|g" ci/constantine-1.yaml
