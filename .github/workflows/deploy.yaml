@@ -90,7 +90,7 @@ jobs:
       - name: Deploy Chain
         uses: steebchen/kubectl@v2.0.0
         with:
-          config: ${{ secrets.GKE_TENDERMINT_DEV_US_EAST1_STARPORT_CLOUD_DEV_KUBECONFIG_B64 }}
+          config: ${{ secrets.GKE_SHARED_NONPROD_TESTNETS_KUBECONFIG }}
           command: apply -n archway -f ci/titus-1.yaml
 
   deploy-constantine:
@@ -113,5 +113,5 @@ jobs:
       - name: Deploy Chain
         uses: steebchen/kubectl@v2.0.0
         with:
-          config: ${{ secrets.GKE_TENDERMINT_DEV_US_EAST1_STARPORT_CLOUD_DEV_KUBECONFIG_B64 }}
+          config: ${{ secrets.GKE_SHARED_NONPROD_TESTNETS_KUBECONFIG }}
           command: apply -n archway -f ci/constantine-1.yaml
