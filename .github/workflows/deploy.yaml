@@ -109,16 +109,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set release tag
-        id: release
-        run: echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//v*}
+      - name: Get release tag
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
       
       - name: Check release tag
         env:
-          RELEASE_VERSION: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
         run: |
           echo $RELEASE_VERSION
-          echo ${{ steps.release.outputs.tag }}
+          echo ${{ steps.previoustag.outputs.tag }}
 
       - name: Update NODE_VERSION
         run: |
