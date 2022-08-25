@@ -7,7 +7,7 @@ import (
 )
 
 // TestWithdrawRewardsByLimit tests the withdraw operation using record limit mode.
-func (s KeeperTestSuite) TestWithdrawRewardsByLimit() {
+func (s *KeeperTestSuite) TestWithdrawRewardsByLimit() {
 	keeper := s.chain.GetApp().RewardsKeeper
 	accAddr := s.chain.GetAccount(0).Address
 
@@ -72,7 +72,7 @@ func (s KeeperTestSuite) TestWithdrawRewardsByLimit() {
 }
 
 // TestWithdrawRewardsByIDs tests the withdraw operation using record IDs mode.
-func (s KeeperTestSuite) TestWithdrawRewardsByIDs() {
+func (s *KeeperTestSuite) TestWithdrawRewardsByIDs() {
 	keeper := s.chain.GetApp().RewardsKeeper
 	accAddr1, accAddr2 := s.chain.GetAccount(0).Address, s.chain.GetAccount(1).Address
 

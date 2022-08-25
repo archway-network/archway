@@ -46,6 +46,8 @@ func Execute(deps *std.Deps, env stdTypes.Env, info stdTypes.MessageInfo, msgBz 
 		return handleMsgVote(deps, env, info, *msg.Vote)
 	case msg.SendIBCVote != nil:
 		return handleMsgSendIBCVote(deps, env, info, *msg.SendIBCVote)
+	case msg.CustomCustom != nil:
+		return handleMsgCustomCustom(msg.CustomCustom)
 	case msg.CustomUpdateMetadata != nil:
 		return handleMsgUpdateMetadata(*msg.CustomUpdateMetadata)
 	case msg.CustomWithdrawRewards != nil:
@@ -133,6 +135,8 @@ func Query(deps *std.Deps, env stdTypes.Env, msgBz []byte) ([]byte, error) {
 		handlerRes, handlerErr = queryAPIVerifyEd25519Signature(deps, *msg.APIVerifyEd25519Signature)
 	case msg.APIVerifyEd25519Signatures != nil:
 		handlerRes, handlerErr = queryAPIVerifyEd25519Signatures(deps, *msg.APIVerifyEd25519Signatures)
+	case msg.CustomCustom != nil:
+		handlerRes, handlerErr = queryCustomCustom(deps, msg.CustomCustom)
 	case msg.CustomMetadata != nil:
 		handlerRes, handlerErr = queryCustomMetadata(deps, env, *msg.CustomMetadata)
 	case msg.CustomRewardsRecords != nil:

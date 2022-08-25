@@ -44,7 +44,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 			blockGasLimit      int64              // consensus parameter (might be 0 to skip inflation distribution)
 			txs                []transactionInput // block transactions input
 			// expected outputs
-			contractsOutput []contractOutput // list of contracts and their expected rewards (might not include some contracts if they don't have metadata set)
+			contractsOutput  []contractOutput // list of contracts and their expected rewards (might not include some contracts if they don't have metadata set)
+			treasuryExpected string           // rewards leftovers expected
 		}
 	)
 
@@ -83,6 +84,10 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					recordsNum: 1, // from 1 contract
 				},
 			},
+			// Leftovers:
+			//   - Tx:  all distributed
+			//   - Inf: 1000stake - 100stake = 900stake
+			treasuryExpected: "900stake",
 		},
 		{
 			name:               "1 tx, 1 contract, 3 ops",
@@ -114,6 +119,10 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					recordsNum: 1, // from 1 contract
 				},
 			},
+			// Leftovers:
+			//   - Tx:  all distributed
+			//   - Inf: 1000stake - 175stake = 825stake
+			treasuryExpected: "825stake",
 		},
 		{
 			name:               "1 tx, 2 contracts with 2 ops for each",
@@ -160,6 +169,10 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					recordsNum: 1, // from 1 contract
 				},
 			},
+			// Leftovers:
+			//   - Tx:  500stake - 166stake - 333stake  = 1stake
+			//   - Inf: 1000stake - 150stake - 300stake = 550stake
+			treasuryExpected: "551stake",
 		},
 		{
 			name:               "2 txs with contract ops intersection (rewards from both txs)",
@@ -231,6 +244,11 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					recordsNum: 1, // from 1 contract
 				},
 			},
+			// Leftovers:
+			//   - Tx 1: 500stake - 214stake - 285stake  = 1stake
+			//   - Tx 2: 600stake - 100stake - 499stake  = 1stake
+			//   - Inf:  1000stake - 306stake - 433stake = 261stake
+			treasuryExpected: "263stake",
 		},
 		{
 			name:               "1 tx with 2 contracts (one without metadata)",
@@ -271,6 +289,10 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					recordsNum: 1, // from 1 contract
 				},
 			},
+			// Leftovers:
+			//   - Tx:  500stake - 250stake  = 250stake
+			//   - Inf: 1000stake - 100stake = 900stake
+			treasuryExpected: "1150stake",
 		},
 		{
 			name:               "1 tx with 2 contracts (one without rewardsAddress)",
@@ -311,6 +333,10 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					recordsNum: 1, // from 1 contract
 				},
 			},
+			// Leftovers:
+			//   - Tx:  500stake - 250stake  = 250stake
+			//   - Inf: 1000stake - 100stake = 900stake
+			treasuryExpected: "1150stake",
 		},
 		{
 			name:               "1 tx, 1 contract, 1 op (no tx fees)",
@@ -339,6 +365,10 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					recordsNum: 1, // from 1 contract
 				},
 			},
+			// Leftovers:
+			//   - Tx:  none
+			//   - Inf: 1000stake - 100stake = 900stake
+			treasuryExpected: "900stake",
 		},
 		{
 			name:               "1 tx, 1 contract, 1 op (no inflation)",
@@ -367,6 +397,10 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					recordsNum: 1, // from 1 contract
 				},
 			},
+			// Leftovers:
+			//   - Tx:  none
+			//   - Inf: none
+			treasuryExpected: "",
 		},
 		{
 			name:               "1 tx, 1 contract, 1 op (no block gas limit)",
@@ -395,6 +429,10 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					recordsNum: 1, // from 1 contract
 				},
 			},
+			// Leftovers:
+			//   - Tx:  none
+			//   - Inf: 1000stake (not distributed at all)
+			treasuryExpected: "1000stake",
 		},
 		{
 			name:               "1 tx, 1 contract, 1 op (no tx fee, no inflation)",
@@ -421,6 +459,10 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					rewards:     "",
 				},
 			},
+			// Leftovers:
+			//   - Tx:  none
+			//   - Inf: none
+			treasuryExpected: "",
 		},
 		{
 			name:               "1 tx, 2 contracts with the same rewardsAddress (multiple records created)",
@@ -460,6 +502,10 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					recordsNum: 2, // from 2 contracts
 				},
 			},
+			// Leftovers:
+			//   - Tx:  900stake - 299stake - 600stake  = 1stake
+			//   - Inf: 1000stake - 100stake - 200stake = 700stake
+			treasuryExpected: "701stake",
 		},
 	}
 
@@ -528,6 +574,16 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					}
 				}
 
+				// Burn inflation rewards for the current block caused by the x/mint (we override this value below)
+				{
+					curBlockRewards, found := rKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
+					require.True(t, found)
+					rewardsToBurn := sdk.Coins{curBlockRewards.InflationRewards}
+
+					require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, rewardsToBurn))
+					require.NoError(t, chain.GetApp().BankKeeper.BurnCoins(ctx, rewardsTypes.TreasuryCollector, rewardsToBurn))
+				}
+
 				// Track inflation rewards
 				if tc.blockInflationCoin != "" {
 					inflationReward, err := sdk.ParseCoinNormalized(tc.blockInflationCoin)
@@ -545,8 +601,15 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 				}
 			}
 
-			// Call EndBlocker, BeginBlocker to finalize x/tracking entries and distribute rewards via x/rewards
+			// Call EndBlocker to finalize x/tracking entries and distribute rewards via x/rewards
+			// Clean up treasury balance to assert the module balance later
 			{
+				// Burn all the treasury collected for previous blocks
+				{
+					treasuryBalanceInitial := chain.GetModuleBalance(rewardsTypes.TreasuryCollector)
+					require.NoError(t, chain.GetApp().BankKeeper.BurnCoins(chain.GetContext(), rewardsTypes.TreasuryCollector, treasuryBalanceInitial))
+				}
+
 				chain.NextBlock(0)
 			}
 
@@ -572,6 +635,17 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 
 				assert.Equal(t, totalRewardsExpected.String(), totalRewardsReceived.String(), "output [%d]", i)
 			}
+
+			// Assert rewards leftovers
+			{
+				treasuryPoolExpected, err := sdk.ParseCoinsNormalized(tc.treasuryExpected)
+				require.NoError(t, err)
+				treasuryPoolReceived := chain.GetApp().RewardsKeeper.TreasuryPool(chain.GetContext())
+				assert.Equal(t, treasuryPoolExpected.String(), treasuryPoolReceived.String(), "treasury pool")
+			}
+
+			// Skip a block to ensure invariants are not violated
+			chain.NextBlock(0)
 		})
 	}
 }

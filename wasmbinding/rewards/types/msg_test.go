@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMsgValidate(t *testing.T) {
+func TestRewardsMsgValidate(t *testing.T) {
 	type testCase struct {
 		name        string
 		msg         Msg
@@ -15,7 +15,7 @@ func TestMsgValidate(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "OK 1",
+			name: "OK: UpdateMetadata",
 			msg: Msg{
 				UpdateMetadata: &UpdateMetadataRequest{
 					OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
@@ -24,7 +24,7 @@ func TestMsgValidate(t *testing.T) {
 			},
 		},
 		{
-			name: "OK 2",
+			name: "OK: WithdrawRewards 1",
 			msg: Msg{
 				WithdrawRewards: &WithdrawRewardsRequest{
 					RecordsLimit: 1,
@@ -32,7 +32,7 @@ func TestMsgValidate(t *testing.T) {
 			},
 		},
 		{
-			name: "OK 3",
+			name: "OK: WithdrawRewards 2",
 			msg: Msg{
 				WithdrawRewards: &WithdrawRewardsRequest{
 					RecordIDs: []uint64{1},

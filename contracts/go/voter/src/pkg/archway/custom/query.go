@@ -4,16 +4,22 @@ import (
 	stdTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 )
 
-// CustomQuery defines the Archway custom plugin query.
-// TODO: this should be a part of Archway CW SDK. Added here as an example of how to use Custom queries.
-type CustomQuery struct {
-	// Metadata returns the contract rewards metadata.
-	Metadata *ContractMetadataRequest
+// This should be a part of Archway CW SDK. Added here as an example of how to use Custom queries.
+type (
+	// CustomQuery defines the Archway custom plugin query.
+	CustomQuery struct {
+		Rewards *RewardsQuery `json:",omitempty"`
+	}
 
-	// RewardsRecords returns a list of RewardsRecord objects that are credited for the account and are ready to be withdrawn.
-	// Request is paginated. If the limit field is not set, the MaxWithdrawRecords param is used.
-	RewardsRecords *RewardsRecordsRequest
-}
+	RewardsQuery struct {
+		// Metadata returns the contract rewards metadata.
+		Metadata *ContractMetadataRequest
+
+		// RewardsRecords returns a list of RewardsRecord objects that are credited for the account and are ready to be withdrawn.
+		// Request is paginated. If the limit field is not set, the MaxWithdrawRecords param is used.
+		RewardsRecords *RewardsRecordsRequest
+	}
+)
 
 type (
 	ContractMetadataRequest struct {

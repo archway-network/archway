@@ -337,11 +337,26 @@ out:
 	return &stdTypes.Response{}, nil
 }
 
+// handleMsgCustomCustom handles MsgExecute.CustomCustom msg creating a custom Cosmos msg for the Custom WASM handler.
+func handleMsgCustomCustom(req stdTypes.RawMessage) (*stdTypes.Response, error) {
+	msg := stdTypes.CosmosMsg{
+		Custom: req,
+	}
+
+	return &stdTypes.Response{
+		Messages: []stdTypes.SubMsg{
+			stdTypes.NewSubMsg(msg),
+		},
+	}, nil
+}
+
 // handleMsgUpdateMetadata handles MsgExecute.CustomUpdateMetadata msg creating a custom Cosmos msg for the Custom WASM handler.
 func handleMsgUpdateMetadata(req archwayCustomTypes.UpdateMetadataRequest) (*stdTypes.Response, error) {
 	// Build msg
 	customMsg := archwayCustomTypes.CustomMsg{
-		UpdateMetadata: &req,
+		Rewards: &archwayCustomTypes.RewardsMsg{
+			UpdateMetadata: &req,
+		},
 	}
 	customMsgBz, err := customMsg.MarshalJSON()
 	if err != nil {
@@ -363,7 +378,9 @@ func handleMsgUpdateMetadata(req archwayCustomTypes.UpdateMetadataRequest) (*std
 func handleMsgWithdrawRewards(deps *std.Deps, req archwayCustomTypes.WithdrawRewardsRequest) (*stdTypes.Response, error) {
 	// Build msg
 	customMsg := archwayCustomTypes.CustomMsg{
-		WithdrawRewards: &req,
+		Rewards: &archwayCustomTypes.RewardsMsg{
+			WithdrawRewards: &req,
+		},
 	}
 	customMsgBz, err := customMsg.MarshalJSON()
 	if err != nil {

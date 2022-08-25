@@ -78,7 +78,7 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
@@ -98,11 +98,11 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/archway-network/archway/wasmbinding"
 	"github.com/archway-network/archway/x/rewards"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
-	"github.com/archway-network/archway/x/rewards/wasmbinding"
 	"github.com/archway-network/archway/x/tracking"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
@@ -219,6 +219,7 @@ var (
 		govtypes.ModuleName:                  {authtypes.Burner},
 		ibctransfertypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
 		wasm.ModuleName:                      {authtypes.Burner},
+		rewardsTypes.TreasuryCollector:       {authtypes.Burner},
 	}
 )
 
@@ -482,7 +483,8 @@ func NewArchwayApp(
 	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
 
 	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
-	wasmOpts = append(wasmOpts, wasmbinding.GetCustomWasmOptions(&app.RewardsKeeper)...) // using a pointer as the keeper is initialized below
+	// Archway specific options (using a pointer as the keeper is post-initialized below)
+	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.RewardsKeeper)...)
 
 	app.WASMKeeper = wasm.NewKeeper(
 		appCodec,
@@ -614,7 +616,6 @@ func NewArchwayApp(
 
 	app.mm.SetOrderEndBlockers(
 		// we have to specify all modules here (Cosmos's order is taken as a reference)
-		crisistypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -637,6 +638,8 @@ func NewArchwayApp(
 		// wasm gas tracking
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
+		// invariants checks are always the last to run
+		crisistypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are

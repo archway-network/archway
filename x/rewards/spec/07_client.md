@@ -178,7 +178,9 @@ block:
 
 #### pool
 
-Get the current rewards pool balance (undistributed yet tokens).
+Get the current rewards pool balance:
+* undistributed yet tokens;
+* treasury tokens;
 
 Usage:
 
@@ -189,8 +191,11 @@ archwayd q rewards pool [flags]
 Example output:
 
 ```yaml
-funds:
+undistributed_funds:
   - amount: "2038832654"
+    denom: uarch
+treasury_funds:
+  - amount: "1000003450"
     denom: uarch
 ```
 

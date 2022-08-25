@@ -2,7 +2,7 @@
 // Repo link: https://github.com/archway-network/archway
 // Original source could not be used "as is" because it contains fmt related code (not supported by TinyGo)
 // and because it adds a lot of extra dependencies for this repo.
-// TODO: This should be moved to the Archway CW SDK. Added here as an example of how to use Stargate raw queries.
+// This should be moved to the Archway CW SDK. Added here as an example of how to use Stargate raw queries.
 package proto
 
 import (
