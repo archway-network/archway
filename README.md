@@ -1,4 +1,4 @@
-![](https://github.com/user/banner.png)
+![](https://github.com/archway-network/archway/blob/main/banner.png)
 # Archway
 
 The core implementation of the Archway protocol leverages the [Cosmos SDK](https://cosmos.network) and [CosmWasm](https://cosmwasm.com) to reward validators and creators for their contributions to the network.
