@@ -1,3 +1,4 @@
+![](https://github.com/archway-network/archway/blob/main/banner.png)
 # Archway
 
 The core implementation of the Archway protocol leverages the [Cosmos SDK](https://cosmos.network) and [CosmWasm](https://cosmwasm.com) to reward validators and creators for their contributions to the network.
@@ -6,7 +7,7 @@ The core implementation of the Archway protocol leverages the [Cosmos SDK](https
 
 ## Install Golang
 
-Go 1.16 is required for Archway.
+Go 1.18 is required for Archway.
 
 If you haven't already, download and install Go. See the official [go.dev documentation](https://golang.org/doc/install). Make sure your `GOBIN` and `GOPATH` are setup.
 

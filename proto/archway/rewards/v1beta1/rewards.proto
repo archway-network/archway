@@ -1,0 +1,96 @@
+syntax = "proto3";
+package archway.rewards.v1beta1;
+
+option go_package = "github.com/archway-network/archway/x/rewards/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+// Params defines the module parameters.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+
+  // inflation_rewards_ratio defines the percentage of minted inflation tokens that are used for dApp rewards [0.0, 1.0].
+  // If set to 0.0, no inflation rewards are distributed.
+  string inflation_rewards_ratio = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  // tx_fee_rebate_ratio defines the percentage of tx fees that are used for dApp rewards [0.0, 1.0].
+  // If set to 0.0, no fee rewards are distributed.
+  string tx_fee_rebate_ratio = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  // max_withdraw_records defines the maximum number of RewardsRecord objects used for the withdrawal operation.
+  uint64 max_withdraw_records = 3;
+}
+
+// ContractMetadata defines the contract rewards distribution options for a particular contract.
+message ContractMetadata {
+  option (gogoproto.goproto_stringer) = false;
+
+  // contract_address defines the contract address (bech32 encoded).
+  string contract_address = 1;
+  // owner_address is the contract owner address that can modify contract reward options (bech32 encoded).
+  // That could be the contract admin or the contract itself.
+  // If owner_address is set to contract address, contract can modify the metadata on its own using WASM bindings.
+  string owner_address = 2;
+  // rewards_address is an address to distribute rewards to (bech32 encoded).
+  // If not set (empty), rewards are not distributed for this contract.
+  string rewards_address = 3;
+}
+
+// BlockRewards defines block related rewards distribution data.
+message BlockRewards {
+  option (gogoproto.goproto_stringer) = false;
+
+  // height defines the block height.
+  int64 height = 1;
+  // inflation_rewards is the rewards to be distributed.
+  cosmos.base.v1beta1.Coin inflation_rewards = 2 [
+    (gogoproto.nullable) = false
+  ];
+  // max_gas defines the maximum gas for the block that is used to distribute inflation rewards (consensus parameter).
+  uint64 max_gas = 3;
+}
+
+// TxRewards defines transaction related rewards distribution data.
+message TxRewards {
+  option (gogoproto.goproto_stringer) = false;
+
+  // tx_id is the tracking transaction ID (x/tracking is the data source for this value).
+  uint64 tx_id = 1;
+  // height defines the block height.
+  int64 height = 2;
+  // fee_rewards is the rewards to be distributed.
+  repeated cosmos.base.v1beta1.Coin fee_rewards = 3 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// RewardsRecord defines a record that is used to distribute rewards later (lazy distribution).
+// This record is being created by the x/rewards EndBlocker and pruned after the rewards are distributed.
+// An actual rewards x/bank transfer might be triggered by a Tx (via CLI for example) or by a contract via WASM bindings.
+// For a contract to trigger rewards transfer, contract address must be set as the rewards_address in a
+// corresponding ContractMetadata.
+message RewardsRecord {
+  option (gogoproto.goproto_stringer) = false;
+
+  // id is the unique ID of the record.
+  uint64 id = 1;
+  // rewards_address is the address to distribute rewards to (bech32 encoded).
+  string rewards_address = 2;
+  // rewards are the rewards to be transferred later.
+  repeated cosmos.base.v1beta1.Coin rewards = 3 [
+    (gogoproto.nullable) = false
+  ];
+  // calculated_height defines the block height of rewards calculation event.
+  int64 calculated_height = 4;
+  // calculated_time defines the block time of rewards calculation event.
+  google.protobuf.Timestamp calculated_time = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+}

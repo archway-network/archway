@@ -1,0 +1,164 @@
+syntax = "proto3";
+package archway.rewards.v1beta1;
+
+option go_package = "github.com/archway-network/archway/x/rewards/types";
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "archway/rewards/v1beta1/rewards.proto";
+
+// Query service for the tracking module.
+service Query {
+  // Params returns module parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/params";
+  }
+
+  // ContractMetadata returns the contract rewards parameters (metadata).
+  rpc ContractMetadata(QueryContractMetadataRequest) returns (QueryContractMetadataResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/contract_metadata";
+  }
+
+  // BlockRewardsTracking returns block rewards tracking for the current block.
+  rpc BlockRewardsTracking(QueryBlockRewardsTrackingRequest) returns (QueryBlockRewardsTrackingResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/block_rewards_tracking";
+  }
+
+  // RewardsPool returns the current undistributed rewards pool funds.
+  rpc RewardsPool(QueryRewardsPoolRequest) returns (QueryRewardsPoolResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/rewards_pool";
+  }
+
+  // EstimateTxFees returns the estimated transaction fees for the given transaction
+  // gas limit using the minimum consensus fee value for the current block.
+  rpc EstimateTxFees(QueryEstimateTxFeesRequest) returns (QueryEstimateTxFeesResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/estimate_tx_fees";
+  }
+
+  // RewardsRecords returns the paginated list of RewardsRecord objects stored for the provided rewards_address.
+  rpc RewardsRecords(QueryRewardsRecordsRequest) returns (QueryRewardsRecordsResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/rewards_records";
+  }
+
+  // OutstandingRewards returns total rewards credited from different contracts for the provided rewards_address.
+  rpc OutstandingRewards(QueryOutstandingRewardsRequest) returns (QueryOutstandingRewardsResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/outstanding_rewards";
+  }
+}
+
+// QueryParamsRequest is the request for Query.Params.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response for Query.Params.
+message QueryParamsResponse {
+  Params params = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryContractMetadataRequest is the request for Query.ContractMetadata.
+message QueryContractMetadataRequest {
+  // contract_address is the contract address (bech32 encoded).
+  string contract_address = 1;
+}
+
+// QueryContractMetadataResponse is the response for Query.ContractMetadata.
+message QueryContractMetadataResponse {
+  ContractMetadata metadata = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryBlockRewardsTrackingRequest is the request for Query.BlockRewardsTracking.
+message QueryBlockRewardsTrackingRequest {}
+
+// QueryBlockRewardsTrackingResponse is the response for Query.BlockRewardsTracking.
+message QueryBlockRewardsTrackingResponse {
+  BlockTracking block = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryRewardsPoolRequest is the request for Query.RewardsPool.
+message QueryRewardsPoolRequest {}
+
+// QueryRewardsPoolResponse is the response for Query.RewardsPool.
+message QueryRewardsPoolResponse {
+  // undistributed_funds are undistributed yet tokens (ready for withdrawal).
+  repeated cosmos.base.v1beta1.Coin undistributed_funds = 1 [
+    (gogoproto.nullable) = false
+  ];
+  // treasury_funds are treasury tokens available (no mechanism is available to withdraw ATM).
+  // Treasury tokens are collected on a block basis. Those tokens are unused block rewards.
+  repeated cosmos.base.v1beta1.Coin treasury_funds = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryEstimateTxFeesRequest is the request for Query.EstimateTxFees.
+message QueryEstimateTxFeesRequest {
+  // gas_limit is the transaction gas limit.
+  uint64 gas_limit = 1;
+}
+
+// QueryEstimateTxFeesResponse is the response for Query.EstimateTxFees.
+message QueryEstimateTxFeesResponse {
+  // gas_unit_price defines the minimum transaction fee per gas unit.
+  cosmos.base.v1beta1.DecCoin gas_unit_price = 1 [
+    (gogoproto.nullable) = false
+  ];
+  // estimated_fee is the estimated transaction fee for a given gas limit.
+  cosmos.base.v1beta1.Coin estimated_fee = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// BlockTracking is the tracking information for a block.
+message BlockTracking {
+  option (gogoproto.goproto_stringer) = false;
+
+  // inflation_rewards defines the inflation rewards for the block.
+  BlockRewards inflation_rewards = 1 [
+    (gogoproto.nullable) = false
+  ];
+  // tx_rewards defines the transaction rewards for the block.
+  repeated TxRewards tx_rewards = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryRewardsRecordsRequest is the request for Query.RewardsRecords.
+message QueryRewardsRecordsRequest {
+  // rewards_address is the target address to query records for (bech32 encoded).
+  string rewards_address = 1;
+  // pagination is an optional pagination options for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryRewardsRecordsResponse is the response for Query.RewardsRecords.
+message QueryRewardsRecordsResponse {
+  // records is the list of rewards records.
+  repeated RewardsRecord records = 1 [
+    (gogoproto.nullable) = false
+  ];
+  // pagination is the pagination details in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryOutstandingRewardsRequest is the request for Query.OutstandingRewards.
+message QueryOutstandingRewardsRequest {
+  // rewards_address is the target address to query calculated rewards for (bech32 encoded).
+  string rewards_address = 1;
+}
+
+// QueryOutstandingRewardsResponse is the response for Query.OutstandingRewards.
+message QueryOutstandingRewardsResponse {
+  // total_rewards is the total rewards credited to the rewards_address.
+  repeated cosmos.base.v1beta1.Coin total_rewards = 1 [
+    (gogoproto.nullable) = false
+  ];
+  // records_num is the total number of RewardsRecord objects stored for the rewards_address.
+  uint64 records_num = 2;
+}

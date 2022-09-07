@@ -1,0 +1,154 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: constantine-1-bigdipper
+  namespace: explorers
+data:
+  settings.json: |-
+    {
+      "public":{
+        "chainName":"Constantine",
+        "chainId":"constantine-1",
+        "gtm":"{Add your Google Tag Manager ID here}",
+        "slashingWindow":10000,
+        "uptimeWindow":250,
+        "initialPageSize":30,
+        "secp256k1":false,
+        "bech32PrefixAccAddr":"archway",
+        "bech32PrefixAccPub":"archwayopub",
+        "bech32PrefixValAddr":"archwayvaloper",
+        "bech32PrefixValPub":"archwayvaloperpub",
+        "bech32PrefixConsAddr":"archwayvalcons",
+        "bech32PrefixConsPub":"archwayvalconspub",
+        "bondDenom":"uconst",
+        "powerReduction":1000000,
+        "coins":[
+          {
+            "denom":"uconst",
+            "displayName":"CONST",
+            "fraction":1000000
+          }
+        ],
+        "ledger":{
+          "coinType":118,
+          "appName":"Cosmos",
+          "appVersion":"2.16.0",
+          "gasPrice":0.02
+        },
+        "modules":{
+          "bank":true,
+          "supply":true,
+          "minting":false,
+          "gov":true,
+          "distribution":false
+        },
+        "coingeckoId":"cosmos",
+        "networks":"https://gist.githubusercontent.com/kwunyeung/8be4598c77c61e497dfc7220a678b3ee/raw/bd-networks.json",
+        "banners":false
+      },
+      "remote":{
+        "rpc":"http://constantine-1.testnets:26657",
+        "api":"http://constantine-1.testnets:1317"
+      },
+      "debug":{
+        "startTimer":true
+      },
+      "params":{
+        "startHeight":0,
+        "defaultBlockTime":5000,
+        "validatorUpdateWindow":300,
+        "blockInterval":15000,
+        "transactionsInterval":18000,
+        "keybaseFetchingInterval":18000000,
+        "consensusInterval":1000,
+        "statusInterval":7500,
+        "signingInfoInterval":1800000,
+        "proposalInterval":5000,
+        "recipeInterval":5000,
+        "nftInterval":5000,
+        "cookbookInterval":5000,
+        "missedBlocksInterval":60000,
+        "delegationInterval":900000
+      }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: constantine-1-bigdipper
+  namespace: explorers
+spec:
+  ports:  
+  - port: 3000
+    name: http
+    targetPort: 3000
+  selector:    
+    app.kubernetes.io/name: constantine-1-bigdipper
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: constantine-1-bigdipper
+  namespace: explorers
+  labels:    
+    app.kubernetes.io/name: constantine-1-bigdipper
+spec:
+  selector:
+    matchLabels:      
+      app.kubernetes.io/name: constantine-1-bigdipper
+  replicas: 1
+  template:
+    metadata:
+      labels:        
+        app.kubernetes.io/name: constantine-1-bigdipper
+    spec:
+      containers:
+        - name: constantine-1-bigdipper
+          image: drewstaylor/bigdipper:1.0.0-archway
+          imagePullPolicy: Always
+          ports:        
+          - containerPort: 3000
+            name: http
+          env:
+            - name: ROOT_URL
+              value: https://explorer.constantine-1.archway.tech
+            - name: MONGO_URL
+              value: mongodb://mongodb:27017/meteor-constantine
+            - name: PORT
+              value: "3000"
+            - name: METEOR_SETTINGS
+              valueFrom:
+                configMapKeyRef:
+                  name: constantine-1-bigdipper
+                  key: settings.json
+          resources:
+            {}
+      terminationGracePeriodSeconds: 10
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: constantine-1-bigdipper
+  namespace: explorers
+  labels:    
+    app.kubernetes.io/name: constantine-1-bigdipper
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: explorer.constantine-1.archway.tech
+    http:
+      paths:
+      - backend:
+          service:
+            name: constantine-1-bigdipper
+            port:
+              number: 3000
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - explorer.constantine-1.archway.tech
+    secretName: constantine-1-bigdipper-cert

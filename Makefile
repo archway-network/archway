@@ -171,6 +171,8 @@ proto-all: proto-format proto-lint proto-gen
 proto-gen:
 	@echo "Generating Protobuf files"
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protocgen.sh
+	./scripts/dontcover.sh ./x/tracking
+	./scripts/dontcover.sh ./x/rewards
 
 proto-format:
 	@echo "Formatting Protobuf files"

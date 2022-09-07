@@ -2,7 +2,7 @@ apiVersion: apps.starport.cloud/v1
 kind: NodeSet
 metadata:
   name: constantine-1
-  namespace: archway
+  namespace: testnets
 spec:
   config:
     nodes:

@@ -1,0 +1,66 @@
+syntax = "proto3";
+package archway.rewards.v1beta1;
+
+option go_package = "github.com/archway-network/archway/x/rewards/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "archway/rewards/v1beta1/rewards.proto";
+
+// Msg defines the module messaging service.
+service Msg {
+  // SetContractMetadata creates or updates an existing contract metadata.
+  // Method is authorized to the contract owner (admin if no metadata exists).
+  rpc SetContractMetadata(MsgSetContractMetadata) returns (MsgSetContractMetadataResponse);
+
+  // WithdrawRewards performs collected rewards distribution.
+  // Rewards might be credited from multiple contracts (rewards_address must be set in the corresponding contract metadata).
+  rpc WithdrawRewards(MsgWithdrawRewards) returns (MsgWithdrawRewardsResponse);
+}
+
+// MsgSetContractMetadata is the request for Msg.SetContractMetadata.
+message MsgSetContractMetadata {
+  // sender_address is the msg sender address (bech32 encoded).
+  string sender_address = 1;
+  // metadata is the contract metadata to set / update.
+  // If metadata exists, non-empty fields will be updated.
+  ContractMetadata metadata = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// MsgSetContractMetadataResponse is the response for Msg.SetContractMetadata.
+message MsgSetContractMetadataResponse {}
+
+// MsgWithdrawRewards is the request for Msg.WithdrawRewards.
+message MsgWithdrawRewards {
+  message RecordsLimit {
+    uint64 limit = 1;
+  }
+
+  message RecordIDs {
+    repeated uint64 ids = 1 [
+      (gogoproto.nullable) = false
+    ];
+  }
+
+  // rewards_address is the address to distribute rewards to (bech32 encoded).
+  string rewards_address = 1;
+  // mode defines the operation type.
+  oneof mode {
+    // records_limit defines the maximum number of RewardsRecord objects to process.
+    RecordsLimit records_limit = 2;
+    // record_ids defines specific RewardsRecord object IDs to process.
+    RecordIDs record_ids = 3;
+  }
+}
+
+// MsgWithdrawRewardsResponse is the response for Msg.WithdrawRewards.
+message MsgWithdrawRewardsResponse {
+  // records_num is the number of RewardsRecord objects processed.
+  uint64 records_num = 1;
+  // rewards are the total rewards transferred.
+  repeated cosmos.base.v1beta1.Coin total_rewards = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
