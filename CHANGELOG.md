@@ -1,4 +1,4 @@
-# v0.0.6
+# v0.1.0
 
 ## Bug Fixes
 - Update Gas Consumed to Decimal values [#159](https://github.com/archway-network/archway/pull/159)
