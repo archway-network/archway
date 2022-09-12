@@ -135,10 +135,6 @@ func (m MsgWithdrawRewards) ValidateBasic() error {
 		if modeReq.RecordsLimit == nil {
 			return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid records limit: nil request")
 		}
-
-		if modeReq.RecordsLimit.Limit == 0 {
-			return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid records limit: must be GT 0")
-		}
 	case *MsgWithdrawRewards_RecordIds:
 		if modeReq == nil {
 			return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid record IDs: nil mode object")

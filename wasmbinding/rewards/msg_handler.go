@@ -63,8 +63,8 @@ func (h MsgHandler) withdrawContractRewards(ctx sdk.Context, contractAddr sdk.Ac
 	var recordsUsed int
 	var err error
 
-	if req.RecordsLimit > 0 {
-		totalRewards, recordsUsed, err = h.rewardsKeeper.WithdrawRewardsByRecordsLimit(ctx, contractAddr, req.RecordsLimit)
+	if req.RecordsLimit != nil {
+		totalRewards, recordsUsed, err = h.rewardsKeeper.WithdrawRewardsByRecordsLimit(ctx, contractAddr, *req.RecordsLimit)
 	}
 	if len(req.RecordIDs) > 0 {
 		totalRewards, recordsUsed, err = h.rewardsKeeper.WithdrawRewardsByRecordIDs(ctx, contractAddr, req.RecordIDs)

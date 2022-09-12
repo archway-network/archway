@@ -35,8 +35,9 @@ type (
 	WithdrawRewardsRequest struct {
 		// RecordsLimit defines the maximum number of RewardsRecord objects to process.
 		// Limit should not exceed the MaxWithdrawRecords param value.
+		// If not set, the default value is used.
 		// Only one of (RecordsLimit, RecordIDs) should be set.
-		RecordsLimit uint64
+		RecordsLimit *uint64
 		// RecordIDs defines specific RewardsRecord object IDs to process.
 		// Only one of (RecordsLimit, RecordIDs) should be set.
 		RecordIds []uint64

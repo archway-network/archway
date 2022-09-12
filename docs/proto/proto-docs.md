@@ -586,7 +586,7 @@ MsgWithdrawRewards is the request for Msg.WithdrawRewards.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `rewards_address` | [string](#string) |  | rewards_address is the address to distribute rewards to (bech32 encoded). |
-| `records_limit` | [MsgWithdrawRewards.RecordsLimit](#archway.rewards.v1beta1.MsgWithdrawRewards.RecordsLimit) |  | records_limit defines the maximum number of RewardsRecord objects to process. |
+| `records_limit` | [MsgWithdrawRewards.RecordsLimit](#archway.rewards.v1beta1.MsgWithdrawRewards.RecordsLimit) |  | records_limit defines the maximum number of RewardsRecord objects to process. If provided limit is 0, the default limit is used (the max_withdraw_records module parameter value). |
 | `record_ids` | [MsgWithdrawRewards.RecordIDs](#archway.rewards.v1beta1.MsgWithdrawRewards.RecordIDs) |  | record_ids defines specific RewardsRecord object IDs to process. |
 
 

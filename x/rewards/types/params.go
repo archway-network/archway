@@ -14,10 +14,20 @@ var (
 	MaxWithdrawRecordsParamKey    = []byte("MaxWithdrawRecords")
 )
 
+// Limit below are var (not const) for E2E tests to change them.
+var (
+	// MaxWithdrawRecordsParamLimit defines the MaxWithdrawRecordsParamKey max value.
+	// Limit is estimated by the TestRewardsParamMaxWithdrawRecordsLimit E2E test.
+	MaxWithdrawRecordsParamLimit = uint64(25000) // limit is defined by the TestRewardsParamMaxWithdrawRecordsLimit E2E test
+	// MaxRecordsQueryLimit defines the page limit for querying RewardsRecords.
+	// Limit is defined by the TestRewardsRecordsQueryLimit E2E test.
+	MaxRecordsQueryLimit = uint64(7500)
+)
+
 var (
 	DefaultInflationRatio     = sdk.MustNewDecFromStr("0.20") // 20%
 	DefaultTxFeeRebateRatio   = sdk.MustNewDecFromStr("0.50") // 50%
-	DefaultMaxWithdrawRecords = uint64(1000)
+	DefaultMaxWithdrawRecords = MaxWithdrawRecordsParamLimit
 )
 
 var _ paramTypes.ParamSet = (*Params)(nil)
@@ -131,6 +141,9 @@ func validateMaxWithdrawRecords(v interface{}) (retErr error) {
 
 	if p == 0 {
 		return fmt.Errorf("must be GTE 1")
+	}
+	if p > MaxWithdrawRecordsParamLimit {
+		return fmt.Errorf("must be LTE %d", MaxWithdrawRecordsParamLimit)
 	}
 
 	return nil

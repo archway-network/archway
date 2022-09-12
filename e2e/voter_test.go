@@ -9,6 +9,7 @@ import (
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/archway-network/archway/pkg"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 
 	cwStd "github.com/CosmWasm/cosmwasm-go/std"
@@ -906,7 +907,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsRewardsRecordsQuery() {
 
 	// Check there are no rewards yet
 	s.Run("Query empty records", func() {
-		records, pageResp, _ := s.VoterGetRewardsRecords(chain, contractAddr, nil, true)
+		records, pageResp, _, _ := s.VoterGetRewardsRecords(chain, contractAddr, nil, true)
 		s.Assert().Empty(records)
 		s.Assert().Empty(pageResp.NextKey)
 		s.Assert().Empty(pageResp.Total)
@@ -914,7 +915,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsRewardsRecordsQuery() {
 
 	// Check invalid input
 	s.Run("Query over the limit", func() {
-		_, _, err := s.VoterGetRewardsRecords(
+		_, _, _, err := s.VoterGetRewardsRecords(
 			chain, contractAddr,
 			&query.PageRequest{
 				Limit: 10000,
@@ -935,7 +936,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsRewardsRecordsQuery() {
 
 	// Check existing rewards
 	s.Run("Query all records", func() {
-		recordsReceived, pageRespReceived, _ := s.VoterGetRewardsRecords(
+		recordsReceived, pageRespReceived, _, _ := s.VoterGetRewardsRecords(
 			chain, contractAddr,
 			&query.PageRequest{
 				CountTotal: true,
@@ -953,7 +954,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsRewardsRecordsQuery() {
 		// Page 1
 		var nextKey []byte
 		{
-			recordsReceived, pageRespReceived, _ := s.VoterGetRewardsRecords(
+			recordsReceived, pageRespReceived, _, _ := s.VoterGetRewardsRecords(
 				chain, contractAddr,
 				&query.PageRequest{
 					Limit:      1,
@@ -971,7 +972,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsRewardsRecordsQuery() {
 
 		// Page 2
 		{
-			recordsReceived, pageRespReceived, _ := s.VoterGetRewardsRecords(
+			recordsReceived, pageRespReceived, _, _ := s.VoterGetRewardsRecords(
 				chain, contractAddr,
 				&query.PageRequest{
 					Key:        nextKey,
@@ -1017,7 +1018,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
 	s.Run("Invalid withdraw request", func() {
 		err := s.VoterWithdrawRewards(
 			chain, contractAddr, acc1,
-			2,
+			pkg.Uint64Ptr(2),
 			[]uint64{1},
 			false,
 		)
@@ -1048,7 +1049,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
 	s.Run("Withdraw using records limit and check Reply stats", func() {
 		s.VoterWithdrawRewards(
 			chain, contractAddr, acc1,
-			2,
+			pkg.Uint64Ptr(2),
 			nil,
 			true,
 		)
@@ -1067,7 +1068,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
 	s.Run("Withdraw using record IDs and check Reply stats", func() {
 		s.VoterWithdrawRewards(
 			chain, contractAddr, acc1,
-			0,
+			nil,
 			[]uint64{recordsExpected[2].Id, recordsExpected[3].Id},
 			true,
 		)

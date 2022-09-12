@@ -93,6 +93,18 @@ func WithInflationRewardsRatio(ratio sdk.Dec) TestChainGenesisOption {
 	}
 }
 
+// WithMaxWithdrawRecords sets x/rewards MaxWithdrawRecords param.
+func WithMaxWithdrawRecords(num uint64) TestChainGenesisOption {
+	return func(cdc codec.Codec, genesis app.GenesisState) {
+		var rewardsGenesis rewardsTypes.GenesisState
+		cdc.MustUnmarshalJSON(genesis[rewardsTypes.ModuleName], &rewardsGenesis)
+
+		rewardsGenesis.Params.MaxWithdrawRecords = num
+
+		genesis[rewardsTypes.ModuleName] = cdc.MustMarshalJSON(&rewardsGenesis)
+	}
+}
+
 // WithTxFeeRebatesRewardsRatio sets x/rewards tx fee rebates rewards ratio parameter.
 func WithTxFeeRebatesRewardsRatio(ratio sdk.Dec) TestChainGenesisOption {
 	return func(cdc codec.Codec, genesis app.GenesisState) {

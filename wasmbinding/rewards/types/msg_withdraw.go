@@ -12,8 +12,9 @@ import (
 type WithdrawRewardsRequest struct {
 	// RecordsLimit defines the maximum number of RewardsRecord objects to process.
 	// Limit should not exceed the MaxWithdrawRecords param value.
+	// If 0 value is passed, the MaxWithdrawRecords value is used.
 	// Only one of (RecordsLimit, RecordIDs) should be set.
-	RecordsLimit uint64 `json:"records_limit"`
+	RecordsLimit *uint64 `json:"records_limit"`
 	// RecordIDs defines specific RewardsRecord object IDs to process.
 	// Only one of (RecordsLimit, RecordIDs) should be set.
 	RecordIDs []uint64 `json:"record_ids"`
@@ -29,7 +30,7 @@ type WithdrawRewardsResponse struct {
 
 // Validate performs request fields validation.
 func (r WithdrawRewardsRequest) Validate() error {
-	if (r.RecordsLimit == 0 && len(r.RecordIDs) == 0) || (r.RecordsLimit > 0 && len(r.RecordIDs) > 0) {
+	if (r.RecordsLimit == nil && len(r.RecordIDs) == 0) || (r.RecordsLimit != nil && len(r.RecordIDs) > 0) {
 		return fmt.Errorf("one of (RecordsLimit, RecordIDs) fields must be set")
 	}
 
