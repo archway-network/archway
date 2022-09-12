@@ -11,7 +11,7 @@
 - Add lazy distribution feature [#207](https://github.com/archway-network/archway/pull/207)
 - Add Wasm Bindings [#196](https://github.com/archway-network/archway/pull/196) [#210](https://github.com/archway-network/archway/pull/210)
 
-# Changes
+## Changes
 - Use archway/wasmd fork [#162](https://github.com/archway-network/archway/pull/159)
 - Update cosmos sdk to 0.45.7 [#212](https://github.com/archway-network/archway/pull/212)
 - Upgrade to IBC v3 [#204](https://github.com/archway-network/archway/pull/204)
