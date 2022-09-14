@@ -34,6 +34,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	"github.com/archway-network/archway/app"
 	"github.com/archway-network/archway/app/params"
 )
@@ -69,6 +70,15 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
+			// This is hard fix for Cosmos SDK v0.45.X (part 1)
+			// We drop this flag here for it not to be used during clientCtx build below.
+			// Having the "--dry-run" set, an in-memory Keyring backend is used.
+			// This backend returns an error for every GetKey (by address / by name) request.
+			dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
+			if dryRun {
+				cmd.Flags().Set(flags.FlagDryRun, "false")
+			}
+
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -81,6 +91,16 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
+			}
+
+			// This is hard fix for Cosmos SDK v0.45.X (part 2)
+			// 1. We re-set the "--dry-run" flag to its original value.
+			// 2. We drop the "--keyring-backend" flag.
+			//    This prevents the in-memory Keyring re-creation (override) during the
+			//    client.GetClientTxContext's ReadPersistentCommandFlags sub-call.
+			if dryRun {
+				cmd.Flags().Set(flags.FlagDryRun, "true")
+				cmd.Flags().Set(flags.FlagKeyringBackend, "")
 			}
 
 			return server.InterceptConfigsPreRunHandler(cmd, "", nil)

@@ -29,6 +29,11 @@ func NewMinFeeDecorator(rk MinConsensusFeeReaderExpected) MinFeeDecorator {
 
 // AnteHandle implements the ante.AnteDecorator interface.
 func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	// Skip fee verification for simulation (--dry-run)
+	if simulate {
+		return next(ctx, tx, simulate)
+	}
+
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkErrors.Wrap(sdkErrors.ErrTxDecode, "Tx must be a FeeTx")
