@@ -8,12 +8,16 @@ import "archway/tracking/v1beta1/tracking.proto";
 
 // GenesisState defines the initial state of the tracking module.
 message GenesisState {
+  // tx_info_last_id defines the last unique ID for a TxInfo objs.
+  uint64 tx_info_last_id = 1;
   // tx_infos defines a list of all the tracked transactions.
   repeated TxInfo tx_infos = 2 [
     (gogoproto.nullable) = false
   ];
+  // contract_op_info_last_id defines the last unique ID for ContractOperationInfo objs.
+  uint64 contract_op_info_last_id = 3;
   // contract_op_infos defines a list of all the tracked contract operations.
-  repeated ContractOperationInfo contract_op_infos = 3 [
+  repeated ContractOperationInfo contract_op_infos = 4 [
     (gogoproto.nullable) = false
   ];
 }

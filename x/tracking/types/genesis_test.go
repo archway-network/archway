@@ -27,11 +27,13 @@ func TestTrackingGenesisStateValidation(t *testing.T) {
 		{
 			name: "OK: non-empty",
 			genesis: trackingTypes.GenesisState{
+				TxInfoLastId: 1,
 				TxInfos: []trackingTypes.TxInfo{
 					{
 						Id: 1,
 					},
 				},
+				ContractOpInfoLastId: 2,
 				ContractOpInfos: []trackingTypes.ContractOperationInfo{
 					{
 						Id:              1,
@@ -62,6 +64,7 @@ func TestTrackingGenesisStateValidation(t *testing.T) {
 		{
 			name: "Fail: invalid ContractOperationInfos",
 			genesis: trackingTypes.GenesisState{
+				TxInfoLastId: 1,
 				TxInfos: []trackingTypes.TxInfo{
 					{
 						Id: 1,
@@ -78,6 +81,7 @@ func TestTrackingGenesisStateValidation(t *testing.T) {
 		{
 			name: "Fail: duplicated TxInfo",
 			genesis: trackingTypes.GenesisState{
+				TxInfoLastId: 1,
 				TxInfos: []trackingTypes.TxInfo{
 					{
 						Id: 1,
@@ -92,11 +96,13 @@ func TestTrackingGenesisStateValidation(t *testing.T) {
 		{
 			name: "Fail: duplicated ContractOperationInfos",
 			genesis: trackingTypes.GenesisState{
+				TxInfoLastId: 1,
 				TxInfos: []trackingTypes.TxInfo{
 					{
 						Id: 1,
 					},
 				},
+				ContractOpInfoLastId: 1,
 				ContractOpInfos: []trackingTypes.ContractOperationInfo{
 					{
 						Id:              1,
@@ -117,15 +123,50 @@ func TestTrackingGenesisStateValidation(t *testing.T) {
 		{
 			name: "Fail: unmatched TxID",
 			genesis: trackingTypes.GenesisState{
+				TxInfoLastId: 1,
 				TxInfos: []trackingTypes.TxInfo{
 					{
 						Id: 1,
 					},
 				},
+				ContractOpInfoLastId: 1,
 				ContractOpInfos: []trackingTypes.ContractOperationInfo{
 					{
 						Id:              1,
 						TxId:            2,
+						ContractAddress: contractAddr1.String(),
+						OperationType:   trackingTypes.ContractOperation_CONTRACT_OPERATION_EXECUTION,
+					},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid lastTxID",
+			genesis: trackingTypes.GenesisState{
+				TxInfoLastId: 0,
+				TxInfos: []trackingTypes.TxInfo{
+					{
+						Id: 1,
+					},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid lastOpInfoID",
+			genesis: trackingTypes.GenesisState{
+				TxInfoLastId: 1,
+				TxInfos: []trackingTypes.TxInfo{
+					{
+						Id: 1,
+					},
+				},
+				ContractOpInfoLastId: 0,
+				ContractOpInfos: []trackingTypes.ContractOperationInfo{
+					{
+						Id:              1,
+						TxId:            1,
 						ContractAddress: contractAddr1.String(),
 						OperationType:   trackingTypes.ContractOperation_CONTRACT_OPERATION_EXECUTION,
 					},

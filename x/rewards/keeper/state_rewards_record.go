@@ -108,20 +108,16 @@ func (s RewardsRecordState) DeleteRewardsRecords(objs ...types.RewardsRecord) {
 }
 
 // Import initializes state from the module genesis data.
-func (s RewardsRecordState) Import(objs []types.RewardsRecord) {
-	lastID := uint64(0)
+func (s RewardsRecordState) Import(lastID uint64, objs []types.RewardsRecord) {
 	for _, obj := range objs {
 		s.setRewardsRecord(&obj)
 		s.setAddressIndex(obj.Id, obj.MustGetRewardsAddress())
-		if obj.Id > lastID {
-			lastID = obj.Id
-		}
 	}
 	s.setLastID(lastID)
 }
 
 // Export returns the module genesis data for the state.
-func (s RewardsRecordState) Export() (objs []types.RewardsRecord) {
+func (s RewardsRecordState) Export() (lastID uint64, objs []types.RewardsRecord) {
 	store := prefix.NewStore(s.stateStore, types.RewardsRecordPrefix)
 
 	iterator := store.Iterator(nil, nil)
@@ -132,6 +128,7 @@ func (s RewardsRecordState) Export() (objs []types.RewardsRecord) {
 		s.cdc.MustUnmarshal(iterator.Value(), &obj)
 		objs = append(objs, obj)
 	}
+	lastID = s.getNextID() - 1
 
 	return
 }

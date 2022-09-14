@@ -128,7 +128,10 @@ func (s *KeeperTestSuite) TestStates() {
 			txState.CreateTxRewards(txRewards.TxId, txRewards.Height, txRewards.FeeRewards)
 		}
 	}
-	rewardsRecordState.Import(testDataExpected.RewardsRecords)
+	rewardsRecordState.Import(
+		testDataExpected.RewardsRecords[len(testDataExpected.RewardsRecords)-1].Id,
+		testDataExpected.RewardsRecords,
+	)
 
 	// Check non-existing records
 	s.Run("Check non-existing metadata record", func() {

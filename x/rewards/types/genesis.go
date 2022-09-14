@@ -14,28 +14,31 @@ func NewGenesisState(
 	contractsMetadata []ContractMetadata,
 	blockRewards []BlockRewards, txRewards []TxRewards,
 	minConsFee sdk.DecCoin,
+	rewardsRecordLastID uint64,
 	rewardsRecords []RewardsRecord,
 ) *GenesisState {
 
 	return &GenesisState{
-		Params:            params,
-		ContractsMetadata: contractsMetadata,
-		BlockRewards:      blockRewards,
-		TxRewards:         txRewards,
-		MinConsensusFee:   minConsFee,
-		RewardsRecords:    rewardsRecords,
+		Params:              params,
+		ContractsMetadata:   contractsMetadata,
+		BlockRewards:        blockRewards,
+		TxRewards:           txRewards,
+		MinConsensusFee:     minConsFee,
+		RewardsRecordLastId: rewardsRecordLastID,
+		RewardsRecords:      rewardsRecords,
 	}
 }
 
 // DefaultGenesisState returns a default genesis state.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		Params:            DefaultParams(),
-		ContractsMetadata: []ContractMetadata{},
-		BlockRewards:      []BlockRewards{},
-		TxRewards:         []TxRewards{},
-		MinConsensusFee:   sdk.DecCoin{},
-		RewardsRecords:    []RewardsRecord{},
+		Params:              DefaultParams(),
+		ContractsMetadata:   []ContractMetadata{},
+		BlockRewards:        []BlockRewards{},
+		TxRewards:           []TxRewards{},
+		MinConsensusFee:     sdk.DecCoin{},
+		RewardsRecordLastId: 0,
+		RewardsRecords:      []RewardsRecord{},
 	}
 }
 
@@ -88,6 +91,7 @@ func (m GenesisState) Validate() error {
 		}
 	}
 
+	rewardsRecordIDMax := uint64(0)
 	rewardsRecordsIdSet := make(map[uint64]struct{})
 	for i, rewardsRecord := range m.RewardsRecords {
 		if err := rewardsRecord.Validate(); err != nil {
@@ -96,7 +100,15 @@ func (m GenesisState) Validate() error {
 		if _, ok := rewardsRecordsIdSet[rewardsRecord.Id]; ok {
 			return fmt.Errorf("rewardsRecords [%d]: duplicated id: %d", i, rewardsRecord.Id)
 		}
+
+		if rewardsRecord.Id > rewardsRecordIDMax {
+			rewardsRecordIDMax = rewardsRecord.Id
+		}
 		rewardsRecordsIdSet[rewardsRecord.Id] = struct{}{}
+	}
+
+	if m.RewardsRecordLastId < rewardsRecordIDMax {
+		return fmt.Errorf("rewardsRecordLastId: %d < max RewardsRecord ID (%d)", m.RewardsRecordLastId, rewardsRecordIDMax)
 	}
 
 	return nil

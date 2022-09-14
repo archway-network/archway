@@ -45,7 +45,8 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				TxRewards: []rewardsTypes.TxRewards{
 					{TxId: 1, Height: 1},
 				},
-				MinConsensusFee: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+				MinConsensusFee:     sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+				RewardsRecordLastId: 1,
 				RewardsRecords: []rewardsTypes.RewardsRecord{
 					{
 						Id:               1,
@@ -167,7 +168,8 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 		{
 			name: "Fail: invalid RewardsRecords: duplicates",
 			genesisState: rewardsTypes.GenesisState{
-				Params: rewardsTypes.DefaultParams(),
+				Params:              rewardsTypes.DefaultParams(),
+				RewardsRecordLastId: 1,
 				RewardsRecords: []rewardsTypes.RewardsRecord{
 					{
 						Id:               1,
@@ -176,6 +178,23 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
 					},
+					{
+						Id:               1,
+						RewardsAddress:   accAddr.String(),
+						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
+						CalculatedHeight: 1,
+						CalculatedTime:   mockTime,
+					},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid RewardsRecord lastID",
+			genesisState: rewardsTypes.GenesisState{
+				Params:              rewardsTypes.DefaultParams(),
+				RewardsRecordLastId: 0,
+				RewardsRecords: []rewardsTypes.RewardsRecord{
 					{
 						Id:               1,
 						RewardsAddress:   accAddr.String(),

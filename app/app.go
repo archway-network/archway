@@ -598,7 +598,7 @@ func NewArchwayApp(
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
-		crisistypes.ModuleName,
+		crisistypes.ModuleName, // doesn't have BeginBlocker, so order is not important
 		genutiltypes.ModuleName,
 		authz.ModuleName,
 		feegrant.ModuleName,
@@ -658,7 +658,6 @@ func NewArchwayApp(
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
-		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
@@ -674,6 +673,8 @@ func NewArchwayApp(
 		// wasm gas tracking
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
+		// invariants checks are always the last to run
+		crisistypes.ModuleName,
 	)
 
 	// Uncomment if you want to set a custom migration order here.

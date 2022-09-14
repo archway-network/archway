@@ -1,56 +1,83 @@
 package keeper_test
 
 import (
-	"math/rand"
-
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/tracking/types"
 )
 
-func (s *KeeperTestSuite) TestGenesisExport() {
-	rand.Seed(86)
-	chain := s.chain
-	ctx, keeper := chain.GetContext(), chain.GetApp().TrackingKeeper
-	operationsToExecute := 100
+// TestGenesisImportExport check genesis import/export.
+// Test updates the initial state with new txs and checks that they were merged.
+func (s *KeeperTestSuite) TestGenesisImportExport() {
+	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().TrackingKeeper
 
-	for i := 0; i < operationsToExecute; i++ {
-		opType := testutils.WASMContractOperationToRewards(testutils.GetRandomContractOperationType())
+	contractAddrs := e2eTesting.GenContractAddresses(2)
 
-		keeper.TrackNewTx(ctx)
-		keeper.TrackNewContractOperation(ctx, chain.GetAccount(rand.Intn(5)).Address, opType, 1, 1)
+	var genesisStateInitial types.GenesisState
+	s.Run("Check export of the initial genesis", func() {
+		genesisState := keeper.ExportGenesis(ctx)
+		s.Require().NotNil(genesisState)
+
+		s.Assert().Empty(genesisState.TxInfoLastId)
+		s.Assert().Empty(genesisState.TxInfos)
+		s.Assert().Empty(genesisState.ContractOpInfos)
+
+		genesisStateInitial = *genesisState
+	})
+
+	newTxInfos := []types.TxInfo{
+		{
+			Id:       110,
+			Height:   100,
+			TotalGas: 1000,
+		},
+		{
+			Id:       210,
+			Height:   200,
+			TotalGas: 2000,
+		},
 	}
 
-	genesis := keeper.ExportGenesis(ctx)
-	s.Require().NoError(genesis.Validate())
-	s.Assert().Equal(operationsToExecute, len(genesis.TxInfos))
-	s.Assert().Equal(operationsToExecute, len(genesis.ContractOpInfos))
-}
+	newContractOpInfos := []types.ContractOperationInfo{
+		{
+			Id:              1,
+			TxId:            110,
+			ContractAddress: contractAddrs[0].String(),
+			OperationType:   testutils.WASMContractOperationToRewards(testutils.GetRandomContractOperationType()),
+			VmGas:           150,
+			SdkGas:          250,
+		},
+		{
+			Id:              2,
+			TxId:            210,
+			ContractAddress: contractAddrs[1].String(),
+			OperationType:   testutils.WASMContractOperationToRewards(testutils.GetRandomContractOperationType()),
+			VmGas:           350,
+			SdkGas:          450,
+		},
+	}
 
-func (s *KeeperTestSuite) TestGenesisImport() {
-	chain := s.chain
-	ctx, keeper := chain.GetContext(), chain.GetApp().TrackingKeeper
-	genesisExpected := types.DefaultGenesisState()
-	operationsToExecute := 100
+	genesisStateImported := types.NewGenesisState(
+		newTxInfos[len(newTxInfos)-1].Id,
+		newTxInfos,
+		newContractOpInfos[len(newContractOpInfos)-1].Id,
+		newContractOpInfos,
+	)
+	s.Run("Check import of an updated genesis", func() {
+		keeper.InitGenesis(ctx, genesisStateImported)
 
-	// Ids must be greater than 0
-	for i := 1; i <= operationsToExecute; i++ {
-		opType := testutils.WASMContractOperationToRewards(testutils.GetRandomContractOperationType())
-
-		txInfo := types.TxInfo{uint64(i), 0, 2}
-		contractOperation := types.ContractOperationInfo{
-			txInfo.Id,
-			txInfo.Id,
-			chain.GetAccount(rand.Intn(5)).Address.String(),
-			opType,
-			1,
-			1,
+		genesisStateExpected := types.GenesisState{
+			TxInfoLastId:         newTxInfos[len(newTxInfos)-1].Id,
+			TxInfos:              append(genesisStateInitial.TxInfos, newTxInfos...),
+			ContractOpInfoLastId: newContractOpInfos[len(newContractOpInfos)-1].Id,
+			ContractOpInfos:      append(genesisStateInitial.ContractOpInfos, newContractOpInfos...),
 		}
-		genesisExpected.TxInfos = append(genesisExpected.TxInfos, txInfo)
-		genesisExpected.ContractOpInfos = append(genesisExpected.ContractOpInfos, contractOperation)
-	}
-	s.Require().NoError(genesisExpected.Validate())
 
-	keeper.InitGenesis(ctx, genesisExpected)
-	genesisReceived := keeper.ExportGenesis(ctx)
-	s.Assert().Equal(genesisExpected, genesisReceived)
+		genesisStateReceived := keeper.ExportGenesis(ctx)
+		s.Require().NotNil(genesisStateReceived)
+		s.Assert().Equal(genesisStateExpected.TxInfoLastId, genesisStateReceived.TxInfoLastId)
+		s.Assert().ElementsMatch(genesisStateExpected.TxInfos, genesisStateReceived.TxInfos)
+		s.Assert().Equal(genesisStateExpected.ContractOpInfoLastId, genesisStateReceived.ContractOpInfoLastId)
+		s.Assert().ElementsMatch(genesisStateExpected.ContractOpInfos, genesisStateReceived.ContractOpInfos)
+	})
 }

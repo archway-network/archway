@@ -11,7 +11,7 @@ import (
 
 // TestGenesisImportExport check genesis import/export.
 // Test updates the initial state with new records and checks that they were merged.
-func (s KeeperTestSuite) TestGenesisImportExport() {
+func (s *KeeperTestSuite) TestGenesisImportExport() {
 	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
 
 	contractAddrs := e2eTesting.GenContractAddresses(2)
@@ -26,6 +26,7 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 		s.Assert().Empty(genesisState.ContractsMetadata)
 		s.Assert().NotEmpty(genesisState.BlockRewards) // height is 2 so we have some inflation rewards already
 		s.Assert().Empty(genesisState.TxRewards)
+		s.Assert().Empty(genesisState.RewardsRecordLastId)
 		s.Assert().Empty(genesisState.RewardsRecords)
 
 		genesisStateInitial = *genesisState
@@ -98,17 +99,26 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 		},
 	}
 
-	genesisStateImported := types.NewGenesisState(newParams, newMetadata, newBlockRewards, newTxRewards, newMinConsFee, newRewardsRecords)
+	genesisStateImported := types.NewGenesisState(
+		newParams,
+		newMetadata,
+		newBlockRewards,
+		newTxRewards,
+		newMinConsFee,
+		newRewardsRecords[len(newRewardsRecords)-1].Id,
+		newRewardsRecords,
+	)
 	s.Run("Check import of an updated genesis", func() {
 		keeper.InitGenesis(ctx, genesisStateImported)
 
 		genesisStateExpected := types.GenesisState{
-			Params:            newParams,
-			ContractsMetadata: append(genesisStateInitial.ContractsMetadata, newMetadata...),
-			BlockRewards:      append(genesisStateInitial.BlockRewards, newBlockRewards...),
-			TxRewards:         append(genesisStateInitial.TxRewards, newTxRewards...),
-			MinConsensusFee:   newMinConsFee,
-			RewardsRecords:    append(genesisStateInitial.RewardsRecords, newRewardsRecords...),
+			Params:              newParams,
+			ContractsMetadata:   append(genesisStateInitial.ContractsMetadata, newMetadata...),
+			BlockRewards:        append(genesisStateInitial.BlockRewards, newBlockRewards...),
+			TxRewards:           append(genesisStateInitial.TxRewards, newTxRewards...),
+			MinConsensusFee:     newMinConsFee,
+			RewardsRecordLastId: newRewardsRecords[len(newRewardsRecords)-1].Id,
+			RewardsRecords:      append(genesisStateInitial.RewardsRecords, newRewardsRecords...),
 		}
 
 		genesisStateReceived := keeper.ExportGenesis(ctx)
@@ -118,6 +128,7 @@ func (s KeeperTestSuite) TestGenesisImportExport() {
 		s.Assert().ElementsMatch(genesisStateExpected.BlockRewards, genesisStateReceived.BlockRewards)
 		s.Assert().ElementsMatch(genesisStateExpected.TxRewards, genesisStateReceived.TxRewards)
 		s.Assert().Equal(genesisStateExpected.MinConsensusFee.String(), genesisStateReceived.MinConsensusFee.String())
+		s.Assert().Equal(genesisStateExpected.RewardsRecordLastId, genesisStateReceived.RewardsRecordLastId)
 		s.Assert().ElementsMatch(genesisStateExpected.RewardsRecords, genesisStateReceived.RewardsRecords)
 	})
 }
