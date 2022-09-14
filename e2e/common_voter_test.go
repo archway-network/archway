@@ -384,7 +384,7 @@ func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contract
 }
 
 // VoterGetRewardsRecords returns the current contract rewards records (for the contractAddress as a rewardsAddress) paginated via Custom querier plugin.
-func (s *E2ETestSuite) VoterGetRewardsRecords(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, pageReq *query.PageRequest, expPass bool) ([]rewardsTypes.RewardsRecord, query.PageResponse, error) {
+func (s *E2ETestSuite) VoterGetRewardsRecords(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, pageReq *query.PageRequest, expPass bool) ([]rewardsTypes.RewardsRecord, query.PageResponse, int, error) {
 	req := voterTypes.MsgQuery{
 		CustomRewardsRecords: &voterTypes.CustomRewardsRecordsRequest{},
 	}
@@ -402,7 +402,7 @@ func (s *E2ETestSuite) VoterGetRewardsRecords(chain *e2eTesting.TestChain, contr
 	res, err := chain.SmartQueryContract(contractAddr, expPass, req)
 	if !expPass {
 		s.Require().Error(err)
-		return nil, query.PageResponse{}, err
+		return nil, query.PageResponse{}, 0, err
 	}
 	s.Require().NoError(err)
 
@@ -417,11 +417,11 @@ func (s *E2ETestSuite) VoterGetRewardsRecords(chain *e2eTesting.TestChain, contr
 		records = append(records, r)
 	}
 
-	return records, resp.Pagination.ToSDK(), nil
+	return records, resp.Pagination.ToSDK(), len(res), nil
 }
 
 // VoterWithdrawRewards sends the contract rewards withdrawal request via Custom message plugin.
-func (s *E2ETestSuite) VoterWithdrawRewards(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, recordsLimit uint64, recordIDs []uint64, expPass bool) error {
+func (s *E2ETestSuite) VoterWithdrawRewards(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, recordsLimit *uint64, recordIDs []uint64, expPass bool) error {
 	req := voterTypes.MsgExecute{
 		CustomWithdrawRewards: &voterCustomTypes.WithdrawRewardsRequest{
 			RecordsLimit: recordsLimit,

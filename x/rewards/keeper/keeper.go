@@ -4,6 +4,7 @@ import (
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -89,6 +90,16 @@ func (k Keeper) TreasuryPool(ctx sdk.Context) sdk.Coins {
 }
 
 // GetRewardsRecords returns all the rewards records for a given rewards address paginated.
+// Query checks the page limit and uses the default limit if not provided.
 func (k Keeper) GetRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, pageReq *query.PageRequest) ([]types.RewardsRecord, *query.PageResponse, error) {
+	if pageReq == nil {
+		pageReq = &query.PageRequest{
+			Limit: types.MaxRecordsQueryLimit,
+		}
+	}
+	if pageReq.Limit > types.MaxRecordsQueryLimit {
+		return nil, nil, sdkErrors.Wrapf(types.ErrInvalidRequest, "max records (%d) query limit exceeded", types.MaxRecordsQueryLimit)
+	}
+
 	return k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
 }

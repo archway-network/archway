@@ -12,9 +12,16 @@ import (
 
 // WithdrawRewardsByRecordsLimit performs the rewards distribution for the given rewards address and the number of record to use.
 func (k Keeper) WithdrawRewardsByRecordsLimit(ctx sdk.Context, rewardsAddr sdk.AccAddress, recordsLimit uint64) (sdk.Coins, int, error) {
+	recordsLimitMax := k.MaxWithdrawRecords(ctx)
+
+	// Use the default limit if not specified
+	if recordsLimit == 0 {
+		recordsLimit = recordsLimitMax
+	}
+
 	// Msg post-validateBasic check
-	if maxRecords := k.MaxWithdrawRecords(ctx); recordsLimit > maxRecords {
-		return nil, 0, sdkErrors.Wrapf(types.ErrInvalidRequest, "max withdraw records (%d) exceeded", maxRecords)
+	if recordsLimit > recordsLimitMax {
+		return nil, 0, sdkErrors.Wrapf(types.ErrInvalidRequest, "max withdraw records (%d) exceeded", recordsLimitMax)
 	}
 
 	// Get all rewards records for the given address by limit

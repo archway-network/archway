@@ -141,7 +141,15 @@ func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom1(in *
 		}
 		switch key {
 		case "records_limit":
-			out.RecordsLimit = uint64(in.Uint64())
+			if in.IsNull() {
+				in.Skip()
+				out.RecordsLimit = nil
+			} else {
+				if out.RecordsLimit == nil {
+					out.RecordsLimit = new(uint64)
+				}
+				*out.RecordsLimit = uint64(in.Uint64())
+			}
 		case "record_ids":
 			if in.IsNull() {
 				in.Skip()
@@ -182,7 +190,11 @@ func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom1(out 
 	{
 		const prefix string = ",\"records_limit\":"
 		out.RawString(prefix[1:])
-		out.Uint64(uint64(in.RecordsLimit))
+		if in.RecordsLimit == nil {
+			out.RawString("null")
+		} else {
+			out.Uint64(uint64(*in.RecordsLimit))
+		}
 	}
 	{
 		const prefix string = ",\"record_ids\":"

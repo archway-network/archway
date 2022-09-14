@@ -49,6 +49,7 @@ message MsgWithdrawRewards {
   // mode defines the operation type.
   oneof mode {
     // records_limit defines the maximum number of RewardsRecord objects to process.
+    // If provided limit is 0, the default limit is used.
     RecordsLimit records_limit = 2;
     // record_ids defines specific RewardsRecord object IDs to process.
     RecordIDs record_ids = 3;

@@ -129,16 +129,6 @@ func TestMsgWithdrawRewardsValidateBasic(t *testing.T) {
 			errExpected: true,
 		},
 		{
-			name: "Fail: RecordsLimit: invalid limit",
-			msg: rewardsTypes.MsgWithdrawRewards{
-				RewardsAddress: accAddr.String(),
-				Mode: &rewardsTypes.MsgWithdrawRewards_RecordsLimit_{
-					RecordsLimit: &rewardsTypes.MsgWithdrawRewards_RecordsLimit{},
-				},
-			},
-			errExpected: true,
-		},
-		{
 			name: "Fail: RecordsLimit: empty object",
 			msg: rewardsTypes.MsgWithdrawRewards{
 				RewardsAddress: accAddr.String(),

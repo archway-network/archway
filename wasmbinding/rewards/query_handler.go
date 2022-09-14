@@ -66,17 +66,6 @@ func (h QueryHandler) getContractMetadata(ctx sdk.Context, contractAddr sdk.AccA
 
 // getRewardsRecords returns the paginated list of types.RewardsRecord objects for a given account address.
 func (h QueryHandler) getRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, pageReq *query.PageRequest) (types.RewardsRecordsResponse, error) {
-	maxWithdrawRecords := h.rewardsKeeper.MaxWithdrawRecords(ctx)
-
-	if pageReq == nil {
-		pageReq = &query.PageRequest{
-			Limit: maxWithdrawRecords,
-		}
-	}
-	if pageReq.Limit > maxWithdrawRecords {
-		return types.RewardsRecordsResponse{}, sdkErrors.Wrapf(rewardsTypes.ErrInvalidRequest, "max records (%d) query limit exceeded", maxWithdrawRecords)
-	}
-
 	records, pageResp, err := h.rewardsKeeper.GetRewardsRecords(ctx, rewardsAddr, pageReq)
 	if err != nil {
 		return types.RewardsRecordsResponse{}, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, err.Error())

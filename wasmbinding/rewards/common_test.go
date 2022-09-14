@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	archPkg "github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/wasmbinding/pkg"
 	"github.com/archway-network/archway/wasmbinding/rewards"
@@ -94,7 +95,7 @@ func TestRewardsWASMBindings(t *testing.T) {
 	t.Run("Withdraw empty rewards", func(t *testing.T) {
 		msg := rewardsWbTypes.Msg{
 			WithdrawRewards: &rewardsWbTypes.WithdrawRewardsRequest{
-				RecordsLimit: 1000,
+				RecordsLimit: archPkg.Uint64Ptr(1000),
 			},
 		}
 
@@ -146,10 +147,12 @@ func TestRewardsWASMBindings(t *testing.T) {
 	// Add some rewards to withdraw (create new records and mint tokens)
 	record1RewardsExpected := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 25))
 	record2RewardsExpected := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 75))
-	recordsRewards := record1RewardsExpected.Add(record2RewardsExpected...)
+	record3RewardsExpected := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
+	recordsRewards := record1RewardsExpected.Add(record2RewardsExpected...).Add(record3RewardsExpected...)
 
 	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record1RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
 	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record2RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
+	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record3RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
 	require.NoError(t, chain.GetApp().MintKeeper.MintCoins(ctx, recordsRewards))
 	require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, recordsRewards))
 
@@ -167,7 +170,7 @@ func TestRewardsWASMBindings(t *testing.T) {
 		res, ok := resObj.(rewardsWbTypes.RewardsRecordsResponse)
 		require.True(t, ok)
 
-		require.Len(t, res.Records, 2)
+		require.Len(t, res.Records, 3)
 		// Record 1
 		assert.EqualValues(t, 1, res.Records[0].ID)
 		assert.Equal(t, contractAddr.String(), res.Records[0].RewardsAddress)
@@ -184,13 +187,21 @@ func TestRewardsWASMBindings(t *testing.T) {
 		record2RewardsReceived, err := pkg.WasmCoinsToSDK(res.Records[1].Rewards)
 		require.NoError(t, err)
 		assert.Equal(t, record2RewardsExpected.String(), record2RewardsReceived.String())
+		// Record 3
+		assert.EqualValues(t, 3, res.Records[2].ID)
+		assert.Equal(t, contractAddr.String(), res.Records[2].RewardsAddress)
+		assert.Equal(t, ctx.BlockHeight(), res.Records[2].CalculatedHeight)
+		assert.Equal(t, ctx.BlockTime().Format(time.RFC3339Nano), res.Records[2].CalculatedTime)
+		record3RewardsReceived, err := pkg.WasmCoinsToSDK(res.Records[2].Rewards)
+		require.NoError(t, err)
+		assert.Equal(t, record3RewardsExpected.String(), record3RewardsReceived.String())
 	})
 
 	// Withdraw rewards using the limit mode
 	t.Run("Withdraw 1st reward using limit", func(t *testing.T) {
 		msg := rewardsWbTypes.Msg{
 			WithdrawRewards: &rewardsWbTypes.WithdrawRewardsRequest{
-				RecordsLimit: 1,
+				RecordsLimit: archPkg.Uint64Ptr(1),
 			},
 		}
 
@@ -228,6 +239,29 @@ func TestRewardsWASMBindings(t *testing.T) {
 		totalRewardsReceived, err := pkg.WasmCoinsToSDK(res.TotalRewards)
 		require.NoError(t, err)
 		assert.EqualValues(t, record2RewardsExpected.String(), totalRewardsReceived.String())
+
+		assert.Equal(t, record1RewardsExpected.Add(record2RewardsExpected...).String(), chain.GetBalance(contractAddr).String())
+	})
+
+	// Withdraw rewards using the limit mode with default limit
+	t.Run("Withdraw 3rd reward using default limit", func(t *testing.T) {
+		msg := rewardsWbTypes.Msg{
+			WithdrawRewards: &rewardsWbTypes.WithdrawRewardsRequest{
+				RecordsLimit: archPkg.Uint64Ptr(0),
+			},
+		}
+
+		_, resData, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
+		require.NoError(t, err)
+		require.Len(t, resData, 1)
+
+		var res rewardsWbTypes.WithdrawRewardsResponse
+		require.NoError(t, json.Unmarshal(resData[0], &res))
+
+		assert.EqualValues(t, 1, res.RecordsNum)
+		totalRewardsReceived, err := pkg.WasmCoinsToSDK(res.TotalRewards)
+		require.NoError(t, err)
+		assert.EqualValues(t, record3RewardsExpected.String(), totalRewardsReceived.String())
 
 		assert.Equal(t, recordsRewards.String(), chain.GetBalance(contractAddr).String())
 	})

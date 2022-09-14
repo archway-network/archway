@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/archway-network/archway/pkg"
 )
 
 func TestRewardsMsgValidate(t *testing.T) {
@@ -27,7 +29,7 @@ func TestRewardsMsgValidate(t *testing.T) {
 			name: "OK: WithdrawRewards 1",
 			msg: Msg{
 				WithdrawRewards: &WithdrawRewardsRequest{
-					RecordsLimit: 1,
+					RecordsLimit: pkg.Uint64Ptr(1),
 				},
 			},
 		},
@@ -36,6 +38,14 @@ func TestRewardsMsgValidate(t *testing.T) {
 			msg: Msg{
 				WithdrawRewards: &WithdrawRewardsRequest{
 					RecordIDs: []uint64{1},
+				},
+			},
+		},
+		{
+			name: "OK: WithdrawRewards 3",
+			msg: Msg{
+				WithdrawRewards: &WithdrawRewardsRequest{
+					RecordsLimit: pkg.Uint64Ptr(0),
 				},
 			},
 		},
@@ -75,7 +85,7 @@ func TestRewardsMsgValidate(t *testing.T) {
 			name: "Fail: invalid WithdrawRewards: one of failed",
 			msg: Msg{
 				WithdrawRewards: &WithdrawRewardsRequest{
-					RecordsLimit: 1,
+					RecordsLimit: pkg.Uint64Ptr(1),
 					RecordIDs:    []uint64{1},
 				},
 			},

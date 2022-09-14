@@ -32,7 +32,7 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByLimit() {
 	// Invalid inputs
 	s.Run("Fail: limit is GT MaxWithdrawRecords", func() {
 		ctx := s.chain.GetContext()
-		_, _, err := keeper.WithdrawRewardsByRecordsLimit(ctx, accAddr, 1001)
+		_, _, err := keeper.WithdrawRewardsByRecordsLimit(ctx, accAddr, rewardsTypes.MaxWithdrawRecordsParamLimit+1)
 		s.Assert().ErrorIs(err, rewardsTypes.ErrInvalidRequest)
 	})
 
@@ -65,7 +65,7 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByLimit() {
 			accAddr, testData[2:],
 			func() (sdk.Coins, int, error) {
 				ctx := s.chain.GetContext()
-				return keeper.WithdrawRewardsByRecordsLimit(ctx, accAddr, 1000)
+				return keeper.WithdrawRewardsByRecordsLimit(ctx, accAddr, 0)
 			},
 		)
 	})
