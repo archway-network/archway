@@ -352,6 +352,7 @@ type (
 		fees          sdk.Coins
 		gasLimit      uint64
 		noBlockChange bool
+		simulate      bool
 	}
 )
 
@@ -372,6 +373,14 @@ func WithTxGasLimit(limit uint64) SendMsgOption {
 // WithoutBlockChange option disables EndBlocker and BeginBlocker after the transaction.
 func WithoutBlockChange() SendMsgOption {
 	return func(opt *sendMsgOptions) {
+		opt.noBlockChange = true
+	}
+}
+
+// WithSimulation options estimates gas usage for the transaction.
+func WithSimulation() SendMsgOption {
+	return func(opt *sendMsgOptions) {
+		opt.simulate = true
 		opt.noBlockChange = true
 	}
 }
@@ -424,6 +433,14 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 		senderAcc.PrivKey,
 	)
 	require.NoError(t, err)
+
+	// Check the Tx
+	if options.simulate {
+		txBz, err := chain.txConfig.TxEncoder()(tx)
+		require.NoError(t, err)
+
+		return chain.app.Simulate(txBz)
+	}
 
 	// Send the Tx
 	return chain.app.Deliver(chain.txConfig.TxEncoder(), tx)
