@@ -20,7 +20,8 @@ func ModuleAccountBalanceInvariant(k Keeper) sdk.Invariant {
 		poolCurrent := k.UndistributedRewardsPool(ctx)
 
 		poolExpected := sdk.NewCoins()
-		for _, record := range k.state.RewardsRecord(ctx).Export() {
+		_, records := k.state.RewardsRecord(ctx).Export()
+		for _, record := range records {
 			poolExpected = poolExpected.Add(record.Rewards...)
 		}
 

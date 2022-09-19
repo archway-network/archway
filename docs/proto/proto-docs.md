@@ -280,6 +280,7 @@ GenesisState defines the initial state of the tracking module.
 | `block_rewards` | [BlockRewards](#archway.rewards.v1beta1.BlockRewards) | repeated | block_rewards defines a list of all block rewards objects. |
 | `tx_rewards` | [TxRewards](#archway.rewards.v1beta1.TxRewards) | repeated | tx_rewards defines a list of all tx rewards objects. |
 | `min_consensus_fee` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  | min_consensus_fee defines the minimum gas unit price. |
+| `rewards_record_last_id` | [uint64](#uint64) |  | rewards_record_last_id defines the last unique ID for a RewardsRecord objs. |
 | `rewards_records` | [RewardsRecord](#archway.rewards.v1beta1.RewardsRecord) | repeated | rewards_records defines a list of all active (undistributed) rewards records. |
 
 
@@ -586,7 +587,7 @@ MsgWithdrawRewards is the request for Msg.WithdrawRewards.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `rewards_address` | [string](#string) |  | rewards_address is the address to distribute rewards to (bech32 encoded). |
-| `records_limit` | [MsgWithdrawRewards.RecordsLimit](#archway.rewards.v1beta1.MsgWithdrawRewards.RecordsLimit) |  | records_limit defines the maximum number of RewardsRecord objects to process. If provided limit is 0, the default limit is used (the max_withdraw_records module parameter value). |
+| `records_limit` | [MsgWithdrawRewards.RecordsLimit](#archway.rewards.v1beta1.MsgWithdrawRewards.RecordsLimit) |  | records_limit defines the maximum number of RewardsRecord objects to process. If provided limit is 0, the default limit is used. |
 | `record_ids` | [MsgWithdrawRewards.RecordIDs](#archway.rewards.v1beta1.MsgWithdrawRewards.RecordIDs) |  | record_ids defines specific RewardsRecord object IDs to process. |
 
 
@@ -779,7 +780,9 @@ GenesisState defines the initial state of the tracking module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `tx_info_last_id` | [uint64](#uint64) |  | tx_info_last_id defines the last unique ID for a TxInfo objs. |
 | `tx_infos` | [TxInfo](#archway.tracking.v1beta1.TxInfo) | repeated | tx_infos defines a list of all the tracked transactions. |
+| `contract_op_info_last_id` | [uint64](#uint64) |  | contract_op_info_last_id defines the last unique ID for ContractOperationInfo objs. |
 | `contract_op_infos` | [ContractOperationInfo](#archway.tracking.v1beta1.ContractOperationInfo) | repeated | contract_op_infos defines a list of all the tracked contract operations. |
 
 

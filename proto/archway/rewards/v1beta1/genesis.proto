@@ -29,8 +29,10 @@ message GenesisState {
   cosmos.base.v1beta1.DecCoin min_consensus_fee = 5 [
     (gogoproto.nullable) = false
   ];
+  // rewards_record_last_id defines the last unique ID for a RewardsRecord objs.
+  uint64 rewards_record_last_id = 6;
   // rewards_records defines a list of all active (undistributed) rewards records.
-  repeated RewardsRecord rewards_records = 6 [
+  repeated RewardsRecord rewards_records = 7 [
     (gogoproto.nullable) = false
   ];
 }

@@ -152,7 +152,14 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 			}
 
 			// Store rewards records
-			chain.GetApp().RewardsKeeper.GetState().RewardsRecord(ctx).Import(tc.rewardsRecords)
+			recordLastID := uint64(0)
+			for _, record := range tc.rewardsRecords {
+				if record.Id > recordLastID {
+					recordLastID = record.Id
+				}
+			}
+
+			chain.GetApp().RewardsKeeper.GetState().RewardsRecord(ctx).Import(recordLastID, tc.rewardsRecords)
 
 			// Check invariant
 			_, brokenReceived := keeper.ModuleAccountBalanceInvariant(chain.GetApp().RewardsKeeper)(ctx)

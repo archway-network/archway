@@ -105,20 +105,16 @@ func (s TxInfoState) DeleteTxInfosByBlock(height int64) []uint64 {
 }
 
 // Import initializes state from the module genesis data.
-func (s TxInfoState) Import(objs []types.TxInfo) {
-	lastID := uint64(0)
+func (s TxInfoState) Import(lastID uint64, objs []types.TxInfo) {
 	for _, obj := range objs {
 		s.SetTxInfo(obj)
 		s.setBlockIndex(obj.Height, obj.Id)
-		if obj.Id > lastID {
-			lastID = obj.Id
-		}
 	}
 	s.setLastID(lastID)
 }
 
 // Export returns the module genesis data for the state.
-func (s TxInfoState) Export() (objs []types.TxInfo) {
+func (s TxInfoState) Export() (lastID uint64, objs []types.TxInfo) {
 	store := prefix.NewStore(s.stateStore, types.TxInfoPrefix)
 
 	iterator := store.Iterator(nil, nil)
@@ -129,6 +125,7 @@ func (s TxInfoState) Export() (objs []types.TxInfo) {
 		s.cdc.MustUnmarshal(iterator.Value(), &obj)
 		objs = append(objs, obj)
 	}
+	lastID = s.nextID() - 1
 
 	return
 }

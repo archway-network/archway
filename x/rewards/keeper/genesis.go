@@ -10,6 +10,7 @@ import (
 // ExportGenesis exports the module genesis for the current block.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	minConsFee, _ := k.state.MinConsensusFee(ctx).GetFee() // default sdk.Coin value is ok
+	rewardsRecordLastID, rewardsRecords := k.state.RewardsRecord(ctx).Export()
 
 	return types.NewGenesisState(
 		k.GetParams(ctx),
@@ -17,7 +18,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		k.state.BlockRewardsState(ctx).Export(),
 		k.state.TxRewardsState(ctx).Export(),
 		minConsFee,
-		k.state.RewardsRecord(ctx).Export(),
+		rewardsRecordLastID,
+		rewardsRecords,
 	)
 }
 
@@ -27,7 +29,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 	k.state.ContractMetadataState(ctx).Import(state.ContractsMetadata)
 	k.state.BlockRewardsState(ctx).Import(state.BlockRewards)
 	k.state.TxRewardsState(ctx).Import(state.TxRewards)
-	k.state.RewardsRecord(ctx).Import(state.RewardsRecords)
+	k.state.RewardsRecord(ctx).Import(state.RewardsRecordLastId, state.RewardsRecords)
 
 	if !pkg.DecCoinIsZero(state.MinConsensusFee) {
 		k.state.MinConsensusFee(ctx).SetFee(state.MinConsensusFee)

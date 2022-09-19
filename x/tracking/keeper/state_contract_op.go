@@ -91,20 +91,16 @@ func (s ContractOpInfoState) DeleteContractOpsByTxID(txID uint64) []uint64 {
 }
 
 // Import initializes state from the module genesis data.
-func (s ContractOpInfoState) Import(objs []types.ContractOperationInfo) {
-	lastID := uint64(0)
+func (s ContractOpInfoState) Import(lastID uint64, objs []types.ContractOperationInfo) {
 	for _, obj := range objs {
 		s.setContractOpInfo(&obj)
 		s.setTxIndex(obj.TxId, obj.Id)
-		if obj.Id > lastID {
-			lastID = obj.Id
-		}
 	}
 	s.setLastID(lastID)
 }
 
 // Export returns the module genesis data for the state.
-func (s ContractOpInfoState) Export() (objs []types.ContractOperationInfo) {
+func (s ContractOpInfoState) Export() (lastID uint64, objs []types.ContractOperationInfo) {
 	store := prefix.NewStore(s.stateStore, types.ContractOpInfoPrefix)
 
 	iterator := store.Iterator(nil, nil)
@@ -115,6 +111,7 @@ func (s ContractOpInfoState) Export() (objs []types.ContractOperationInfo) {
 		s.cdc.MustUnmarshal(iterator.Value(), &obj)
 		objs = append(objs, obj)
 	}
+	lastID = s.getNextID() - 1
 
 	return
 }
