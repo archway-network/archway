@@ -72,7 +72,7 @@ jobs:
       - name: Deploy Chain
         uses: steebchen/kubectl@v2.0.0
         with:
-          config: ${{ secrets.GKE_SHARED_NONPROD_TESTNETS_KUBECONFIG }}
+          config: ${{ secrets.GKE_SHARED_NONPROD_GH_ACTIONS_BOT_KUBECONFIG }}
           command: apply -n testnets -f ci/titus-1.yaml
 
   deploy-constantine:
@@ -99,5 +99,5 @@ jobs:
       - name: Deploy Chain
         uses: steebchen/kubectl@v2.0.0
         with:
-          config: ${{ secrets.GKE_SHARED_NONPROD_TESTNETS_KUBECONFIG }}
+          config: ${{ secrets.GKE_SHARED_NONPROD_GH_ACTIONS_BOT_KUBECONFIG }}
           command: apply -n testnets -f ci/constantine-1.yaml
