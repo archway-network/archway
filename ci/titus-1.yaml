@@ -77,7 +77,7 @@ spec:
       increment: 5G
       threshold: 80
     size: 160G
-  replicas: 2
+  replicas: 4
   resources:
     sentry: {}
     validator: {}
