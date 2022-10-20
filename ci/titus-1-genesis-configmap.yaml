@@ -8,7 +8,7 @@ data:
       "consensus_params": {
         "block": {
           "max_bytes": "22020096",
-          "max_gas": "-1",
+          "max_gas": "100000000",
           "time_iota_ms": "1000"
         },
         "evidence": {
@@ -201,7 +201,7 @@ data:
             "max_deposit_period": "172800s"
           },
           "voting_params": {
-            "voting_period": "172800s"
+            "voting_period": "60s"
           },
           "tally_params": {
             "quorum": "0.334000000000000000",
@@ -250,10 +250,10 @@ data:
           "params": {
             "mint_denom": "utitus",
             "inflation_rate_change": "0.130000000000000000",
-            "inflation_max": "0.200000000000000000",
-            "inflation_min": "0.070000000000000000",
+            "inflation_max": "0.100000000000000000",
+            "inflation_min": "0.100000000000000000",
             "goal_bonded": "0.670000000000000000",
-            "blocks_per_year": "6311520"
+            "blocks_per_year": "31557600"
           }
         },
         "params": null,
@@ -267,7 +267,7 @@ data:
           "block_rewards": [],
           "tx_rewards": [],
           "min_consensus_fee": {
-            "denom": "",
+            "denom": "utitus",
             "amount": "0"
           },
           "rewards_record_last_id": "0",
