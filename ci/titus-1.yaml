@@ -277,7 +277,7 @@ data:
           "params": {
             "mint_denom": "utitus",
             "inflation_rate_change": "0.130000000000000000",
-            "inflation_max": "0.100000000000000000",
+            "inflation_max": "0.200000000000000000",
             "inflation_min": "0.100000000000000000",
             "goal_bonded": "0.670000000000000000",
             "blocks_per_year": "31557600"
@@ -372,6 +372,7 @@ metadata:
 spec:
   binaryName: archwayd
   config:
+    resetDataOnGenesisChanges: true
     nodes:
       configOverride:
         app:
@@ -420,7 +421,7 @@ spec:
     rpc: true
   image:
     name: docker.io/archwaynetwork/archwayd
-    version: NODE_VERSION
+    version: sha-f1307e2
     imagePullPolicy: Always
   init:
     assets:
