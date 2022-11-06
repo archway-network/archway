@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/pkg"
@@ -31,7 +33,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 	k.state.TxRewardsState(ctx).Import(state.TxRewards)
 	k.state.RewardsRecord(ctx).Import(state.RewardsRecordLastId, state.RewardsRecords)
 
-	if !pkg.DecCoinIsZero(state.MinConsensusFee) {
+	if !pkg.DecCoinIsZero(state.MinConsensusFee) || pkg.DecCoinIsNegative(state.MinConsensusFee) {
+		fmt.Sprintf("inside: %+v\n", state.MinConsensusFee)
 		k.state.MinConsensusFee(ctx).SetFee(state.MinConsensusFee)
 	}
+	fmt.Sprintf("outside: %+v\n", state.MinConsensusFee)
 }
