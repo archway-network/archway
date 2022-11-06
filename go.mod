@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220822092235-974247a04ac7
-	github.com/CosmWasm/wasmd v0.25.0
+	github.com/CosmWasm/wasmd v0.28.0
 	github.com/CosmWasm/wasmvm v1.0.0
 	github.com/archway-network/voter v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.45.8
@@ -136,6 +136,6 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/CosmWasm/wasmd => github.com/archway-network/wasmd v0.27.0
+replace github.com/CosmWasm/wasmd => github.com/archway-network/wasmd v0.28.0
 
 replace github.com/archway-network/voter => ./contracts/go/voter
