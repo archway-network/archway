@@ -65,9 +65,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Update NODE_VERSION
+      - name: Inject version and secrets to titus-1.yaml
         run: |
           sed -i -e "s|NODE_VERSION|${{ needs.build-docker-image.outputs.image-version }}|g" ci/titus-1.yaml
+          sed -i -e "s|TITUS_1_ACCOUNT_MNEMONIC_B64|${{ secrets.TITUS_1_ACCOUNT_MNEMONIC_B64 }}|g" ci/titus-1.yaml
+          sed -i -e "s|TITUS_1_FAUCET_ACCOUNT_MNEMONIC_B64|${{ secrets.TITUS_1_FAUCET_ACCOUNT_MNEMONIC_B64 }}|g" ci/titus-1.yaml
+          sed -i -e "s|TITUS_1_PRIV_VALIDATOR_KEY_B64|${{ secrets.TITUS_1_PRIV_VALIDATOR_KEY_B64 }}|g" ci/titus-1.yaml
 
       - name: Deploy Chain
         uses: steebchen/kubectl@v2.0.0
