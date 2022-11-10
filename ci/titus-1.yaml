@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  mnemonic: bHlyaWNzIHVwb24gbGFwdG9wIGN1dGUgdmVzc2VsIGNvdmVyIHNtaWxlIGFkZHJlc3Mgc3BlbGwgYmVnaW4gYXJtIHdlYXBvbiBtYWluIHN0YXJ0IGdyYWluIGxhcHRvcCBzdXN0YWluIGJhY2hlbG9yIGZvb3Qgam9iIG1vYmlsZSBtZW51IGNoaWNrZW4gaW5xdWlyeQ==
+  mnemonic: TITUS_1_ACCOUNT_MNEMONIC_B64
 immutable: true
 kind: Secret
 metadata:
@@ -9,7 +9,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  mnemonic: cXVpdCBlcnVwdCBjb29sIGludm9sdmUgcGhyYXNlIGN1cGJvYXJkIGZhY3VsdHkgZHJhZnQgc2xvZ2FuIGhhemFyZCBmdXJ5IHRhY2tsZSBzaGlwIHNpZWdlIHBhbmljIHJpdHVhbCBiZWxpZXZlIG1lbG9keSBkZW55IHB1bHAgbG91ZCBqZWFucyBhcGFydCByYW5kb20=
+  mnemonic: TITUS_1_FAUCET_ACCOUNT_MNEMONIC_B64
 immutable: true
 kind: Secret
 metadata:
@@ -18,7 +18,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  priv_validator_key.json: ewogICJhZGRyZXNzIjogIjM5MUE2MkRGQUFDNzdDRjlFMTZFNzYwM0FDMTVCQTM4MkI2M0Q2QjUiLAogICJwdWJfa2V5IjogewogICAgInR5cGUiOiAidGVuZGVybWludC9QdWJLZXlFZDI1NTE5IiwKICAgICJ2YWx1ZSI6ICJ4SFlwVGxwanZtcXVoVXZtV0VXeE9iQnJnRjNiVmF4S1VhWTR6WVVwL2FFPSIKICB9LAogICJwcml2X2tleSI6IHsKICAgICJ0eXBlIjogInRlbmRlcm1pbnQvUHJpdktleUVkMjU1MTkiLAogICAgInZhbHVlIjogInpYWllBbWZpeUF5ZmoxSEFBV1ZNeVFKQWcrOWpoNXdWanM1ZVN0UFVyY1BFZGlsT1dtTythcTZGUytaWVJiRTVzR3VBWGR0VnJFcFJwampOaFNuOW9RPT0iCiAgfQp9
+  priv_validator_key.json: TITUS_1_PRIV_VALIDATOR_KEY_B64
 immutable: true
 kind: Secret
 metadata:
@@ -29,13 +29,13 @@ apiVersion: v1
 data:
   genesis.json: |-
     {
-      "genesis_time": "2022-10-07T20:54:05.216699013Z",
+      "genesis_time": "2022-11-10T09:33:57.594662Z",
       "chain_id": "titus-1",
       "initial_height": "1",
       "consensus_params": {
         "block": {
           "max_bytes": "22020096",
-          "max_gas": "100000000",
+          "max_gas": "1000000000",
           "time_iota_ms": "1000"
         },
         "evidence": {
@@ -63,14 +63,14 @@ data:
           "accounts": [
             {
               "@type": "/cosmos.auth.v1beta1.BaseAccount",
-              "address": "archway1tfwqeexpqmr6pzpkfjzjaeyxtclzqu6ldz0r0r",
+              "address": "archway1kctj9jjlqs6hh6lq4vlgefmr38t5cfgk26ew3h",
               "pub_key": null,
               "account_number": "0",
               "sequence": "0"
             },
             {
               "@type": "/cosmos.auth.v1beta1.BaseAccount",
-              "address": "archway1pmwjjr9p4kzt80040y7cz3xxh2lvyh57t7velq",
+              "address": "archway1y2cgf0y6qkjz0cjdhss6lrsg79gl4uhx67cypx",
               "pub_key": null,
               "account_number": "0",
               "sequence": "0"
@@ -87,20 +87,20 @@ data:
           },
           "balances": [
             {
-              "address": "archway1pmwjjr9p4kzt80040y7cz3xxh2lvyh57t7velq",
+              "address": "archway1y2cgf0y6qkjz0cjdhss6lrsg79gl4uhx67cypx",
               "coins": [
                 {
                   "denom": "utitus",
-                  "amount": "100000000000000000"
+                  "amount": "100000000000000"
                 }
               ]
             },
             {
-              "address": "archway1tfwqeexpqmr6pzpkfjzjaeyxtclzqu6ldz0r0r",
+              "address": "archway1kctj9jjlqs6hh6lq4vlgefmr38t5cfgk26ew3h",
               "coins": [
                 {
                   "denom": "utitus",
-                  "amount": "10000000000000000000"
+                  "amount": "900000000000000"
                 }
               ]
             }
@@ -108,7 +108,7 @@ data:
           "supply": [
             {
               "denom": "utitus",
-              "amount": "10100000000000000000"
+              "amount": "1000000000000000"
             }
           ],
           "denom_metadata": []
@@ -156,7 +156,7 @@ data:
                   {
                     "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
                     "description": {
-                      "moniker": "archway",
+                      "moniker": "philabs",
                       "identity": "",
                       "website": "",
                       "security_contact": "",
@@ -168,19 +168,19 @@ data:
                       "max_change_rate": "0.010000000000000000"
                     },
                     "min_self_delegation": "1",
-                    "delegator_address": "archway1tfwqeexpqmr6pzpkfjzjaeyxtclzqu6ldz0r0r",
-                    "validator_address": "archwayvaloper1tfwqeexpqmr6pzpkfjzjaeyxtclzqu6ldxxpz2",
+                    "delegator_address": "archway1kctj9jjlqs6hh6lq4vlgefmr38t5cfgk26ew3h",
+                    "validator_address": "archwayvaloper1kctj9jjlqs6hh6lq4vlgefmr38t5cfgk27svu7",
                     "pubkey": {
                       "@type": "/cosmos.crypto.ed25519.PubKey",
-                      "key": "xHYpTlpjvmquhUvmWEWxObBrgF3bVaxKUaY4zYUp/aE="
+                      "key": "NcWP7IbHCVzv8D/HqOjKClxhTpI/Wi1vcwmXz6XnUa0="
                     },
                     "value": {
                       "denom": "utitus",
-                      "amount": "1000000"
+                      "amount": "900000000000000"
                     }
                   }
                 ],
-                "memo": "a29787a6ea3ec9f7f12870b18cffbf51cb91d1f9@10.48.1.128:26656",
+                "memo": "ac16c5a1edefd6712a0d57bc953cf3b9bf61a999@192.168.0.27:26656",
                 "timeout_height": "0",
                 "extension_options": [],
                 "non_critical_extension_options": []
@@ -190,7 +190,7 @@ data:
                   {
                     "public_key": {
                       "@type": "/cosmos.crypto.secp256k1.PubKey",
-                      "key": "A0FOA1ewwIOm/J5wAU+9z36E5YFzhH3yHH69eYOZ9Ck+"
+                      "key": "AoeNMGFpbPDp63COmoy5DNoheboP0lQawofikELygCCa"
                     },
                     "mode_info": {
                       "single": {
@@ -208,7 +208,7 @@ data:
                 }
               },
               "signatures": [
-                "7zPXatblve5AqRb1ECUWlA+VTg77yKadM8R2mt7MVAVQfHXeVStLOrWiXGloPVYYQuwSL1SNclzPPlnkx8RE5Q=="
+                "D/CQo/CQtcA+2AVVV0l9K8Jx+4Cp7qkGuR/fKnbQK9RAfYgPjbB6GCSVZLzFo69Ur2ysRU+sX6bWZzCOGbQMNQ=="
               ]
             }
           ]
