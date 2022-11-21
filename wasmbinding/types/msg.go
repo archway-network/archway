@@ -10,7 +10,7 @@ import (
 type Msg struct {
 	// UpdateContractMetadata is a request to update the contract metadata.
 	// Request is authorized only if the contract address is set as the DeveloperAddress (metadata field).
-	UpdateContractMetadata *rewardsTypes.UpdateContractMetadataRequest `json:"update_rewards_metadata"`
+	UpdateContractMetadata *rewardsTypes.UpdateContractMetadataRequest `json:"update_contract_metadata"`
 
 	// WithdrawRewards is a request to withdraw rewards for the contract.
 	// Contract address is used as the rewards address (metadata field).
@@ -30,7 +30,7 @@ func (m Msg) Validate() error {
 	}
 
 	if cnt != 1 {
-		return fmt.Errorf("one and only one field must be set")
+		return fmt.Errorf("one and only one field must be set (fields=%v)", cnt)
 	}
 
 	return nil
