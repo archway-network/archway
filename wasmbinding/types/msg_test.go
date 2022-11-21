@@ -19,13 +19,22 @@ func TestMsgValidate(t *testing.T) {
 		{
 			name: "OK: Rewards",
 			msg: Msg{
-				Rewards: &types.Msg{
-					UpdateMetadata: &types.UpdateMetadataRequest{
-						OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
-						RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
-					},
+				UpdateContractMetadata: &types.UpdateContractMetadataRequest{
+					OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 				},
 			},
+		},
+		{
+			name: "Fail: not one of",
+			msg: Msg{
+				UpdateContractMetadata: &types.UpdateContractMetadataRequest{
+					OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				},
+				WithdrawRewards: &types.WithdrawRewardsRequest{},
+			},
+			errExpected: true,
 		},
 		{
 			name:        "Fail: empty",
