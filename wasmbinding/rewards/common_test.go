@@ -37,38 +37,23 @@ func TestRewardsWASMBindings(t *testing.T) {
 	queryPlugin := rewards.NewQueryHandler(keeper)
 	msgPlugin := rewards.NewRewardsMsgHandler(keeper)
 
-	// Invalid inputs
-	t.Run("Invalid query input", func(t *testing.T) {
-		query := rewardsWbTypes.Query{}
-
-		_, err := queryPlugin.DispatchQuery(ctx, query)
-		assert.ErrorIs(t, err, rewardsTypes.ErrInvalidRequest)
-	})
-
 	// Query empty / non-existing data
 	t.Run("Query non-existing metadata", func(t *testing.T) {
-		query := rewardsWbTypes.Query{
-			Metadata: &rewardsWbTypes.ContractMetadataRequest{
-				ContractAddress: contractAddr.String(),
-			},
+		query := rewardsWbTypes.ContractMetadataRequest{
+			ContractAddress: contractAddr.String(),
 		}
 
-		_, err := queryPlugin.DispatchQuery(ctx, query)
+		_, err := queryPlugin.GetContractMetadata(ctx, query)
 		assert.ErrorIs(t, err, rewardsTypes.ErrMetadataNotFound)
 	})
 
 	t.Run("Query empty rewards", func(t *testing.T) {
-		query := rewardsWbTypes.Query{
-			RewardsRecords: &rewardsWbTypes.RewardsRecordsRequest{
-				RewardsAddress: contractAddr.String(),
-			},
+		query := rewardsWbTypes.RewardsRecordsRequest{
+			RewardsAddress: contractAddr.String(),
 		}
 
-		resObj, err := queryPlugin.DispatchQuery(ctx, query)
+		res, err := queryPlugin.GetRewardsRecords(ctx, query)
 		require.NoError(t, err)
-
-		res, ok := resObj.(rewardsWbTypes.RewardsRecordsResponse)
-		require.True(t, ok)
 		assert.Empty(t, res.Records)
 	})
 
@@ -135,17 +120,12 @@ func TestRewardsWASMBindings(t *testing.T) {
 	})
 
 	t.Run("Check metadata updated", func(t *testing.T) {
-		query := rewardsWbTypes.Query{
-			Metadata: &rewardsWbTypes.ContractMetadataRequest{
-				ContractAddress: contractAddr.String(),
-			},
+		query := rewardsWbTypes.ContractMetadataRequest{
+			ContractAddress: contractAddr.String(),
 		}
 
-		resObj, err := queryPlugin.DispatchQuery(ctx, query)
+		res, err := queryPlugin.GetContractMetadata(ctx, query)
 		require.NoError(t, err)
-
-		res, ok := resObj.(rewardsWbTypes.ContractMetadataResponse)
-		require.True(t, ok)
 		assert.Equal(t, contractAddr.String(), res.OwnerAddress)
 		assert.Equal(t, contractAddr.String(), res.RewardsAddress)
 	})
@@ -164,20 +144,15 @@ func TestRewardsWASMBindings(t *testing.T) {
 
 	// Query available rewards
 	t.Run("Query new rewards", func(t *testing.T) {
-		query := rewardsWbTypes.Query{
-			RewardsRecords: &rewardsWbTypes.RewardsRecordsRequest{
-				RewardsAddress: contractAddr.String(),
-				Pagination: &pkg.PageRequest{
-					CountTotal: true,
-				},
+		query := rewardsWbTypes.RewardsRecordsRequest{
+			RewardsAddress: contractAddr.String(),
+			Pagination: &pkg.PageRequest{
+				CountTotal: true,
 			},
 		}
 
-		resObj, err := queryPlugin.DispatchQuery(ctx, query)
+		res, err := queryPlugin.GetRewardsRecords(ctx, query)
 		require.NoError(t, err)
-
-		res, ok := resObj.(rewardsWbTypes.RewardsRecordsResponse)
-		require.True(t, ok)
 
 		require.Len(t, res.Records, 3)
 		// Record 1
