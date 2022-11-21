@@ -834,7 +834,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
 	contractAddr := s.VoterUploadAndInstantiate(chain, acc1)
 
 	s.Run("Fail: no metadata", func() {
-		req := voterCustomTypes.UpdateMetadataRequest{
+		req := voterCustomTypes.UpdateContractMetadataRequest{
 			OwnerAddress: acc2.Address.String(),
 		}
 		err := s.VoterUpdateMetadata(chain, contractAddr, acc1, req, false)
@@ -851,7 +851,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
 	}
 
 	s.Run("Fail: update OwnerAddress: unauthorized", func() {
-		req := voterCustomTypes.UpdateMetadataRequest{
+		req := voterCustomTypes.UpdateContractMetadataRequest{
 			OwnerAddress: acc2.Address.String(),
 		}
 		err := s.VoterUpdateMetadata(chain, contractAddr, acc1, req, false)
@@ -867,7 +867,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
 	}
 
 	s.Run("OK: update RewardAddress", func() {
-		req := voterCustomTypes.UpdateMetadataRequest{
+		req := voterCustomTypes.UpdateContractMetadataRequest{
 			RewardsAddress: acc2.Address.String(),
 		}
 		s.VoterUpdateMetadata(chain, contractAddr, acc1, req, true)
@@ -878,7 +878,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
 	})
 
 	s.Run("OK: update OwnerAddress (change ownership)", func() {
-		req := voterCustomTypes.UpdateMetadataRequest{
+		req := voterCustomTypes.UpdateContractMetadataRequest{
 			OwnerAddress: acc1.Address.String(),
 		}
 		s.VoterUpdateMetadata(chain, contractAddr, acc1, req, true)
@@ -1022,7 +1022,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
 			[]uint64{1},
 			false,
 		)
-		s.Assert().Contains(err.Error(), "msg validation")
+		s.Assert().Contains(err.Error(), "withdrawRewards: one of (RecordsLimit, RecordIDs) fields must be set")
 	})
 
 	// Create a new voting and add a few votes to get some rewards

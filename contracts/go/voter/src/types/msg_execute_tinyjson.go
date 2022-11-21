@@ -529,7 +529,7 @@ func tinyjson8d55ca79DecodeGithubComArchwayNetworkVoterSrcTypes5(in *jlexer.Lexe
 				out.CustomUpdateMetadata = nil
 			} else {
 				if out.CustomUpdateMetadata == nil {
-					out.CustomUpdateMetadata = new(custom.UpdateMetadataRequest)
+					out.CustomUpdateMetadata = new(custom.UpdateContractMetadataRequest)
 				}
 				(*out.CustomUpdateMetadata).UnmarshalTinyJSON(in)
 			}

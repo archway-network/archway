@@ -365,7 +365,7 @@ func (s *E2ETestSuite) VoterSendCustomMsg(chain *e2eTesting.TestChain, contractA
 }
 
 // VoterUpdateMetadata sends the contract metadata update request via Custom message plugin.
-func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, metaReq voterCustomTypes.UpdateMetadataRequest, expPass bool) error {
+func (s *E2ETestSuite) VoterUpdateMetadata(chain *e2eTesting.TestChain, contractAddr sdk.AccAddress, acc e2eTesting.Account, metaReq voterCustomTypes.UpdateContractMetadataRequest, expPass bool) error {
 	req := voterTypes.MsgExecute{
 		CustomUpdateMetadata: &metaReq,
 	}
