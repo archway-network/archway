@@ -2,50 +2,45 @@ name: Go
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: technote-space/get-diff-action@v4
-      with:
-        PATTERNS: |
-          **/**.go
-          go.mod
-          go.sum
-
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.18
-
-    - name: Build
-      run: go build -v ./...
-
-    - name: Test
-      run: go test -v ./...
-
-    - name: test & coverage report creation
-      run: |
-        go test ./... -mod=readonly -timeout 12m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
-      if: "env.GIT_DIFF != ''"
-    - name: filter out DONTCOVER
-      run: |
-        excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
-        excludelist+=" $(find ./ -type f -name '*.pb.go')"
-        for filename in ${excludelist}; do
-          filename=$(echo $filename | sed 's/^./github.com\/archway-network\/archwayd/g')
-          echo "Excluding ${filename} from coverage report..."
-          sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
-        done
-      if: "env.GIT_DIFF != ''"
-    - uses: codecov/codecov-action@v1
-      with:
-        file: ./coverage.txt # optional
-        fail_ci_if_error: true
-      if: "env.GIT_DIFF != ''"
-
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        run: go test -v ./...
+      - name: Test & Coverage Report creation
+        run: go test ./... -mod=readonly -timeout 12m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock'
+        if: env.GIT_DIFF
+      - name: Filter out DONTCOVER
+        run: |
+          excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
+          excludelist+=" $(find ./ -type f -name '*.pb.go')"
+          for filename in ${excludelist}; do
+            filename=$(echo $filename | sed 's/^./github.com\/archway-network\/archwayd/g')
+            echo "Excluding ${filename} from coverage report..."
+            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
+          done
+        if: env.GIT_DIFF
+      - name: Upload Coverage Report
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.txt
+          fail_ci_if_error: true
+        if: env.GIT_DIFF
