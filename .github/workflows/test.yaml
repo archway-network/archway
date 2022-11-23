@@ -17,10 +17,19 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - name: Set up Golang
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: ~1.18
+      - name: Setup Golang caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-
       - name: Build
         run: go build -v ./...
       - name: Test
