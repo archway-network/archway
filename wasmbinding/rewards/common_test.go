@@ -72,6 +72,15 @@ func TestRewardsWASMBindings(t *testing.T) {
 		assert.Empty(t, res.Records)
 	})
 
+	t.Run("Update invalid metadata", func(t *testing.T) {
+		msg := rewardsWbTypes.UpdateContractMetadataRequest{
+			OwnerAddress: "invalid",
+		}
+
+		_, _, err := msgPlugin.UpdateContractMetadata(ctx, contractAddr, msg)
+		assert.ErrorContains(t, err, "ownerAddress: parsing: decoding bech32 failed")
+	})
+
 	// Handle no-op msg
 	t.Run("Update non-existing metadata (unauthorized create operation)", func(t *testing.T) {
 		msg := rewardsWbTypes.UpdateContractMetadataRequest{
@@ -81,6 +90,16 @@ func TestRewardsWASMBindings(t *testing.T) {
 
 		_, _, err := msgPlugin.UpdateContractMetadata(ctx, contractAddr, msg)
 		assert.ErrorIs(t, err, rewardsTypes.ErrUnauthorized)
+	})
+
+	t.Run("Withdraw invalid request", func(t *testing.T) {
+		msg := rewardsWbTypes.WithdrawRewardsRequest{
+			RecordsLimit: archPkg.Uint64Ptr(1000),
+			RecordIDs:    []uint64{1, 0},
+		}
+
+		_, _, err := msgPlugin.WithdrawContractRewards(ctx, contractAddr, msg)
+		assert.ErrorContains(t, err, "one of (RecordsLimit, RecordIDs) fields must be set")
 	})
 
 	t.Run("Withdraw empty rewards", func(t *testing.T) {
