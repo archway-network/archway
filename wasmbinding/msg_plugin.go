@@ -48,8 +48,10 @@ func (d MsgDispatcher) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress,
 
 	// Execute custom sub-msg (one of)
 	switch {
-	case customMsg.Rewards != nil:
-		return d.rewardsHandler.DispatchMsg(ctx, contractAddr, contractIBCPortID, *customMsg.Rewards)
+	case customMsg.UpdateContractMetadata != nil:
+		return d.rewardsHandler.UpdateContractMetadata(ctx, contractAddr, *customMsg.UpdateContractMetadata)
+	case customMsg.WithdrawRewards != nil:
+		return d.rewardsHandler.WithdrawContractRewards(ctx, contractAddr, *customMsg.WithdrawRewards)
 	default:
 		// That should never happen, since we validate the input above
 		return nil, nil, sdkErrors.Wrap(wasmdTypes.ErrUnknownMsg, "no custom handler found")

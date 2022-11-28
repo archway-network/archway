@@ -45,13 +45,6 @@ func TestRewardsWASMBindings(t *testing.T) {
 		assert.ErrorIs(t, err, rewardsTypes.ErrInvalidRequest)
 	})
 
-	t.Run("Invalid msg input", func(t *testing.T) {
-		msg := rewardsWbTypes.Msg{}
-
-		_, _, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
-		assert.ErrorIs(t, err, rewardsTypes.ErrInvalidRequest)
-	})
-
 	// Query empty / non-existing data
 	t.Run("Query non-existing metadata", func(t *testing.T) {
 		query := rewardsWbTypes.Query{
@@ -79,27 +72,42 @@ func TestRewardsWASMBindings(t *testing.T) {
 		assert.Empty(t, res.Records)
 	})
 
-	// Handle no-op msg
-	t.Run("Update non-existing metadata (unauthorized create operation)", func(t *testing.T) {
-		msg := rewardsWbTypes.Msg{
-			UpdateMetadata: &rewardsWbTypes.UpdateMetadataRequest{
-				OwnerAddress:   acc.Address.String(),
-				RewardsAddress: acc.Address.String(),
-			},
+	t.Run("Update invalid metadata", func(t *testing.T) {
+		msg := rewardsWbTypes.UpdateContractMetadataRequest{
+			OwnerAddress: "invalid",
 		}
 
-		_, _, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
+		_, _, err := msgPlugin.UpdateContractMetadata(ctx, contractAddr, msg)
+		assert.ErrorContains(t, err, "ownerAddress: parsing: decoding bech32 failed")
+	})
+
+	// Handle no-op msg
+	t.Run("Update non-existing metadata (unauthorized create operation)", func(t *testing.T) {
+		msg := rewardsWbTypes.UpdateContractMetadataRequest{
+			OwnerAddress:   acc.Address.String(),
+			RewardsAddress: acc.Address.String(),
+		}
+
+		_, _, err := msgPlugin.UpdateContractMetadata(ctx, contractAddr, msg)
 		assert.ErrorIs(t, err, rewardsTypes.ErrUnauthorized)
 	})
 
-	t.Run("Withdraw empty rewards", func(t *testing.T) {
-		msg := rewardsWbTypes.Msg{
-			WithdrawRewards: &rewardsWbTypes.WithdrawRewardsRequest{
-				RecordsLimit: archPkg.Uint64Ptr(1000),
-			},
+	t.Run("Withdraw invalid request", func(t *testing.T) {
+		msg := rewardsWbTypes.WithdrawRewardsRequest{
+			RecordsLimit: archPkg.Uint64Ptr(1000),
+			RecordIDs:    []uint64{1, 0},
 		}
 
-		_, resData, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
+		_, _, err := msgPlugin.WithdrawContractRewards(ctx, contractAddr, msg)
+		assert.ErrorContains(t, err, "one of (RecordsLimit, RecordIDs) fields must be set")
+	})
+
+	t.Run("Withdraw empty rewards", func(t *testing.T) {
+		msg := rewardsWbTypes.WithdrawRewardsRequest{
+			RecordsLimit: archPkg.Uint64Ptr(1000),
+		}
+
+		_, resData, err := msgPlugin.WithdrawContractRewards(ctx, contractAddr, msg)
 		require.NoError(t, err)
 		require.Len(t, resData, 1)
 
@@ -117,14 +125,12 @@ func TestRewardsWASMBindings(t *testing.T) {
 
 	// Update metadata
 	t.Run("Update metadata (set contractAddr as the rewardsAddr)", func(t *testing.T) {
-		msg := rewardsWbTypes.Msg{
-			UpdateMetadata: &rewardsWbTypes.UpdateMetadataRequest{
-				OwnerAddress:   contractAddr.String(),
-				RewardsAddress: contractAddr.String(),
-			},
+		msg := rewardsWbTypes.UpdateContractMetadataRequest{
+			OwnerAddress:   contractAddr.String(),
+			RewardsAddress: contractAddr.String(),
 		}
 
-		_, _, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
+		_, _, err := msgPlugin.UpdateContractMetadata(ctx, contractAddr, msg)
 		require.NoError(t, err)
 	})
 
@@ -161,6 +167,9 @@ func TestRewardsWASMBindings(t *testing.T) {
 		query := rewardsWbTypes.Query{
 			RewardsRecords: &rewardsWbTypes.RewardsRecordsRequest{
 				RewardsAddress: contractAddr.String(),
+				Pagination: &pkg.PageRequest{
+					CountTotal: true,
+				},
 			},
 		}
 
@@ -195,17 +204,17 @@ func TestRewardsWASMBindings(t *testing.T) {
 		record3RewardsReceived, err := pkg.WasmCoinsToSDK(res.Records[2].Rewards)
 		require.NoError(t, err)
 		assert.Equal(t, record3RewardsExpected.String(), record3RewardsReceived.String())
+
+		assert.EqualValues(t, 3, res.Pagination.Total)
 	})
 
 	// Withdraw rewards using the limit mode
 	t.Run("Withdraw 1st reward using limit", func(t *testing.T) {
-		msg := rewardsWbTypes.Msg{
-			WithdrawRewards: &rewardsWbTypes.WithdrawRewardsRequest{
-				RecordsLimit: archPkg.Uint64Ptr(1),
-			},
+		msg := rewardsWbTypes.WithdrawRewardsRequest{
+			RecordsLimit: archPkg.Uint64Ptr(1),
 		}
 
-		_, resData, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
+		_, resData, err := msgPlugin.WithdrawContractRewards(ctx, contractAddr, msg)
 		require.NoError(t, err)
 		require.Len(t, resData, 1)
 
@@ -222,13 +231,11 @@ func TestRewardsWASMBindings(t *testing.T) {
 
 	// Withdraw rewards using the record IDs mode
 	t.Run("Withdraw 2nd reward using record ID", func(t *testing.T) {
-		msg := rewardsWbTypes.Msg{
-			WithdrawRewards: &rewardsWbTypes.WithdrawRewardsRequest{
-				RecordIDs: []uint64{2},
-			},
+		msg := rewardsWbTypes.WithdrawRewardsRequest{
+			RecordIDs: []uint64{2},
 		}
 
-		_, resData, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
+		_, resData, err := msgPlugin.WithdrawContractRewards(ctx, contractAddr, msg)
 		require.NoError(t, err)
 		require.Len(t, resData, 1)
 
@@ -245,13 +252,11 @@ func TestRewardsWASMBindings(t *testing.T) {
 
 	// Withdraw rewards using the limit mode with default limit
 	t.Run("Withdraw 3rd reward using default limit", func(t *testing.T) {
-		msg := rewardsWbTypes.Msg{
-			WithdrawRewards: &rewardsWbTypes.WithdrawRewardsRequest{
-				RecordsLimit: archPkg.Uint64Ptr(0),
-			},
+		msg := rewardsWbTypes.WithdrawRewardsRequest{
+			RecordsLimit: archPkg.Uint64Ptr(0),
 		}
 
-		_, resData, err := msgPlugin.DispatchMsg(ctx, contractAddr, "", msg)
+		_, resData, err := msgPlugin.WithdrawContractRewards(ctx, contractAddr, msg)
 		require.NoError(t, err)
 		require.Len(t, resData, 1)
 

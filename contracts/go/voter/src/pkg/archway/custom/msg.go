@@ -8,22 +8,18 @@ import (
 type (
 	// CustomMsg defines the Archway custom plugin message.
 	CustomMsg struct {
-		Rewards *RewardsMsg `json:",omitempty"`
-	}
-
-	RewardsMsg struct {
-		// UpdateMetadata updates the contract rewards metadata.
+		// UpdateContractMetadata updates the contract rewards metadata.
 		// Authorized if metadata exists for this contract and the contract address is set for the meta's DeveloperAddress field.
-		UpdateMetadata *UpdateMetadataRequest
+		UpdateContractMetadata *UpdateContractMetadataRequest `json:",omitempty"`
 
 		// WithdrawRewards is a request to withdraw rewards for the contract.
 		// Contract address is used as the rewards address (metadata field).
-		WithdrawRewards *WithdrawRewardsRequest
+		WithdrawRewards *WithdrawRewardsRequest `json:",omitempty"`
 	}
 )
 
 type (
-	UpdateMetadataRequest struct {
+	UpdateContractMetadataRequest struct {
 		// OwnerAddress if not empty, changes the contract metadata ownership.
 		OwnerAddress string
 		// RewardsAddress if not empty, changes the rewards distribution destination address.

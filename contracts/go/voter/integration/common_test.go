@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	ContractWasmFileName = "voter.wasm"
+	ContractWasmFileName = "code.wasm"
 	ValidAddr            = "01234567890abcdefghijklmnopqrstu"
 )
 

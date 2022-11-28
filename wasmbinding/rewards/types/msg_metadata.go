@@ -8,8 +8,8 @@ import (
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
-// UpdateMetadataRequest is the Msg.UpdateMetadata request.
-type UpdateMetadataRequest struct {
+// UpdateContractMetadataRequest is the Msg.UpdateMetadata request.
+type UpdateContractMetadataRequest struct {
 	// OwnerAddress if not empty, changes the contract metadata ownership.
 	OwnerAddress string `json:"owner_address"`
 	// RewardsAddress if not empty, changes the rewards distribution destination address.
@@ -17,7 +17,7 @@ type UpdateMetadataRequest struct {
 }
 
 // Validate performs request fields validation.
-func (r UpdateMetadataRequest) Validate() error {
+func (r UpdateContractMetadataRequest) Validate() error {
 	changeCnt := 0
 
 	if r.OwnerAddress != "" {
@@ -42,7 +42,7 @@ func (r UpdateMetadataRequest) Validate() error {
 }
 
 // ToSDK convert the UpdateMetadataRequest to a rewardsTypes.Metadata.
-func (r UpdateMetadataRequest) ToSDK() rewardsTypes.ContractMetadata {
+func (r UpdateContractMetadataRequest) ToSDK() rewardsTypes.ContractMetadata {
 	return rewardsTypes.ContractMetadata{
 		OwnerAddress:   r.OwnerAddress,
 		RewardsAddress: r.RewardsAddress,
@@ -51,7 +51,7 @@ func (r UpdateMetadataRequest) ToSDK() rewardsTypes.ContractMetadata {
 
 // MustGetOwnerAddressOk returns the contract owner address as sdk.AccAddress if set to be updated.
 // CONTRACT: panics in case of an error.
-func (r UpdateMetadataRequest) MustGetOwnerAddressOk() (*sdk.AccAddress, bool) {
+func (r UpdateContractMetadataRequest) MustGetOwnerAddressOk() (*sdk.AccAddress, bool) {
 	if r.OwnerAddress == "" {
 		return nil, false
 	}
@@ -66,7 +66,7 @@ func (r UpdateMetadataRequest) MustGetOwnerAddressOk() (*sdk.AccAddress, bool) {
 }
 
 // MustGetRewardsAddressOk returns the rewards address as sdk.AccAddress if set to be updated.
-func (r UpdateMetadataRequest) MustGetRewardsAddressOk() (*sdk.AccAddress, bool) {
+func (r UpdateContractMetadataRequest) MustGetRewardsAddressOk() (*sdk.AccAddress, bool) {
 	if r.RewardsAddress == "" {
 		return nil, false
 	}
