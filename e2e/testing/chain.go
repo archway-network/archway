@@ -343,7 +343,15 @@ func (chain *TestChain) BeginBlock() []abci.Event {
 		}
 	}
 
-	res := chain.app.BeginBlock(abci.RequestBeginBlock{Header: chain.curHeader})
+	res := chain.app.BeginBlock(abci.RequestBeginBlock{
+		Hash:   nil,
+		Header: chain.curHeader,
+		LastCommitInfo: abci.LastCommitInfo{
+			Round: 0,
+			Votes: voteInfo,
+		},
+		ByzantineValidators: nil,
+	})
 
 	return res.Events
 }
