@@ -331,6 +331,18 @@ func (chain *TestChain) BeginBlock() []abci.Event {
 	chain.curHeader.AppHash = chain.app.LastCommitID().Hash
 	chain.curHeader.ValidatorsHash = chain.valSet.Hash()
 	chain.curHeader.NextValidatorsHash = chain.valSet.Hash()
+	chain.curHeader.ProposerAddress = chain.GetCurrentValSet().Proposer.Address
+
+	voteInfo := make([]abci.VoteInfo, len(chain.GetCurrentValSet().Validators))
+	for i, v := range chain.GetCurrentValSet().Validators {
+		voteInfo[i] = abci.VoteInfo{
+			Validator: abci.Validator{
+				Address: v.Address,
+				Power:   v.VotingPower,
+			},
+			SignedLastBlock: true,
+		}
+	}
 
 	res := chain.app.BeginBlock(abci.RequestBeginBlock{Header: chain.curHeader})
 
