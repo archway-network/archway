@@ -47,6 +47,15 @@ func TestRewardsWASMBindings(t *testing.T) {
 		assert.ErrorIs(t, err, rewardsTypes.ErrMetadataNotFound)
 	})
 
+	t.Run("Query invalid address", func(t *testing.T) {
+		query := rewardsWbTypes.ContractMetadataRequest{
+			ContractAddress: "invalid",
+		}
+
+		_, err := queryPlugin.GetContractMetadata(ctx, query)
+		assert.ErrorContains(t, err, "contractAddress: parsing: decoding bech32 failed")
+	})
+
 	t.Run("Query empty rewards", func(t *testing.T) {
 		query := rewardsWbTypes.RewardsRecordsRequest{
 			RewardsAddress: contractAddr.String(),
@@ -55,6 +64,15 @@ func TestRewardsWASMBindings(t *testing.T) {
 		res, err := queryPlugin.GetRewardsRecords(ctx, query)
 		require.NoError(t, err)
 		assert.Empty(t, res.Records)
+	})
+
+	t.Run("Query invalid rewards", func(t *testing.T) {
+		query := rewardsWbTypes.RewardsRecordsRequest{
+			RewardsAddress: "invalid",
+		}
+
+		_, err := queryPlugin.GetRewardsRecords(ctx, query)
+		assert.ErrorContains(t, err, "rewardsAddress: parsing: decoding bech32 failed")
 	})
 
 	t.Run("Update invalid metadata", func(t *testing.T) {
