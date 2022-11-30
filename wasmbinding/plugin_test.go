@@ -40,6 +40,18 @@ func TestWASMBindingPlugins(t *testing.T) {
 		})
 	})
 
+	t.Run("Querier OK", func(t *testing.T) {
+		t.Run("Query empty metada", func(t *testing.T) {
+			_, err := queryPlugin.Custom(ctx, []byte("{\"contract_metadata\": {\"contract_address\": \""+mockContractAddr.String()+"\"}}"))
+			assert.NotNil(t, err)
+		})
+
+		t.Run("Query empty rewards", func(t *testing.T) {
+			_, err := queryPlugin.Custom(ctx, []byte("{\"rewards_records\": {\"rewards_address\": \""+mockContractAddr.String()+"\"}}"))
+			assert.NotNil(t, err)
+		})
+	})
+
 	// Msg handler tests
 	t.Run("MsgHandler failure", func(t *testing.T) {
 		t.Run("Invalid JSON request", func(t *testing.T) {
