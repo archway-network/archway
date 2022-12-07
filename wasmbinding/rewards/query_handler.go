@@ -30,33 +30,13 @@ func NewQueryHandler(rk KeeperReaderExpected) QueryHandler {
 	}
 }
 
-// DispatchQuery validates and executes a custom WASM query.
-func (h QueryHandler) DispatchQuery(ctx sdk.Context, req types.Query) (interface{}, error) {
-	// Validate the input
+// GetContractMetadata returns the contract metadata.
+func (h QueryHandler) GetContractMetadata(ctx sdk.Context, req types.ContractMetadataRequest) (types.ContractMetadataResponse, error) {
 	if err := req.Validate(); err != nil {
-		return nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, fmt.Sprintf("x/rewards: sub-query validation: %v", err))
+		return types.ContractMetadataResponse{}, fmt.Errorf("metadata: %w", err)
 	}
 
-	// Execute request (one of)
-	switch {
-	case req.Metadata != nil:
-		return h.getContractMetadata(ctx, req.Metadata.MustGetContractAddress())
-	case req.RewardsRecords != nil:
-		var pageReq *query.PageRequest
-		if req.RewardsRecords.Pagination != nil {
-			req := req.RewardsRecords.Pagination.ToSDK()
-			pageReq = &req
-		}
-
-		return h.getRewardsRecords(ctx, req.RewardsRecords.MustGetRewardsAddress(), pageReq)
-	default:
-		return nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "x/rewards: unknown request")
-	}
-}
-
-// getContractMetadata returns the contract metadata.
-func (h QueryHandler) getContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress) (types.ContractMetadataResponse, error) {
-	meta := h.rewardsKeeper.GetContractMetadata(ctx, contractAddr)
+	meta := h.rewardsKeeper.GetContractMetadata(ctx, req.MustGetContractAddress())
 	if meta == nil {
 		return types.ContractMetadataResponse{}, rewardsTypes.ErrMetadataNotFound
 	}
@@ -64,9 +44,19 @@ func (h QueryHandler) getContractMetadata(ctx sdk.Context, contractAddr sdk.AccA
 	return types.NewContractMetadataResponse(*meta), nil
 }
 
-// getRewardsRecords returns the paginated list of types.RewardsRecord objects for a given account address.
-func (h QueryHandler) getRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, pageReq *query.PageRequest) (types.RewardsRecordsResponse, error) {
-	records, pageResp, err := h.rewardsKeeper.GetRewardsRecords(ctx, rewardsAddr, pageReq)
+// GetRewardsRecords returns the paginated list of types.RewardsRecord objects for a given account address.
+func (h QueryHandler) GetRewardsRecords(ctx sdk.Context, req types.RewardsRecordsRequest) (types.RewardsRecordsResponse, error) {
+	if err := req.Validate(); err != nil {
+		return types.RewardsRecordsResponse{}, fmt.Errorf("rewardsRecords: %w", err)
+	}
+
+	var pageReq *query.PageRequest
+	if req.Pagination != nil {
+		req := req.Pagination.ToSDK()
+		pageReq = &req
+	}
+
+	records, pageResp, err := h.rewardsKeeper.GetRewardsRecords(ctx, req.MustGetRewardsAddress(), pageReq)
 	if err != nil {
 		return types.RewardsRecordsResponse{}, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, err.Error())
 	}

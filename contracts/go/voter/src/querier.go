@@ -212,10 +212,8 @@ func queryCustomMetadata(deps *std.Deps, env stdTypes.Env, req types.CustomMetad
 // queryCustomMetadataCustom returns a contract metadata using Custom plugin query.
 func queryCustomMetadataCustom(deps *std.Deps, env stdTypes.Env) (*types.CustomMetadataResponse, error) {
 	customReq := archwayCustomTypes.CustomQuery{
-		Rewards: &archwayCustomTypes.RewardsQuery{
-			Metadata: &archwayCustomTypes.ContractMetadataRequest{
-				ContractAddress: env.Contract.Address,
-			},
+		ContractMetadata: &archwayCustomTypes.ContractMetadataRequest{
+			ContractAddress: env.Contract.Address,
 		},
 	}
 
@@ -291,11 +289,9 @@ func queryCustomMetadataStargate(deps *std.Deps, env stdTypes.Env) (*types.Custo
 // queryCustomRewardsRecords defines CustomQuery.RewardsRecords query.
 func queryCustomRewardsRecords(deps *std.Deps, env stdTypes.Env, req types.CustomRewardsRecordsRequest) (*types.CustomRewardsRecordsResponse, error) {
 	customReq := archwayCustomTypes.CustomQuery{
-		Rewards: &archwayCustomTypes.RewardsQuery{
-			RewardsRecords: &archwayCustomTypes.RewardsRecordsRequest{
-				RewardsAddress: env.Contract.Address,
-				Pagination:     req.Pagination,
-			},
+		RewardsRecords: &archwayCustomTypes.RewardsRecordsRequest{
+			RewardsAddress: env.Contract.Address,
+			Pagination:     req.Pagination,
 		},
 	}
 
