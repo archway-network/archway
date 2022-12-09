@@ -2,6 +2,7 @@ package src
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/CosmWasm/cosmwasm-go/std"
 	stdTypes "github.com/CosmWasm/cosmwasm-go/std/types"
@@ -300,9 +301,10 @@ func handleReplyBankMsg(deps *std.Deps, reply stdTypes.SubcallResult) (*stdTypes
 	}
 
 	var releasedAmt []stdTypes.Coin
+	fmt.Println(string(reply.Ok.Data))
 out:
 	for _, event := range reply.Ok.Events {
-		if event.Type != "transfer" {
+		if event.Type != "transfer" { // Only cares for transfer attribute
 			continue
 		}
 

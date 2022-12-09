@@ -70,24 +70,25 @@ func (s *E2ETestSuite) TestVoter_ExecuteQueryAndReply() {
 		s.Assert().EqualValues(0, tallyRcv.Votes[0].TotalNo)
 	})
 
-	s.Run("Release contract funds and verify (x/bank submsg execution and reply)", func() {
-		acc1BalanceBefore := chain.GetBalance(acc1.Address)
+	// NOTE: currently this contract reads SDK events to work, as of CosmWasm 0.28, SDK events are filtered and can't be accessed in responses
+	//s.Run("Release contract funds and verify (x/bank submsg execution and reply)", func() { // tries to read events
+	//	acc1BalanceBefore := chain.GetBalance(acc1.Address)
 
-		contractCoinsExp := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(DefNewVotingCostAmt+DefNewVoteCostAmt)))
-		contractCoinsRcv := chain.GetBalance(contractAddr)
-		s.Assert().EqualValues(contractCoinsExp, contractCoinsRcv)
+	//	contractCoinsExp := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(DefNewVotingCostAmt+DefNewVoteCostAmt)))
+	//	contractCoinsRcv := chain.GetBalance(contractAddr)
+	//	s.Assert().EqualValues(contractCoinsExp, contractCoinsRcv)
 
-		releasedCoinsRcv := s.VoterRelease(chain, contractAddr, acc1)
-		s.Assert().EqualValues(contractCoinsExp, releasedCoinsRcv)
+	//	releasedCoinsRcv := s.VoterRelease(chain, contractAddr, acc1)
+	//	s.Assert().EqualValues(contractCoinsExp, releasedCoinsRcv)
 
-		acc1BalanceAfter := chain.GetBalance(acc1.Address)
-		acc1BalanceExpected := acc1BalanceBefore.Add(contractCoinsExp...).Sub(chain.GetDefaultTxFee())
-		s.Assert().EqualValues(acc1BalanceExpected.String(), acc1BalanceAfter.String())
+	//	acc1BalanceAfter := chain.GetBalance(acc1.Address)
+	//	acc1BalanceExpected := acc1BalanceBefore.Add(contractCoinsExp...).Sub(chain.GetDefaultTxFee())
+	//	s.Assert().EqualValues(acc1BalanceExpected.String(), acc1BalanceAfter.String())
 
-		releaseStats := s.VoterGetReleaseStats(chain, contractAddr)
-		s.Assert().EqualValues(1, releaseStats.Count)
-		s.Assert().EqualValues(releasedCoinsRcv, s.CosmWasmCoinsToSDK(releaseStats.TotalAmount...))
-	})
+	//	releaseStats := s.VoterGetReleaseStats(chain, contractAddr)
+	//	s.Assert().EqualValues(1, releaseStats.Count)
+	//	s.Assert().EqualValues(releasedCoinsRcv, s.CosmWasmCoinsToSDK(releaseStats.TotalAmount...))
+	//})
 }
 
 // TestVoter_Sudo tests Sudo execution via Gov proposal to change the contract parameters.
