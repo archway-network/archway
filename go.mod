@@ -136,6 +136,6 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/CosmWasm/wasmd => github.com/archway-network/wasmd v0.29.2
+replace github.com/CosmWasm/wasmd => github.com/archway-network/wasmd v0.29.2-archway
 
 replace github.com/archway-network/voter => ./contracts/go/voter
