@@ -6,6 +6,7 @@ import (
 	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
@@ -37,6 +38,18 @@ func TestWASMBindingPlugins(t *testing.T) {
 
 			_, err := queryPlugin.Custom(ctx, queryBz)
 			assert.ErrorIs(t, err, sdkErrors.ErrInvalidRequest)
+		})
+	})
+
+	t.Run("Querier OK", func(t *testing.T) {
+		t.Run("Query empty metada", func(t *testing.T) {
+			_, err := queryPlugin.Custom(ctx, []byte("{\"contract_metadata\": {\"contract_address\": \""+mockContractAddr.String()+"\"}}"))
+			assert.Error(t, err)
+		})
+
+		t.Run("Query empty rewards", func(t *testing.T) {
+			_, err := queryPlugin.Custom(ctx, []byte("{\"rewards_records\": {\"rewards_address\": \""+mockContractAddr.String()+"\"}}"))
+			require.NoError(t, err)
 		})
 	})
 

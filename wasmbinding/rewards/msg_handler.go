@@ -5,9 +5,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/archway-network/archway/wasmbinding/rewards/types"
+	rewardsMsgTypes "github.com/archway-network/archway/wasmbinding/rewards/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -30,26 +29,12 @@ func NewRewardsMsgHandler(rk KeeperWriterExpected) MsgHandler {
 	}
 }
 
-// DispatchMsg validates and executes a custom WASM msg.
-func (h MsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg types.Msg) ([]sdk.Event, [][]byte, error) {
-	// Validate the input
-	if err := msg.Validate(); err != nil {
-		return nil, nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, fmt.Sprintf("x/rewards: sub-msg validation: %v", err))
+// UpdateContractMetadata updates the contract metadata.
+func (h MsgHandler) UpdateContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress, req rewardsMsgTypes.UpdateContractMetadataRequest) ([]sdk.Event, [][]byte, error) {
+	if err := req.Validate(); err != nil {
+		return nil, nil, fmt.Errorf("updateContractMetadata: %w", err)
 	}
 
-	// Execute operation (one of)
-	switch {
-	case msg.UpdateMetadata != nil:
-		return h.updateContractMetadata(ctx, contractAddr, *msg.UpdateMetadata)
-	case msg.WithdrawRewards != nil:
-		return h.withdrawContractRewards(ctx, contractAddr, *msg.WithdrawRewards)
-	default:
-		return nil, nil, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, "x/rewards: unknown operation")
-	}
-}
-
-// updateContractMetadata updates the contract metadata.
-func (h MsgHandler) updateContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress, req types.UpdateMetadataRequest) ([]sdk.Event, [][]byte, error) {
 	if err := h.rewardsKeeper.SetContractMetadata(ctx, contractAddr, contractAddr, req.ToSDK()); err != nil {
 		return nil, nil, err
 	}
@@ -57,8 +42,12 @@ func (h MsgHandler) updateContractMetadata(ctx sdk.Context, contractAddr sdk.Acc
 	return nil, nil, nil
 }
 
-// withdrawContractRewards withdraws the rewards for the contract address.
-func (h MsgHandler) withdrawContractRewards(ctx sdk.Context, contractAddr sdk.AccAddress, req types.WithdrawRewardsRequest) ([]sdk.Event, [][]byte, error) {
+// WithdrawContractRewards withdraws the rewards for the contract address.
+func (h MsgHandler) WithdrawContractRewards(ctx sdk.Context, contractAddr sdk.AccAddress, req rewardsMsgTypes.WithdrawRewardsRequest) ([]sdk.Event, [][]byte, error) {
+	if err := req.Validate(); err != nil {
+		return nil, nil, fmt.Errorf("withdrawRewards: %w", err)
+	}
+
 	var totalRewards sdk.Coins
 	var recordsUsed int
 	var err error
@@ -73,7 +62,7 @@ func (h MsgHandler) withdrawContractRewards(ctx sdk.Context, contractAddr sdk.Ac
 		return nil, nil, err
 	}
 
-	resBz, err := json.Marshal(types.NewWithdrawRewardsResponse(totalRewards, recordsUsed))
+	resBz, err := json.Marshal(rewardsMsgTypes.NewWithdrawRewardsResponse(totalRewards, recordsUsed))
 	if err != nil {
 		return nil, nil, fmt.Errorf("result JSON marshal: %w", err)
 	}

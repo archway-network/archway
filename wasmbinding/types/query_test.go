@@ -19,16 +19,26 @@ func TestQueryValidate(t *testing.T) {
 		{
 			name: "OK: Rewards",
 			query: Query{
-				Rewards: &rewardsTypes.Query{
-					Metadata: &rewardsTypes.ContractMetadataRequest{
-						ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
-					},
+				ContractMetadata: &rewardsTypes.ContractMetadataRequest{
+					ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 				},
 			},
 		},
 		{
 			name:        "Fail: empty",
 			query:       Query{},
+			errExpected: true,
+		},
+		{
+			name: "Fail: not one of",
+			query: Query{
+				ContractMetadata: &rewardsTypes.ContractMetadataRequest{
+					ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				},
+				RewardsRecords: &rewardsTypes.RewardsRecordsRequest{
+					RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				},
+			},
 			errExpected: true,
 		},
 	}
