@@ -196,7 +196,7 @@ build-docker:
 
 build-release: build-docker
 	mkdir -p $(CURRENT_DIR)/releases
-	docker run --rm -ti -v $(CURRENT_DIR)/releases:/root/.archway --entrypoint /bin/sh archwayd:latest -c "cp /usr/bin/archwayd /root/.archway"
+	docker run --rm --platform linux/amd64 -ti -v $(CURRENT_DIR)/releases:/root/.archway --entrypoint /bin/sh archwayd:latest -c "cp /usr/bin/archwayd /root/.archway"
 
 localnet:
 	docker-compose up
