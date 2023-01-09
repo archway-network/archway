@@ -40,8 +40,10 @@ func (d QueryDispatcher) DispatchQuery(ctx sdk.Context, request json.RawMessage)
 	var resErr error
 
 	switch {
-	case req.Rewards != nil:
-		resData, resErr = d.rewardsHandler.DispatchQuery(ctx, *req.Rewards)
+	case req.ContractMetadata != nil:
+		resData, resErr = d.rewardsHandler.GetContractMetadata(ctx, *req.ContractMetadata)
+	case req.RewardsRecords != nil:
+		resData, resErr = d.rewardsHandler.GetRewardsRecords(ctx, *req.RewardsRecords)
 	default:
 		// That should never happen, since we validate the input above
 		return nil, wasmVmTypes.UnsupportedRequest{Kind: "no custom querier found"}

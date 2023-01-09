@@ -238,7 +238,7 @@ func (v *WithdrawRewardsRequest) UnmarshalJSON(data []byte) error {
 func (v *WithdrawRewardsRequest) UnmarshalTinyJSON(l *jlexer.Lexer) {
 	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom1(l, v)
 }
-func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(in *jlexer.Lexer, out *UpdateMetadataRequest) {
+func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(in *jlexer.Lexer, out *UpdateContractMetadataRequest) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -271,7 +271,7 @@ func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(in *
 		in.Consumed()
 	}
 }
-func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(out *jwriter.Writer, in UpdateMetadataRequest) {
+func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(out *jwriter.Writer, in UpdateContractMetadataRequest) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -289,29 +289,29 @@ func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(out 
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v UpdateMetadataRequest) MarshalJSON() ([]byte, error) {
+func (v UpdateContractMetadataRequest) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalTinyJSON supports tinyjson.Marshaler interface
-func (v UpdateMetadataRequest) MarshalTinyJSON(w *jwriter.Writer) {
+func (v UpdateContractMetadataRequest) MarshalTinyJSON(w *jwriter.Writer) {
 	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *UpdateMetadataRequest) UnmarshalJSON(data []byte) error {
+func (v *UpdateContractMetadataRequest) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(&r, v)
 	return r.Error()
 }
 
 // UnmarshalTinyJSON supports tinyjson.Unmarshaler interface
-func (v *UpdateMetadataRequest) UnmarshalTinyJSON(l *jlexer.Lexer) {
+func (v *UpdateContractMetadataRequest) UnmarshalTinyJSON(l *jlexer.Lexer) {
 	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(l, v)
 }
-func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(in *jlexer.Lexer, out *RewardsMsg) {
+func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(in *jlexer.Lexer, out *CustomMsg) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -330,15 +330,15 @@ func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(in *
 			continue
 		}
 		switch key {
-		case "update_metadata":
+		case "update_contract_metadata":
 			if in.IsNull() {
 				in.Skip()
-				out.UpdateMetadata = nil
+				out.UpdateContractMetadata = nil
 			} else {
-				if out.UpdateMetadata == nil {
-					out.UpdateMetadata = new(UpdateMetadataRequest)
+				if out.UpdateContractMetadata == nil {
+					out.UpdateContractMetadata = new(UpdateContractMetadataRequest)
 				}
-				(*out.UpdateMetadata).UnmarshalTinyJSON(in)
+				(*out.UpdateContractMetadata).UnmarshalTinyJSON(in)
 			}
 		case "withdraw_rewards":
 			if in.IsNull() {
@@ -360,102 +360,25 @@ func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(in *
 		in.Consumed()
 	}
 }
-func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(out *jwriter.Writer, in RewardsMsg) {
+func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(out *jwriter.Writer, in CustomMsg) {
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
-		const prefix string = ",\"update_metadata\":"
-		out.RawString(prefix[1:])
-		if in.UpdateMetadata == nil {
-			out.RawString("null")
-		} else {
-			(*in.UpdateMetadata).MarshalTinyJSON(out)
-		}
-	}
-	{
-		const prefix string = ",\"withdraw_rewards\":"
-		out.RawString(prefix)
-		if in.WithdrawRewards == nil {
-			out.RawString("null")
-		} else {
-			(*in.WithdrawRewards).MarshalTinyJSON(out)
-		}
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v RewardsMsg) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalTinyJSON supports tinyjson.Marshaler interface
-func (v RewardsMsg) MarshalTinyJSON(w *jwriter.Writer) {
-	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *RewardsMsg) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(&r, v)
-	return r.Error()
-}
-
-// UnmarshalTinyJSON supports tinyjson.Unmarshaler interface
-func (v *RewardsMsg) UnmarshalTinyJSON(l *jlexer.Lexer) {
-	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(l, v)
-}
-func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(in *jlexer.Lexer, out *CustomMsg) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "rewards":
-			if in.IsNull() {
-				in.Skip()
-				out.Rewards = nil
-			} else {
-				if out.Rewards == nil {
-					out.Rewards = new(RewardsMsg)
-				}
-				(*out.Rewards).UnmarshalTinyJSON(in)
-			}
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(out *jwriter.Writer, in CustomMsg) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	if in.Rewards != nil {
-		const prefix string = ",\"rewards\":"
+	if in.UpdateContractMetadata != nil {
+		const prefix string = ",\"update_contract_metadata\":"
 		first = false
 		out.RawString(prefix[1:])
-		(*in.Rewards).MarshalTinyJSON(out)
+		(*in.UpdateContractMetadata).MarshalTinyJSON(out)
+	}
+	if in.WithdrawRewards != nil {
+		const prefix string = ",\"withdraw_rewards\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.WithdrawRewards).MarshalTinyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -463,23 +386,23 @@ func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(out 
 // MarshalJSON supports json.Marshaler interface
 func (v CustomMsg) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(&w, v)
+	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalTinyJSON supports tinyjson.Marshaler interface
 func (v CustomMsg) MarshalTinyJSON(w *jwriter.Writer) {
-	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(w, v)
+	tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *CustomMsg) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(&r, v)
+	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(&r, v)
 	return r.Error()
 }
 
 // UnmarshalTinyJSON supports tinyjson.Unmarshaler interface
 func (v *CustomMsg) UnmarshalTinyJSON(l *jlexer.Lexer) {
-	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom4(l, v)
+	tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom3(l, v)
 }

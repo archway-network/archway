@@ -8,16 +8,12 @@ import (
 type (
 	// CustomQuery defines the Archway custom plugin query.
 	CustomQuery struct {
-		Rewards *RewardsQuery `json:",omitempty"`
-	}
-
-	RewardsQuery struct {
-		// Metadata returns the contract rewards metadata.
-		Metadata *ContractMetadataRequest
+		// ContractMetadata returns the contract rewards metadata.
+		ContractMetadata *ContractMetadataRequest `json:",omitempty"`
 
 		// RewardsRecords returns a list of RewardsRecord objects that are credited for the account and are ready to be withdrawn.
 		// Request is paginated. If the limit field is not set, the MaxWithdrawRecords param is used.
-		RewardsRecords *RewardsRecordsRequest
+		RewardsRecords *RewardsRecordsRequest `json:",omitempty"`
 	}
 )
 
