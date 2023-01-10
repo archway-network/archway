@@ -78,3 +78,21 @@ func (s *KeeperTestSuite) TestGRPC_ContractMetadata() {
 		s.Require().Equal(contractMeta.OwnerAddress, res.Metadata.OwnerAddress)
 	})
 }
+
+func (s *KeeperTestSuite) TestGRPC_BlockRewardsTracking() {
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	querySrvr := keeper.NewQueryServer(k)
+
+	s.Run("err: empty request", func() {
+		_, err := querySrvr.BlockRewardsTracking(sdk.WrapSDKContext(ctx), nil)
+		s.Require().Error(err)
+		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	})
+
+	s.Run("ok: gets block rewards tracking", func() {
+		res, err := querySrvr.BlockRewardsTracking(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryBlockRewardsTrackingRequest{})
+		s.Require().NoError(err)
+		s.Require().Equal(0, len(res.Block.TxRewards))
+		s.Require().Equal(ctx.BlockHeight(), res.Block.InflationRewards.Height)
+	})
+}
