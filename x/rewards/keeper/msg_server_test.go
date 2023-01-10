@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"github.com/archway-network/archway/pkg/testutils"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
@@ -14,6 +15,14 @@ import (
 )
 
 func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	contractAdminAcc, otherAcc := s.chain.GetAccount(0), s.chain.GetAccount(1)
+	contractViewer := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(contractViewer)
+	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+
+	server := keeper.NewMsgServer(k)
+
 	testCases := []struct {
 		testCase    string
 		prepare     func() *rewardstypes.MsgSetContractMetadata
@@ -42,9 +51,8 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 		{
 			testCase: "err: invalid contract address",
 			prepare: func() *rewardstypes.MsgSetContractMetadata {
-				accs, _ := e2eTesting.GenAccounts(1)
 				return &rewardstypes.MsgSetContractMetadata{
-					SenderAddress: accs[0].String(),
+					SenderAddress: contractAdminAcc.Address.String(),
 					Metadata: rewardstypes.ContractMetadata{
 						ContractAddress: "👻",
 					},
@@ -56,10 +64,8 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 		{
 			testCase: "err: contract does not exist",
 			prepare: func() *rewardstypes.MsgSetContractMetadata {
-				contractAddr := e2eTesting.GenContractAddresses(1)[0]
-				accs, _ := e2eTesting.GenAccounts(1)
 				return &rewardstypes.MsgSetContractMetadata{
-					SenderAddress: accs[0].String(),
+					SenderAddress: contractAdminAcc.Address.String(),
 					Metadata: rewardstypes.ContractMetadata{
 						ContractAddress: contractAddr.String(),
 					},
@@ -69,12 +75,23 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 			errorType:   rewardstypes.ErrContractNotFound,
 		},
 		{
+			testCase: "err: the message sender is not the contract admin",
+			prepare: func() *rewardstypes.MsgSetContractMetadata {
+				contractViewer.AddContractAdmin(contractAddr.String(), contractAdminAcc.Address.String())
+
+				return &rewardstypes.MsgSetContractMetadata{
+					SenderAddress: otherAcc.Address.String(),
+					Metadata: rewardstypes.ContractMetadata{
+						ContractAddress: contractAddr.String(),
+					},
+				}
+			},
+			expectError: true,
+			errorType:   sdkErrors.Wrap(rewardstypes.ErrUnauthorized, "metadata can only be created by the contract admin"),
+		},
+		{
 			testCase: "ok: all good'",
 			prepare: func() *rewardstypes.MsgSetContractMetadata {
-				contractAdminAcc, otherAcc := s.chain.GetAccount(0), s.chain.GetAccount(1)
-				contractViewer := testutils.NewMockContractViewer()
-				s.chain.GetApp().RewardsKeeper.SetContractInfoViewer(contractViewer)
-				contractAddr := e2eTesting.GenContractAddresses(1)[0]
 				contractViewer.AddContractAdmin(contractAddr.String(), contractAdminAcc.Address.String())
 
 				return &rewardstypes.MsgSetContractMetadata{
@@ -91,17 +108,16 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 		},
 	}
 
-	server := keeper.NewMsgServer(s.chain.GetApp().RewardsKeeper)
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
 			req := tc.prepare()
-			res, err := server.SetContractMetadata(sdk.WrapSDKContext(s.chain.GetContext()), req)
+			res, err := server.SetContractMetadata(sdk.WrapSDKContext(ctx), req)
 			if tc.expectError {
 				s.Require().Error(err)
 				s.Require().Equal(tc.errorType.Error(), err.Error())
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(res, rewardstypes.MsgSetContractMetadataResponse{})
+				s.Require().Equal(res, &rewardstypes.MsgSetContractMetadataResponse{})
 			}
 		})
 	}
