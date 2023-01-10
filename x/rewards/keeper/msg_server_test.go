@@ -2,14 +2,14 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/archway-network/archway/pkg/testutils"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/rewards/keeper"
 	rewardstypes "github.com/archway-network/archway/x/rewards/types"
 )
@@ -117,7 +117,111 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 				s.Require().Equal(tc.errorType.Error(), err.Error())
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(res, &rewardstypes.MsgSetContractMetadataResponse{})
+				s.Require().Equal(&rewardstypes.MsgSetContractMetadataResponse{}, res)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMsgServer_WithdrawRewards() {
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	acc := s.chain.GetAccount(0).Address
+
+	server := keeper.NewMsgServer(k)
+
+	testCases := []struct {
+		testCase    string
+		prepare     func() *rewardstypes.MsgWithdrawRewards
+		expectError bool
+		errorType   error
+	}{
+		{
+			testCase: "err: empty request",
+			prepare: func() *rewardstypes.MsgWithdrawRewards {
+				return nil
+			},
+			expectError: true,
+			errorType:   status.Error(codes.InvalidArgument, "empty request"),
+		},
+		{
+			testCase: "err: invalid sender address",
+			prepare: func() *rewardstypes.MsgWithdrawRewards {
+				return &rewardstypes.MsgWithdrawRewards{
+					RewardsAddress: "👻",
+				}
+			},
+			expectError: true,
+			errorType:   fmt.Errorf("decoding bech32 failed: invalid bech32 string length 4"),
+		},
+		{
+			testCase: "err: rewards mode invalid",
+			prepare: func() *rewardstypes.MsgWithdrawRewards {
+				return &rewardstypes.MsgWithdrawRewards{
+					RewardsAddress: acc.String(),
+					Mode:           nil,
+				}
+			},
+			expectError: true,
+			errorType:   status.Error(codes.InvalidArgument, "invalid request mode"),
+		},
+		{
+			testCase: "err: withdraw rewards records limit invalid",
+			prepare: func() *rewardstypes.MsgWithdrawRewards {
+				return &rewardstypes.MsgWithdrawRewards{
+					RewardsAddress: acc.String(),
+					Mode: &rewardstypes.MsgWithdrawRewards_RecordsLimit_{
+						RecordsLimit: &rewardstypes.MsgWithdrawRewards_RecordsLimit{
+							Limit: rewardstypes.MaxWithdrawRecordsParamLimit + 1,
+						},
+					},
+				}
+			},
+			expectError: true,
+			errorType:   status.Error(codes.InvalidArgument, sdkErrors.Wrapf(rewardstypes.ErrInvalidRequest, "max withdraw records (25000) exceeded").Error()),
+		},
+		{
+			testCase: "ok: withdraw rewards by records limit",
+			prepare: func() *rewardstypes.MsgWithdrawRewards {
+				return &rewardstypes.MsgWithdrawRewards{
+					RewardsAddress: acc.String(),
+					Mode: &rewardstypes.MsgWithdrawRewards_RecordsLimit_{
+						RecordsLimit: &rewardstypes.MsgWithdrawRewards_RecordsLimit{
+							Limit: 1,
+						},
+					},
+				}
+			},
+			expectError: false,
+			errorType:   nil,
+		},
+		{
+			testCase: "ok: withdraw rewards by record ids",
+			prepare: func() *rewardstypes.MsgWithdrawRewards {
+				return &rewardstypes.MsgWithdrawRewards{
+					RewardsAddress: acc.String(),
+					Mode: &rewardstypes.MsgWithdrawRewards_RecordIds{
+						RecordIds: &rewardstypes.MsgWithdrawRewards_RecordIDs{
+							Ids: []uint64{},
+						},
+					},
+				}
+			},
+			expectError: false,
+			errorType:   nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
+			req := tc.prepare()
+			res, err := server.WithdrawRewards(sdk.WrapSDKContext(ctx), req)
+			if tc.expectError {
+				s.Require().Error(err)
+				s.Require().Equal(tc.errorType.Error(), err.Error())
+			} else {
+				s.Require().NoError(err)
+				s.Require().EqualValues(0, res.RecordsNum)
+				s.Require().Empty(res.TotalRewards)
 			}
 		})
 	}
