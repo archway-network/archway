@@ -6,7 +6,7 @@ import (
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
-func (s KeeperTestSuite) TestSetContractMetadata() {
+func (s *KeeperTestSuite) TestSetContractMetadata() {
 	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
 	contractAdminAcc, otherAcc := s.chain.GetAccount(0), s.chain.GetAccount(1)
 
