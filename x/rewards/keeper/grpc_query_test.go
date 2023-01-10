@@ -96,3 +96,20 @@ func (s *KeeperTestSuite) TestGRPC_BlockRewardsTracking() {
 		s.Require().Equal(ctx.BlockHeight(), res.Block.InflationRewards.Height)
 	})
 }
+
+func (s *KeeperTestSuite) TestGRPC_RewardsPool() {
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	querySrvr := keeper.NewQueryServer(k)
+
+	s.Run("err: empty request", func() {
+		_, err := querySrvr.RewardsPool(sdk.WrapSDKContext(ctx), nil)
+		s.Require().Error(err)
+		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	})
+
+	s.Run("ok: gets rewards pool", func() {
+		res, err := querySrvr.RewardsPool(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryRewardsPoolRequest{})
+		s.Require().NoError(err)
+		s.Require().NotNil(res)
+	})
+}
