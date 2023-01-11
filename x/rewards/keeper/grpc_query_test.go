@@ -159,3 +159,31 @@ func (s *KeeperTestSuite) TestGRPC_OutstandingRewards() {
 		s.Require().EqualValues(0, res.RecordsNum)
 	})
 }
+
+func (s *KeeperTestSuite) TestGRPC_RewardsRecords() {
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+
+	querySrvr := keeper.NewQueryServer(k)
+
+	s.Run("err: empty request", func() {
+		_, err := querySrvr.RewardsRecords(sdk.WrapSDKContext(ctx), nil)
+		s.Require().Error(err)
+		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	})
+
+	s.Run("err: invalid rewards address", func() {
+		_, err := querySrvr.RewardsRecords(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryRewardsRecordsRequest{
+			RewardsAddress: "👻",
+		})
+		s.Require().Error(err)
+		s.Require().Equal(status.Error(codes.InvalidArgument, "invalid rewards address: decoding bech32 failed: invalid bech32 string length 4"), err)
+	})
+
+	s.Run("ok: get rewards records", func() {
+		res, err := querySrvr.RewardsRecords(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryRewardsRecordsRequest{
+			RewardsAddress: s.chain.GetAccount(0).Address.String(),
+		})
+		s.Require().NoError(err)
+		s.Require().EqualValues(0, len(res.Records))
+	})
+}
