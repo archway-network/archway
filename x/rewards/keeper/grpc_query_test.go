@@ -1,13 +1,13 @@
 package keeper_test
 
 import (
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/pkg/testutils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/rewards/keeper"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
@@ -109,6 +109,24 @@ func (s *KeeperTestSuite) TestGRPC_RewardsPool() {
 
 	s.Run("ok: gets rewards pool", func() {
 		res, err := querySrvr.RewardsPool(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryRewardsPoolRequest{})
+		s.Require().NoError(err)
+		s.Require().NotNil(res)
+	})
+}
+
+func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+
+	querySrvr := keeper.NewQueryServer(k)
+
+	s.Run("err: empty request", func() {
+		_, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), nil)
+		s.Require().Error(err)
+		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	})
+
+	s.Run("ok: gets estimated tx fees", func() {
+		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 0})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)
 	})
