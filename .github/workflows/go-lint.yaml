@@ -1,0 +1,29 @@
+name: Linter
+
+# Run on every master merge and on PRs.
+on:
+  push:
+    branches: ["master"]
+    paths: ["**.go", "**.proto", "go.mod", "go.sum"]
+  pull_request:
+    paths: ["**.go", "**.proto", "go.mod", "go.sum"]
+
+permissions:
+  contents: read
+
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+
+      - uses: actions/checkout@v3
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --fix=false
