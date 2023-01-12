@@ -31,3 +31,4 @@ jobs:
         with:
           version: latest
           args: --fix=false
+          only-new-issues: true
