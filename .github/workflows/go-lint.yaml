@@ -3,11 +3,15 @@ name: Linter
 # Run on every master merge and on PRs.
 on:
   push:
-    branches: ["master"]
-    paths: ["**.go", "**.proto", "go.mod", "go.sum"]
-  pull_request:
-    paths: ["**.go", "**.proto", "go.mod", "go.sum"]
+    branches: [main]
+    tags: [v*]
 
+  pull_request:
+    branches: [main]
+
+  workflow_dispatch:
+    branches: [main]
+    
 permissions:
   contents: read
 
