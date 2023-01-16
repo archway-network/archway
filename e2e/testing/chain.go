@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v3/testing/mock"
 	"github.com/golang/protobuf/proto"
@@ -195,6 +196,17 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	bankGenesis := bankTypes.NewGenesisState(bankTypes.DefaultGenesisState().Params, balances, totalSupply, []bankTypes.Metadata{})
 	genState[bankTypes.ModuleName] = archApp.AppCodec().MustMarshalJSON(bankGenesis)
 
+	signInfo := make([]slashingTypes.SigningInfo, len(validatorSet.Validators))
+	for i, v := range validatorSet.Validators {
+		signInfo[i] = slashingTypes.SigningInfo{
+			Address: sdk.ConsAddress(v.Address).String(),
+			ValidatorSigningInfo: slashingTypes.ValidatorSigningInfo{
+				Address: sdk.ConsAddress(v.Address).String(),
+			},
+		}
+	}
+	genState[slashingTypes.ModuleName] = archApp.AppCodec().MustMarshalJSON(slashingTypes.NewGenesisState(slashingTypes.DefaultParams(), signInfo, nil))
+
 	// Apply genesis options
 	for _, opt := range genStateOpts {
 		opt(archApp.AppCodec(), genState)
@@ -330,8 +342,28 @@ func (chain *TestChain) BeginBlock() []abci.Event {
 	chain.curHeader.AppHash = chain.app.LastCommitID().Hash
 	chain.curHeader.ValidatorsHash = chain.valSet.Hash()
 	chain.curHeader.NextValidatorsHash = chain.valSet.Hash()
+	chain.curHeader.ProposerAddress = chain.GetCurrentValSet().Proposer.Address
 
-	res := chain.app.BeginBlock(abci.RequestBeginBlock{Header: chain.curHeader})
+	voteInfo := make([]abci.VoteInfo, len(chain.GetCurrentValSet().Validators))
+	for i, v := range chain.GetCurrentValSet().Validators {
+		voteInfo[i] = abci.VoteInfo{
+			Validator: abci.Validator{
+				Address: v.Address,
+				Power:   v.VotingPower,
+			},
+			SignedLastBlock: true,
+		}
+	}
+
+	res := chain.app.BeginBlock(abci.RequestBeginBlock{
+		Hash:   nil,
+		Header: chain.curHeader,
+		LastCommitInfo: abci.LastCommitInfo{
+			Round: 0,
+			Votes: voteInfo,
+		},
+		ByzantineValidators: nil,
+	})
 
 	return res.Events
 }
