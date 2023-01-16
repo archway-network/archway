@@ -3,7 +3,6 @@ package e2eTesting
 
 import (
 	"encoding/json"
-	"math/rand"
 	"strconv"
 	"testing"
 	"time"
@@ -422,7 +421,6 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 
 	// Build and sign Tx
 	tx, err := helpers.GenTx(
-		rand.New(rand.NewSource(time.Now().UnixNano())),
 		chain.txConfig,
 		msgs,
 		options.fees,

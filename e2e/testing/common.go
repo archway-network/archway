@@ -56,7 +56,7 @@ func GenContractAddresses(num uint) []sdk.AccAddress {
 	addrs := make([]sdk.AccAddress, 0, num)
 
 	for i := 0; i < cap(addrs); i++ {
-		contractAddr := wasmKeeper.BuildContractAddress(uint64(i), uint64(i))
+		contractAddr := wasmKeeper.BuildContractAddressClassic(uint64(i), uint64(i))
 		addrs = append(addrs, contractAddr)
 	}
 

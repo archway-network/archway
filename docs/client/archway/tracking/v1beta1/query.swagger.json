@@ -1,0 +1,182 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "archway/tracking/v1beta1/query.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/archway/tracking/v1/block_gas_tracking": {
+      "get": {
+        "summary": "BlockGasTracking returns block gas tracking for the current block",
+        "operationId": "BlockGasTracking",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/archway.tracking.v1beta1.QueryBlockGasTrackingResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "tags": [
+          "Query"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "archway.tracking.v1beta1.BlockTracking": {
+      "type": "object",
+      "properties": {
+        "txs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/archway.tracking.v1beta1.TxTracking"
+          },
+          "description": "txs defines the list of transactions tracked in the block."
+        }
+      },
+      "description": "BlockTracking is the tracking information for a block."
+    },
+    "archway.tracking.v1beta1.ContractOperation": {
+      "type": "string",
+      "enum": [
+        "CONTRACT_OPERATION_UNSPECIFIED",
+        "CONTRACT_OPERATION_INSTANTIATION",
+        "CONTRACT_OPERATION_EXECUTION",
+        "CONTRACT_OPERATION_QUERY",
+        "CONTRACT_OPERATION_MIGRATE",
+        "CONTRACT_OPERATION_IBC",
+        "CONTRACT_OPERATION_SUDO",
+        "CONTRACT_OPERATION_REPLY"
+      ],
+      "default": "CONTRACT_OPERATION_UNSPECIFIED",
+      "description": "ContractOperation denotes which operation consumed gas."
+    },
+    "archway.tracking.v1beta1.ContractOperationInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64",
+          "description": "id defines the unique operation ID."
+        },
+        "tx_id": {
+          "type": "string",
+          "format": "uint64",
+          "description": "tx_id defines a transaction ID operation relates to (TxInfo.id)."
+        },
+        "contract_address": {
+          "type": "string",
+          "description": "contract_address defines the contract address operation relates to."
+        },
+        "operation_type": {
+          "$ref": "#/definitions/archway.tracking.v1beta1.ContractOperation",
+          "description": "operation_type defines the gas consumption type."
+        },
+        "vm_gas": {
+          "type": "string",
+          "format": "uint64",
+          "description": "vm_gas is the gas consumption reported by the WASM VM.\nValue is adjusted by this module (CalculateUpdatedGas func)."
+        },
+        "sdk_gas": {
+          "type": "string",
+          "format": "uint64",
+          "description": "sdk_gas is the gas consumption reported by the SDK gas meter and the WASM GasRegister (cost of Execute/Query/etc).\nValue is adjusted by this module (CalculateUpdatedGas func)."
+        }
+      },
+      "description": "ContractOperationInfo keeps a single contract operation gas consumption data.\nObject is being created by the IngestGasRecord call from the wasmd."
+    },
+    "archway.tracking.v1beta1.QueryBlockGasTrackingResponse": {
+      "type": "object",
+      "properties": {
+        "block": {
+          "$ref": "#/definitions/archway.tracking.v1beta1.BlockTracking"
+        }
+      },
+      "description": "QueryBlockGasTrackingResponse is the response for Query.BlockGasTracking."
+    },
+    "archway.tracking.v1beta1.TxInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64",
+          "description": "id defines the unique transaction ID."
+        },
+        "height": {
+          "type": "string",
+          "format": "int64",
+          "description": "height defines the block height of the transaction."
+        },
+        "total_gas": {
+          "type": "string",
+          "format": "uint64",
+          "description": "total_gas defines total gas consumption by the transaction.\nIt is the sum of gas consumed by all contract operations (VM + SDK gas)."
+        }
+      },
+      "description": "TxInfo keeps a transaction gas tracking data.\nObject is being created at the module EndBlocker."
+    },
+    "archway.tracking.v1beta1.TxTracking": {
+      "type": "object",
+      "properties": {
+        "info": {
+          "$ref": "#/definitions/archway.tracking.v1beta1.TxInfo",
+          "description": "info defines the transaction details."
+        },
+        "contract_operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/archway.tracking.v1beta1.ContractOperationInfo"
+          },
+          "description": "contract_operations defines the list of contract operations consumed by the transaction."
+        }
+      },
+      "description": "TxTracking is the tracking information for a single transaction."
+    },
+    "google.protobuf.Any": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "grpc.gateway.runtime.Error": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/google.protobuf.Any"
+          }
+        }
+      }
+    }
+  }
+}

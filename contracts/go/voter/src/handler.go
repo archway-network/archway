@@ -319,9 +319,10 @@ out:
 			break out
 		}
 	}
-	if len(releasedAmt) == 0 {
-		return nil, types.NewErrInvalidRequest("x/bank reply: transfer.amount attribute: not found")
-	}
+	// The following check is disabled because the x/wasmd v0.29.X has disabled SDK events pass through.
+	//if len(releasedAmt) == 0 {
+	//	return nil, types.NewErrInvalidRequest("x/bank reply: transfer.amount attribute: not found")
+	//}
 
 	// Update release stats
 	stats, err := state.GetReleaseStats(deps.Storage)
