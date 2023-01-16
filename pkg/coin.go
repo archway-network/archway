@@ -24,6 +24,15 @@ func DecCoinIsZero(coin sdk.DecCoin) bool {
 	return coin.IsZero()
 }
 
+// DecCoinIsNegative checks if sdk.DecCoin is negative (not panics in case Amount is nil).
+func DecCoinIsNegative(coin sdk.DecCoin) bool {
+	if coin.Amount.IsNil() {
+		return true
+	}
+
+	return coin.IsNegative()
+}
+
 // ValidateCoin performs a stricter validation of sdk.Coin comparing to the SDK version.
 func ValidateCoin(coin sdk.Coin) error {
 	if err := sdk.ValidateDenom(coin.Denom); err != nil {

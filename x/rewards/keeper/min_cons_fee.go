@@ -26,8 +26,8 @@ func (k Keeper) UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin
 
 	// Calculate
 	feeAmt := calculateMinConsensusFeeAmt(inflationRewardsAmt, blockGasLimit, txFeeRebateRatio)
-	if feeAmt.IsZero() {
-		k.Logger(ctx).Info("Minimum consensus fee update skipped: calculated amount is zero")
+	if feeAmt.IsZero() || feeAmt.IsNegative() {
+		k.Logger(ctx).Info("Minimum consensus fee update skipped: calculated amount is zero or bellow zero")
 		return
 	}
 	feeCoin := sdk.DecCoin{
