@@ -1,6 +1,6 @@
 # docker build . -t cosmwasm/archwayd:latest
 # docker run --rm -it cosmwasm/archwayd:latest /bin/sh
-FROM golang:1.18-alpine3.15 AS go-builder
+FROM --platform=linux/amd64 golang:1.18-alpine3.15 AS go-builder
 ARG arch=x86_64
 
 # this comes from standard alpine nightly file
@@ -30,7 +30,7 @@ RUN echo "Ensuring binary is statically linked ..." \
   && (file /code/build/archwayd | grep "statically linked")
 
 # --------------------------------------------------------
-FROM alpine:3.13
+FROM --platform=linux/amd64 alpine:3.13
 
 COPY --from=go-builder /code/build/archwayd /usr/bin/archwayd
 

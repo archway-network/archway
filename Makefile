@@ -13,6 +13,7 @@ DOCKER := $(shell which docker)
 BUF_IMAGE=bufbuild/buf@sha256:9dc5d6645f8f8a2d5aaafc8957fbbb5ea64eada98a84cb09654e8f49d6f73b3e
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(BUF_IMAGE)
 HTTPS_GIT := https://github.com/archway-network/archway.git
+CURRENT_DIR := $(shell pwd)
 
 export GO111MODULE = on
 
@@ -191,6 +192,11 @@ proto-check-breaking:
 
 build-docker:
 	docker build . -t archwayd:latest
+
+
+build-release: build-docker
+	mkdir -p $(CURRENT_DIR)/releases
+	docker run --rm --platform linux/amd64 -ti -v $(CURRENT_DIR)/releases:/root/.archway --entrypoint /bin/sh archwayd:latest -c "cp /usr/bin/archwayd /root/.archway"
 
 localnet:
 	docker-compose up
