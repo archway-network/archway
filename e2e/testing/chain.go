@@ -19,8 +19,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v3/testing/mock"
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
@@ -205,7 +205,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 			},
 		}
 	}
-	genState[slashingTypes.ModuleName] = archApp.AppCodec().MustMarshalJSON(slashingtypes.NewGenesisState(slashingtypes.DefaultParams(), signInfo, nil))
+	genState[slashingTypes.ModuleName] = archApp.AppCodec().MustMarshalJSON(slashingTypes.NewGenesisState(slashingTypes.DefaultParams(), signInfo, nil))
 
 	// Apply genesis options
 	for _, opt := range genStateOpts {
