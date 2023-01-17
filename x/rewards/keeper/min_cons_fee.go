@@ -54,7 +54,9 @@ func (k Keeper) GetMinConsensusFee(ctx sdk.Context) (sdk.DecCoin, bool) {
 }
 
 // calculateMinConsensusFee calculates the minimum consensus fee amount using the formula:
-//   -1 * ( BlockRewards / ( GasLimit * (TxFeeRatio - 1) ) )
+//
+//	-1 * ( BlockRewards / ( GasLimit * (TxFeeRatio - 1) ) )
+//
 // A simplified expression is used, original from specs: -1 * ( BlockRewards / ( GasLimit * TxFeeRatio - GasLimit ) )
 func calculateMinConsensusFeeAmt(blockRewards, gasLimit, txFeeRatio sdk.Dec) sdk.Dec {
 	return blockRewards.Quo(

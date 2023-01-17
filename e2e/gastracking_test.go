@@ -18,12 +18,12 @@ import (
 )
 
 // TestGasTrackingAndRewardsDistribution tests the whole x/tracking + x/rewards chain:
-//   * sets contract metadata and check an emitted event;
-//   * sends WASM Execute event;
-//   * checks x/tracking records created;
-//   * checks x/rewards records created;
-//   * checks x/rewards events emitted;
-//   * checks rewards address receives distributed rewards;
+//   - sets contract metadata and check an emitted event;
+//   - sends WASM Execute event;
+//   - checks x/tracking records created;
+//   - checks x/rewards records created;
+//   - checks x/rewards events emitted;
+//   - checks rewards address receives distributed rewards;
 func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	txFeeRebateRewardsRatio := sdk.NewDecWithPrec(5, 1)
 	inflationRewardsRatio := sdk.NewDecWithPrec(5, 1)

@@ -17,7 +17,6 @@ func NewGenesisState(
 	rewardsRecordLastID uint64,
 	rewardsRecords []RewardsRecord,
 ) *GenesisState {
-
 	return &GenesisState{
 		Params:              params,
 		ContractsMetadata:   contractsMetadata,

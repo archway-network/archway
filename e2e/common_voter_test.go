@@ -14,11 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	channelTypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 
-	"github.com/archway-network/archway/wasmbinding/pkg"
-	rewardsWbTypes "github.com/archway-network/archway/wasmbinding/rewards/types"
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	voterState "github.com/archway-network/voter/src/state"
 	voterTypes "github.com/archway-network/voter/src/types"
+
+	"github.com/archway-network/archway/wasmbinding/pkg"
+	rewardsWbTypes "github.com/archway-network/archway/wasmbinding/rewards/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"

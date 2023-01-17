@@ -8,8 +8,8 @@ import (
 )
 
 // SetContractMetadata creates or updates the contract metadata verifying the ownership:
-//   * Meta could be created by the contract admin (if set);
-//   * Meta could be modified by the contract owner;
+//   - Meta could be created by the contract admin (if set);
+//   - Meta could be modified by the contract owner;
 func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sdk.AccAddress, metaUpdates types.ContractMetadata) error {
 	state := k.state.ContractMetadataState(ctx)
 

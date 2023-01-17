@@ -238,7 +238,7 @@ func (s *E2ETestSuite) TestTxFees() {
 			s.Require().NoError(err)
 		}
 
-		// Get rewards address balance diff (adjusting prev balance with fees payed)
+		// Get rewards address balance diff (adjusting prev balance with fees paid)
 		var rewardsAddrBalanceDiff sdk.Coins
 		{
 			rewardsAccPrevBalance = rewardsAccPrevBalance.Sub(sdk.Coins{withdrawTxFees})
