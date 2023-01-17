@@ -3,10 +3,12 @@ package e2eTesting
 import (
 	"context"
 	"fmt"
-	"github.com/archway-network/archway/app"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
+
+	"github.com/archway-network/archway/app"
 )
 
 var (
@@ -22,7 +24,7 @@ func (c grpcClient) Invoke(ctx context.Context, method string, args interface{},
 	resp := c.app.Query(abci.RequestQuery{
 		Data:   c.app.AppCodec().MustMarshal(req),
 		Path:   method,
-		Height: 0, // TODO: heighted queries
+		Height: 0, // TODO: heightened queries
 		Prove:  false,
 	})
 

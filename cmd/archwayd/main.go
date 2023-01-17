@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	cosmwasm "github.com/CosmWasm/wasmvm"
-	"github.com/spf13/cobra"
 	"os"
 	"runtime/debug"
+
+	cosmwasm "github.com/CosmWasm/wasmvm"
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"

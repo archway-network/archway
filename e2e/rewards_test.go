@@ -8,10 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	voterTypes "github.com/archway-network/voter/src/types"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // TestRewardsWithdrawProfitAndFees ensures that Tx fees spent for withdrawing rewards are lower than withdraw Tx fee paid.
