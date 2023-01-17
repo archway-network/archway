@@ -78,5 +78,4 @@ func TestContractMetadataValidate(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	}
-
 }

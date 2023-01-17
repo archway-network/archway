@@ -34,7 +34,8 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 		delegatorAcc := chain.GetAccount(i)
 
 		msg := govTypes.NewMsgVote(delegatorAcc.Address, proposalID, govTypes.OptionYes)
-		chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
+		_, _, _, err = chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
+		require.NoError(t, err)
 	}
 
 	// Wait for voting to end

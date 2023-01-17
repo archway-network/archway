@@ -26,8 +26,8 @@ func (k Keeper) UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin
 
 	// Calculate
 	feeAmt := calculateMinConsensusFeeAmt(inflationRewardsAmt, blockGasLimit, txFeeRebateRatio)
-	if feeAmt.IsZero() {
-		k.Logger(ctx).Info("Minimum consensus fee update skipped: calculated amount is zero")
+	if feeAmt.IsZero() || feeAmt.IsNegative() {
+		k.Logger(ctx).Info("Minimum consensus fee update skipped: calculated amount is zero or bellow zero")
 		return
 	}
 	feeCoin := sdk.DecCoin{
@@ -54,7 +54,9 @@ func (k Keeper) GetMinConsensusFee(ctx sdk.Context) (sdk.DecCoin, bool) {
 }
 
 // calculateMinConsensusFee calculates the minimum consensus fee amount using the formula:
-//   -1 * ( BlockRewards / ( GasLimit * (TxFeeRatio - 1) ) )
+//
+//	-1 * ( BlockRewards / ( GasLimit * (TxFeeRatio - 1) ) )
+//
 // A simplified expression is used, original from specs: -1 * ( BlockRewards / ( GasLimit * TxFeeRatio - GasLimit ) )
 func calculateMinConsensusFeeAmt(blockRewards, gasLimit, txFeeRatio sdk.Dec) sdk.Dec {
 	return blockRewards.Quo(

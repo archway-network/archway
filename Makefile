@@ -1,8 +1,7 @@
 #!/usr/bin/make -f
 
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-# VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
-VERSION := "0.0.5"
+VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 # SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
@@ -14,6 +13,7 @@ DOCKER := $(shell which docker)
 BUF_IMAGE=bufbuild/buf@sha256:9dc5d6645f8f8a2d5aaafc8957fbbb5ea64eada98a84cb09654e8f49d6f73b3e
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(BUF_IMAGE)
 HTTPS_GIT := https://github.com/archway-network/archway.git
+CURRENT_DIR := $(shell pwd)
 
 export GO111MODULE = on
 
@@ -181,7 +181,8 @@ proto-format:
 	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
 
 proto-swagger-gen:
-	@./scripts/protoc-swagger-gen.sh
+	@echo "Generating Protobuf Swagger files"
+	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protoc-swagger-gen.sh
 
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json
@@ -191,6 +192,11 @@ proto-check-breaking:
 
 build-docker:
 	docker build . -t archwayd:latest
+
+
+build-release: build-docker
+	mkdir -p $(CURRENT_DIR)/releases
+	docker run --rm --platform linux/amd64 -ti -v $(CURRENT_DIR)/releases:/root/.archway --entrypoint /bin/sh archwayd:latest -c "cp /usr/bin/archwayd /root/.archway"
 
 localnet:
 	docker-compose up

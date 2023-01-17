@@ -1,0 +1,24 @@
+# Options for analysis running. See https://golangci-lint.run/usage/configuration/ for config options.
+run:
+  timeout: 5m
+issues:
+  max-issues-per-linter: 0 # infinite
+  max-same-issues: 0 # infinite
+  fix: true
+  exclude:
+  # see https://github.com/stretchr/testify/issues/1199#issuecomment-1215592618, testify shows vet problem
+    - 'github.com\/stretchr\/testify\/suite\.Suite contains sync\.RWMutex'
+linters:
+  enable:
+    - whitespace
+    - misspell
+    - goimports
+linters-settings:
+  misspell:
+    locale: US
+  goimports:
+    # Put imports beginning with prefix after 3rd-party packages.
+    # It's a comma-separated list of prefixes.
+    local-prefixes: github.com/archway-network/archway
+severity:
+  default-severity: error
