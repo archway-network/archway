@@ -12,7 +12,9 @@ All notable changes to this project will be documented in this file.
 
 ### Removed 
 
-### Fixed 
+### Fixed
+
+- [#247](https://github.com/archway-network/archway/pull/247) Dockerfile libwasm VM dependencies
 
 ### Security
 
