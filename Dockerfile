@@ -1,6 +1,4 @@
-# docker build . -t cosmwasm/archwayd:latest
-# docker run --rm -it cosmwasm/archwayd:latest /bin/sh
-FROM golang:1.18-alpine3.15 AS go-builder
+FROM golang:1.19.5-alpine3.17 AS go-builder
 ARG arch=x86_64
 
 # this comes from standard alpine nightly file
@@ -35,6 +33,9 @@ FROM alpine:3.13
 COPY --from=go-builder /code/build/archwayd /usr/bin/archwayd
 
 WORKDIR /root/.archway
+
+# safety check to ensure deps are correct
+RUN archwayd version
 
 # rest server
 EXPOSE 1317
