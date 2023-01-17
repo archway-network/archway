@@ -1,0 +1,572 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "archway/rewards/v1beta1/query.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/archway/rewards/v1/block_rewards_tracking": {
+      "get": {
+        "summary": "BlockRewardsTracking returns block rewards tracking for the current block.",
+        "operationId": "BlockRewardsTracking",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/archway.rewards.v1beta1.QueryBlockRewardsTrackingResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/archway/rewards/v1/contract_metadata": {
+      "get": {
+        "summary": "ContractMetadata returns the contract rewards parameters (metadata).",
+        "operationId": "ContractMetadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/archway.rewards.v1beta1.QueryContractMetadataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "contract_address",
+            "description": "contract_address is the contract address (bech32 encoded).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/archway/rewards/v1/estimate_tx_fees": {
+      "get": {
+        "summary": "EstimateTxFees returns the estimated transaction fees for the given transaction\ngas limit using the minimum consensus fee value for the current block.",
+        "operationId": "EstimateTxFees",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/archway.rewards.v1beta1.QueryEstimateTxFeesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "gas_limit",
+            "description": "gas_limit is the transaction gas limit.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/archway/rewards/v1/outstanding_rewards": {
+      "get": {
+        "summary": "OutstandingRewards returns total rewards credited from different contracts for the provided rewards_address.",
+        "operationId": "OutstandingRewards",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/archway.rewards.v1beta1.QueryOutstandingRewardsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "rewards_address",
+            "description": "rewards_address is the target address to query calculated rewards for (bech32 encoded).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/archway/rewards/v1/params": {
+      "get": {
+        "summary": "Params returns module parameters.",
+        "operationId": "Params",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/archway.rewards.v1beta1.QueryParamsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/archway/rewards/v1/rewards_pool": {
+      "get": {
+        "summary": "RewardsPool returns the current undistributed rewards pool funds.",
+        "operationId": "RewardsPool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/archway.rewards.v1beta1.QueryRewardsPoolResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/archway/rewards/v1/rewards_records": {
+      "get": {
+        "summary": "RewardsRecords returns the paginated list of RewardsRecord objects stored for the provided rewards_address.",
+        "operationId": "RewardsRecords",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/archway.rewards.v1beta1.QueryRewardsRecordsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "rewards_address",
+            "description": "rewards_address is the target address to query records for (bech32 encoded).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs.\ncount_total is only respected when offset is used. It is ignored when key\nis set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "archway.rewards.v1beta1.BlockRewards": {
+      "type": "object",
+      "properties": {
+        "height": {
+          "type": "string",
+          "format": "int64",
+          "description": "height defines the block height."
+        },
+        "inflation_rewards": {
+          "$ref": "#/definitions/cosmos.base.v1beta1.Coin",
+          "description": "inflation_rewards is the rewards to be distributed."
+        },
+        "max_gas": {
+          "type": "string",
+          "format": "uint64",
+          "description": "max_gas defines the maximum gas for the block that is used to distribute inflation rewards (consensus parameter)."
+        }
+      },
+      "description": "BlockRewards defines block related rewards distribution data."
+    },
+    "archway.rewards.v1beta1.BlockTracking": {
+      "type": "object",
+      "properties": {
+        "inflation_rewards": {
+          "$ref": "#/definitions/archway.rewards.v1beta1.BlockRewards",
+          "description": "inflation_rewards defines the inflation rewards for the block."
+        },
+        "tx_rewards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/archway.rewards.v1beta1.TxRewards"
+          },
+          "description": "tx_rewards defines the transaction rewards for the block."
+        }
+      },
+      "description": "BlockTracking is the tracking information for a block."
+    },
+    "archway.rewards.v1beta1.ContractMetadata": {
+      "type": "object",
+      "properties": {
+        "contract_address": {
+          "type": "string",
+          "description": "contract_address defines the contract address (bech32 encoded)."
+        },
+        "owner_address": {
+          "type": "string",
+          "description": "owner_address is the contract owner address that can modify contract reward options (bech32 encoded).\nThat could be the contract admin or the contract itself.\nIf owner_address is set to contract address, contract can modify the metadata on its own using WASM bindings."
+        },
+        "rewards_address": {
+          "type": "string",
+          "description": "rewards_address is an address to distribute rewards to (bech32 encoded).\nIf not set (empty), rewards are not distributed for this contract."
+        }
+      },
+      "description": "ContractMetadata defines the contract rewards distribution options for a particular contract."
+    },
+    "archway.rewards.v1beta1.Params": {
+      "type": "object",
+      "properties": {
+        "inflation_rewards_ratio": {
+          "type": "string",
+          "description": "inflation_rewards_ratio defines the percentage of minted inflation tokens that are used for dApp rewards [0.0, 1.0].\nIf set to 0.0, no inflation rewards are distributed."
+        },
+        "tx_fee_rebate_ratio": {
+          "type": "string",
+          "description": "tx_fee_rebate_ratio defines the percentage of tx fees that are used for dApp rewards [0.0, 1.0].\nIf set to 0.0, no fee rewards are distributed."
+        },
+        "max_withdraw_records": {
+          "type": "string",
+          "format": "uint64",
+          "description": "max_withdraw_records defines the maximum number of RewardsRecord objects used for the withdrawal operation."
+        }
+      },
+      "description": "Params defines the module parameters."
+    },
+    "archway.rewards.v1beta1.QueryBlockRewardsTrackingResponse": {
+      "type": "object",
+      "properties": {
+        "block": {
+          "$ref": "#/definitions/archway.rewards.v1beta1.BlockTracking"
+        }
+      },
+      "description": "QueryBlockRewardsTrackingResponse is the response for Query.BlockRewardsTracking."
+    },
+    "archway.rewards.v1beta1.QueryContractMetadataResponse": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "$ref": "#/definitions/archway.rewards.v1beta1.ContractMetadata"
+        }
+      },
+      "description": "QueryContractMetadataResponse is the response for Query.ContractMetadata."
+    },
+    "archway.rewards.v1beta1.QueryEstimateTxFeesResponse": {
+      "type": "object",
+      "properties": {
+        "gas_unit_price": {
+          "$ref": "#/definitions/cosmos.base.v1beta1.DecCoin",
+          "description": "gas_unit_price defines the minimum transaction fee per gas unit."
+        },
+        "estimated_fee": {
+          "$ref": "#/definitions/cosmos.base.v1beta1.Coin",
+          "description": "estimated_fee is the estimated transaction fee for a given gas limit."
+        }
+      },
+      "description": "QueryEstimateTxFeesResponse is the response for Query.EstimateTxFees."
+    },
+    "archway.rewards.v1beta1.QueryOutstandingRewardsResponse": {
+      "type": "object",
+      "properties": {
+        "total_rewards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cosmos.base.v1beta1.Coin"
+          },
+          "description": "total_rewards is the total rewards credited to the rewards_address."
+        },
+        "records_num": {
+          "type": "string",
+          "format": "uint64",
+          "description": "records_num is the total number of RewardsRecord objects stored for the rewards_address."
+        }
+      },
+      "description": "QueryOutstandingRewardsResponse is the response for Query.OutstandingRewards."
+    },
+    "archway.rewards.v1beta1.QueryParamsResponse": {
+      "type": "object",
+      "properties": {
+        "params": {
+          "$ref": "#/definitions/archway.rewards.v1beta1.Params"
+        }
+      },
+      "description": "QueryParamsResponse is the response for Query.Params."
+    },
+    "archway.rewards.v1beta1.QueryRewardsPoolResponse": {
+      "type": "object",
+      "properties": {
+        "undistributed_funds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cosmos.base.v1beta1.Coin"
+          },
+          "description": "undistributed_funds are undistributed yet tokens (ready for withdrawal)."
+        },
+        "treasury_funds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cosmos.base.v1beta1.Coin"
+          },
+          "description": "treasury_funds are treasury tokens available (no mechanism is available to withdraw ATM).\nTreasury tokens are collected on a block basis. Those tokens are unused block rewards."
+        }
+      },
+      "description": "QueryRewardsPoolResponse is the response for Query.RewardsPool."
+    },
+    "archway.rewards.v1beta1.QueryRewardsRecordsResponse": {
+      "type": "object",
+      "properties": {
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/archway.rewards.v1beta1.RewardsRecord"
+          },
+          "description": "records is the list of rewards records."
+        },
+        "pagination": {
+          "$ref": "#/definitions/cosmos.base.query.v1beta1.PageResponse",
+          "description": "pagination is the pagination details in the response."
+        }
+      },
+      "description": "QueryRewardsRecordsResponse is the response for Query.RewardsRecords."
+    },
+    "archway.rewards.v1beta1.RewardsRecord": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64",
+          "description": "id is the unique ID of the record."
+        },
+        "rewards_address": {
+          "type": "string",
+          "description": "rewards_address is the address to distribute rewards to (bech32 encoded)."
+        },
+        "rewards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cosmos.base.v1beta1.Coin"
+          },
+          "description": "rewards are the rewards to be transferred later."
+        },
+        "calculated_height": {
+          "type": "string",
+          "format": "int64",
+          "description": "calculated_height defines the block height of rewards calculation event."
+        },
+        "calculated_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "calculated_time defines the block time of rewards calculation event."
+        }
+      },
+      "description": "RewardsRecord defines a record that is used to distribute rewards later (lazy distribution).\nThis record is being created by the x/rewards EndBlocker and pruned after the rewards are distributed.\nAn actual rewards x/bank transfer might be triggered by a Tx (via CLI for example) or by a contract via WASM bindings.\nFor a contract to trigger rewards transfer, contract address must be set as the rewards_address in a\ncorresponding ContractMetadata."
+    },
+    "archway.rewards.v1beta1.TxRewards": {
+      "type": "object",
+      "properties": {
+        "tx_id": {
+          "type": "string",
+          "format": "uint64",
+          "description": "tx_id is the tracking transaction ID (x/tracking is the data source for this value)."
+        },
+        "height": {
+          "type": "string",
+          "format": "int64",
+          "description": "height defines the block height."
+        },
+        "fee_rewards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cosmos.base.v1beta1.Coin"
+          },
+          "description": "fee_rewards is the rewards to be distributed."
+        }
+      },
+      "description": "TxRewards defines transaction related rewards distribution data."
+    },
+    "cosmos.base.query.v1beta1.PageRequest": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "format": "byte",
+          "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set."
+        },
+        "offset": {
+          "type": "string",
+          "format": "uint64",
+          "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set."
+        },
+        "limit": {
+          "type": "string",
+          "format": "uint64",
+          "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app."
+        },
+        "count_total": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs.\ncount_total is only respected when offset is used. It is ignored when key\nis set."
+        }
+      },
+      "description": "message SomeRequest {\n         Foo some_parameter = 1;\n         PageRequest pagination = 2;\n }",
+      "title": "PageRequest is to be embedded in gRPC request messages for efficient\npagination. Ex:"
+    },
+    "cosmos.base.query.v1beta1.PageResponse": {
+      "type": "object",
+      "properties": {
+        "next_key": {
+          "type": "string",
+          "format": "byte",
+          "title": "next_key is the key to be passed to PageRequest.key to\nquery the next page most efficiently"
+        },
+        "total": {
+          "type": "string",
+          "format": "uint64",
+          "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
+        }
+      },
+      "description": "PageResponse is to be embedded in gRPC response messages where the\ncorresponding request message has used PageRequest.\n\n message SomeResponse {\n         repeated Bar results = 1;\n         PageResponse page = 2;\n }"
+    },
+    "cosmos.base.v1beta1.Coin": {
+      "type": "object",
+      "properties": {
+        "denom": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "string"
+        }
+      },
+      "description": "Coin defines a token with a denomination and an amount.\n\nNOTE: The amount field is an Int which implements the custom method\nsignatures required by gogoproto."
+    },
+    "cosmos.base.v1beta1.DecCoin": {
+      "type": "object",
+      "properties": {
+        "denom": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "string"
+        }
+      },
+      "description": "DecCoin defines a token with a denomination and a decimal amount.\n\nNOTE: The amount field is an Dec which implements the custom method\nsignatures required by gogoproto."
+    },
+    "google.protobuf.Any": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "grpc.gateway.runtime.Error": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/google.protobuf.Any"
+          }
+        }
+      }
+    }
+  }
+}
