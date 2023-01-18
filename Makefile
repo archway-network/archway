@@ -202,7 +202,7 @@ localnet:
 	docker-compose up
 
 release:
-	docker run --rm -v "$(CURDIR)":/code -w /code goreleaser/goreleaser-cross --skip-publish --rm-dist
+	docker run --rm -v "$(CURDIR)":/code -w /code goreleaser/goreleaser-cross:v1.19.5 --skip-publish --rm-dist
 
 .PHONY: all install install-debug \
 	go-mod-cache draw-deps clean build format \
