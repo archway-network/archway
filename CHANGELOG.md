@@ -30,6 +30,21 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Improvements
+
+
+## [v0.1.0]
+
+### Added
+
 - [#196](https://github.com/archway-network/archway/pull/196) - add wasm bindings for contracts to interact with the x/gastracking module.
 - [#202](https://github.com/archway-network/archway/pull/202) - added the new x/tracking and x/rewards modules.ù
 - [#210](https://github.com/archway-network/archway/pull/210) - wasm bindings API change
