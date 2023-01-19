@@ -5,31 +5,36 @@ on:
     types: [published]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: true 
-      matrix:
-        os: [ubuntu-latest]
-        db_backend: [ goleveldb ]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Get the version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
-      - uses: actions/setup-go@v2
-        with:
-          go-version: "^1.18" # The Go version to download (if necessary) and use.
-      - name: Build
-        run: |
-          VERSION=${{ steps.get_version.outputs.VERSION }} DB_BACKEND=${{ matrix.db_backend }} LINK_STATICALLY=true make build
-          tar -czvf archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz build/archwayd
-      - uses: actions/upload-artifact@v2
-        with:
-          name: archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz
-          path: archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: archwayd_${{ steps.get_version.outputs.VERSION }}_${{ matrix.os }}.tar.gz
+  release:
+      name: Release
+      runs-on: ubuntu-latest
 
+      container:
+        image: goreleaser/goreleaser-cross:v1.19.5
+        options: --user root
+
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+
+        - name: Set up Go
+          uses: actions/setup-go@v3
+          with:
+            go-version-file: go.mod
+      
+        # Add QEMU to support multi arch build in the future
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@v2
+
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v2
+
+        - name: Install package
+          run: apt install wget
+
+        - name: Run GoReleaser
+          uses: goreleaser/goreleaser-action@v3
+          with:
+            args: release --rm-dist --config .goreleaser.yaml
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
