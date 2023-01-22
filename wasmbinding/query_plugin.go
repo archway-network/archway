@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/archway-network/archway/wasmbinding/gov"
 	"github.com/archway-network/archway/wasmbinding/rewards"
 	"github.com/archway-network/archway/wasmbinding/types"
 )
@@ -15,12 +16,14 @@ import (
 // QueryDispatcher dispatches custom WASM messages.
 type QueryDispatcher struct {
 	rewardsHandler rewards.QueryHandler
+	govHandler     gov.QueryHandler
 }
 
 // NewQueryDispatcher returns a new QueryDispatcher instance.
-func NewQueryDispatcher(rewardsHandler rewards.QueryHandler) QueryDispatcher {
+func NewQueryDispatcher(rewardsHandler rewards.QueryHandler, govHandler gov.QueryHandler) QueryDispatcher {
 	return QueryDispatcher{
 		rewardsHandler: rewardsHandler,
+		govHandler:     govHandler,
 	}
 }
 
@@ -44,6 +47,8 @@ func (d QueryDispatcher) DispatchQuery(ctx sdk.Context, request json.RawMessage)
 		resData, resErr = d.rewardsHandler.GetContractMetadata(ctx, *req.ContractMetadata)
 	case req.RewardsRecords != nil:
 		resData, resErr = d.rewardsHandler.GetRewardsRecords(ctx, *req.RewardsRecords)
+	case req.GovProposals != nil:
+		resData, resErr = d.govHandler.GetProposals(ctx, *req.GovProposals)
 	default:
 		// That should never happen, since we validate the input above
 		return nil, wasmVmTypes.UnsupportedRequest{Kind: "no custom querier found"}

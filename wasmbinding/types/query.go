@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	govTypes "github.com/archway-network/archway/wasmbinding/gov/types"
 	rewardsTypes "github.com/archway-network/archway/wasmbinding/rewards/types"
 )
 
@@ -12,8 +13,11 @@ type Query struct {
 	ContractMetadata *rewardsTypes.ContractMetadataRequest `json:"contract_metadata"`
 
 	// RewardsRecords returns a list of RewardsRecord objects that are credited for the account and are ready to be withdrawn.
-	// Request is paginated. If the limit field is not set, the MaxWithdrawRecords param is used.
+	// The request is paginated. If the limit field is not set, the MaxWithdrawRecords param is used.
 	RewardsRecords *rewardsTypes.RewardsRecordsRequest `json:"rewards_records"`
+
+	// GovProposals returns a list of Proposal objects.
+	GovProposals *govTypes.ProposalsRequest `json:"gov_proposals"`
 }
 
 // Validate validates the query fields.
@@ -25,6 +29,10 @@ func (q Query) Validate() error {
 	}
 
 	if q.RewardsRecords != nil {
+		cnt++
+	}
+
+	if q.GovProposals != nil {
 		cnt++
 	}
 

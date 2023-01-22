@@ -483,7 +483,7 @@ func NewArchwayApp(
 
 	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
-	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.RewardsKeeper)...)
+	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.RewardsKeeper, &app.GovKeeper)...)
 
 	app.WASMKeeper = wasm.NewKeeper(
 		appCodec,

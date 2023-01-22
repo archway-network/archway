@@ -3,6 +3,7 @@ package wasmbinding
 import (
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
+	"github.com/archway-network/archway/wasmbinding/gov"
 	"github.com/archway-network/archway/wasmbinding/rewards"
 )
 
@@ -12,11 +13,15 @@ type RewardsKeeperExpected interface {
 	rewards.KeeperReaderExpected
 }
 
+type GovKeeperExpected interface {
+	gov.KeeperReaderExpected
+}
+
 // BuildWasmOptions returns x/wasmd module options to support WASM bindings functionality.
-func BuildWasmOptions(rKeeper RewardsKeeperExpected) []wasmKeeper.Option {
+func BuildWasmOptions(rKeeper RewardsKeeperExpected, govKeeper GovKeeperExpected) []wasmKeeper.Option {
 	return []wasmKeeper.Option{
 		wasmKeeper.WithMessageHandlerDecorator(BuildWasmMsgDecorator(rKeeper)),
-		wasmKeeper.WithQueryPlugins(BuildWasmQueryPlugin(rKeeper)),
+		wasmKeeper.WithQueryPlugins(BuildWasmQueryPlugin(rKeeper, govKeeper)),
 	}
 }
 
@@ -31,10 +36,11 @@ func BuildWasmMsgDecorator(rKeeper RewardsKeeperExpected) func(old wasmKeeper.Me
 }
 
 // BuildWasmQueryPlugin returns the Wasm custom querier plugin.
-func BuildWasmQueryPlugin(rKeeper RewardsKeeperExpected) *wasmKeeper.QueryPlugins {
+func BuildWasmQueryPlugin(rKeeper RewardsKeeperExpected, govKeeper GovKeeperExpected) *wasmKeeper.QueryPlugins {
 	return &wasmKeeper.QueryPlugins{
 		Custom: NewQueryDispatcher(
 			rewards.NewQueryHandler(rKeeper),
+			gov.NewQueryHandler(govKeeper),
 		).DispatchQuery,
 	}
 }
