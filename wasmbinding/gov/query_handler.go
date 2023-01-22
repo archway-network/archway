@@ -13,6 +13,7 @@ import (
 // KeeperReaderExpected defines the x/gov keeper expected read operations.
 type KeeperReaderExpected interface {
 	Proposals(c sdk.Context, req *govTypes.QueryProposalsRequest) (*govTypes.QueryProposalsResponse, error)
+	Vote(c sdk.Context, req *govTypes.QueryVoteRequest) (*govTypes.QueryVoteResponse, error)
 }
 
 // QueryHandler provides a custom WASM query handler for the x/gov module.
@@ -52,4 +53,22 @@ func (h QueryHandler) GetProposals(ctx sdk.Context, req types.ProposalsRequest) 
 	}
 
 	return types.NewProposalsResponse(res.Proposals, *res.Pagination), nil
+}
+
+// GetVote returns the vote weighted options for a given proposal and voter.
+func (h QueryHandler) GetVote(ctx sdk.Context, req types.VoteRequest) (types.VoteResponse, error) {
+	if err := req.Validate(); err != nil {
+		return types.VoteResponse{}, fmt.Errorf("vote: %w", err)
+	}
+
+	voteReq := govTypes.QueryVoteRequest{
+		ProposalId: req.ProposalId,
+		Voter:      req.Voter,
+	}
+	res, err := h.govKeeper.Vote(ctx, &voteReq)
+	if err != nil {
+		return types.VoteResponse{}, err
+	}
+
+	return types.NewVoteResponse(res.Vote), nil
 }

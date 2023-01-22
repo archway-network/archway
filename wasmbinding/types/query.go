@@ -18,6 +18,9 @@ type Query struct {
 
 	// GovProposals returns a list of Proposal objects.
 	GovProposals *govTypes.ProposalsRequest `json:"gov_proposals"`
+
+	// GovVote returns the vote data for a given proposal and voter.
+	GovVote *govTypes.VoteRequest `json:"gov_vote"`
 }
 
 // Validate validates the query fields.
@@ -33,6 +36,10 @@ func (q Query) Validate() error {
 	}
 
 	if q.GovProposals != nil {
+		cnt++
+	}
+
+	if q.GovVote != nil {
 		cnt++
 	}
 
