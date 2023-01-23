@@ -1,10 +1,12 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
-	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type VoteRequest struct {
@@ -15,10 +17,12 @@ type VoteRequest struct {
 	Voter string `json:"voter"`
 }
 
+type VoteOption int
+
 type (
 	VoteResponse struct {
 		// Vote defines a vote on a governance proposal.
-		Vote Vote `json:"vote"`
+		Vote Vote `json:"vote,omitempty"`
 	}
 
 	Vote struct {
@@ -27,14 +31,58 @@ type (
 		// Voter is the bech32 encoded account address of the voter.
 		Voter string `json:"voter"`
 		// Option is the voting option from the enum.
-		Options []WeightedVoteOption `json:"option"`
+		Options []WeightedVoteOption `json:"options"`
 	}
 
 	WeightedVoteOption struct {
-		Option string  `json:"option,omitempty"`
-		Weight sdk.Dec `json:"weight,omitempty"`
+		Option VoteOption `json:"option"`
+		Weight string     `json:"weight"`
 	}
 )
+
+const (
+	Yes VoteOption = iota
+	No
+	Abstain
+	NoWithVeto
+)
+
+var fromVoteOption = map[VoteOption]string{
+	Yes:        "yes",
+	No:         "no",
+	Abstain:    "abstain",
+	NoWithVeto: "no_with_veto",
+}
+
+var toVoteOption = map[string]VoteOption{
+	"yes":          Yes,
+	"no":           No,
+	"abstain":      Abstain,
+	"no_with_veto": NoWithVeto,
+}
+
+func (v VoteOption) String() string {
+	return fromVoteOption[v]
+}
+
+func (v VoteOption) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.String())
+}
+
+func (s *VoteOption) UnmarshalJSON(b []byte) error {
+	var j string
+	err := json.Unmarshal(b, &j)
+	if err != nil {
+		return err
+	}
+
+	voteOption, ok := toVoteOption[j]
+	if !ok {
+		return fmt.Errorf("invalid vote option '%v'", j)
+	}
+	*s = voteOption
+	return nil
+}
 
 // Validate performs request fields validation.
 func (r VoteRequest) Validate() error {
@@ -71,11 +119,28 @@ func NewVoteResponse(vote govTypes.Vote) VoteResponse {
 	}
 
 	for _, option := range vote.Options {
-		resp.Vote.Options = append(resp.Vote.Options, WeightedVoteOption{
-			Option: option.String(),
-			Weight: option.Weight,
-		})
+		resp.Vote.Options = append(resp.Vote.Options, NewWeightedVoteOption(option))
 	}
 
 	return resp
+}
+
+func NewWeightedVoteOption(voteOption govTypes.WeightedVoteOption) WeightedVoteOption {
+	var option VoteOption
+
+	switch voteOption.Option {
+	case govTypes.OptionYes:
+		option = Yes
+	case govTypes.OptionNo:
+		option = No
+	case govTypes.OptionNoWithVeto:
+		option = NoWithVeto
+	case govTypes.OptionAbstain:
+		option = Abstain
+	}
+
+	return WeightedVoteOption{
+		Option: option,
+		Weight: voteOption.Weight.String(),
+	}
 }
