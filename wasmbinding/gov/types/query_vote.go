@@ -17,8 +17,6 @@ type VoteRequest struct {
 	Voter string `json:"voter"`
 }
 
-type VoteOption int
-
 type (
 	VoteResponse struct {
 		// Vote defines a vote on a governance proposal.
@@ -39,6 +37,8 @@ type (
 		Weight string     `json:"weight"`
 	}
 )
+
+type VoteOption int
 
 const (
 	Yes VoteOption = iota
