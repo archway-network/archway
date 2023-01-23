@@ -1,10 +1,13 @@
 package wasmbinding_test
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -24,7 +27,9 @@ func TestWASMBindingPlugins(t *testing.T) {
 
 	// Create custom plugins
 	rewardsKeeper := chain.GetApp().RewardsKeeper
-	msgPlugin, queryPlugin := wasmbinding.BuildWasmMsgDecorator(rewardsKeeper), wasmbinding.BuildWasmQueryPlugin(rewardsKeeper)
+	govKeeper := chain.GetApp().GovKeeper
+	msgPlugin := wasmbinding.BuildWasmMsgDecorator(rewardsKeeper)
+	queryPlugin := wasmbinding.BuildWasmQueryPlugin(rewardsKeeper, govKeeper)
 
 	// Querier tests
 	t.Run("Querier failure", func(t *testing.T) {
@@ -49,6 +54,34 @@ func TestWASMBindingPlugins(t *testing.T) {
 
 		t.Run("Query empty rewards", func(t *testing.T) {
 			_, err := queryPlugin.Custom(ctx, []byte("{\"rewards_records\": {\"rewards_address\": \""+mockContractAddr.String()+"\"}}"))
+			require.NoError(t, err)
+		})
+
+		t.Run("Query empty gov proposals", func(t *testing.T) {
+			_, err := queryPlugin.Custom(ctx, []byte("{\"gov_proposals\": {}}"))
+			require.NoError(t, err)
+		})
+
+		t.Run("Query gov vote", func(t *testing.T) {
+			proposalId := govTypes.DefaultStartingProposalID
+			textProposal := govTypes.NewTextProposal("foo", "bar")
+
+			anyTime := time.Now().UTC()
+			proposal, pErr := govTypes.NewProposal(textProposal, proposalId, anyTime, anyTime)
+			require.NoError(t, pErr)
+			govKeeper.SetProposal(ctx, proposal)
+
+			accAddrs, _ := e2eTesting.GenAccounts(2)
+			depositor := accAddrs[0]
+			deposit := govTypes.NewDeposit(proposalId, depositor, nil)
+			govKeeper.SetDeposit(ctx, deposit)
+
+			voter := accAddrs[1]
+			govKeeper.ActivateVotingPeriod(ctx, proposal)
+			vote := govTypes.NewVote(proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes))
+			govKeeper.SetVote(ctx, vote)
+
+			_, err := queryPlugin.Custom(ctx, []byte(fmt.Sprintf("{\"gov_vote\": {\"proposal_id\": %d, \"voter\": \"%s\"}}", proposalId, voter)))
 			require.NoError(t, err)
 		})
 	})
