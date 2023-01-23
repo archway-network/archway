@@ -2,11 +2,12 @@ package types
 
 import (
 	"fmt"
+	"time"
+
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"time"
 )
 
 // ProposalsRequest is the Query.ProposalRequest request.

@@ -7,10 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/wasmbinding/gov"
 	govWbTypes "github.com/archway-network/archway/wasmbinding/gov/types"
-	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // TestGovWASMBindings tests the custom querier for the x/gov WASM bindings.
