@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/archway-network/archway/wasmbinding/gov/types"
 	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -12,8 +12,8 @@ import (
 
 // KeeperReaderExpected defines the x/gov keeper expected read operations.
 type KeeperReaderExpected interface {
-	Proposals(c sdk.Context, req *govTypes.QueryProposalsRequest) (*govTypes.QueryProposalsResponse, error)
-	Vote(c sdk.Context, req *govTypes.QueryVoteRequest) (*govTypes.QueryVoteResponse, error)
+	GetProposalsFiltered(c sdk.Context, params govTypes.QueryProposalsParams) govTypes.Proposals
+	GetVote(c sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govTypes.Vote, found bool)
 }
 
 // QueryHandler provides a custom WASM query handler for the x/gov module.
@@ -34,25 +34,11 @@ func (h QueryHandler) GetProposals(ctx sdk.Context, req types.ProposalsRequest) 
 		return types.ProposalsResponse{}, fmt.Errorf("proposals: %w", err)
 	}
 
-	var pageReq *query.PageRequest
-	if req.Pagination != nil {
-		req := req.Pagination.ToSDK()
-		pageReq = &req
-	}
-
 	proposalStatus, _ := govTypes.ProposalStatusFromString(req.Status)
-	proposalsReq := govTypes.QueryProposalsRequest{
-		Voter:          req.Voter,
-		Depositor:      req.Depositor,
-		ProposalStatus: proposalStatus,
-		Pagination:     pageReq,
-	}
-	res, err := h.govKeeper.Proposals(ctx, &proposalsReq)
-	if err != nil {
-		return types.ProposalsResponse{}, err
-	}
+	params := govTypes.NewQueryProposalsParams(req.GetPage(), req.Limit, proposalStatus, req.GetVoter(), req.GetDepositor())
+	proposals := h.govKeeper.GetProposalsFiltered(ctx, params)
 
-	return types.NewProposalsResponse(res.Proposals, *res.Pagination), nil
+	return types.NewProposalsResponse(proposals), nil
 }
 
 // GetVote returns the vote weighted options for a given proposal and voter.
@@ -61,14 +47,11 @@ func (h QueryHandler) GetVote(ctx sdk.Context, req types.VoteRequest) (types.Vot
 		return types.VoteResponse{}, fmt.Errorf("vote: %w", err)
 	}
 
-	voteReq := govTypes.QueryVoteRequest{
-		ProposalId: req.ProposalId,
-		Voter:      req.Voter,
-	}
-	res, err := h.govKeeper.Vote(ctx, &voteReq)
-	if err != nil {
+	vote, found := h.govKeeper.GetVote(ctx, req.ProposalId, req.MustGetVoter())
+	if !found {
+		err := sdkErrors.Wrap(govTypes.ErrInvalidVote, fmt.Errorf("vote not found for proposal %d and voter %s", req.ProposalId, req.Voter).Error())
 		return types.VoteResponse{}, err
 	}
 
-	return types.NewVoteResponse(res.Vote), nil
+	return types.NewVoteResponse(vote), nil
 }

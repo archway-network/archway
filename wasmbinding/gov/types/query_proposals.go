@@ -2,36 +2,31 @@ package types
 
 import (
 	"fmt"
-	"time"
-
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-
-	"github.com/archway-network/archway/wasmbinding/pkg"
 	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"time"
 )
 
 // ProposalsRequest is the Query.ProposalRequest request.
 type ProposalsRequest struct {
 	// Voter is the bech32 encoded account address of the voter.
-	Voter string `json:"voter"`
+	Voter string `json:"voter,omitempty"`
 	// Depositor is the bech32 encoded account address of the voter.
-	Depositor string `json:"depositor"`
+	Depositor string `json:"depositor,omitempty"`
 	// Status is the status from the enum govTypes.ProposalStatus.
-	Status string `json:"status"`
-	// Pagination is an optional pagination options for the request.
-	// Limit should not exceed the MaxWithdrawRecords param value.
-	Pagination *pkg.PageRequest `json:"pagination"`
+	Status string `json:"status,omitempty"`
+	// Page is an optional argument to paginate the request.
+	Page int `json:"page,omitempty"`
+	// Limit is an optional argument to paginate the request.
+	Limit int `json:"limit,omitempty"`
 }
 
 type (
 	ProposalsResponse struct {
 		// Proposals is the list of proposals returned by the query.
 		Proposals []Proposal `json:"proposals"`
-		// Pagination is the pagination details in the response.
-		Pagination pkg.PageResponse `json:"pagination"`
 	}
 
 	Proposal struct {
@@ -77,11 +72,37 @@ func (r ProposalsRequest) Validate() error {
 	return nil
 }
 
-// NewProposalsResponse builds a new ProposalsResponse.
-func NewProposalsResponse(proposals []govTypes.Proposal, pageResp query.PageResponse) ProposalsResponse {
+// GetVoter returns the rewards address as sdk.AccAddress or nil.
+func (r ProposalsRequest) GetVoter() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(r.Voter)
+	if err != nil {
+		return nil
+	}
+
+	return addr
+}
+
+// GetDepositor returns the rewards address as sdk.AccAddress or nil.
+func (r ProposalsRequest) GetDepositor() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(r.Depositor)
+	if err != nil {
+		return nil
+	}
+
+	return addr
+}
+
+func (r ProposalsRequest) GetPage() int {
+	if r.Page == 0 {
+		return 1
+	}
+
+	return r.Page
+}
+
+func NewProposalsResponse(proposals []govTypes.Proposal) ProposalsResponse {
 	resp := ProposalsResponse{
-		Proposals:  make([]Proposal, 0, len(proposals)),
-		Pagination: pkg.NewPageResponseFromSDK(pageResp),
+		Proposals: make([]Proposal, 0, len(proposals)),
 	}
 
 	for _, proposal := range proposals {
