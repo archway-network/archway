@@ -47,8 +47,6 @@ func (d QueryDispatcher) DispatchQuery(ctx sdk.Context, request json.RawMessage)
 		resData, resErr = d.rewardsHandler.GetContractMetadata(ctx, *req.ContractMetadata)
 	case req.RewardsRecords != nil:
 		resData, resErr = d.rewardsHandler.GetRewardsRecords(ctx, *req.RewardsRecords)
-	case req.GovProposals != nil:
-		resData, resErr = d.govHandler.GetProposals(ctx, *req.GovProposals)
 	case req.GovVote != nil:
 		resData, resErr = d.govHandler.GetVote(ctx, *req.GovVote)
 	default:

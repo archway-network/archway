@@ -57,11 +57,6 @@ func TestWASMBindingPlugins(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		t.Run("Query empty gov proposals", func(t *testing.T) {
-			_, err := queryPlugin.Custom(ctx, []byte("{\"gov_proposals\": {}}"))
-			require.NoError(t, err)
-		})
-
 		t.Run("Query gov vote", func(t *testing.T) {
 			proposalId := govTypes.DefaultStartingProposalID
 			textProposal := govTypes.NewTextProposal("foo", "bar")

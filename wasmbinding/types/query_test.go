@@ -26,12 +26,6 @@ func TestQueryValidate(t *testing.T) {
 			},
 		},
 		{
-			name: "OK: GovProposals",
-			query: Query{
-				GovProposals: &govTypes.ProposalsRequest{},
-			},
-		},
-		{
 			name: "OK: GovVote",
 			query: Query{
 				GovVote: &govTypes.VoteRequest{

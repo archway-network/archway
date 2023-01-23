@@ -16,9 +16,6 @@ type Query struct {
 	// The request is paginated. If the limit field is not set, the MaxWithdrawRecords param is used.
 	RewardsRecords *rewardsTypes.RewardsRecordsRequest `json:"rewards_records"`
 
-	// GovProposals returns a list of Proposal objects.
-	GovProposals *govTypes.ProposalsRequest `json:"gov_proposals"`
-
 	// GovVote returns the vote data for a given proposal and voter.
 	GovVote *govTypes.VoteRequest `json:"gov_vote"`
 }
@@ -32,10 +29,6 @@ func (q Query) Validate() error {
 	}
 
 	if q.RewardsRecords != nil {
-		cnt++
-	}
-
-	if q.GovProposals != nil {
 		cnt++
 	}
 

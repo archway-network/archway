@@ -13,7 +13,6 @@ import (
 
 // KeeperReaderExpected defines the x/gov keeper expected read operations.
 type KeeperReaderExpected interface {
-	GetProposalsFiltered(c sdk.Context, params govTypes.QueryProposalsParams) govTypes.Proposals
 	GetVote(c sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govTypes.Vote, found bool)
 }
 
@@ -27,19 +26,6 @@ func NewQueryHandler(gk KeeperReaderExpected) QueryHandler {
 	return QueryHandler{
 		govKeeper: gk,
 	}
-}
-
-// GetProposals returns the paginated list of types.Proposal objects for a given request.
-func (h QueryHandler) GetProposals(ctx sdk.Context, req types.ProposalsRequest) (types.ProposalsResponse, error) {
-	if err := req.Validate(); err != nil {
-		return types.ProposalsResponse{}, fmt.Errorf("proposals: %w", err)
-	}
-
-	proposalStatus, _ := govTypes.ProposalStatusFromString(req.Status)
-	params := govTypes.NewQueryProposalsParams(req.GetPage(), req.Limit, proposalStatus, req.GetVoter(), req.GetDepositor())
-	proposals := h.govKeeper.GetProposalsFiltered(ctx, params)
-
-	return types.NewProposalsResponse(proposals), nil
 }
 
 // GetVote returns the vote weighted options for a given proposal and voter.

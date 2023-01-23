@@ -23,83 +23,25 @@ func TestGovWASMBindings(t *testing.T) {
 	// Create custom plugins
 	queryPlugin := gov.NewQueryHandler(keeper)
 
-	proposalId := govTypes.DefaultStartingProposalID
-	textProposal := govTypes.NewTextProposal("foo", "bar")
-
-	anyTime := time.Now().UTC()
-	proposal, pErr := govTypes.NewProposal(textProposal, proposalId, anyTime, anyTime)
-	require.NoError(t, pErr)
-
 	accAddrs, _ := e2eTesting.GenAccounts(2)
 	depositor := accAddrs[0]
 	voter := accAddrs[1]
 
-	t.Run("Query non-existing proposals", func(t *testing.T) {
-		query := govWbTypes.ProposalsRequest{}
-
-		res, err := queryPlugin.GetProposals(ctx, query)
-		require.NoError(t, err)
-		assert.Empty(t, res.Proposals)
-	})
-
 	// Store a proposal
+	proposalId := govTypes.DefaultStartingProposalID
+	textProposal := govTypes.NewTextProposal("foo", "bar")
+	proposal, pErr := govTypes.NewProposal(textProposal, proposalId, time.Now().UTC(), time.Now().UTC())
+	require.NoError(t, pErr)
 	keeper.SetProposal(ctx, proposal)
-
-	t.Run("Query existing proposals", func(t *testing.T) {
-		query := govWbTypes.ProposalsRequest{}
-
-		res, err := queryPlugin.GetProposals(ctx, query)
-		require.NoError(t, err)
-		assert.Len(t, res.Proposals, 1)
-	})
 
 	// Make a deposit
 	deposit := govTypes.NewDeposit(proposalId, depositor, nil)
 	keeper.SetDeposit(ctx, deposit)
 
-	t.Run("Query proposals by depositor", func(t *testing.T) {
-		query := govWbTypes.ProposalsRequest{
-			Depositor: depositor.String(),
-		}
-
-		res, err := queryPlugin.GetProposals(ctx, query)
-		require.NoError(t, err)
-		assert.Len(t, res.Proposals, 1)
-	})
-
 	// Vote
 	keeper.ActivateVotingPeriod(ctx, proposal)
 	vote := govTypes.NewVote(proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes))
 	keeper.SetVote(ctx, vote)
-
-	t.Run("Query proposals by voter", func(t *testing.T) {
-		query := govWbTypes.ProposalsRequest{
-			Voter: voter.String(),
-		}
-
-		res, err := queryPlugin.GetProposals(ctx, query)
-		require.NoError(t, err)
-		assert.Len(t, res.Proposals, 1)
-	})
-
-	t.Run("Query proposals by status", func(t *testing.T) {
-		query := govWbTypes.ProposalsRequest{
-			Status: govTypes.StatusVotingPeriod.String(),
-		}
-
-		res, err := queryPlugin.GetProposals(ctx, query)
-		require.NoError(t, err)
-		assert.Len(t, res.Proposals, 1)
-	})
-
-	t.Run("Query invalid status", func(t *testing.T) {
-		query := govWbTypes.ProposalsRequest{
-			Status: "INVALID",
-		}
-
-		_, err := queryPlugin.GetProposals(ctx, query)
-		require.Error(t, err)
-	})
 
 	t.Run("Query vote on proposal", func(t *testing.T) {
 		query := govWbTypes.VoteRequest{
