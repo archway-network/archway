@@ -41,6 +41,12 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Improvements
 
 
+## [v0.1.1]
+
+### Added
+
+- [#253](https://github.com/archway-network/archway/pull/253) - add wasm bindings for contracts to query the x/gov module.
+
 ## [v0.1.0]
 
 ### Added
