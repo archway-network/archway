@@ -141,6 +141,8 @@ func Query(deps *std.Deps, env stdTypes.Env, msgBz []byte) ([]byte, error) {
 		handlerRes, handlerErr = queryCustomMetadata(deps, env, *msg.CustomMetadata)
 	case msg.CustomRewardsRecords != nil:
 		handlerRes, handlerErr = queryCustomRewardsRecords(deps, env, *msg.CustomRewardsRecords)
+	case msg.CustomGovVoteRequest != nil:
+		handlerRes, handlerErr = queryCustomGovVote(deps, env, *msg.CustomGovVoteRequest)
 	default:
 		handlerErr = types.NewErrInvalidRequest("unknown query")
 	}
