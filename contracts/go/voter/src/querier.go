@@ -2,6 +2,7 @@ package src
 
 import (
 	"encoding/json"
+
 	"github.com/CosmWasm/cosmwasm-go/std"
 	stdTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 
