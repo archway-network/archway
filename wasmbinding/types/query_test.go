@@ -29,7 +29,7 @@ func TestQueryValidate(t *testing.T) {
 			name: "OK: GovVote",
 			query: Query{
 				GovVote: &govTypes.VoteRequest{
-					ProposalId: 1,
+					ProposalID: 1,
 					Voter:      "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 				},
 			},

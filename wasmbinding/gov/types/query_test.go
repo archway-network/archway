@@ -17,7 +17,7 @@ func TestVoteRequestValidate(t *testing.T) {
 		{
 			name: "OK: Valid request",
 			query: VoteRequest{
-				ProposalId: 1,
+				ProposalID: 1,
 				Voter:      "cosmos14450hpujwlct9x0la3wv46sgk79czrl9phh0dm",
 			},
 		},
@@ -31,7 +31,7 @@ func TestVoteRequestValidate(t *testing.T) {
 		{
 			name: "Fail: Missing voter",
 			query: VoteRequest{
-				ProposalId: 1,
+				ProposalID: 1,
 			},
 			errExpected: true,
 		},

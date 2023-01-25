@@ -11,7 +11,7 @@ import (
 
 type VoteRequest struct {
 	// ProposalID is the unique ID of the proposal.
-	ProposalId uint64 `json:"proposal_id"`
+	ProposalID uint64 `json:"proposal_id"`
 
 	// Voter is the bech32 encoded account address of the voter.
 	Voter string `json:"voter"`
@@ -86,7 +86,7 @@ func (s *VoteOption) UnmarshalJSON(b []byte) error {
 
 // Validate performs request fields validation.
 func (r VoteRequest) Validate() error {
-	if r.ProposalId == 0 {
+	if r.ProposalID == 0 {
 		return fmt.Errorf("proposal_id: must specify a proposal ID to query")
 	}
 

@@ -45,7 +45,7 @@ func TestGovWASMBindings(t *testing.T) {
 
 	t.Run("Query vote on proposal", func(t *testing.T) {
 		query := govWbTypes.VoteRequest{
-			ProposalId: proposalId,
+			ProposalID: proposalId,
 			Voter:      voter.String(),
 		}
 
@@ -58,7 +58,7 @@ func TestGovWASMBindings(t *testing.T) {
 
 	t.Run("Query vote on invalid proposal", func(t *testing.T) {
 		query := govWbTypes.VoteRequest{
-			ProposalId: 2,
+			ProposalID: 2,
 			Voter:      voter.String(),
 		}
 

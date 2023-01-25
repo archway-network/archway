@@ -34,9 +34,9 @@ func (h QueryHandler) GetVote(ctx sdk.Context, req types.VoteRequest) (types.Vot
 		return types.VoteResponse{}, fmt.Errorf("vote: %w", err)
 	}
 
-	vote, found := h.govKeeper.GetVote(ctx, req.ProposalId, req.MustGetVoter())
+	vote, found := h.govKeeper.GetVote(ctx, req.ProposalID, req.MustGetVoter())
 	if !found {
-		err := sdkErrors.Wrap(govTypes.ErrInvalidVote, fmt.Errorf("vote not found for proposal %d and voter %s", req.ProposalId, req.Voter).Error())
+		err := sdkErrors.Wrap(govTypes.ErrInvalidVote, fmt.Errorf("vote not found for proposal %d and voter %s", req.ProposalID, req.Voter).Error())
 		return types.VoteResponse{}, err
 	}
 
