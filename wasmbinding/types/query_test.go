@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	govTypes "github.com/archway-network/archway/wasmbinding/gov/types"
 	rewardsTypes "github.com/archway-network/archway/wasmbinding/rewards/types"
 )
 
@@ -21,6 +22,15 @@ func TestQueryValidate(t *testing.T) {
 			query: Query{
 				ContractMetadata: &rewardsTypes.ContractMetadataRequest{
 					ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				},
+			},
+		},
+		{
+			name: "OK: GovVote",
+			query: Query{
+				GovVote: &govTypes.VoteRequest{
+					ProposalID: 1,
+					Voter:      "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 				},
 			},
 		},
