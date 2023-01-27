@@ -14,6 +14,8 @@ type (
 		// RewardsRecords returns a list of RewardsRecord objects that are credited for the account and are ready to be withdrawn.
 		// Request is paginated. If the limit field is not set, the MaxWithdrawRecords param is used.
 		RewardsRecords *RewardsRecordsRequest `json:",omitempty"`
+
+		GovVote *GovVoteRequest `json:",omitempty"`
 	}
 )
 
@@ -58,6 +60,13 @@ type (
 		// CalculatedTime defines the block time of rewards calculation event.
 		// RFC3339Nano is used to represent the time.
 		CalculatedTime string
+	}
+)
+
+type ( // NOTE: only GovVoteRequest is present, for testing we don't care about the response, this is to be maintained in a shared repo and not be replicated.
+	GovVoteRequest struct {
+		ProposalID uint64 `json:",omitempty"`
+		Voter      string `json:",omitempty"`
 	}
 )
 

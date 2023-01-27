@@ -1,6 +1,8 @@
 package src
 
 import (
+	"encoding/json"
+
 	"github.com/CosmWasm/cosmwasm-go/std"
 	stdTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 
@@ -321,4 +323,34 @@ func queryCustomRewardsRecords(deps *std.Deps, env stdTypes.Env, req types.Custo
 	return &types.CustomRewardsRecordsResponse{
 		RewardsRecordsResponse: res,
 	}, nil
+}
+
+func queryCustomGovVote(deps *std.Deps, env stdTypes.Env, req types.CustomGovVoteRequest) (*json.RawMessage, error) {
+	customReq := archwayCustomTypes.CustomQuery{
+		GovVote: &archwayCustomTypes.GovVoteRequest{
+			ProposalID: req.ProposalID,
+			Voter:      req.Voter,
+		},
+	}
+
+	customReqBz, err := customReq.MarshalJSON()
+	if err != nil {
+		return nil, types.NewErrInternal("request JSON marshal: " + err.Error())
+	}
+
+	reqRaw := stdTypes.QueryRequest{
+		Custom: customReqBz,
+	}
+	reqRawBz, err := reqRaw.MarshalJSON()
+	if err != nil {
+		return nil, types.NewErrInternal("query JSON marshal: " + err.Error())
+	}
+
+	resBz, err := deps.Querier.RawQuery(reqRawBz)
+	if err != nil {
+		return nil, types.NewErrInternal("raw query: " + err.Error())
+	}
+
+	asRawMsg := json.RawMessage(resBz)
+	return &asRawMsg, nil
 }
