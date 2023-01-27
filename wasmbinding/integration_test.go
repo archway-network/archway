@@ -2,15 +2,17 @@ package wasmbinding_test
 
 import (
 	"encoding/json"
+	"testing"
+
 	cwMath "github.com/CosmWasm/cosmwasm-go/std/math"
 	cwSdkTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	voterTypes "github.com/archway-network/voter/src/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkGov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 func TestGovQuerier(t *testing.T) {
