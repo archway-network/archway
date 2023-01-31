@@ -87,6 +87,13 @@ var (
 	RewardsRecordAddressIndexPrefix = []byte{0x02}
 )
 
+// FlatFee prefixed store state keys.
 var (
-	FlatFeePrefix = []byte{0x10}
+	// FlatFeeStatePrefix defines the state global prefix.
+	FlatFeeStatePrefix = []byte{0x05}
+
+	// FlatFeePrefix defines the prefix for storing FlatFee objects.
+	// Key: FlatFeeStatePrefix | FlatFeePrefix | {ContractAddress}
+	// Value: sdk.Coin
+	FlatFeePrefix = []byte{0x00}
 )
