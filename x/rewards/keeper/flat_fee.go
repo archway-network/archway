@@ -1,16 +1,24 @@
 package keeper
 
 import (
+	"github.com/archway-network/archway/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SetFlatFee
-func (k Keeper) SetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress, flatFee sdk.Coin) {
+func (k Keeper) SetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress, flatFee sdk.Coin) error {
+	// Check if the contract metadata exists
+	contractInfo := k.GetContractMetadata(ctx, contractAddr)
+	if contractInfo == nil {
+		return types.ErrMetadataNotFound
+	}
+
 	if flatFee.Amount.IsZero() {
 		k.state.FlatFee(ctx).RemoveFee(contractAddr)
 	} else {
 		k.state.FlatFee(ctx).SetFee(contractAddr, flatFee)
 	}
+	return nil
 }
 
 // GetFlatFee
