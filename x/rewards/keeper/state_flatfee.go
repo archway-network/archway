@@ -9,14 +9,14 @@ import (
 	"github.com/archway-network/archway/x/rewards/types"
 )
 
-// FlatFeeState
+// FlatFeeState provides access to the types.FlatFee objects storage operations.
 type FlatFeeState struct {
 	stateStore storeTypes.KVStore
 	cdc        codec.Codec
 	ctx        sdk.Context
 }
 
-// SetFee
+// SetFee creates or modifies a types.FlatFee object.
 func (s FlatFeeState) SetFee(contractAddr sdk.AccAddress, feeCoin sdk.Coin) {
 	store := prefix.NewStore(s.stateStore, types.FlatFeePrefix)
 	store.Set(
@@ -25,7 +25,7 @@ func (s FlatFeeState) SetFee(contractAddr sdk.AccAddress, feeCoin sdk.Coin) {
 	)
 }
 
-// GetFee
+// GetFee returns a types.FlatFee object by contract address.
 func (s FlatFeeState) GetFee(contractAddr sdk.AccAddress) (sdk.Coin, bool) {
 	store := prefix.NewStore(s.stateStore, types.FlatFeePrefix)
 	coinBz := store.Get(contractAddr.Bytes())
@@ -39,7 +39,7 @@ func (s FlatFeeState) GetFee(contractAddr sdk.AccAddress) (sdk.Coin, bool) {
 	return coin, true
 }
 
-// RemoveFee
+// RemoveFee deletes a types.FlatFee object.
 func (s FlatFeeState) RemoveFee(contractAddr sdk.AccAddress) {
 	store := prefix.NewStore(s.stateStore, types.FlatFeePrefix)
 	store.Delete(contractAddr.Bytes())

@@ -79,6 +79,7 @@ func (s State) RewardsRecord(ctx sdk.Context) RewardsRecordState {
 	}
 }
 
+// FlatFee returns types.FlatFeeState repository.
 func (s State) FlatFee(ctx sdk.Context) FlatFeeState {
 	baseStore := ctx.KVStore(s.key)
 	return FlatFeeState{
