@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/archway-network/archway/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/rewards/types"
 )
 
 // SetFlatFee checks if a contract has metadata set and stores the given flat fee to be associated with that contract
