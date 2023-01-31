@@ -86,3 +86,7 @@ var (
 	// Value: None
 	RewardsRecordAddressIndexPrefix = []byte{0x02}
 )
+
+var (
+	FlatFeePrefix = []byte{0x10}
+)
