@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// SetFlatFee
+// SetFlatFee checks if a contract has metadata set and stores the given flat fee to be associated with that contract
 func (k Keeper) SetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress, flatFee sdk.Coin) error {
 	// Check if the contract metadata exists
 	contractInfo := k.GetContractMetadata(ctx, contractAddr)
@@ -21,7 +21,7 @@ func (k Keeper) SetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress, flatFee
 	return nil
 }
 
-// GetFlatFee
+// GetFlatFee retreives the flat fee stored for a given contract
 func (k Keeper) GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Coin, bool) {
 	fee, found := k.state.FlatFee(ctx).GetFee(contractAddr)
 	if !found {
