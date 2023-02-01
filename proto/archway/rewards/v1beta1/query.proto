@@ -46,6 +46,10 @@ service Query {
   rpc OutstandingRewards(QueryOutstandingRewardsRequest) returns (QueryOutstandingRewardsResponse) {
     option (google.api.http).get = "/archway/rewards/v1/outstanding_rewards";
   }
+
+  rpc FlatFee(QueryFlatFeeRequest) returns (QueryFlatFeeResponse) {
+    option (google.api.http).get = "/archway/rewards/v1/flat_fee";
+  }
 }
 
 // QueryParamsRequest is the request for Query.Params.
@@ -161,4 +165,14 @@ message QueryOutstandingRewardsResponse {
   ];
   // records_num is the total number of RewardsRecord objects stored for the rewards_address.
   uint64 records_num = 2;
+}
+
+message QueryFlatFeeRequest {
+  string contract_address = 1;
+}
+
+message QueryFlatFeeResponse {
+  cosmos.base.v1beta1.Coin flat_fee_amount = 1 [
+    (gogoproto.nullable) = false
+  ];
 }
