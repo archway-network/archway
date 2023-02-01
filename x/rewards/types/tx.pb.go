@@ -362,10 +362,14 @@ func (m *MsgWithdrawRewardsResponse) GetTotalRewards() []types.Coin {
 	return nil
 }
 
+// MsgSetFlatFee is the request for Msg.SetFlatFee.
 type MsgSetFlatFee struct {
-	SenderAddress   string     `protobuf:"bytes,1,opt,name=sender_address,json=senderAddress,proto3" json:"sender_address,omitempty"`
-	ContractAddress string     `protobuf:"bytes,2,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	FlatFeeAmount   types.Coin `protobuf:"bytes,3,opt,name=flat_fee_amount,json=flatFeeAmount,proto3" json:"flat_fee_amount"`
+	// sender_address is the msg sender address (bech32 encoded).
+	SenderAddress string `protobuf:"bytes,1,opt,name=sender_address,json=senderAddress,proto3" json:"sender_address,omitempty"`
+	// contract_address is the contract address (bech32 encoded).
+	ContractAddress string `protobuf:"bytes,2,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+	// flat_fee_amount defines the minimum flat fee set by the contract_owner
+	FlatFeeAmount types.Coin `protobuf:"bytes,3,opt,name=flat_fee_amount,json=flatFeeAmount,proto3" json:"flat_fee_amount"`
 }
 
 func (m *MsgSetFlatFee) Reset()         { *m = MsgSetFlatFee{} }
@@ -422,6 +426,7 @@ func (m *MsgSetFlatFee) GetFlatFeeAmount() types.Coin {
 	return types.Coin{}
 }
 
+// MsgSetFlatFeeResponse is the response for Msg.SetFlatFee.
 type MsgSetFlatFeeResponse struct {
 }
 
@@ -530,6 +535,8 @@ type MsgClient interface {
 	// WithdrawRewards performs collected rewards distribution.
 	// Rewards might be credited from multiple contracts (rewards_address must be set in the corresponding contract metadata).
 	WithdrawRewards(ctx context.Context, in *MsgWithdrawRewards, opts ...grpc.CallOption) (*MsgWithdrawRewardsResponse, error)
+	// SetFlatFee sets or updates or removes the flat fee to interact with the contract
+	// Method is authorized to the contract owner.
 	SetFlatFee(ctx context.Context, in *MsgSetFlatFee, opts ...grpc.CallOption) (*MsgSetFlatFeeResponse, error)
 }
 
@@ -576,6 +583,8 @@ type MsgServer interface {
 	// WithdrawRewards performs collected rewards distribution.
 	// Rewards might be credited from multiple contracts (rewards_address must be set in the corresponding contract metadata).
 	WithdrawRewards(context.Context, *MsgWithdrawRewards) (*MsgWithdrawRewardsResponse, error)
+	// SetFlatFee sets or updates or removes the flat fee to interact with the contract
+	// Method is authorized to the contract owner.
 	SetFlatFee(context.Context, *MsgSetFlatFee) (*MsgSetFlatFeeResponse, error)
 }
 

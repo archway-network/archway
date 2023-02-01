@@ -168,6 +168,7 @@ func (s *QueryServer) RewardsRecords(c context.Context, request *types.QueryRewa
 	}, nil
 }
 
+// FlatFee implements the types.QueryServer interface.
 func (s *QueryServer) FlatFee(c context.Context, request *types.QueryFlatFeeRequest) (*types.QueryFlatFeeResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

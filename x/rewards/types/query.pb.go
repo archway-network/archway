@@ -745,7 +745,9 @@ func (m *QueryOutstandingRewardsResponse) GetRecordsNum() uint64 {
 	return 0
 }
 
+// QueryFlatFeeRequest is the request for Query.FlatFeet
 type QueryFlatFeeRequest struct {
+	// contract_address is the contract address (bech32 encoded).
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
 }
 
@@ -789,7 +791,9 @@ func (m *QueryFlatFeeRequest) GetContractAddress() string {
 	return ""
 }
 
+// QueryFlatFeeResponse is the response for Query.FlatFee
 type QueryFlatFeeResponse struct {
+	// flat_fee_amount defines the minimum flat fee set by the contract_owner per contract execution.
 	FlatFeeAmount types.Coin `protobuf:"bytes,1,opt,name=flat_fee_amount,json=flatFeeAmount,proto3" json:"flat_fee_amount"`
 }
 
@@ -957,6 +961,7 @@ type QueryClient interface {
 	RewardsRecords(ctx context.Context, in *QueryRewardsRecordsRequest, opts ...grpc.CallOption) (*QueryRewardsRecordsResponse, error)
 	// OutstandingRewards returns total rewards credited from different contracts for the provided rewards_address.
 	OutstandingRewards(ctx context.Context, in *QueryOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryOutstandingRewardsResponse, error)
+	// FlatFee returns the flat fee set by the contract owner for the provided contract_address
 	FlatFee(ctx context.Context, in *QueryFlatFeeRequest, opts ...grpc.CallOption) (*QueryFlatFeeResponse, error)
 }
 
@@ -1057,6 +1062,7 @@ type QueryServer interface {
 	RewardsRecords(context.Context, *QueryRewardsRecordsRequest) (*QueryRewardsRecordsResponse, error)
 	// OutstandingRewards returns total rewards credited from different contracts for the provided rewards_address.
 	OutstandingRewards(context.Context, *QueryOutstandingRewardsRequest) (*QueryOutstandingRewardsResponse, error)
+	// FlatFee returns the flat fee set by the contract owner for the provided contract_address
 	FlatFee(context.Context, *QueryFlatFeeRequest) (*QueryFlatFeeResponse, error)
 }
 

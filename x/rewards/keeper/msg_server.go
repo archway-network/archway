@@ -86,6 +86,7 @@ func (s MsgServer) WithdrawRewards(c context.Context, request *types.MsgWithdraw
 	}, nil
 }
 
+// SetFlatFee implements the types.MsgServer interface.
 func (s MsgServer) SetFlatFee(c context.Context, request *types.MsgSetFlatFee) (*types.MsgSetFlatFeeResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
