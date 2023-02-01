@@ -187,3 +187,53 @@ func (s *KeeperTestSuite) TestGRPC_RewardsRecords() {
 		s.Require().EqualValues(0, len(res.Records))
 	})
 }
+
+func (s *KeeperTestSuite) TestGRPC_FlatFee() {
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+
+	querySrvr := keeper.NewQueryServer(k)
+
+	s.Run("err: empty request", func() {
+		_, err := querySrvr.FlatFee(sdk.WrapSDKContext(ctx), nil)
+		s.Require().Error(err)
+		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	})
+
+	s.Run("err: invalid contract address", func() {
+		_, err := querySrvr.FlatFee(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryFlatFeeRequest{
+			ContractAddress: "👻",
+		})
+		s.Require().Error(err)
+		s.Require().Equal(status.Error(codes.InvalidArgument, "invalid contract address: decoding bech32 failed: invalid bech32 string length 4"), err)
+	})
+
+	s.Run("err: flat fee not found", func() {
+		contractAddr := e2eTesting.GenContractAddresses(1)[0]
+		_, err := querySrvr.FlatFee(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryFlatFeeRequest{
+			ContractAddress: contractAddr.String(),
+		})
+		s.Require().Error(err)
+		s.Require().Equal(status.Error(codes.NotFound, "flat fee: not found"), err)
+	})
+
+	s.Run("ok: get flat fee", func() {
+		contractAdminAcc := s.chain.GetAccount(0)
+		contractViewer := testutils.NewMockContractViewer()
+		k.SetContractInfoViewer(contractViewer)
+		contractAddr := e2eTesting.GenContractAddresses(1)[0]
+		contractViewer.AddContractAdmin(contractAddr.String(), contractAdminAcc.Address.String())
+		err := k.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, rewardsTypes.ContractMetadata{
+			ContractAddress: contractAddr.String(),
+			OwnerAddress:    contractAdminAcc.Address.String(),
+		})
+		k.SetFlatFee(ctx, contractAddr, sdk.NewInt64Coin("token", 123))
+		s.Require().NoError(err)
+
+		res, err := querySrvr.FlatFee(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryFlatFeeRequest{
+			ContractAddress: contractAddr.String(),
+		})
+		s.Require().NoError(err)
+		s.Require().NotNil(res)
+		s.Require().EqualValues(sdk.NewInt64Coin("token", 123), res.FlatFeeAmount)
+	})
+}
