@@ -226,6 +226,7 @@ func (s *KeeperTestSuite) TestGRPC_FlatFee() {
 			ContractAddress: contractAddr.String(),
 			OwnerAddress:    contractAdminAcc.Address.String(),
 		})
+		s.Require().NoError(err)
 		err = k.SetFlatFee(ctx, contractAddr, sdk.NewInt64Coin("token", 123))
 		s.Require().NoError(err)
 
