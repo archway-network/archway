@@ -71,7 +71,9 @@ message MsgWithdrawRewardsResponse {
 message MsgSetFlatFee {
   string sender_address = 1;
 
-  cosmos.base.v1beta1.Coin flat_fee_amount = 2 [
+  string contract_address = 2;
+
+  cosmos.base.v1beta1.Coin flat_fee_amount = 3 [
     (gogoproto.nullable) = false
   ];
 }
