@@ -167,3 +167,26 @@ func (s *QueryServer) RewardsRecords(c context.Context, request *types.QueryRewa
 		Pagination: pageResp,
 	}, nil
 }
+
+// FlatFee implements the types.QueryServer interface.
+func (s *QueryServer) FlatFee(c context.Context, request *types.QueryFlatFeeRequest) (*types.QueryFlatFeeResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid contract address: "+err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	fee, ok := s.keeper.GetFlatFee(ctx, contractAddr)
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "flat fee: not found")
+	}
+
+	return &types.QueryFlatFeeResponse{
+		FlatFeeAmount: fee,
+	}, nil
+}

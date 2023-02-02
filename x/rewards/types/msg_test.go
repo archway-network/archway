@@ -191,3 +191,53 @@ func TestMsgWithdrawRewardsValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgSetFlatFeeValidateBasic(t *testing.T) {
+	type testCase struct {
+		name        string
+		msg         rewardsTypes.MsgSetFlatFee
+		errExpected bool
+	}
+
+	accAddrs, _ := e2eTesting.GenAccounts(1)
+	accAddr := accAddrs[0]
+
+	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+
+	testCases := []testCase{
+		{
+			name: "OK",
+			msg: rewardsTypes.MsgSetFlatFee{
+				SenderAddress:   accAddr.String(),
+				ContractAddress: contractAddr.String(),
+			},
+		},
+		{
+			name: "Fail: invalid SenderAddress",
+			msg: rewardsTypes.MsgSetFlatFee{
+				SenderAddress:   "👻",
+				ContractAddress: contractAddr.String(),
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid Contract Address",
+			msg: rewardsTypes.MsgSetFlatFee{
+				SenderAddress:   accAddr.String(),
+				ContractAddress: "👻",
+			},
+			errExpected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.errExpected {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}

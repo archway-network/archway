@@ -13,6 +13,7 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSetContractMetadata{}, "rewards/MsgSetContractMetadata", nil)
 	cdc.RegisterConcrete(&MsgWithdrawRewards{}, "rewards/MsgWithdrawRewards", nil)
+	cdc.RegisterConcrete(&MsgSetFlatFee{}, "rewards/MsgSetFlatFee", nil)
 }
 
 // RegisterInterfaces registers interfaces types with the interface registry.
@@ -20,6 +21,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSetContractMetadata{},
 		&MsgWithdrawRewards{},
+		&MsgSetFlatFee{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

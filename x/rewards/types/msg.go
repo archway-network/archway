@@ -10,11 +10,13 @@ import (
 const (
 	TypeMsgSetContractMetadata = "set-contract-metadata"
 	TypeMsgWithdrawRewards     = "withdraw-rewards"
+	TypeMsgFlatFee             = "flat-fee"
 )
 
 var (
 	_ sdk.Msg = &MsgSetContractMetadata{}
 	_ sdk.Msg = &MsgWithdrawRewards{}
+	_ sdk.Msg = &MsgSetFlatFee{}
 )
 
 // NewMsgSetContractMetadata creates a new MsgSetContractMetadata instance.
@@ -160,6 +162,51 @@ func (m MsgWithdrawRewards) ValidateBasic() error {
 		}
 	default:
 		return sdkErrors.Wrapf(sdkErrors.ErrUnknownRequest, "unknown withdraw rewards mode: %T", m.Mode)
+	}
+
+	return nil
+}
+
+// NewMsgFlatFee creates a new MsgSetFlatFee instance.
+func NewMsgFlatFee(senderAddr, contractAddr sdk.AccAddress, flatFee sdk.Coin) *MsgSetFlatFee {
+	msg := &MsgSetFlatFee{
+		SenderAddress:   senderAddr.String(),
+		ContractAddress: contractAddr.String(),
+		FlatFeeAmount:   flatFee,
+	}
+
+	return msg
+}
+
+// Route implements the sdk.Msg interface.
+func (m MsgSetFlatFee) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (m MsgSetFlatFee) Type() string { return TypeMsgFlatFee }
+
+// GetSigners implements the sdk.Msg interface.
+func (m MsgSetFlatFee) GetSigners() []sdk.AccAddress {
+	senderAddr, err := sdk.AccAddressFromBech32(m.SenderAddress)
+	if err != nil {
+		panic(fmt.Errorf("parsing sender address (%s): %w", m.SenderAddress, err))
+	}
+
+	return []sdk.AccAddress{senderAddr}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (m MsgSetFlatFee) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&m)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (m MsgSetFlatFee) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.SenderAddress); err != nil {
+		return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
+		return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid contract address: %v", err)
 	}
 
 	return nil

@@ -16,6 +16,10 @@ service Msg {
   // WithdrawRewards performs collected rewards distribution.
   // Rewards might be credited from multiple contracts (rewards_address must be set in the corresponding contract metadata).
   rpc WithdrawRewards(MsgWithdrawRewards) returns (MsgWithdrawRewardsResponse);
+
+  // SetFlatFee sets or updates or removes the flat fee to interact with the contract
+  // Method is authorized to the contract owner.
+  rpc SetFlatFee(MsgSetFlatFee) returns (MsgSetFlatFeeResponse);
 }
 
 // MsgSetContractMetadata is the request for Msg.SetContractMetadata.
@@ -65,3 +69,18 @@ message MsgWithdrawRewardsResponse {
     (gogoproto.nullable) = false
   ];
 }
+
+// MsgSetFlatFee is the request for Msg.SetFlatFee.
+message MsgSetFlatFee {
+  // sender_address is the msg sender address (bech32 encoded).
+  string sender_address = 1;
+  // contract_address is the contract address (bech32 encoded).
+  string contract_address = 2;
+  // flat_fee_amount defines the minimum flat fee set by the contract_owner
+  cosmos.base.v1beta1.Coin flat_fee_amount = 3 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// MsgSetFlatFeeResponse is the response for Msg.SetFlatFee.
+message MsgSetFlatFeeResponse {}
