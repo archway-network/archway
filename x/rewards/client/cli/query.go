@@ -26,6 +26,7 @@ func GetQueryCmd() *cobra.Command {
 		getQueryEstimateTxFeesCmd(),
 		getQueryOutstandingRewardsCmd(),
 		getQueryRewardsRecordsCmd(),
+		getQueryContractFlatFeeCmd(),
 	)
 
 	return cmd
@@ -244,6 +245,39 @@ func getQueryRewardsRecordsCmd() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "rewards-records")
+
+	return cmd
+}
+
+func getQueryContractFlatFeeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "flat-fee [contract-address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query contract flat-fee",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			contractAddr, err := pkg.ParseAccAddressArg("contract-address", args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.FlatFee(cmd.Context(), &types.QueryFlatFeeRequest{
+				ContractAddress: contractAddr.String(),
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(&res.FlatFeeAmount)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
