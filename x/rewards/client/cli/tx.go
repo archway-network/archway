@@ -25,6 +25,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		getTxSetContractMetadataCmd(),
 		getTxWithdrawRewardsCmd(),
+		getTxSetFlatFeeCmd(),
 	)
 
 	return cmd
@@ -115,6 +116,40 @@ func getTxWithdrawRewardsCmd() *cobra.Command {
 
 	addRecordsLimitFlag(cmd)
 	addRecordIDsFlag(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func getTxSetFlatFeeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-flat-fee [contract-address] [fee-amount]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Set / modify contract flat fee",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			senderAddr := clientCtx.GetFromAddress()
+
+			contractAddress, err := pkg.ParseAccAddressArg("contract-address", args[0])
+			if err != nil {
+				return err
+			}
+
+			deposit, err := pkg.ParseCoinArg("fee-amount", args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgFlatFee(senderAddr, contractAddress, deposit)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
