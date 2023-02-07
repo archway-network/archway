@@ -105,17 +105,29 @@ func (s *QueryServer) EstimateTxFees(c context.Context, request *types.QueryEsti
 
 	ctx := sdk.UnwrapSDKContext(c)
 
+	fees := []sdk.Coin{}
 	minConsFee, found := s.keeper.GetMinConsensusFee(ctx)
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "min consensus fee: not found")
+	if found {
+		fees = append(fees, sdk.Coin{
+			Denom:  minConsFee.Denom,
+			Amount: minConsFee.Amount.MulInt64(int64(request.GasLimit)).RoundInt(),
+		})
+	}
+
+	if request.ContractAddress != "" { // if contract address is passed in, get the flat fee and add that.
+		contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid contract address: "+err.Error())
+		}
+		contractFlatFee, found := s.keeper.GetFlatFee(ctx, contractAddr)
+		if found {
+			fees = append(fees, contractFlatFee)
+		}
 	}
 
 	return &types.QueryEstimateTxFeesResponse{
 		GasUnitPrice: minConsFee,
-		EstimatedFee: sdk.Coin{
-			Denom:  minConsFee.Denom,
-			Amount: minConsFee.Amount.MulInt64(int64(request.GasLimit)).RoundInt(),
-		},
+		EstimatedFee: sdk.NewCoins(fees...).Sort(),
 	}, nil
 }
 

@@ -117,7 +117,7 @@ message QueryEstimateTxFeesResponse {
     (gogoproto.nullable) = false
   ];
   // estimated_fee is the estimated transaction fee for a given gas limit.
-  cosmos.base.v1beta1.Coin estimated_fee = 2 [
+  repeated cosmos.base.v1beta1.Coin estimated_fee = 2 [
     (gogoproto.nullable) = false
   ];
 }
