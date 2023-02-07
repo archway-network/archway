@@ -33,6 +33,10 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#253](https://github.com/archway-network/archway/pull/253) - add wasm bindings for contracts to query the x/gov module.
 - [#254](https://github.com/archway-network/archway/pull/254) - implementing contract premiums (keeper, msgSrvr & querySrvr, cli endpoints)
 
+### Changed
+
+- [#267](https://github.com/archway-network/archway/pull/267) - update `querySrvr.EstimateTxFees` to also consider contract flat fee when returning the estimated fees.
+
 ## [v0.1.0]
 
 ### Added
