@@ -45,43 +45,38 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 		return ctx, sdkErrors.Wrap(sdkErrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	// Skip the check if min gas unit price is not defined (not yet set or is zero)
+	var feeCoins []sdk.Coin // All the fees which need to be paid for the given tx. includes min consensus fee + every contract flat fee
 	gasUnitPrice, found := mfd.rewardsKeeper.GetMinConsensusFee(ctx)
-	if !found || gasUnitPrice.IsZero() {
-		return next(ctx, tx, simulate)
+	if found {
+		// Estimate the minimum fee expected
+		// We use RoundInt here since minimum fee must be GTE calculated amount
+		txGasLimit := pkg.NewDecFromUint64(feeTx.GetGas())
+		if txGasLimit.IsZero() {
+			return ctx, sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "tx gas limit is not set")
+		}
+		minFeeExpected := sdk.Coin{
+			Denom:  gasUnitPrice.Denom,
+			Amount: gasUnitPrice.Amount.Mul(txGasLimit).RoundInt(),
+		}
+		feeCoins = append(feeCoins, minFeeExpected)
 	}
 
-	// Estimate the minimum fee expected
-	// We use RoundInt here since minimum fee must be GTE calculated amount
+	// for _, m := range tx.GetMsgs() {
+	// 	flatFees, err := mfd.getContractFlatFees(ctx, m)
+	// 	if err != nil {
+	// 		return ctx, err
+	// 	}
+	// 	for _, fee := range flatFees {
+	// 		fees.Add(fee)
+	// 	}
+	// }
+
+	fees := sdk.NewCoins(feeCoins...)
 	txFees := feeTx.GetFee()
-
-	txGasLimit := pkg.NewDecFromUint64(feeTx.GetGas())
-	if txGasLimit.IsZero() {
-		return ctx, sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "tx gas limit is not set")
-	}
-
-	minFeeExpected := sdk.Coin{
-		Denom:  gasUnitPrice.Denom,
-		Amount: gasUnitPrice.Amount.Mul(txGasLimit).RoundInt(),
-	}
-
-	var flatfee sdk.Coins
-	for _, m := range tx.GetMsgs() {
-		fees, err := mfd.getContractFlatFees(ctx, m)
-		if err != nil {
-			return ctx, err
-		}
-		for _, fee := range fees {
-			flatfee.Add(fee)
-		}
-	}
-
-	// Check (skip if the expected amount is zero)
-	if minFeeExpected.Amount.IsZero() || txFees.IsAnyGTE(sdk.Coins{minFeeExpected}) {
+	if fees.IsZero() || txFees.IsAnyGTE(feeCoins) {
 		return next(ctx, tx, simulate)
 	}
-
-	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, minFeeExpected)
+	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, fees.String())
 }
 
 func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) (sdk.Coins, error) {
@@ -116,5 +111,5 @@ func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) (sdk.
 			}
 		}
 	}
-	return flatfee, flatfee.Validate()
+	return flatfee, nil
 }
