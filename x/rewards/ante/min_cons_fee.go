@@ -2,6 +2,7 @@ package ante
 
 import (
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -20,12 +21,14 @@ type RewardsFeeReaderExpected interface {
 // The minimum consensus fee value is defined by block dApp rewards and rewards distribution parameters.
 // CONTRACT: Tx must implement FeeTx interface to use MinFeeDecorator.
 type MinFeeDecorator struct {
+	codec         codec.BinaryCodec
 	rewardsKeeper RewardsFeeReaderExpected
 }
 
 // NewMinFeeDecorator returns a new MinFeeDecorator instance.
-func NewMinFeeDecorator(rk RewardsFeeReaderExpected) MinFeeDecorator {
+func NewMinFeeDecorator(codec codec.BinaryCodec, rk RewardsFeeReaderExpected) MinFeeDecorator {
 	return MinFeeDecorator{
+		codec:         codec,
 		rewardsKeeper: rk,
 	}
 }
@@ -62,14 +65,14 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 		Amount: gasUnitPrice.Amount.Mul(txGasLimit).RoundInt(),
 	}
 
+	var flatfee sdk.Coins
 	for _, m := range tx.GetMsgs() {
-		contractAddr, cwExecMsgFound := getMsgContractAddress(m)
-		if cwExecMsgFound {
-			ca := sdk.MustAccAddressFromBech32(contractAddr)
-			flatfee, found := mfd.rewardsKeeper.GetFlatFee(ctx, ca)
-			if found {
-				panic(flatfee)
-			}
+		fees, err := mfd.getContractFlatFees(ctx, m)
+		if err != nil {
+			return ctx, err
+		}
+		for _, fee := range fees {
+			flatfee.Add(fee)
 		}
 	}
 
@@ -81,23 +84,37 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, minFeeExpected)
 }
 
-func getMsgContractAddress(m sdk.Msg) (contractAddress string, isContractExecute bool) {
+func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) (sdk.Coins, error) {
+	var flatfee sdk.Coins
 	switch msg := m.(type) {
 	case *wasmTypes.MsgExecuteContract:
 		{
-			return msg.Contract, true
+			ca, err := sdk.AccAddressFromBech32(msg.Contract)
+			if err != nil {
+				return nil, err
+			}
+			fee, found := mfd.rewardsKeeper.GetFlatFee(ctx, ca)
+			if found {
+				flatfee.Add(fee)
+			}
 		}
 	case *authz.MsgExec:
 		{
-			// todo: decode authz msgs and check if they are execute contract
-			// var wrappedMsg sdk.Msg
-			// err := dec.codec.UnpackAny(msg, &wrappedMsg)
-			// if err != nil {
-			// 	return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "error decoding authz messages")
-			// }
-			return "", false
+			for _, v := range msg.Msgs {
+				var wrappedMsg sdk.Msg
+				err := mfd.codec.UnpackAny(v, &wrappedMsg)
+				if err != nil {
+					return nil, sdkErrors.Wrapf(sdkErrors.ErrUnauthorized, "error decoding authz messages")
+				}
+				fees, err := mfd.getContractFlatFees(ctx, wrappedMsg)
+				if err != nil {
+					return nil, err
+				}
+				for _, fee := range fees {
+					flatfee.Add(fee)
+				}
+			}
 		}
-	default:
-		return "", false
 	}
+	return flatfee, flatfee.Validate()
 }

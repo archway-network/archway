@@ -80,7 +80,7 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 			)
 
 			// Call the Ante handler manually
-			anteHandler := ante.NewMinFeeDecorator(chain.GetApp().RewardsKeeper)
+			anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), chain.GetApp().RewardsKeeper)
 			_, err = anteHandler.AnteHandle(ctx, tx, false, testutils.NoopAnteHandler)
 			if tc.errExpected != nil {
 				assert.ErrorIs(t, err, tc.errExpected)
