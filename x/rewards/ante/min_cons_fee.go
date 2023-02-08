@@ -61,15 +61,13 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 		feeCoins = append(feeCoins, minFeeExpected)
 	}
 
-	// for _, m := range tx.GetMsgs() {
-	// 	flatFees, err := mfd.getContractFlatFees(ctx, m)
-	// 	if err != nil {
-	// 		return ctx, err
-	// 	}
-	// 	for _, fee := range flatFees {
-	// 		fees.Add(fee)
-	// 	}
-	// }
+	for _, m := range tx.GetMsgs() {
+		flatFees, err := mfd.getContractFlatFees(ctx, m)
+		if err != nil {
+			return ctx, err
+		}
+		feeCoins = append(feeCoins, flatFees...)
+	}
 
 	fees := sdk.NewCoins(feeCoins...)
 	txFees := feeTx.GetFee()
@@ -79,10 +77,10 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, fees.String())
 }
 
-func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) (sdk.Coins, error) {
-	var flatfee sdk.Coins
+func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) ([]sdk.Coin, error) {
+	var flatfee []sdk.Coin
 	switch msg := m.(type) {
-	case *wasmTypes.MsgExecuteContract:
+	case *wasmTypes.MsgExecuteContract: // if msg is contract execute, fetch flatfee for msg.Contract address
 		{
 			ca, err := sdk.AccAddressFromBech32(msg.Contract)
 			if err != nil {
@@ -90,10 +88,10 @@ func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) (sdk.
 			}
 			fee, found := mfd.rewardsKeeper.GetFlatFee(ctx, ca)
 			if found {
-				flatfee.Add(fee)
+				flatfee = append(flatfee, fee)
 			}
 		}
-	case *authz.MsgExec:
+	case *authz.MsgExec: // if msg is authz msg, unwrap the msg and check if any are wasmTypes.MsgExecuteContract
 		{
 			for _, v := range msg.Msgs {
 				var wrappedMsg sdk.Msg
@@ -105,9 +103,7 @@ func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) (sdk.
 				if err != nil {
 					return nil, err
 				}
-				for _, fee := range fees {
-					flatfee.Add(fee)
-				}
+				flatfee = append(flatfee, fees...)
 			}
 		}
 	}
