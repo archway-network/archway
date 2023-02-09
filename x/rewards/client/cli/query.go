@@ -145,9 +145,9 @@ func getQueryUndistributedPoolFundsCmd() *cobra.Command {
 
 func getQueryEstimateTxFeesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "estimate-fees [gas-limit]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Query transaction fees estimation for a give gas limit",
+		Use:   "estimate-fees [gas-limit] [contract-address]",
+		Args:  cobra.MinimumNArgs(1),
+		Short: "Query transaction fees estimation for a give gas limit, optionally takes in contract address to include the flat fees in the estimate",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -160,9 +160,19 @@ func getQueryEstimateTxFeesCmd() *cobra.Command {
 				return err
 			}
 
-			res, err := queryClient.EstimateTxFees(cmd.Context(), &types.QueryEstimateTxFeesRequest{
+			req := types.QueryEstimateTxFeesRequest{
 				GasLimit: gasLimit,
-			})
+			}
+
+			if len(args) > 1 {
+				contractAddr, err := pkg.ParseAccAddressArg("contract-address", args[1])
+				if err != nil {
+					return err
+				}
+				req.ContractAddress = contractAddr.String()
+			}
+
+			res, err := queryClient.EstimateTxFees(cmd.Context(), &req)
 			if err != nil {
 				return err
 			}
