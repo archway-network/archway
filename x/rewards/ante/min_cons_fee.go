@@ -69,7 +69,13 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 		feeCoins = append(feeCoins, flatFees...)
 	}
 
-	fees := sdk.NewCoins(feeCoins...)
+	if len(feeCoins) == 0 {
+		return next(ctx, tx, simulate)
+	}
+	fees := sdk.NewCoins(feeCoins[0])
+	for i := 1; i < len(feeCoins); i++ {
+		fees.Add(feeCoins[i])
+	}
 	txFees := feeTx.GetFee()
 	if fees.IsZero() || txFees.IsAllGTE(feeCoins) {
 		return next(ctx, tx, simulate)
