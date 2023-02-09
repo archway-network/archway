@@ -96,7 +96,6 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 }
 
 func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
-
 	// Create chain
 	chain := e2eTesting.NewTestChain(t, 1)
 	ctx := chain.GetContext()
