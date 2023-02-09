@@ -177,7 +177,7 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("Fail: Contract flat fee set + but tx doesnt send fee", func(t *testing.T) {
+	t.Run("Fail: Contract flat fee set + but tx doesnt send fee (diff denoms)", func(t *testing.T) {
 		txFees, err := sdk.ParseCoinsNormalized("100stake")
 		require.NoError(t, err)
 		txMsgs := []sdk.Msg{
@@ -199,7 +199,7 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 		assert.ErrorIs(t, err, sdkErrors.ErrInsufficientFee)
 	})
 
-	t.Run("OK: Contract flat fee set + tx sends fee", func(t *testing.T) {
+	t.Run("OK: Contract flat fee set + tx sends fee (diff denoms)", func(t *testing.T) {
 		txFees, err := sdk.ParseCoinsNormalized("100stake,10test")
 		require.NoError(t, err)
 		txMsgs := []sdk.Msg{
@@ -275,7 +275,72 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	// todo
-	// contract flat fee set same denom
-	// two contracts with flat fee in a msg
+	t.Run("Fail: Contract flat fee set + tx sends insuffiect fee (same denoms)", func(t *testing.T) {
+		txFees, err := sdk.ParseCoinsNormalized("100stake")
+		require.NoError(t, err)
+		txMsgs := []sdk.Msg{
+			testutils.NewMockMsg(),
+			&wasmdTypes.MsgExecuteContract{
+				Contract: contractFlatFeeSameDenomSet.String(),
+			},
+		}
+		tx := testutils.NewMockFeeTx(
+			testutils.WithMockFeeTxFees(txFees),
+			testutils.WithMockFeeTxGas(1000),
+			testutils.WithMockFeeTxMsgs(txMsgs...),
+		)
+
+		anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), chain.GetApp().RewardsKeeper)
+
+		_, err = anteHandler.AnteHandle(ctx, tx, false, testutils.NoopAnteHandler)
+
+		assert.ErrorIs(t, err, sdkErrors.ErrInsufficientFee)
+	})
+
+	t.Run("OK: Contract flat fee set + tx sends sufficient fee (same denoms)", func(t *testing.T) {
+		txFees, err := sdk.ParseCoinsNormalized("110stake")
+		require.NoError(t, err)
+		txMsgs := []sdk.Msg{
+			testutils.NewMockMsg(),
+			&wasmdTypes.MsgExecuteContract{
+				Contract: contractFlatFeeSameDenomSet.String(),
+			},
+		}
+		tx := testutils.NewMockFeeTx(
+			testutils.WithMockFeeTxFees(txFees),
+			testutils.WithMockFeeTxGas(1000),
+			testutils.WithMockFeeTxMsgs(txMsgs...),
+		)
+
+		anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), chain.GetApp().RewardsKeeper)
+
+		_, err = anteHandler.AnteHandle(ctx, tx, false, testutils.NoopAnteHandler)
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("OK: Contract flat fee set + tx sends sufficient fee (same&diff denoms)", func(t *testing.T) {
+		txFees, err := sdk.ParseCoinsNormalized("110stake,10test")
+		require.NoError(t, err)
+		txMsgs := []sdk.Msg{
+			testutils.NewMockMsg(),
+			&wasmdTypes.MsgExecuteContract{
+				Contract: contractFlatFeeSameDenomSet.String(),
+			},
+			&wasmdTypes.MsgExecuteContract{
+				Contract: contractFlatFeeDiffDenomSet.String(),
+			},
+		}
+		tx := testutils.NewMockFeeTx(
+			testutils.WithMockFeeTxFees(txFees),
+			testutils.WithMockFeeTxGas(1000),
+			testutils.WithMockFeeTxMsgs(txMsgs...),
+		)
+
+		anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), chain.GetApp().RewardsKeeper)
+
+		_, err = anteHandler.AnteHandle(ctx, tx, false, testutils.NoopAnteHandler)
+
+		assert.NoError(t, err)
+	})
 }
