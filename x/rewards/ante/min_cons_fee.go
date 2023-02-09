@@ -71,7 +71,7 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 
 	fees := sdk.NewCoins(feeCoins...)
 	txFees := feeTx.GetFee()
-	if fees.IsZero() || txFees.IsAnyGTE(feeCoins) {
+	if fees.IsZero() || txFees.IsAllGTE(feeCoins) {
 		return next(ctx, tx, simulate)
 	}
 	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, fees.String())
