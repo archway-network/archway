@@ -106,6 +106,8 @@ message QueryRewardsPoolResponse {
 message QueryEstimateTxFeesRequest {
   // gas_limit is the transaction gas limit.
   uint64 gas_limit = 1;
+  // contract_address whose flat fee is considered when estimating tx fees.
+  string contract_address = 2;
 }
 
 // QueryEstimateTxFeesResponse is the response for Query.EstimateTxFees.
@@ -115,7 +117,7 @@ message QueryEstimateTxFeesResponse {
     (gogoproto.nullable) = false
   ];
   // estimated_fee is the estimated transaction fee for a given gas limit.
-  cosmos.base.v1beta1.Coin estimated_fee = 2 [
+  repeated cosmos.base.v1beta1.Coin estimated_fee = 2 [
     (gogoproto.nullable) = false
   ];
 }
