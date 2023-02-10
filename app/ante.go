@@ -4,6 +4,7 @@ package app
 import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -28,6 +29,8 @@ type HandlerOptions struct {
 
 	TrackingKeeper trackingKeeper.Keeper
 	RewardsKeeper  rewardsKeeper.Keeper
+
+	Codec codec.BinaryCodec
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -69,7 +72,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		// Custom Archway minimum fee checker
-		rewardsAnte.NewMinFeeDecorator(options.RewardsKeeper),
+		rewardsAnte.NewMinFeeDecorator(options.Codec, options.RewardsKeeper),
 		// Custom Archway interceptor to track new transactions
 		trackingAnte.NewTxGasTrackingDecorator(options.TrackingKeeper),
 		// Custom Archway fee deduction, which splits fees between x/rewards and x/auth fee collector
