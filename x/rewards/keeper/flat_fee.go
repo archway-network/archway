@@ -59,11 +59,9 @@ func (k Keeper) ExportFlatFees(ctx sdk.Context) []types.FlatFee {
 
 	var fees = make([]types.FlatFee, 0)
 	for ; iterator.Valid(); iterator.Next() {
+		var coin sdk.Coin
 		contractAddr := sdk.AccAddress(iterator.Key())
-		coin, ok := k.state.FlatFee(ctx).GetFee(contractAddr)
-		if !ok {
-			panic(fmt.Sprintf("invalid coin: %+v for address: %s", coin, contractAddr))
-		}
+		k.state.cdc.MustUnmarshal(iterator.Value(), &coin)
 
 		fees = append(fees, types.FlatFee{
 			ContractAddress: contractAddr.String(),
