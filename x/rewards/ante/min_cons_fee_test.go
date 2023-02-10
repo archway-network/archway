@@ -324,5 +324,4 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 			}
 		})
 	}
-
 }
