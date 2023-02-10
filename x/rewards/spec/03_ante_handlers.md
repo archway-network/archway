@@ -17,11 +17,11 @@ $$
 
 where:
 
-* *$TxFees$* - transaction fees provided by a user;
-* *$TxGasLimit$* - transaction gas limit provided by a user;
-* *$MinConsensusFee$* - minimum gas unit price estimated by the module;
-* *$ContractAddress_{msg}$* - contract address of the msg which needs to be executed;
-* *$flatfee(x)$* - function which fetches the flat fee for the given input;
+* $TxFees$ - transaction fees provided by a user;
+* $TxGasLimit$ - transaction gas limit provided by a user;
+* $MinConsensusFee$ - minimum gas unit price estimated by the module;
+* $ContractAddress_{msg}$ - contract address of the msg which needs to be executed;
+* $flatfee(x)$ - function which fetches the flat fee for the given input;
 
 Every msg in the transaction is parsed to check if it is a `wasmTypes.MsgExecuteContract` or a `authz.MsgExec` msg. Contract address is identified for matching msgs and `flat_fee` (if set) is fetched for the given contract addresses.
 

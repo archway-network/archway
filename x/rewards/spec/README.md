@@ -61,11 +61,11 @@ $$
 
 where:
 
-* *$MinimumTxFee$* - minimum fees expected to be paid for the given transaction;
-* *$MinConsensusFee$* - price for one gas unit;
-* *$TxGasLimit$* - transaction gas limit provided by a user;
-* *$ContractAddress_{msg}$* - contract address of the msg which needs to be executed;
-* *$flatfee(x)$* - function which fetches the flat fee for the given input;
+* $MinimumTxFee$ - minimum fees expected to be paid for the given transaction;
+* $MinConsensusFee$ - price for one gas unit;
+* $TxGasLimit$ - transaction gas limit provided by a user;
+* $ContractAddress_{msg}$ - contract address of the msg which needs to be executed;
+* $flatfee(x)$ - function which fetches the flat fee for the given input;
 
 ##### Minimum consensus fee
 
