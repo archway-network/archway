@@ -94,3 +94,13 @@ message RewardsRecord {
     (gogoproto.stdtime) = true
   ];
 }
+
+// FlatFee defines the flat fee for a particular contract.
+message FlatFee {
+  option (gogoproto.goproto_stringer) = false;
+
+  // contract_address defines the contract address (bech32 encoded).
+  string contract_address = 1;
+  // flat_fee defines the minimum flat fee set by the contract_owner
+  cosmos.base.v1beta1.Coin flat_fee = 2 [ (gogoproto.nullable) = false ];
+}
