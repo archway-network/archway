@@ -199,6 +199,23 @@ treasury_funds:
     denom: uarch
 ```
 
+#### contract-flat-fee
+
+Get an existing contract flat fee. Query fails if a contract flat fee is not set.
+
+Usage:
+
+```bash
+archwayd q rewards flat-fee [contract-address] [flags]
+```
+Example output:
+
+```yaml
+amount: "200"
+denom: uarch
+```
+
+
 ### Transactions
 
 The `tx` commands allows a user to interact with the module.
@@ -233,7 +250,7 @@ Example (delegate rewards ownership to the contract):
 archwayd tx rewards set-contract-metadata archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u \
   --owner-address archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u \
   --rewards-address archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u \
-  --from myAccountKey
+  --from myAccountKey \
   --fees 1500uarch
 ```
 
@@ -269,4 +286,22 @@ carcarchwaydh1_tx rewards withdraw-rewards \
   --records-limit 1000 \
   --from myAccountKey \
   --fees 3000uarch
+```
+
+#### set-flat-fee
+
+Create / update a contract flat fee
+
+Usage:
+
+```bash
+archwayd tx rewards set-flat-fee [contract-address] [fee-amount] [flags]
+```
+
+Example (sets the contract flat fee to 200uarch):
+
+```bash
+archwayd tx rewards set-flat-fee archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u 200uarch \
+  --from myAccountKey \
+  --fees 1500uarch
 ```

@@ -154,3 +154,14 @@ Storage keys:
 * RewardsRecordID: `0x04 | 0x00 -> uint64`
 * RewardsRecord: `0x04 | 0x01 | ID -> ProtocolBuffer(RewardsRecord)`
 * RewardsRecordByAddress: `0x04 | 0x02 | RewardsAddress | ID -> nil`
+
+## Contract Flat Fees
+
+Flat Fees for a given contract is used as a contract premium which allows smart contract developers to define a custom flat fee for interacting with their smart contract.
+
+Value for a contract can be updated by the contract owner as set in the [ContractMetadata](#contractmetadata). 
+
+
+Storage keys:
+
+* RewardsRecordByAddress: `0x05 | 0x00 | ContractAddress -> ProtocolBuffer(sdk.Coin)`

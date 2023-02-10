@@ -47,3 +47,18 @@ Returns:
 * The message [response](../../../proto/archway/rewards/v1beta1/tx.proto#L59) contains the total amount of rewards tokens transferred (empty if this rewards address has no rewards yet);
 
 This *withdrawal* operation can also be triggered by a contract ([WASM bindings section](08_wasm_bindings.md)).
+
+## MsgSetFlatFee
+
+A contract flat fee is created / updated / deleted using the [MsgSetFlatFee](../../../proto/archway/rewards/v1beta1/tx.proto#L74) message.
+
+An empty or zero _flat_fee_ removes the fee for the contract if it already exists.
+
+On success:
+
+- Contract's `flat_fee` is set / updated / removed;
+
+This message is expected to fail if:
+
+* ContractMetadata does not exist;
+* Metadata exists: the message sender is not the `owner_address` (metadata field);

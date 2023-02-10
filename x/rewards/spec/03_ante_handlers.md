@@ -12,14 +12,19 @@ The [MinFeeDecorator](../ante/min_cons_fee.go#L19) checks if a transaction fees 
 The handler declines the transaction if the provided fees do not match the condition:
 
 $$
-TxFees < TxGasLimit * MinConsensusFee
+TxFees < (TxGasLimit * MinConsensusFee) + \sum_{msg=1, type_{msg} = MsgExecuteContract}^{len(msgs)} flatfee(ContractAddress_{msg})
 $$
 
 where:
 
-* *TxFees* - transaction fees provided by a user;
-* *TxGasLimit* - transaction gas limit provided by a user;
-* *MinConsensusFee* - minimum gas unit price estimated by the module;
+* $TxFees$ - transaction fees provided by a user;
+* $TxGasLimit$ - transaction gas limit provided by a user;
+* $MinConsensusFee$ - minimum gas unit price estimated by the module;
+* $ContractAddress_{msg}$ - contract address of the msg which needs to be executed;
+* $flatfee(x)$ - function which fetches the flat fee for the given input;
+
+Every msg in the transaction is parsed to check if it is a `wasmTypes.MsgExecuteContract` or a `authz.MsgExec` msg. Contract address is identified for matching msgs and `flat_fee` (if set) is fetched for the given contract addresses.
+
 
 ## DeductFeeDecorator
 
