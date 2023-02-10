@@ -248,3 +248,58 @@ func TestRewardsRecordValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestFlatFeeValidate(t *testing.T) {
+	type testCase struct {
+		name        string
+		flatFee     rewardsTypes.FlatFee
+		errExpected bool
+	}
+
+	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	testCases := []testCase{
+		{
+			name: "OK: with flat fee coin",
+			flatFee: rewardsTypes.FlatFee{
+				ContractAddress: contractAddr.String(),
+				FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			},
+		},
+		{
+			name: "Fail: invalid ContractAddress",
+			flatFee: rewardsTypes.FlatFee{
+				ContractAddress: "invalid",
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: empty flat fee",
+			flatFee: rewardsTypes.FlatFee{
+				ContractAddress: contractAddr.String(),
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid flat fee amount",
+			flatFee: rewardsTypes.FlatFee{
+				ContractAddress: contractAddr.String(),
+				FlatFee: sdk.Coin{
+					Denom:  sdk.DefaultBondDenom,
+					Amount: sdk.NewInt(-1),
+				},
+			},
+			errExpected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.flatFee.Validate()
+			if tc.errExpected {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}

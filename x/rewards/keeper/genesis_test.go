@@ -28,6 +28,7 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 		s.Assert().Empty(genesisState.TxRewards)
 		s.Assert().Empty(genesisState.RewardsRecordLastId)
 		s.Assert().Empty(genesisState.RewardsRecords)
+		s.Assert().Empty(genesisState.FlatFees)
 
 		genesisStateInitial = *genesisState
 	})
@@ -99,6 +100,17 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 		},
 	}
 
+	newFlatFees := []types.FlatFee{
+		{
+			ContractAddress: contractAddrs[0].String(),
+			FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+		},
+		{
+			ContractAddress: contractAddrs[1].String(),
+			FlatFee:         sdk.NewCoin("uarch", sdk.NewInt(1)),
+		},
+	}
+
 	genesisStateImported := types.NewGenesisState(
 		newParams,
 		newMetadata,
@@ -107,6 +119,7 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 		newMinConsFee,
 		newRewardsRecords[len(newRewardsRecords)-1].Id,
 		newRewardsRecords,
+		newFlatFees,
 	)
 	s.Run("Check import of an updated genesis", func() {
 		keeper.InitGenesis(ctx, genesisStateImported)
@@ -119,6 +132,7 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 			MinConsensusFee:     newMinConsFee,
 			RewardsRecordLastId: newRewardsRecords[len(newRewardsRecords)-1].Id,
 			RewardsRecords:      append(genesisStateInitial.RewardsRecords, newRewardsRecords...),
+			FlatFees:            append(genesisStateInitial.FlatFees, newFlatFees...),
 		}
 
 		genesisStateReceived := keeper.ExportGenesis(ctx)
@@ -130,5 +144,6 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 		s.Assert().Equal(genesisStateExpected.MinConsensusFee.String(), genesisStateReceived.MinConsensusFee.String())
 		s.Assert().Equal(genesisStateExpected.RewardsRecordLastId, genesisStateReceived.RewardsRecordLastId)
 		s.Assert().ElementsMatch(genesisStateExpected.RewardsRecords, genesisStateReceived.RewardsRecords)
+		s.Assert().ElementsMatch(genesisStateExpected.FlatFees, genesisStateReceived.FlatFees)
 	})
 }

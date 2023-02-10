@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/x/rewards/types"
@@ -36,4 +39,37 @@ func (k Keeper) GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Co
 	}
 
 	return fee, true
+}
+
+// ImportFlatFees initializes state from the genesis flat fees data.
+func (k Keeper) ImportFlatFees(ctx sdk.Context, flatFees []types.FlatFee) {
+	for _, flatFee := range flatFees {
+		if err := k.SetFlatFee(ctx, flatFee.MustGetContractAddress(), flatFee.GetFlatFee()); err != nil {
+			panic(fmt.Sprintf("flat fee: %+v is invalid: %s", flatFee, err))
+		}
+	}
+}
+
+// ExportFlatFees returns the flat fees genesis data for the state.
+func (k Keeper) ExportFlatFees(ctx sdk.Context) []types.FlatFee {
+	store := prefix.NewStore(k.state.FlatFee(ctx).stateStore, types.FlatFeePrefix)
+
+	iterator := store.Iterator(nil, nil)
+	defer iterator.Close()
+
+	var fees = make([]types.FlatFee, 0)
+	for ; iterator.Valid(); iterator.Next() {
+		contractAddr := sdk.AccAddress(iterator.Key())
+		coin, ok := k.state.FlatFee(ctx).GetFee(contractAddr)
+		if !ok {
+			panic(fmt.Sprintf("invalid coin: %+v for address: %s", coin, contractAddr))
+		}
+
+		fees = append(fees, types.FlatFee{
+			ContractAddress: contractAddr.String(),
+			FlatFee:         coin,
+		})
+	}
+
+	return fees
 }

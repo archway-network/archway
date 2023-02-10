@@ -16,6 +16,7 @@ func NewGenesisState(
 	minConsFee sdk.DecCoin,
 	rewardsRecordLastID uint64,
 	rewardsRecords []RewardsRecord,
+	flatFees []FlatFee,
 ) *GenesisState {
 	return &GenesisState{
 		Params:              params,
@@ -25,6 +26,7 @@ func NewGenesisState(
 		MinConsensusFee:     minConsFee,
 		RewardsRecordLastId: rewardsRecordLastID,
 		RewardsRecords:      rewardsRecords,
+		FlatFees:            flatFees,
 	}
 }
 
@@ -38,6 +40,7 @@ func DefaultGenesisState() *GenesisState {
 		MinConsensusFee:     sdk.DecCoin{},
 		RewardsRecordLastId: 0,
 		RewardsRecords:      []RewardsRecord{},
+		FlatFees:            []FlatFee{},
 	}
 }
 
@@ -108,6 +111,18 @@ func (m GenesisState) Validate() error {
 
 	if m.RewardsRecordLastId < rewardsRecordIDMax {
 		return fmt.Errorf("rewardsRecordLastId: %d < max RewardsRecord ID (%d)", m.RewardsRecordLastId, rewardsRecordIDMax)
+	}
+
+	flatFeeSet := make(map[string]struct{})
+	for i, fee := range m.FlatFees {
+		if err := fee.Validate(); err != nil {
+			return fmt.Errorf("flatFee [%d]: %w", i, err)
+		}
+
+		if _, ok := flatFeeSet[fee.ContractAddress]; ok {
+			return fmt.Errorf("flatFee [%d]: duplicated contract address: %s", i, fee.ContractAddress)
+		}
+		flatFeeSet[fee.ContractAddress] = struct{}{}
 	}
 
 	return nil

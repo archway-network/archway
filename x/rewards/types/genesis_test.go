@@ -59,6 +59,38 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 			},
 		},
 		{
+			name: "OK: Flat Fees",
+			genesisState: rewardsTypes.GenesisState{
+				Params: rewardsTypes.DefaultParams(),
+				ContractsMetadata: []rewardsTypes.ContractMetadata{
+					{ContractAddress: contractAddr.String(), OwnerAddress: accAddr.String()},
+				},
+				BlockRewards: []rewardsTypes.BlockRewards{
+					{Height: 1},
+				},
+				TxRewards: []rewardsTypes.TxRewards{
+					{TxId: 1, Height: 1},
+				},
+				MinConsensusFee:     sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+				RewardsRecordLastId: 1,
+				RewardsRecords: []rewardsTypes.RewardsRecord{
+					{
+						Id:               1,
+						RewardsAddress:   accAddr.String(),
+						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
+						CalculatedHeight: 1,
+						CalculatedTime:   mockTime,
+					},
+				},
+				FlatFees: []rewardsTypes.FlatFee{
+					{
+						ContractAddress: contractAddr.String(),
+						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+					},
+				},
+			},
+		},
+		{
 			name: "Fail: invalid Params",
 			genesisState: rewardsTypes.GenesisState{
 				Params: rewardsTypes.Params{
@@ -201,6 +233,51 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
+					},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid FlatFees: invalid contract address",
+			genesisState: rewardsTypes.GenesisState{
+				Params: rewardsTypes.DefaultParams(),
+				FlatFees: []rewardsTypes.FlatFee{
+					{
+						ContractAddress: "",
+						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+					},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid FlatFees: invalid coin",
+			genesisState: rewardsTypes.GenesisState{
+				Params: rewardsTypes.DefaultParams(),
+				FlatFees: []rewardsTypes.FlatFee{
+					{
+						ContractAddress: "",
+						FlatFee: sdk.Coin{
+							Denom: sdk.DefaultBondDenom,
+						},
+					},
+				},
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid FlatFees: duplicates",
+			genesisState: rewardsTypes.GenesisState{
+				Params: rewardsTypes.DefaultParams(),
+				FlatFees: []rewardsTypes.FlatFee{
+					{
+						ContractAddress: contractAddr.String(),
+						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+					},
+					{
+						ContractAddress: contractAddr.String(),
+						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2)),
 					},
 				},
 			},

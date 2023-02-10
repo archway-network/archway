@@ -46,3 +46,41 @@ func (s *KeeperTestSuite) TestSetFlatFee() {
 		s.Require().Equal(sdk.Coin{}, flatFee)
 	})
 }
+
+// TestFlatFeeImportExport check flat fees import/export.
+// Test updates the initial state with new records and checks that they were merged.
+func (s *KeeperTestSuite) TestFlatFeeImportExportSuccess() {
+	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	contractAddrs := e2eTesting.GenContractAddresses(2)
+	accAddrs, _ := e2eTesting.GenAccounts(2)
+	newMetadata := []rewardsTypes.ContractMetadata{
+		{
+			ContractAddress: contractAddrs[0].String(),
+			OwnerAddress:    accAddrs[0].String(),
+		},
+		{
+			ContractAddress: contractAddrs[1].String(),
+			OwnerAddress:    accAddrs[1].String(),
+			RewardsAddress:  accAddrs[1].String(),
+		},
+	}
+	keeper.GetState().ContractMetadataState(ctx).Import(newMetadata)
+
+	newFlatFees := []rewardsTypes.FlatFee{
+		{
+			ContractAddress: contractAddrs[0].String(),
+			FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+		},
+		{
+			ContractAddress: contractAddrs[1].String(),
+			FlatFee:         sdk.NewCoin("uarch", sdk.NewInt(1)),
+		},
+	}
+
+	s.Run("Check import export of flat fees", func() {
+		keeper.ImportFlatFees(ctx, newFlatFees)
+		genesisStateReceived := keeper.ExportGenesis(ctx)
+		s.Require().NotNil(genesisStateReceived)
+		s.Assert().ElementsMatch(newFlatFees, genesisStateReceived.FlatFees)
+	})
+}

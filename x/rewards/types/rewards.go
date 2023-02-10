@@ -142,3 +142,14 @@ func (m FlatFee) Validate() error {
 
 	return nil
 }
+
+// MustGetContractAddress returns the contract address.
+// CONTRACT: panics in case of an error.
+func (m FlatFee) MustGetContractAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(m.ContractAddress)
+	if err != nil {
+		panic(fmt.Errorf("parsing contract address: %w", err))
+	}
+
+	return addr
+}
