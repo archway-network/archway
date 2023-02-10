@@ -319,6 +319,31 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("Fail: Contract flat fee set + tx sends insufficient fee (same&diff denoms)", func(t *testing.T) {
+		txFees, err := sdk.ParseCoinsNormalized("100stake,10test")
+		require.NoError(t, err)
+		txMsgs := []sdk.Msg{
+			testutils.NewMockMsg(),
+			&wasmdTypes.MsgExecuteContract{
+				Contract: contractFlatFeeSameDenomSet.String(),
+			},
+			&wasmdTypes.MsgExecuteContract{
+				Contract: contractFlatFeeDiffDenomSet.String(),
+			},
+		}
+		tx := testutils.NewMockFeeTx(
+			testutils.WithMockFeeTxFees(txFees),
+			testutils.WithMockFeeTxGas(1000),
+			testutils.WithMockFeeTxMsgs(txMsgs...),
+		)
+
+		anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), chain.GetApp().RewardsKeeper)
+
+		_, err = anteHandler.AnteHandle(ctx, tx, false, testutils.NoopAnteHandler)
+
+		assert.ErrorIs(t, err, sdkErrors.ErrInsufficientFee)
+	})
+
 	t.Run("OK: Contract flat fee set + tx sends sufficient fee (same&diff denoms)", func(t *testing.T) {
 		txFees, err := sdk.ParseCoinsNormalized("110stake,10test")
 		require.NoError(t, err)
