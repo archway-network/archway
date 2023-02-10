@@ -10,7 +10,7 @@ parent:
 ## Abstract
 
 The module enables Cosmos SDK-based blockchain to calculate and distribute dApp rewards within the Archway protocol.
-Module also introduces a concept of *minimal consensus fee* to set the lower bound of a transaction fee.
+Module introduces a concept of *minimal consensus fee* to set the lower bound of a transaction fee. Module also introduces a concept of *contract flat fee* which a contract owner can set as the minimum fee that the contract expects to perform a transaction
 
 ### dApp rewards
 
@@ -53,13 +53,22 @@ where:
 * *ContractTotalGasUsed* - total gas used by a contract within this block;
 * *BlockGasLimit* - maximum gas limit per block (consensus parameter);
 
-#### Minimum consensus fee
+#### Transaction fees
+
+$$
+MinimumTxFee = (MinConsensusFee * TxGasLimit) + \sum_{msg=1, msg.type = wasmTypes.MsgExecuteContract}^{len(msgs)} flatfee(ContractAddress_{msg})
+$$
+
+where:
+
+* *$MinimumTxFee$* - minimum fees expected to be paid for the given transaction;
+* *$MinConsensusFee$* - price for one gas unit;
+* *$ContractAddress_{msg}$* - contract address of the msg which needs to be executed;
+* *$flatfee(x)$* - function which fetches the flat fee for the given input;
+
+##### Minimum consensus fee
 
 The *minimum consensus fee* is a price for one gas unit. That value limits the minimum fee paid by a user in respect to the provided transaction gas limit:
-
-$$
-MinimumTxFee = MinConsensusFee * TxGasLimit
-$$
 
 The *minimum consensus fee* value is updated each block using the formula:
 
@@ -68,8 +77,12 @@ MinConsensusFee = -\frac{InflationBlockRewards}{BlockGasLimit * TxFeeRebateRatio
 InflationBlockRewards = MintedTokens * InflationRewardsRatio
 }$$
 
-> If the provided transaction fee is less, then MinConsensusFee x TxGasLimit, transaction is rejected.
-> User can estimate a transaction fee using the `x/rewards` query.
+##### Contract flat Fee
+
+The *contract flat fee* is a fee set by the contract owner. Any user executing a msg on that contract needs to pay this amount as part of their transaction fee. When a transaction has multiple messages which call different contracts, the flat fees for all the contracts need to be paid. Contract owners  can choose any native token as their contract flat fees, it does not have to be the default token of the chain.
+
+> If the provided transaction fee is less, then MinimumTxFee, transaction is rejected.
+> User can estimate a transaction fee using the `x/rewards/EstimateTxFees` query.
 
 ## Contents
 
