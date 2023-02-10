@@ -56,13 +56,14 @@ where:
 #### Transaction fees
 
 $$
-MinimumTxFee = (MinConsensusFee * TxGasLimit) + \sum_{msg=1, msg.type = wasmTypes.MsgExecuteContract}^{len(msgs)} flatfee(ContractAddress_{msg})
+MinimumTxFee = (MinConsensusFee * TxGasLimit) + \sum_{msg=1, type_{msg} = MsgExecuteContract}^{len(msgs)} flatfee(ContractAddress_{msg})
 $$
 
 where:
 
 * *$MinimumTxFee$* - minimum fees expected to be paid for the given transaction;
 * *$MinConsensusFee$* - price for one gas unit;
+* *$TxGasLimit$* - transaction gas limit provided by a user;
 * *$ContractAddress_{msg}$* - contract address of the msg which needs to be executed;
 * *$flatfee(x)$* - function which fetches the flat fee for the given input;
 
