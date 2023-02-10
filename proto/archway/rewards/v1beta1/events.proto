@@ -53,3 +53,10 @@ message MinConsensusFeeSetEvent {
     (gogoproto.nullable) = false
   ];
 }
+
+message ContractFlatFeeSetEvent {
+  string contract_address = 1;
+  cosmos.base.v1beta1.Coin flat_fee = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
