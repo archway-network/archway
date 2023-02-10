@@ -47,3 +47,13 @@ func EmitMinConsensusFeeSetEvent(ctx sdk.Context, fee sdk.DecCoin) {
 		panic(fmt.Errorf("sending MinConsensusFeeSetEvent event: %w", err))
 	}
 }
+
+func EmitContractFlatFeeSetEvent(ctx sdk.Context, contractAddress sdk.AccAddress, fee sdk.Coin) {
+	err := ctx.EventManager().EmitTypedEvent(&ContractFlatFeeSetEvent{
+		ContractAddress: contractAddress.String(),
+		FlatFee:         fee,
+	})
+	if err != nil {
+		panic(fmt.Errorf("sending ContractFlatFeeSetEvent event: %w", err))
+	}
+}

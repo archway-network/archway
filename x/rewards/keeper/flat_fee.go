@@ -19,6 +19,12 @@ func (k Keeper) SetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress, flatFee
 	} else {
 		k.state.FlatFee(ctx).SetFee(contractAddr, flatFee)
 	}
+
+	types.EmitContractFlatFeeSetEvent(
+		ctx,
+		contractAddr,
+		flatFee,
+	)
 	return nil
 }
 
