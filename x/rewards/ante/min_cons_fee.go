@@ -45,7 +45,7 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 		return ctx, sdkErrors.Wrap(sdkErrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	var feeCoins []sdk.Coin // All the fees which need to be paid for the given tx. includes min consensus fee + every contract flat fee
+	var expectedFees sdk.Coins // All the fees which need to be paid for the given tx. includes min consensus fee + every contract flat fee
 	gasUnitPrice, found := mfd.rewardsKeeper.GetMinConsensusFee(ctx)
 	if found {
 		// Estimate the minimum fee expected
@@ -58,33 +58,26 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 			Denom:  gasUnitPrice.Denom,
 			Amount: gasUnitPrice.Amount.Mul(txGasLimit).RoundInt(),
 		}
-		feeCoins = append(feeCoins, minFeeExpected)
+		expectedFees = expectedFees.Add(minFeeExpected)
 	}
 
+	// Get flatfees for any contracts being called in the tx.msgs
 	for _, m := range tx.GetMsgs() {
 		flatFees, err := mfd.getContractFlatFees(ctx, m)
 		if err != nil {
 			return ctx, err
 		}
-		feeCoins = append(feeCoins, flatFees...)
+		expectedFees = expectedFees.Add(flatFees...)
 	}
 
-	if len(feeCoins) == 0 {
-		return next(ctx, tx, simulate)
-	}
-	fees := sdk.NewCoins(feeCoins[0])
-	for i := 1; i < len(feeCoins); i++ {
-		fees.Add(feeCoins[i])
-	}
 	txFees := feeTx.GetFee()
-	if fees.IsZero() || txFees.IsAllGTE(feeCoins) {
+	if expectedFees.IsZero() || txFees.IsAllGTE(expectedFees) {
 		return next(ctx, tx, simulate)
 	}
-	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, fees.String())
+	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, expectedFees.String())
 }
 
-func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) ([]sdk.Coin, error) {
-	var flatfee []sdk.Coin
+func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) (sdk.Coins, error) {
 	switch msg := m.(type) {
 	case *wasmTypes.MsgExecuteContract: // if msg is contract execute, fetch flatfee for msg.Contract address
 		{
@@ -94,11 +87,12 @@ func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) ([]sd
 			}
 			fee, found := mfd.rewardsKeeper.GetFlatFee(ctx, ca)
 			if found {
-				flatfee = append(flatfee, fee)
+				return sdk.NewCoins(fee), nil
 			}
 		}
 	case *authz.MsgExec: // if msg is authz msg, unwrap the msg and check if any are wasmTypes.MsgExecuteContract
 		{
+			var flatfees sdk.Coins
 			for _, v := range msg.Msgs {
 				var wrappedMsg sdk.Msg
 				err := mfd.codec.UnpackAny(v, &wrappedMsg)
@@ -109,9 +103,10 @@ func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) ([]sd
 				if err != nil {
 					return nil, err
 				}
-				flatfee = append(flatfee, fees...)
+				flatfees = flatfees.Add(fees...)
 			}
+			return flatfees, nil
 		}
 	}
-	return flatfee, nil
+	return nil, nil
 }
