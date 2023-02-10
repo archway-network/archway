@@ -263,9 +263,12 @@ func (m *MinConsensusFeeSetEvent) GetFee() types.DecCoin {
 	return types.DecCoin{}
 }
 
+// ContractFlatFeeSetEvent is emitted when the contract flat fee is updated
 type ContractFlatFeeSetEvent struct {
-	ContractAddress string     `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	FlatFee         types.Coin `protobuf:"bytes,2,opt,name=flat_fee,json=flatFee,proto3" json:"flat_fee"`
+	// contract_address defines the bech32 address of the contract for which the flat fee is set
+	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+	// flat_fee defines the amount that has been set as the minimum fee for the contract
+	FlatFee types.Coin `protobuf:"bytes,2,opt,name=flat_fee,json=flatFee,proto3" json:"flat_fee"`
 }
 
 func (m *ContractFlatFeeSetEvent) Reset()         { *m = ContractFlatFeeSetEvent{} }
