@@ -49,20 +49,10 @@ func (s FlatFeeState) RemoveFee(contractAddr sdk.AccAddress) {
 }
 
 // Import initializes state from the genesis flat fees data.
-func (s FlatFeeState) Import(metadata []types.ContractMetadata, flatFees []types.FlatFee) {
-	contractAddrToMetadata := make(map[string]types.ContractMetadata, 0)
-	for _, meta := range metadata {
-		contractAdd := meta.MustGetContractAddress()
-		contractAddrToMetadata[contractAdd.String()] = meta
-	}
-
+func (s FlatFeeState) Import(flatFees []types.FlatFee) {
 	for _, flatFee := range flatFees {
 		contractAddr := flatFee.MustGetContractAddress()
 		fee := flatFee.GetFlatFee()
-
-		if _, ok := contractAddrToMetadata[contractAddr.String()]; !ok {
-			panic(fmt.Sprintf("flat fee: %+v is invalid, err: %s", flatFee, types.ErrContractNotFound))
-		}
 
 		if !fee.Amount.IsPositive() {
 			panic(fmt.Sprintf("flat fee: %+v is invalid, err: %s", flatFee, sdkErrors.ErrInvalidCoins))

@@ -12,19 +12,6 @@ import (
 func (s *KeeperTestSuite) TestFlatFeeImportExport() {
 	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
 	contractAddrs := e2eTesting.GenContractAddresses(2)
-	accAddrs, _ := e2eTesting.GenAccounts(2)
-	newMetadata := []rewardsTypes.ContractMetadata{
-		{
-			ContractAddress: contractAddrs[0].String(),
-			OwnerAddress:    accAddrs[0].String(),
-		},
-		{
-			ContractAddress: contractAddrs[1].String(),
-			OwnerAddress:    accAddrs[1].String(),
-			RewardsAddress:  accAddrs[1].String(),
-		},
-	}
-	keeper.GetState().ContractMetadataState(ctx).Import(newMetadata)
 
 	newFlatFees := []rewardsTypes.FlatFee{
 		{
@@ -38,7 +25,7 @@ func (s *KeeperTestSuite) TestFlatFeeImportExport() {
 	}
 
 	s.Run("Check import export of flat fees", func() {
-		keeper.GetState().FlatFee(ctx).Import(newMetadata, newFlatFees)
+		keeper.GetState().FlatFee(ctx).Import(newFlatFees)
 		exportedFlatFees := keeper.GetState().FlatFee(ctx).Export()
 		s.Require().NotNil(exportedFlatFees)
 		s.Assert().ElementsMatch(newFlatFees, exportedFlatFees)

@@ -18,10 +18,8 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 		errExpected  bool
 	}
 
-	accAddrs, _ := e2eTesting.GenAccounts(1)
-	accAddr := accAddrs[0]
-
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	accAddrs, _ := e2eTesting.GenAccounts(2)
+	contractAddrs := e2eTesting.GenContractAddresses(2)
 
 	mockTime := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
 
@@ -37,7 +35,7 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 			genesisState: rewardsTypes.GenesisState{
 				Params: rewardsTypes.DefaultParams(),
 				ContractsMetadata: []rewardsTypes.ContractMetadata{
-					{ContractAddress: contractAddr.String(), OwnerAddress: accAddr.String()},
+					{ContractAddress: contractAddrs[0].String(), OwnerAddress: accAddrs[0].String()},
 				},
 				BlockRewards: []rewardsTypes.BlockRewards{
 					{Height: 1},
@@ -50,7 +48,7 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				RewardsRecords: []rewardsTypes.RewardsRecord{
 					{
 						Id:               1,
-						RewardsAddress:   accAddr.String(),
+						RewardsAddress:   accAddrs[0].String(),
 						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
@@ -63,7 +61,8 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 			genesisState: rewardsTypes.GenesisState{
 				Params: rewardsTypes.DefaultParams(),
 				ContractsMetadata: []rewardsTypes.ContractMetadata{
-					{ContractAddress: contractAddr.String(), OwnerAddress: accAddr.String()},
+					{ContractAddress: contractAddrs[0].String(), OwnerAddress: accAddrs[0].String()},
+					{ContractAddress: contractAddrs[1].String(), OwnerAddress: accAddrs[1].String()},
 				},
 				BlockRewards: []rewardsTypes.BlockRewards{
 					{Height: 1},
@@ -76,7 +75,7 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				RewardsRecords: []rewardsTypes.RewardsRecord{
 					{
 						Id:               1,
-						RewardsAddress:   accAddr.String(),
+						RewardsAddress:   accAddrs[0].String(),
 						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
@@ -84,8 +83,12 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				},
 				FlatFees: []rewardsTypes.FlatFee{
 					{
-						ContractAddress: contractAddr.String(),
+						ContractAddress: contractAddrs[0].String(),
 						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+					},
+					{
+						ContractAddress: contractAddrs[1].String(),
+						FlatFee:         sdk.NewCoin("uarch", sdk.NewInt(10)),
 					},
 				},
 			},
@@ -105,7 +108,7 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 			genesisState: rewardsTypes.GenesisState{
 				Params: rewardsTypes.DefaultParams(),
 				ContractsMetadata: []rewardsTypes.ContractMetadata{
-					{ContractAddress: contractAddr.String()},
+					{ContractAddress: contractAddrs[0].String()},
 				},
 			},
 			errExpected: true,
@@ -115,8 +118,8 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 			genesisState: rewardsTypes.GenesisState{
 				Params: rewardsTypes.DefaultParams(),
 				ContractsMetadata: []rewardsTypes.ContractMetadata{
-					{ContractAddress: contractAddr.String(), OwnerAddress: accAddr.String()},
-					{ContractAddress: contractAddr.String(), OwnerAddress: accAddr.String()},
+					{ContractAddress: contractAddrs[0].String(), OwnerAddress: accAddrs[0].String()},
+					{ContractAddress: contractAddrs[0].String(), OwnerAddress: accAddrs[0].String()},
 				},
 			},
 			errExpected: true,
@@ -160,8 +163,8 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 					{Height: 1},
 				},
 				TxRewards: []rewardsTypes.TxRewards{
-					{TxId: 1},
-					{TxId: 1},
+					{TxId: 1, Height: 1},
+					{TxId: 1, Height: 1},
 				},
 			},
 			errExpected: true,
@@ -205,14 +208,14 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				RewardsRecords: []rewardsTypes.RewardsRecord{
 					{
 						Id:               1,
-						RewardsAddress:   accAddr.String(),
+						RewardsAddress:   accAddrs[0].String(),
 						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
 					},
 					{
 						Id:               1,
-						RewardsAddress:   accAddr.String(),
+						RewardsAddress:   accAddrs[0].String(),
 						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
@@ -229,7 +232,7 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				RewardsRecords: []rewardsTypes.RewardsRecord{
 					{
 						Id:               1,
-						RewardsAddress:   accAddr.String(),
+						RewardsAddress:   accAddrs[0].String(),
 						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
@@ -239,13 +242,20 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 			errExpected: true,
 		},
 		{
-			name: "Fail: invalid FlatFees: invalid contract address",
+			name: "Fail: invalid FlatFees: metadata not found for corresponding contract",
 			genesisState: rewardsTypes.GenesisState{
 				Params: rewardsTypes.DefaultParams(),
+				ContractsMetadata: []rewardsTypes.ContractMetadata{
+					{ContractAddress: contractAddrs[0].String(), OwnerAddress: accAddrs[0].String()},
+				},
 				FlatFees: []rewardsTypes.FlatFee{
 					{
-						ContractAddress: "",
+						ContractAddress: contractAddrs[0].String(),
 						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+					},
+					{
+						ContractAddress: contractAddrs[1].String(),
+						FlatFee:         sdk.NewCoin("uarch", sdk.NewInt(10)),
 					},
 				},
 			},
@@ -255,11 +265,15 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 			name: "Fail: invalid FlatFees: invalid coin",
 			genesisState: rewardsTypes.GenesisState{
 				Params: rewardsTypes.DefaultParams(),
+				ContractsMetadata: []rewardsTypes.ContractMetadata{
+					{ContractAddress: contractAddrs[0].String(), OwnerAddress: accAddrs[0].String()},
+				},
 				FlatFees: []rewardsTypes.FlatFee{
 					{
-						ContractAddress: "",
+						ContractAddress: contractAddrs[0].String(),
 						FlatFee: sdk.Coin{
-							Denom: sdk.DefaultBondDenom,
+							Amount: sdk.NewInt(-1),
+							Denom:  sdk.DefaultBondDenom,
 						},
 					},
 				},
@@ -270,13 +284,16 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 			name: "Fail: invalid FlatFees: duplicates",
 			genesisState: rewardsTypes.GenesisState{
 				Params: rewardsTypes.DefaultParams(),
+				ContractsMetadata: []rewardsTypes.ContractMetadata{
+					{ContractAddress: contractAddrs[0].String(), OwnerAddress: accAddrs[0].String()},
+				},
 				FlatFees: []rewardsTypes.FlatFee{
 					{
-						ContractAddress: contractAddr.String(),
+						ContractAddress: contractAddrs[0].String(),
 						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
 					},
 					{
-						ContractAddress: contractAddr.String(),
+						ContractAddress: contractAddrs[0].String(),
 						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2)),
 					},
 				},

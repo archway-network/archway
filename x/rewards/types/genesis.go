@@ -115,6 +115,10 @@ func (m GenesisState) Validate() error {
 
 	flatFeeSet := make(map[string]struct{})
 	for i, fee := range m.FlatFees {
+		if _, ok := contractAddrSet[fee.ContractAddress]; !ok {
+			return fmt.Errorf("flat fee: %+v is invalid, err: contract metadata not found", fee)
+		}
+
 		if err := fee.Validate(); err != nil {
 			return fmt.Errorf("flatFee [%d]: %w", i, err)
 		}
