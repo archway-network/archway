@@ -1,15 +1,11 @@
 package keeper
 
 import (
-	"fmt"
-
+	"github.com/archway-network/archway/x/rewards/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/archway-network/archway/x/rewards/types"
 )
 
 // FlatFeeState provides access to the types.FlatFee objects storage operations.
@@ -53,11 +49,6 @@ func (s FlatFeeState) Import(flatFees []types.FlatFee) {
 	for _, flatFee := range flatFees {
 		contractAddr := flatFee.MustGetContractAddress()
 		fee := flatFee.GetFlatFee()
-
-		if !fee.Amount.IsPositive() {
-			panic(fmt.Sprintf("flat fee: %+v is invalid, err: %s", flatFee, sdkErrors.ErrInvalidCoins))
-		}
-
 		s.SetFee(contractAddr, fee)
 	}
 }
