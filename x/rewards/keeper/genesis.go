@@ -20,6 +20,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		minConsFee,
 		rewardsRecordLastID,
 		rewardsRecords,
+		k.state.FlatFee(ctx).Export(),
 	)
 }
 
@@ -30,6 +31,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 	k.state.BlockRewardsState(ctx).Import(state.BlockRewards)
 	k.state.TxRewardsState(ctx).Import(state.TxRewards)
 	k.state.RewardsRecord(ctx).Import(state.RewardsRecordLastId, state.RewardsRecords)
+	k.state.FlatFee(ctx).Import(state.FlatFees)
 
 	if !pkg.DecCoinIsZero(state.MinConsensusFee) && !pkg.DecCoinIsNegative(state.MinConsensusFee) {
 		k.state.MinConsensusFee(ctx).SetFee(state.MinConsensusFee)

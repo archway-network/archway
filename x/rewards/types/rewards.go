@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"sigs.k8s.io/yaml"
 
 	"github.com/archway-network/archway/pkg"
@@ -121,4 +122,34 @@ func (m RewardsRecord) Validate() error {
 	}
 
 	return nil
+}
+
+// String implements the fmt.Stringer interface.
+func (m FlatFee) String() string {
+	bz, _ := yaml.Marshal(m)
+	return string(bz)
+}
+
+// Validate performs object fields validation.
+func (m FlatFee) Validate() error {
+	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
+		return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid contract address: %v", err)
+	}
+
+	if err := pkg.ValidateCoin(m.FlatFee); err != nil {
+		return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid flat fee coin: %v", err)
+	}
+
+	return nil
+}
+
+// MustGetContractAddress returns the contract address.
+// CONTRACT: panics in case of an error.
+func (m FlatFee) MustGetContractAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(m.ContractAddress)
+	if err != nil {
+		panic(fmt.Errorf("parsing contract address: %w", err))
+	}
+
+	return addr
 }

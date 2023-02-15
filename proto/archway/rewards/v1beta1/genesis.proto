@@ -35,4 +35,8 @@ message GenesisState {
   repeated RewardsRecord rewards_records = 7 [
     (gogoproto.nullable) = false
   ];
+  // flat_fees defines a list of contract flat fee.
+  repeated FlatFee flat_fees = 8 [
+    (gogoproto.nullable) = false
+  ];
 }
