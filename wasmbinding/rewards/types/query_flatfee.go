@@ -17,7 +17,7 @@ type ContractFlatFeeRequest struct {
 
 // ContractFlatFeeResponse is the Query.Metadata response.
 type ContractFlatFeeResponse struct {
-	// OwnerAddress is the address of the contract owner (the one who can modify the contract flat fee).
+	// The amount which has been set as the contract flat fee
 	FlatFeeAmount wasmVmTypes.Coin `json:"flat_fee_amount"`
 }
 
