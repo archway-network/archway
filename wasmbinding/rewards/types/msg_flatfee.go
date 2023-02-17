@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/archway-network/archway/wasmbinding/pkg"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SetFlatFeeRequest is the Msg.SetFlatFee request.
