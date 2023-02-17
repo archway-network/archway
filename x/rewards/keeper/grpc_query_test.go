@@ -9,6 +9,7 @@ import (
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/rewards/keeper"
+	"github.com/archway-network/archway/x/rewards/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -146,7 +147,10 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 			OwnerAddress:    contractAdminAcc.Address.String(),
 		})
 		s.Require().NoError(err)
-		err = k.SetFlatFee(ctx, contractAddr, expectedFlatFee)
+		err = k.SetFlatFee(ctx, contractAdminAcc.Address.String(), types.FlatFee{
+			ContractAddress: contractAddr.String(),
+			FlatFee:         expectedFlatFee,
+		})
 		s.Require().NoError(err)
 
 		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 0, ContractAddress: contractAddr.String()})
@@ -252,7 +256,10 @@ func (s *KeeperTestSuite) TestGRPC_FlatFee() {
 			OwnerAddress:    contractAdminAcc.Address.String(),
 		})
 		s.Require().NoError(err)
-		err = k.SetFlatFee(ctx, contractAddr, sdk.NewInt64Coin("token", 123))
+		err = k.SetFlatFee(ctx, contractAdminAcc.Address.String(), types.FlatFee{
+			ContractAddress: contractAddr.String(),
+			FlatFee:         sdk.NewInt64Coin("token", 123),
+		})
 		s.Require().NoError(err)
 
 		res, err := querySrvr.FlatFee(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryFlatFeeRequest{

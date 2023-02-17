@@ -71,6 +71,7 @@ func (h MsgHandler) WithdrawContractRewards(ctx sdk.Context, contractAddr sdk.Ac
 	return nil, [][]byte{resBz}, nil
 }
 
+// SetFlatFee sets the flat fee for the contract address.
 func (h MsgHandler) SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, req rewardsMsgTypes.SetFlatFeeRequest) ([]sdk.Event, [][]byte, error) {
 	if err := req.Validate(); err != nil {
 		return nil, nil, fmt.Errorf("setFlatFee: %w", err)
