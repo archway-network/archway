@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/wasmbinding/pkg"
-	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // ContracFlatFeeRequest is the Query.FlatFee request.
@@ -44,8 +43,8 @@ func (r ContractFlatFeeRequest) MustGetContractAddress() sdk.AccAddress {
 }
 
 // NewContractFlatFeeResponse converts rewardsTypes.FlatFee to ContractFlatFeeResponse.
-func NewContractFlatFeeResponse(flatFee rewardsTypes.FlatFee) ContractFlatFeeResponse {
+func NewContractFlatFeeResponse(flatFee sdk.Coin) ContractFlatFeeResponse {
 	return ContractFlatFeeResponse{
-		FlatFeeAmount: pkg.SDKCoinToWasm(flatFee.GetFlatFee()),
+		FlatFeeAmount: pkg.SDKCoinToWasm(flatFee),
 	}
 }
