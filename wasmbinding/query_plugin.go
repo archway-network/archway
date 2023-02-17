@@ -49,6 +49,8 @@ func (d QueryDispatcher) DispatchQuery(ctx sdk.Context, request json.RawMessage)
 		resData, resErr = d.rewardsHandler.GetRewardsRecords(ctx, *req.RewardsRecords)
 	case req.GovVote != nil:
 		resData, resErr = d.govHandler.GetVote(ctx, *req.GovVote)
+	case req.FlatFee != nil:
+		resData, resErr = d.rewardsHandler.GetFlatFee(ctx, *req.FlatFee)
 	default:
 		// That should never happen, since we validate the input above
 		return nil, wasmVmTypes.UnsupportedRequest{Kind: "no custom querier found"}

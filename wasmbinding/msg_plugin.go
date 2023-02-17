@@ -52,6 +52,8 @@ func (d MsgDispatcher) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress,
 		return d.rewardsHandler.UpdateContractMetadata(ctx, contractAddr, *customMsg.UpdateContractMetadata)
 	case customMsg.WithdrawRewards != nil:
 		return d.rewardsHandler.WithdrawContractRewards(ctx, contractAddr, *customMsg.WithdrawRewards)
+	case customMsg.SetFlatFee != nil:
+		return d.rewardsHandler.SetFlatFee(ctx, contractAddr, *customMsg.SetFlatFee)
 	default:
 		// That should never happen, since we validate the input above
 		return nil, nil, sdkErrors.Wrap(wasmdTypes.ErrUnknownMsg, "no custom handler found")
