@@ -56,6 +56,24 @@ func TestRewardsWASMBindings(t *testing.T) {
 		assert.ErrorContains(t, err, "contractAddress: parsing: decoding bech32 failed")
 	})
 
+	t.Run("Query non-existing flatfee", func(t *testing.T) {
+		query := rewardsWbTypes.ContractFlatFeeRequest{
+			ContractAddress: contractAddr.String(),
+		}
+
+		_, err := queryPlugin.GetFlatFee(ctx, query)
+		assert.ErrorIs(t, err, rewardsTypes.ErrContractFlatFeeNotFound)
+	})
+
+	t.Run("Query invalid contract address", func(t *testing.T) {
+		query := rewardsWbTypes.ContractFlatFeeRequest{
+			ContractAddress: "👻",
+		}
+
+		_, err := queryPlugin.GetFlatFee(ctx, query)
+		assert.ErrorContains(t, err, "contractAddress: parsing: decoding bech32 failed")
+	})
+
 	t.Run("Query empty rewards", func(t *testing.T) {
 		query := rewardsWbTypes.RewardsRecordsRequest{
 			RewardsAddress: contractAddr.String(),
