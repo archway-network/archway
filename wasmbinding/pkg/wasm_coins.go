@@ -33,3 +33,12 @@ func WasmCoinsToSDK(coins wasmVmTypes.Coins) (sdk.Coins, error) {
 
 	return result, nil
 }
+
+// SDKCoinToWasm converts sdk.Coin to wasmVmTypes.Coin
+func SDKCoinToWasm(coin sdk.Coin) wasmVmTypes.Coin {
+	wasmCoin := wasmVmTypes.Coin{
+		Denom:  coin.Denom,
+		Amount: coin.Amount.String(),
+	}
+	return wasmCoin
+}
