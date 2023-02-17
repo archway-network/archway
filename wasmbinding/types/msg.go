@@ -15,6 +15,10 @@ type Msg struct {
 	// WithdrawRewards is a request to withdraw rewards for the contract.
 	// Contract address is used as the rewards address (metadata field).
 	WithdrawRewards *rewardsTypes.WithdrawRewardsRequest `json:"withdraw_rewards"`
+
+	// SetFlatFee is a request to set contract flat fee
+	// Request is authorized only if the contract has meta data
+	SetFlatFee *rewardsTypes.SetFlatFeeRequest `json:"set_flat_fee"`
 }
 
 // Validate validates the msg fields.
@@ -26,6 +30,10 @@ func (m Msg) Validate() error {
 	}
 
 	if m.WithdrawRewards != nil {
+		cnt++
+	}
+
+	if m.SetFlatFee != nil {
 		cnt++
 	}
 
