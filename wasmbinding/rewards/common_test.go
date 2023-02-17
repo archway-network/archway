@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/assert"
@@ -102,6 +103,15 @@ func TestRewardsWASMBindings(t *testing.T) {
 		assert.ErrorContains(t, err, "ownerAddress: parsing: decoding bech32 failed")
 	})
 
+	t.Run("Invalid setflatfee", func(t *testing.T) {
+		msg := rewardsWbTypes.SetFlatFeeRequest{
+			ContractAddress: "👻",
+		}
+
+		_, _, err := msgPlugin.SetFlatFee(ctx, contractAddr, msg)
+		assert.ErrorContains(t, err, "contractAddress: parsing: decoding bech32 failed")
+	})
+
 	// Handle no-op msg
 	t.Run("Update non-existing metadata (unauthorized create operation)", func(t *testing.T) {
 		msg := rewardsWbTypes.UpdateContractMetadataRequest{
@@ -111,6 +121,16 @@ func TestRewardsWASMBindings(t *testing.T) {
 
 		_, _, err := msgPlugin.UpdateContractMetadata(ctx, contractAddr, msg)
 		assert.ErrorIs(t, err, rewardsTypes.ErrUnauthorized)
+	})
+
+	t.Run("Set flatfee: non-existing metadata (unauthorized create operation)", func(t *testing.T) {
+		msg := rewardsWbTypes.SetFlatFeeRequest{
+			ContractAddress: acc.Address.String(),
+			FlatFeeAmount:   types.NewCoin(10, "test"),
+		}
+
+		_, _, err := msgPlugin.SetFlatFee(ctx, contractAddr, msg)
+		assert.ErrorIs(t, err, rewardsTypes.ErrMetadataNotFound)
 	})
 
 	t.Run("Withdraw invalid request", func(t *testing.T) {
@@ -164,6 +184,52 @@ func TestRewardsWASMBindings(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, contractAddr.String(), res.OwnerAddress)
 		assert.Equal(t, contractAddr.String(), res.RewardsAddress)
+	})
+
+	t.Run("SetFlatFee: contract not admin (unauthorized operation)", func(t *testing.T) {
+		msg := rewardsWbTypes.SetFlatFeeRequest{
+			ContractAddress: contractAddr.String(),
+			FlatFeeAmount:   types.NewCoin(10, "test"),
+		}
+
+		_, _, err := msgPlugin.SetFlatFee(ctx, acc.Address, msg)
+		assert.ErrorIs(t, err, rewardsTypes.ErrUnauthorized)
+	})
+
+	t.Run("query FlatFee: not found", func(t *testing.T) {
+		_, err := queryPlugin.GetFlatFee(ctx, rewardsWbTypes.ContractFlatFeeRequest{
+			ContractAddress: contractAddr.String(),
+		})
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, rewardsTypes.ErrContractFlatFeeNotFound)
+	})
+
+	t.Run("SetFlatFee: Valid", func(t *testing.T) {
+		flatFee := types.NewCoin(10, "test")
+		msg := rewardsWbTypes.SetFlatFeeRequest{
+			ContractAddress: contractAddr.String(),
+			FlatFeeAmount:   flatFee,
+		}
+
+		_, _, err := msgPlugin.SetFlatFee(ctx, contractAddr, msg)
+		assert.NoError(t, err)
+
+		feeRes, err := queryPlugin.GetFlatFee(ctx, rewardsWbTypes.ContractFlatFeeRequest{
+			ContractAddress: contractAddr.String(),
+		})
+		assert.NoError(t, err)
+		assert.NotNil(t, feeRes)
+		assert.Equal(t, flatFee, feeRes.FlatFeeAmount)
+	})
+
+	t.Run("query FlatFee: Valid", func(t *testing.T) {
+		flatFee := types.NewCoin(10, "test")
+		feeRes, err := queryPlugin.GetFlatFee(ctx, rewardsWbTypes.ContractFlatFeeRequest{
+			ContractAddress: contractAddr.String(),
+		})
+		assert.NoError(t, err)
+		assert.NotNil(t, feeRes)
+		assert.Equal(t, flatFee, feeRes.FlatFeeAmount)
 	})
 
 	// Add some rewards to withdraw (create new records and mint tokens)
