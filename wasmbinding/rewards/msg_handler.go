@@ -15,7 +15,7 @@ type KeeperWriterExpected interface {
 	SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sdk.AccAddress, metaUpdates rewardsTypes.ContractMetadata) error
 	WithdrawRewardsByRecordsLimit(ctx sdk.Context, rewardsAddr sdk.AccAddress, recordsLimit uint64) (sdk.Coins, int, error)
 	WithdrawRewardsByRecordIDs(ctx sdk.Context, rewardsAddr sdk.AccAddress, recordIDs []uint64) (sdk.Coins, int, error)
-	SetFlatFee(ctx sdk.Context, senderAddr string, flatFeeUpdate rewardsTypes.FlatFee) error
+	SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, flatFeeUpdate rewardsTypes.FlatFee) error
 }
 
 // MsgHandler provides a custom WASM message handler for the x/rewards module.
@@ -77,7 +77,7 @@ func (h MsgHandler) SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, req r
 		return nil, nil, fmt.Errorf("setFlatFee: %w", err)
 	}
 
-	if err := h.rewardsKeeper.SetFlatFee(ctx, senderAddr.String(), req.ToSDK()); err != nil {
+	if err := h.rewardsKeeper.SetFlatFee(ctx, senderAddr, req.ToSDK()); err != nil {
 		return nil, nil, err
 	}
 

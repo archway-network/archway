@@ -121,7 +121,7 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 	err = chain.GetApp().RewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractFlatFeeDiffDenomSet, metaCurrentDiff)
 	require.NoError(t, err)
 	flatFeeDiff := sdk.NewInt64Coin("test", 10)
-	err = chain.GetApp().RewardsKeeper.SetFlatFee(ctx, contractAdminAcc.Address.String(), rewardsTypes.FlatFee{
+	err = chain.GetApp().RewardsKeeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
 		ContractAddress: contractFlatFeeDiffDenomSet.String(),
 		FlatFee:         flatFeeDiff,
 	})
@@ -136,7 +136,7 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 	err = chain.GetApp().RewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractFlatFeeSameDenomSet, metaCurrentSame)
 	require.NoError(t, err)
 	flatFeeSame := sdk.NewInt64Coin("stake", 10)
-	err = chain.GetApp().RewardsKeeper.SetFlatFee(ctx, contractAdminAcc.Address.String(), rewardsTypes.FlatFee{
+	err = chain.GetApp().RewardsKeeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
 		ContractAddress: contractFlatFeeSameDenomSet.String(),
 		FlatFee:         flatFeeSame,
 	})

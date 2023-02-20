@@ -8,13 +8,13 @@ import (
 )
 
 // SetFlatFee checks if a contract has metadata set and stores the given flat fee to be associated with that contract
-func (k Keeper) SetFlatFee(ctx sdk.Context, senderAddr string, feeUpdate types.FlatFee) error {
+func (k Keeper) SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, feeUpdate types.FlatFee) error {
 	// Check if the contract metadata exists
 	contractInfo := k.GetContractMetadata(ctx, feeUpdate.MustGetContractAddress())
 	if contractInfo == nil {
 		return types.ErrMetadataNotFound
 	}
-	if contractInfo.OwnerAddress != senderAddr {
+	if contractInfo.OwnerAddress != senderAddr.String() {
 		return sdkErrors.Wrap(types.ErrUnauthorized, "flat_fee can only be set or changed by the contract owner")
 	}
 

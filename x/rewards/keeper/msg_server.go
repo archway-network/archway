@@ -93,7 +93,7 @@ func (s MsgServer) SetFlatFee(c context.Context, request *types.MsgSetFlatFee) (
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	_, err := sdk.AccAddressFromBech32(request.SenderAddress)
+	senderAddress, err := sdk.AccAddressFromBech32(request.SenderAddress)
 	if err != nil {
 		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
 	}
@@ -103,7 +103,7 @@ func (s MsgServer) SetFlatFee(c context.Context, request *types.MsgSetFlatFee) (
 		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
 	}
 
-	if err := s.keeper.SetFlatFee(ctx, request.SenderAddress, types.FlatFee{
+	if err := s.keeper.SetFlatFee(ctx, senderAddress, types.FlatFee{
 		ContractAddress: request.GetContractAddress(),
 		FlatFee:         request.GetFlatFeeAmount(),
 	}); err != nil {

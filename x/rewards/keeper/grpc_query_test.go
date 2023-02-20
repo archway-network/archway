@@ -147,7 +147,7 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 			OwnerAddress:    contractAdminAcc.Address.String(),
 		})
 		s.Require().NoError(err)
-		err = k.SetFlatFee(ctx, contractAdminAcc.Address.String(), types.FlatFee{
+		err = k.SetFlatFee(ctx, contractAdminAcc.Address, types.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         expectedFlatFee,
 		})
@@ -256,7 +256,7 @@ func (s *KeeperTestSuite) TestGRPC_FlatFee() {
 			OwnerAddress:    contractAdminAcc.Address.String(),
 		})
 		s.Require().NoError(err)
-		err = k.SetFlatFee(ctx, contractAdminAcc.Address.String(), types.FlatFee{
+		err = k.SetFlatFee(ctx, contractAdminAcc.Address, types.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         sdk.NewInt64Coin("token", 123),
 		})
