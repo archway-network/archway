@@ -16,6 +16,7 @@ type KeeperReaderExpected interface {
 	GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress) *rewardsTypes.ContractMetadata
 	GetRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, pageReq *query.PageRequest) ([]rewardsTypes.RewardsRecord, *query.PageResponse, error)
 	MaxWithdrawRecords(ctx sdk.Context) uint64
+	GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Coin, bool)
 }
 
 // QueryHandler provides a custom WASM query handler for the x/rewards module.
@@ -42,6 +43,18 @@ func (h QueryHandler) GetContractMetadata(ctx sdk.Context, req types.ContractMet
 	}
 
 	return types.NewContractMetadataResponse(*meta), nil
+}
+
+func (h QueryHandler) GetFlatFee(ctx sdk.Context, req types.ContractFlatFeeRequest) (types.ContractFlatFeeResponse, error) {
+	if err := req.Validate(); err != nil {
+		return types.ContractFlatFeeResponse{}, fmt.Errorf("flatfee: %w", err)
+	}
+
+	flatfee, found := h.rewardsKeeper.GetFlatFee(ctx, req.MustGetContractAddress())
+	if !found {
+		return types.ContractFlatFeeResponse{}, rewardsTypes.ErrContractFlatFeeNotFound
+	}
+	return types.NewContractFlatFeeResponse(flatfee), nil
 }
 
 // GetRewardsRecords returns the paginated list of types.RewardsRecord objects for a given account address.

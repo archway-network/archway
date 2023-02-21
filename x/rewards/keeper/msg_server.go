@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -94,25 +93,20 @@ func (s MsgServer) SetFlatFee(c context.Context, request *types.MsgSetFlatFee) (
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	_, err := sdk.AccAddressFromBech32(request.SenderAddress)
+	senderAddress, err := sdk.AccAddressFromBech32(request.SenderAddress)
 	if err != nil {
 		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
 	}
 
-	contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)
+	_, err = sdk.AccAddressFromBech32(request.ContractAddress)
 	if err != nil {
 		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
 	}
 
-	metadata := s.keeper.GetContractMetadata(ctx, contractAddr)
-	if metadata == nil {
-		return nil, types.ErrMetadataNotFound
-	}
-	if metadata.OwnerAddress != request.SenderAddress {
-		return nil, sdkErrors.Wrap(types.ErrUnauthorized, "flat_fee can only be set or changed by the contract owner")
-	}
-
-	if err := s.keeper.SetFlatFee(ctx, contractAddr, request.FlatFeeAmount); err != nil {
+	if err := s.keeper.SetFlatFee(ctx, senderAddress, types.FlatFee{
+		ContractAddress: request.GetContractAddress(),
+		FlatFee:         request.GetFlatFeeAmount(),
+	}); err != nil {
 		return nil, err
 	}
 

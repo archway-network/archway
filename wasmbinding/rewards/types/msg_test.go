@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/archway-network/archway/pkg"
@@ -106,6 +107,61 @@ func TestWithdrawRewardsRequestValidate(t *testing.T) {
 			name: "Fail: invalid WithdrawRewards: RecordIDs: duplicated IDs",
 			msg: WithdrawRewardsRequest{
 				RecordIDs: []uint64{1, 2, 1},
+			},
+			errExpected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.Validate()
+			if tc.errExpected {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestSetFlatFeeRequestValidate(t *testing.T) {
+	type testCase struct {
+		name        string
+		msg         SetFlatFeeRequest
+		errExpected bool
+	}
+
+	testCases := []testCase{
+		{
+			name: "OK: SetFlatFeeRequest",
+			msg: SetFlatFeeRequest{
+				ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				FlatFeeAmount: wasmVmTypes.Coin{
+					Denom:  "test",
+					Amount: "10",
+				},
+			},
+		},
+		{
+			name:        "Fail: invalid SetFlatFeeRequest: no changes",
+			msg:         SetFlatFeeRequest{},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid SetFlatFeeRequest: invalid contractAddress",
+			msg: SetFlatFeeRequest{
+				ContractAddress: "👻",
+			},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid SetFlatFeeRequest: invalid fee",
+			msg: SetFlatFeeRequest{
+				ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				FlatFeeAmount: wasmVmTypes.Coin{
+					Denom:  "test",
+					Amount: "👻",
+				},
 			},
 			errExpected: true,
 		},

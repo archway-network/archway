@@ -18,7 +18,10 @@ func (s *KeeperTestSuite) TestSetFlatFee() {
 	fee := sdk.NewInt64Coin("test", 10)
 
 	s.Run("Fail: non-existing contract metadata", func() {
-		err := keeper.SetFlatFee(ctx, contractAddr, fee)
+		err := keeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
+			ContractAddress: contractAddr.String(),
+			FlatFee:         fee,
+		})
 		s.Assert().ErrorIs(err, rewardsTypes.ErrMetadataNotFound)
 	})
 
@@ -29,7 +32,10 @@ func (s *KeeperTestSuite) TestSetFlatFee() {
 	_ = keeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
 
 	s.Run("OK: set flat fee", func() {
-		err := keeper.SetFlatFee(ctx, contractAddr, fee)
+		err := keeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
+			ContractAddress: contractAddr.String(),
+			FlatFee:         fee,
+		})
 		s.Require().NoError(err)
 
 		flatFee, ok := keeper.GetFlatFee(ctx, contractAddr)
@@ -38,7 +44,10 @@ func (s *KeeperTestSuite) TestSetFlatFee() {
 	})
 
 	s.Run("OK: remove flat fee", func() {
-		err := keeper.SetFlatFee(ctx, contractAddr, sdk.NewInt64Coin("test", 0))
+		err := keeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
+			ContractAddress: contractAddr.String(),
+			FlatFee:         sdk.NewInt64Coin("test", 0),
+		})
 		s.Require().NoError(err)
 
 		flatFee, ok := keeper.GetFlatFee(ctx, contractAddr)

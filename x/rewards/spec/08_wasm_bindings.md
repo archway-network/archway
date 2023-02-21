@@ -114,13 +114,41 @@ Example response:
 }
 ```
 
+#### FlatFee
+
+The [flatfee](../../../wasmbinding/rewards/types/query_flatfee.go) request returns a contract flat fee.
+A contract can query its own or any other contract's metadata.
+
+Query example:
+
+```json
+{
+  "rewards": {
+    "flat_fee": {
+      "contract_address": "archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u"
+    }
+  }
+}
+```
+
+Example response:
+
+```json
+{
+  "flat_fee_amount": {
+    "amount": "10000",
+    "denom": "uarch"
+  }
+}
+```
+
 ### Messages
 
 [The sub-message structure](../../../wasmbinding/rewards/types/msg.go#L8) is used to send the `x/rewards` module specific state change message.
 
 This message is expected to fail if:
 
-* Message has no operations specified (`update_metadata` and `withdraw_rewards` fields are not defined);
+* Message has no operations specified (`update_metadata` and `withdraw_rewards` and `set_flat_fee` fields are not defined);
 * Message has more than one operation specified;
 
 #### Update metadata
@@ -204,6 +232,43 @@ Response example:
   ]
 }
 ```
+
+
+#### Set Flat Fee
+
+The [set_flat_fee](../../../wasmbinding/rewards/types/msg_flatfee.go#L12) request is used to update an existing contract metadata.
+
+Message example (CosmWasm's `CosmosMsg`):
+
+```json
+{
+  "custom": {
+    "rewards": {
+      "set_flat_fee": {
+        "contract_address": "archway14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sy85n2u",
+        "flat_fee_amount": {
+          "amount": "10000",
+          "denom": "uarch"
+        }
+      }
+    }
+  }
+}
+```
+
+Sub-message fields:
+
+* `contract_address` - the contract address to update the flat fee for.
+* `flat_fee_amount` - flat fee amount .
+
+This sub-message doesn't return a response data.
+If the message coins zero value amount, the existing flat fee is removed.
+
+This sub-message is expected to fail if:
+
+* Contract does not exist;
+* Metadata is not set for a contract;
+* The contract address is not set as the metadata's `owner_address` (request is unauthorized);
 
 ## Usage examples
 

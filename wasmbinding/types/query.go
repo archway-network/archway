@@ -18,6 +18,9 @@ type Query struct {
 
 	// GovVote returns the vote data for a given proposal and voter.
 	GovVote *govTypes.VoteRequest `json:"gov_vote"`
+
+	// FlatFee returns the contracts flat fee
+	FlatFee *rewardsTypes.ContractFlatFeeRequest `json:"flat_fee"`
 }
 
 // Validate validates the query fields.
@@ -33,6 +36,10 @@ func (q Query) Validate() error {
 	}
 
 	if q.GovVote != nil {
+		cnt++
+	}
+
+	if q.FlatFee != nil {
 		cnt++
 	}
 
