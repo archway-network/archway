@@ -11,5 +11,14 @@ func (lbi LastBlockInfo) GetInflationAsDec() (sdk.Dec, error) {
 }
 
 func (lbi LastBlockInfo) Validate() error {
+	inflation, err := lbi.GetInflationAsDec()
+	if err != nil {
+		return err
+	}
+
+	if inflation.LT(sdk.ZeroDec()) && inflation.GT(sdk.OneDec()) {
+		return ErrInvalidInflation
+	}
+
 	return nil
 }
