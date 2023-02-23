@@ -1,0 +1,11 @@
+syntax = "proto3";
+package archway.mint.v1;
+
+option go_package = "github.com/archway-network/archway/x/mint/types";
+
+import "gogoproto/gogo.proto";
+
+// Params defines the module parameters.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+}

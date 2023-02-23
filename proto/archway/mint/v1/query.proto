@@ -1,0 +1,26 @@
+syntax = "proto3";
+package archway.mint.v1;
+
+option go_package = "github.com/archway-network/archway/x/mint/types";
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "archway/mint/v1/mint.proto";
+
+// Query service for the mint module.
+service Query {
+  // Params returns module parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/archway/mint/v1/params";
+  }
+}
+
+// QueryParamsRequest is the request for Query.Params.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response for Query.Params.
+message QueryParamsResponse {
+  Params params = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
