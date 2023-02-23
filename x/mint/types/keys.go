@@ -8,3 +8,7 @@ const (
 	// QuerierRoute is the querier route for the module.
 	QuerierRoute = ModuleName
 )
+
+var (
+	LastBlockInfoPrefix = []byte{0x00}
+)
