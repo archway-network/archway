@@ -50,7 +50,7 @@ func (a AppModuleBasic) RegisterInterfaces(registry codecTypes.InterfaceRegistry
 
 // DefaultGenesis returns default genesis state as raw bytes for the module.
 func (a AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
 // ValidateGenesis performs genesis state validation for the module.
@@ -74,7 +74,7 @@ func (a AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // GetTxCmd returns the root tx command for the module.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+	return nil
 }
 
 // GetQueryCmd returns no root query command for the module.
@@ -126,14 +126,14 @@ func (a AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.Raw
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(bz, &genesisState)
 
-	a.keeper.InitGenesis(ctx, &genesisState)
+	InitGenesis(ctx, a.keeper, genesisState)
 
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the module.
 func (a AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	state := a.keeper.ExportGenesis(ctx)
+	state := ExportGenesis(ctx, a.keeper)
 	return cdc.MustMarshalJSON(state)
 }
 

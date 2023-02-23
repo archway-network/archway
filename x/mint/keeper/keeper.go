@@ -17,10 +17,6 @@ type Keeper struct {
 
 // NewKeeper creates a new Keeper instance.
 func NewKeeper(cdc codec.Codec, ps paramTypes.Subspace) Keeper {
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return Keeper{
 		cdc:        cdc,
 		paramStore: ps,
