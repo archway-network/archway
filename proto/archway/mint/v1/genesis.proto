@@ -1,0 +1,15 @@
+syntax = "proto3";
+package archway.mint.v1;
+
+option go_package = "github.com/archway-network/archway/x/mint/types";
+
+import "gogoproto/gogo.proto";
+import "archway/mint/v1/mint.proto";
+
+// GenesisState defines the initial state of the mint module.
+message GenesisState {
+  // params defines all the module parameters.
+  Params params = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
