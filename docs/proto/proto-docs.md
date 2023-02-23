@@ -4,14 +4,28 @@
 
 ## Table of Contents
 
+- [archway/mint/v1/mint.proto](#archway/mint/v1/mint.proto)
+    - [Params](#archway.mint.v1.Params)
+  
+- [archway/mint/v1/genesis.proto](#archway/mint/v1/genesis.proto)
+    - [GenesisState](#archway.mint.v1.GenesisState)
+  
+- [archway/mint/v1/query.proto](#archway/mint/v1/query.proto)
+    - [QueryParamsRequest](#archway.mint.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#archway.mint.v1.QueryParamsResponse)
+  
+    - [Query](#archway.mint.v1.Query)
+  
 - [archway/rewards/v1beta1/rewards.proto](#archway/rewards/v1beta1/rewards.proto)
     - [BlockRewards](#archway.rewards.v1beta1.BlockRewards)
     - [ContractMetadata](#archway.rewards.v1beta1.ContractMetadata)
+    - [FlatFee](#archway.rewards.v1beta1.FlatFee)
     - [Params](#archway.rewards.v1beta1.Params)
     - [RewardsRecord](#archway.rewards.v1beta1.RewardsRecord)
     - [TxRewards](#archway.rewards.v1beta1.TxRewards)
   
 - [archway/rewards/v1beta1/events.proto](#archway/rewards/v1beta1/events.proto)
+    - [ContractFlatFeeSetEvent](#archway.rewards.v1beta1.ContractFlatFeeSetEvent)
     - [ContractMetadataSetEvent](#archway.rewards.v1beta1.ContractMetadataSetEvent)
     - [ContractRewardCalculationEvent](#archway.rewards.v1beta1.ContractRewardCalculationEvent)
     - [MinConsensusFeeSetEvent](#archway.rewards.v1beta1.MinConsensusFeeSetEvent)
@@ -28,6 +42,8 @@
     - [QueryContractMetadataResponse](#archway.rewards.v1beta1.QueryContractMetadataResponse)
     - [QueryEstimateTxFeesRequest](#archway.rewards.v1beta1.QueryEstimateTxFeesRequest)
     - [QueryEstimateTxFeesResponse](#archway.rewards.v1beta1.QueryEstimateTxFeesResponse)
+    - [QueryFlatFeeRequest](#archway.rewards.v1beta1.QueryFlatFeeRequest)
+    - [QueryFlatFeeResponse](#archway.rewards.v1beta1.QueryFlatFeeResponse)
     - [QueryOutstandingRewardsRequest](#archway.rewards.v1beta1.QueryOutstandingRewardsRequest)
     - [QueryOutstandingRewardsResponse](#archway.rewards.v1beta1.QueryOutstandingRewardsResponse)
     - [QueryParamsRequest](#archway.rewards.v1beta1.QueryParamsRequest)
@@ -42,6 +58,8 @@
 - [archway/rewards/v1beta1/tx.proto](#archway/rewards/v1beta1/tx.proto)
     - [MsgSetContractMetadata](#archway.rewards.v1beta1.MsgSetContractMetadata)
     - [MsgSetContractMetadataResponse](#archway.rewards.v1beta1.MsgSetContractMetadataResponse)
+    - [MsgSetFlatFee](#archway.rewards.v1beta1.MsgSetFlatFee)
+    - [MsgSetFlatFeeResponse](#archway.rewards.v1beta1.MsgSetFlatFeeResponse)
     - [MsgWithdrawRewards](#archway.rewards.v1beta1.MsgWithdrawRewards)
     - [MsgWithdrawRewards.RecordIDs](#archway.rewards.v1beta1.MsgWithdrawRewards.RecordIDs)
     - [MsgWithdrawRewards.RecordsLimit](#archway.rewards.v1beta1.MsgWithdrawRewards.RecordsLimit)
@@ -67,6 +85,114 @@
     - [Query](#archway.tracking.v1beta1.Query)
   
 - [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="archway/mint/v1/mint.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/mint/v1/mint.proto
+
+
+
+<a name="archway.mint.v1.Params"></a>
+
+### Params
+Params defines the module parameters.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="archway/mint/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/mint/v1/genesis.proto
+
+
+
+<a name="archway.mint.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the initial state of the mint module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#archway.mint.v1.Params) |  | params defines all the module parameters. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="archway/mint/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/mint/v1/query.proto
+
+
+
+<a name="archway.mint.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request for Query.Params.
+
+
+
+
+
+
+<a name="archway.mint.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response for Query.Params.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#archway.mint.v1.Params) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="archway.mint.v1.Query"></a>
+
+### Query
+Query service for the mint module.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#archway.mint.v1.QueryParamsRequest) | [QueryParamsResponse](#archway.mint.v1.QueryParamsResponse) | Params returns module parameters. | GET|/archway/mint/v1/params|
+
+ <!-- end services -->
 
 
 
@@ -105,6 +231,22 @@ ContractMetadata defines the contract rewards distribution options for a particu
 | `contract_address` | [string](#string) |  | contract_address defines the contract address (bech32 encoded). |
 | `owner_address` | [string](#string) |  | owner_address is the contract owner address that can modify contract reward options (bech32 encoded). That could be the contract admin or the contract itself. If owner_address is set to contract address, contract can modify the metadata on its own using WASM bindings. |
 | `rewards_address` | [string](#string) |  | rewards_address is an address to distribute rewards to (bech32 encoded). If not set (empty), rewards are not distributed for this contract. |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.FlatFee"></a>
+
+### FlatFee
+FlatFee defines the flat fee for a particular contract.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_address` | [string](#string) |  | contract_address defines the contract address (bech32 encoded). |
+| `flat_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | flat_fee defines the minimum flat fee set by the contract_owner |
 
 
 
@@ -181,6 +323,22 @@ TxRewards defines transaction related rewards distribution data.
 <p align="right"><a href="#top">Top</a></p>
 
 ## archway/rewards/v1beta1/events.proto
+
+
+
+<a name="archway.rewards.v1beta1.ContractFlatFeeSetEvent"></a>
+
+### ContractFlatFeeSetEvent
+ContractFlatFeeSetEvent is emitted when the contract flat fee is updated
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_address` | [string](#string) |  | contract_address defines the bech32 address of the contract for which the flat fee is set |
+| `flat_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | flat_fee defines the amount that has been set as the minimum fee for the contract |
+
+
+
 
 
 
@@ -282,6 +440,7 @@ GenesisState defines the initial state of the tracking module.
 | `min_consensus_fee` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  | min_consensus_fee defines the minimum gas unit price. |
 | `rewards_record_last_id` | [uint64](#uint64) |  | rewards_record_last_id defines the last unique ID for a RewardsRecord objs. |
 | `rewards_records` | [RewardsRecord](#archway.rewards.v1beta1.RewardsRecord) | repeated | rewards_records defines a list of all active (undistributed) rewards records. |
+| `flat_fees` | [FlatFee](#archway.rewards.v1beta1.FlatFee) | repeated | flat_fees defines a list of contract flat fee. |
 
 
 
@@ -384,6 +543,7 @@ QueryEstimateTxFeesRequest is the request for Query.EstimateTxFees.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gas_limit` | [uint64](#uint64) |  | gas_limit is the transaction gas limit. |
+| `contract_address` | [string](#string) |  | contract_address whose flat fee is considered when estimating tx fees. |
 
 
 
@@ -399,7 +559,37 @@ QueryEstimateTxFeesResponse is the response for Query.EstimateTxFees.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gas_unit_price` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  | gas_unit_price defines the minimum transaction fee per gas unit. |
-| `estimated_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | estimated_fee is the estimated transaction fee for a given gas limit. |
+| `estimated_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | estimated_fee is the estimated transaction fee for a given gas limit. |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.QueryFlatFeeRequest"></a>
+
+### QueryFlatFeeRequest
+QueryFlatFeeRequest is the request for Query.FlatFeet
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_address` | [string](#string) |  | contract_address is the contract address (bech32 encoded). |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.QueryFlatFeeResponse"></a>
+
+### QueryFlatFeeResponse
+QueryFlatFeeResponse is the response for Query.FlatFee
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `flat_fee_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | flat_fee_amount defines the minimum flat fee set by the contract_owner per contract execution. |
 
 
 
@@ -540,6 +730,7 @@ Query service for the tracking module.
 | `EstimateTxFees` | [QueryEstimateTxFeesRequest](#archway.rewards.v1beta1.QueryEstimateTxFeesRequest) | [QueryEstimateTxFeesResponse](#archway.rewards.v1beta1.QueryEstimateTxFeesResponse) | EstimateTxFees returns the estimated transaction fees for the given transaction gas limit using the minimum consensus fee value for the current block. | GET|/archway/rewards/v1/estimate_tx_fees|
 | `RewardsRecords` | [QueryRewardsRecordsRequest](#archway.rewards.v1beta1.QueryRewardsRecordsRequest) | [QueryRewardsRecordsResponse](#archway.rewards.v1beta1.QueryRewardsRecordsResponse) | RewardsRecords returns the paginated list of RewardsRecord objects stored for the provided rewards_address. | GET|/archway/rewards/v1/rewards_records|
 | `OutstandingRewards` | [QueryOutstandingRewardsRequest](#archway.rewards.v1beta1.QueryOutstandingRewardsRequest) | [QueryOutstandingRewardsResponse](#archway.rewards.v1beta1.QueryOutstandingRewardsResponse) | OutstandingRewards returns total rewards credited from different contracts for the provided rewards_address. | GET|/archway/rewards/v1/outstanding_rewards|
+| `FlatFee` | [QueryFlatFeeRequest](#archway.rewards.v1beta1.QueryFlatFeeRequest) | [QueryFlatFeeResponse](#archway.rewards.v1beta1.QueryFlatFeeResponse) | FlatFee returns the flat fee set by the contract owner for the provided contract_address | GET|/archway/rewards/v1/flat_fee|
 
  <!-- end services -->
 
@@ -572,6 +763,33 @@ MsgSetContractMetadata is the request for Msg.SetContractMetadata.
 
 ### MsgSetContractMetadataResponse
 MsgSetContractMetadataResponse is the response for Msg.SetContractMetadata.
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.MsgSetFlatFee"></a>
+
+### MsgSetFlatFee
+MsgSetFlatFee is the request for Msg.SetFlatFee.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender_address` | [string](#string) |  | sender_address is the msg sender address (bech32 encoded). |
+| `contract_address` | [string](#string) |  | contract_address is the contract address (bech32 encoded). |
+| `flat_fee_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | flat_fee_amount defines the minimum flat fee set by the contract_owner |
+
+
+
+
+
+
+<a name="archway.rewards.v1beta1.MsgSetFlatFeeResponse"></a>
+
+### MsgSetFlatFeeResponse
+MsgSetFlatFeeResponse is the response for Msg.SetFlatFee.
 
 
 
@@ -656,6 +874,7 @@ Msg defines the module messaging service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SetContractMetadata` | [MsgSetContractMetadata](#archway.rewards.v1beta1.MsgSetContractMetadata) | [MsgSetContractMetadataResponse](#archway.rewards.v1beta1.MsgSetContractMetadataResponse) | SetContractMetadata creates or updates an existing contract metadata. Method is authorized to the contract owner (admin if no metadata exists). | |
 | `WithdrawRewards` | [MsgWithdrawRewards](#archway.rewards.v1beta1.MsgWithdrawRewards) | [MsgWithdrawRewardsResponse](#archway.rewards.v1beta1.MsgWithdrawRewardsResponse) | WithdrawRewards performs collected rewards distribution. Rewards might be credited from multiple contracts (rewards_address must be set in the corresponding contract metadata). | |
+| `SetFlatFee` | [MsgSetFlatFee](#archway.rewards.v1beta1.MsgSetFlatFee) | [MsgSetFlatFeeResponse](#archway.rewards.v1beta1.MsgSetFlatFeeResponse) | SetFlatFee sets or updates or removes the flat fee to interact with the contract Method is authorized to the contract owner. | |
 
  <!-- end services -->
 
