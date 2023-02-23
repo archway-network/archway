@@ -16,5 +16,5 @@ message LastBlockInfo {
   // inflation defines the last block's inflation.
   string inflation = 1;
   // time keeps track of the last block time.  
-  google.protobuf.Timestamp time = 2;
+  google.protobuf.Timestamp time = 2  [(gogoproto.stdtime) = true];
 }

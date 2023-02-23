@@ -21,6 +21,7 @@ require (
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
+	github.com/tendermint/spm v0.1.9
 	github.com/tendermint/tendermint v0.34.23
 	github.com/tendermint/tm-db v0.6.7
 	google.golang.org/genproto v0.0.0-20230221151758-ace64dc21148
