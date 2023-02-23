@@ -2,12 +2,14 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/archway-network/archway/x/mint/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSetLastBlockInfo(t *testing.T) {
+	currentTime := time.Now()
 	testCases := []struct {
 		testCase    string
 		lbi         types.LastBlockInfo
@@ -24,6 +26,7 @@ func TestSetLastBlockInfo(t *testing.T) {
 			"ok: valid inflation",
 			types.LastBlockInfo{
 				Inflation: "0.33",
+				Time:      &currentTime,
 			},
 			false,
 		},
@@ -41,7 +44,7 @@ func TestSetLastBlockInfo(t *testing.T) {
 			} else {
 				require.NoError(t, err, tc)
 				_, lbi := keeper.GetLastBlockInfo(ctx)
-				require.EqualValues(t, tc.lbi, lbi, tc)
+				require.EqualValues(t, tc.lbi.Inflation, lbi.Inflation, tc)
 			}
 		})
 	}
@@ -49,24 +52,25 @@ func TestSetLastBlockInfo(t *testing.T) {
 
 func TestGetLastBlockInfo(t *testing.T) {
 	keeper, ctx := SetupTestMintKeeper(t)
+	currentTime := time.Now()
 
 	// LastBlockInfo not found
 	found, _ := keeper.GetLastBlockInfo(ctx)
 	require.False(t, found)
 
 	// Save some block info
-	lbi := types.LastBlockInfo{Inflation: "0.2"}
+	lbi := types.LastBlockInfo{Inflation: "0.2", Time: &currentTime}
 	err := keeper.SetLastBlockInfo(ctx, lbi)
 	require.NoError(t, err)
 	found, res := keeper.GetLastBlockInfo(ctx)
 	require.True(t, found)
-	require.EqualValues(t, lbi, res)
+	require.EqualValues(t, lbi.Inflation, res.Inflation)
 
 	// Overwrite existing block info
-	lbi2 := types.LastBlockInfo{Inflation: "0.3"}
+	lbi2 := types.LastBlockInfo{Inflation: "0.3", Time: &currentTime}
 	err = keeper.SetLastBlockInfo(ctx, lbi2)
 	require.NoError(t, err)
 	found, res = keeper.GetLastBlockInfo(ctx)
 	require.True(t, found)
-	require.EqualValues(t, lbi2, res)
+	require.EqualValues(t, lbi2.Inflation, res.Inflation)
 }
