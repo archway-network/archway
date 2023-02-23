@@ -16,8 +16,12 @@ func (lbi LastBlockInfo) Validate() error {
 		return err
 	}
 
-	if inflation.LT(sdk.ZeroDec()) && inflation.GT(sdk.OneDec()) {
+	if inflation.LT(sdk.ZeroDec()) || inflation.GT(sdk.OneDec()) {
 		return ErrInvalidInflation
+	}
+
+	if lbi.Time == nil {
+		return ErrInvalidTimestamp
 	}
 
 	return nil
