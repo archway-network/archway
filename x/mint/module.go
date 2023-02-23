@@ -1,4 +1,4 @@
-// Package rewards defines a module that implements the custom inflation scheme of archway. More details refer to ADR: 001
+// Package mint defines a module that implements the custom inflation scheme of archway. More details refer to ADR: 001
 package mint
 
 import (
