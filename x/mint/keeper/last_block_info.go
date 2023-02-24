@@ -19,15 +19,15 @@ func (k Keeper) SetLastBlockInfo(ctx sdk.Context, lbi types.LastBlockInfo) error
 }
 
 // GetLastBlockInfo fetches the latest block info
-func (k Keeper) GetLastBlockInfo(ctx sdk.Context) (bool, types.LastBlockInfo) {
+func (k Keeper) GetLastBlockInfo(ctx sdk.Context) (types.LastBlockInfo, bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	var lbi types.LastBlockInfo
 	bz := store.Get(types.LastBlockInfoPrefix)
 	if bz == nil {
-		return false, lbi
+		return lbi, false
 	}
 
 	k.cdc.MustUnmarshal(bz, &lbi)
-	return true, lbi
+	return lbi, true
 }

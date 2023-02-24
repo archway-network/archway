@@ -45,7 +45,7 @@ func TestSetLastBlockInfo(t *testing.T) {
 				require.Error(t, err, tc)
 			} else {
 				require.NoError(t, err, tc)
-				_, lbi := keeper.GetLastBlockInfo(ctx)
+				lbi, _ := keeper.GetLastBlockInfo(ctx)
 				require.EqualValues(t, tc.lbi.Inflation, lbi.Inflation, tc)
 			}
 		})
@@ -57,14 +57,14 @@ func TestGetLastBlockInfo(t *testing.T) {
 	currentTime := time.Now()
 
 	// LastBlockInfo not found
-	found, _ := keeper.GetLastBlockInfo(ctx)
+	_, found := keeper.GetLastBlockInfo(ctx)
 	require.False(t, found)
 
 	// Save some block info
 	lbi := types.LastBlockInfo{Inflation: sdk.MustNewDecFromStr("0.2"), Time: &currentTime}
 	err := keeper.SetLastBlockInfo(ctx, lbi)
 	require.NoError(t, err)
-	found, res := keeper.GetLastBlockInfo(ctx)
+	res, found := keeper.GetLastBlockInfo(ctx)
 	require.True(t, found)
 	require.EqualValues(t, lbi.Inflation, res.Inflation)
 
@@ -72,7 +72,7 @@ func TestGetLastBlockInfo(t *testing.T) {
 	lbi2 := types.LastBlockInfo{Inflation: sdk.MustNewDecFromStr("0.3"), Time: &currentTime}
 	err = keeper.SetLastBlockInfo(ctx, lbi2)
 	require.NoError(t, err)
-	found, res = keeper.GetLastBlockInfo(ctx)
+	res, found = keeper.GetLastBlockInfo(ctx)
 	require.True(t, found)
 	require.EqualValues(t, lbi2.Inflation, res.Inflation)
 }
