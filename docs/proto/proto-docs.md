@@ -5,6 +5,7 @@
 ## Table of Contents
 
 - [archway/mint/v1/mint.proto](#archway/mint/v1/mint.proto)
+    - [LastBlockInfo](#archway.mint.v1.LastBlockInfo)
     - [Params](#archway.mint.v1.Params)
   
 - [archway/mint/v1/genesis.proto](#archway/mint/v1/genesis.proto)
@@ -92,6 +93,22 @@
 <p align="right"><a href="#top">Top</a></p>
 
 ## archway/mint/v1/mint.proto
+
+
+
+<a name="archway.mint.v1.LastBlockInfo"></a>
+
+### LastBlockInfo
+BlockInfo keeps track of the last block
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `inflation` | [string](#string) |  | inflation defines the last block's inflation. |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | time keeps track of the last block time. |
+
+
+
 
 
 
