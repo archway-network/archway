@@ -18,7 +18,3 @@ func DefaultParams() Params {
 func (m Params) Validate() error {
 	panic("unimplemented 👻")
 }
-
-func (m Params) String() string {
-	panic("unimplemented 👻")
-}
