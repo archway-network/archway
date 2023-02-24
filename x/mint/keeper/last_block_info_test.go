@@ -4,8 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/archway-network/archway/x/mint/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/archway-network/archway/x/mint/types"
 )
 
 func TestSetLastBlockInfo(t *testing.T) {
@@ -16,16 +18,16 @@ func TestSetLastBlockInfo(t *testing.T) {
 		expectError bool
 	}{
 		{
-			"invalid inflation string",
+			"invalid inflation amount",
 			types.LastBlockInfo{
-				Inflation: "👻",
+				Inflation: sdk.MustNewDecFromStr("123"),
 			},
 			true,
 		},
 		{
 			"ok: valid inflation",
 			types.LastBlockInfo{
-				Inflation: "0.33",
+				Inflation: sdk.MustNewDecFromStr("0.33"),
 				Time:      &currentTime,
 			},
 			false,
@@ -59,7 +61,7 @@ func TestGetLastBlockInfo(t *testing.T) {
 	require.False(t, found)
 
 	// Save some block info
-	lbi := types.LastBlockInfo{Inflation: "0.2", Time: &currentTime}
+	lbi := types.LastBlockInfo{Inflation: sdk.MustNewDecFromStr("0.2"), Time: &currentTime}
 	err := keeper.SetLastBlockInfo(ctx, lbi)
 	require.NoError(t, err)
 	found, res := keeper.GetLastBlockInfo(ctx)
@@ -67,7 +69,7 @@ func TestGetLastBlockInfo(t *testing.T) {
 	require.EqualValues(t, lbi.Inflation, res.Inflation)
 
 	// Overwrite existing block info
-	lbi2 := types.LastBlockInfo{Inflation: "0.3", Time: &currentTime}
+	lbi2 := types.LastBlockInfo{Inflation: sdk.MustNewDecFromStr("0.3"), Time: &currentTime}
 	err = keeper.SetLastBlockInfo(ctx, lbi2)
 	require.NoError(t, err)
 	found, res = keeper.GetLastBlockInfo(ctx)
