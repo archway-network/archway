@@ -8,17 +8,18 @@ import (
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"gopkg.in/yaml.v2"
 )
 
 // Default param values
 var (
-	MinimumInflation      sdk.Dec                   = sdk.ZeroDec()
-	MaximumInflation      sdk.Dec                   = sdk.OneDec()
-	MinimumBonded         sdk.Dec                   = sdk.ZeroDec()
-	MaximumBonded         sdk.Dec                   = sdk.OneDec()
-	InflationChange       sdk.Dec                   = sdk.OneDec()
-	MaxBlockDuration      time.Duration             = time.Minute
-	FeeCollectorRecipient Params_InflationRecipient = Params_InflationRecipient{
+	MinimumInflation      sdk.Dec            = sdk.ZeroDec()
+	MaximumInflation      sdk.Dec            = sdk.OneDec()
+	MinimumBonded         sdk.Dec            = sdk.ZeroDec()
+	MaximumBonded         sdk.Dec            = sdk.OneDec()
+	InflationChange       sdk.Dec            = sdk.OneDec()
+	MaxBlockDuration      time.Duration      = time.Minute
+	FeeCollectorRecipient InflationRecipient = InflationRecipient{
 		Recipient: authtypes.FeeCollectorName,
 		Ratio:     sdk.OneDec(),
 	}
@@ -37,7 +38,7 @@ var (
 )
 
 // NewParams creates a new Params instance.
-func NewParams(minInflation sdk.Dec, maxInflation sdk.Dec, minBonded sdk.Dec, maxBonded sdk.Dec, inflationChange sdk.Dec, maxBlockDuration time.Duration, inflationRecipients []*Params_InflationRecipient) Params {
+func NewParams(minInflation sdk.Dec, maxInflation sdk.Dec, minBonded sdk.Dec, maxBonded sdk.Dec, inflationChange sdk.Dec, maxBlockDuration time.Duration, inflationRecipients []*InflationRecipient) Params {
 	return Params{
 		MinInflation:        minInflation,
 		MaxInflation:        maxInflation,
@@ -58,7 +59,7 @@ func DefaultParams() Params {
 		MaximumBonded,
 		InflationChange,
 		MaxBlockDuration,
-		[]*Params_InflationRecipient{&FeeCollectorRecipient},
+		[]*InflationRecipient{&FeeCollectorRecipient},
 	)
 }
 
@@ -78,6 +79,12 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxBlockDuration, &p.MaxBlockDuration, validateMaxBlockDuration),
 		paramtypes.NewParamSetPair(KeyInflationRecipients, &p.InflationRecipients, validateInflationRecipients),
 	}
+}
+
+// String implements the Stringer interface.
+func (p Params) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
 }
 
 // Validate perform object fields validation.
@@ -150,7 +157,7 @@ func validateMaxBlockDuration(i interface{}) error {
 }
 
 func validateInflationRecipients(i interface{}) error {
-	inflationRecipients, ok := i.([]*Params_InflationRecipient)
+	inflationRecipients, ok := i.([]*InflationRecipient)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

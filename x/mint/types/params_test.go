@@ -95,7 +95,7 @@ func TestParamsValidate(t *testing.T) {
 				MaxBonded:        sdk.MustNewDecFromStr("0.2"),
 				InflationChange:  sdk.MustNewDecFromStr("0.2"),
 				MaxBlockDuration: time.Hour,
-				InflationRecipients: []*types.Params_InflationRecipient{
+				InflationRecipients: []*types.InflationRecipient{
 					{
 						Recipient: types.ModuleName,
 						Ratio:     sdk.MustNewDecFromStr("0.2"),
@@ -113,7 +113,7 @@ func TestParamsValidate(t *testing.T) {
 				MaxBonded:        sdk.MustNewDecFromStr("0.2"),
 				InflationChange:  sdk.MustNewDecFromStr("0.2"),
 				MaxBlockDuration: time.Hour,
-				InflationRecipients: []*types.Params_InflationRecipient{
+				InflationRecipients: []*types.InflationRecipient{
 					{
 						Recipient: types.ModuleName,
 						Ratio:     sdk.MustNewDecFromStr("0.2"),
@@ -135,7 +135,7 @@ func TestParamsValidate(t *testing.T) {
 				MaxBonded:        sdk.MustNewDecFromStr("0.2"),
 				InflationChange:  sdk.MustNewDecFromStr("0.2"),
 				MaxBlockDuration: time.Hour,
-				InflationRecipients: []*types.Params_InflationRecipient{
+				InflationRecipients: []*types.InflationRecipient{
 					{
 						Recipient: types.ModuleName,
 						Ratio:     sdk.MustNewDecFromStr("0.2"),

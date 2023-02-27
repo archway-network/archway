@@ -32,13 +32,14 @@ message Params {
   // inflation_recipients defines the list of inflation recipients.
   // CONTRACT: the sum of the ratio of each inflation recipient must be 1.
   repeated InflationRecipient inflation_recipients = 7;
-  // InflationRecipient defines the inflation recipients.
-  message InflationRecipient {
-    // recipient is the module receiving inflation, eg: x/staking, x/rewards.
-    string recipient = 1;
-    // ratio is the % of inflation being received.
-    string ratio = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false]; // percentage: 0 <= x <= 1.
-  }
+}
+
+ // InflationRecipient defines the inflation recipients.
+ message InflationRecipient {
+  // recipient is the module receiving inflation, eg: x/staking, x/rewards.
+  string recipient = 1;
+  // ratio is the % of inflation being received.
+  string ratio = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false]; // percentage: 0 <= x <= 1.
 }
 
 // BlockInfo keeps track of the last block
