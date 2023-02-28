@@ -167,6 +167,9 @@ func validateInflationRecipients(i interface{}) error {
 	}
 	inflationDistribution := sdk.ZeroDec()
 	for _, recipient := range inflationRecipients {
+		if recipient.Recipient == "" {
+			return sdkErrors.Wrap(ErrInvalidInflationRecipient, "inflation recipient module name is empty")
+		}
 		inflationDistribution = inflationDistribution.Add(recipient.Ratio)
 	}
 	if !inflationDistribution.Equal(sdk.OneDec()) {
