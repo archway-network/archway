@@ -13,6 +13,10 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/archway/mint/v1/params";
   }
+  // Inflation returns last block's inflation.
+  rpc Inflation(QueryInflationRequest) returns (QueryInflationResponse) {
+    option (google.api.http).get = "/archway/mint/v1/inflation";
+  }
 }
 
 // QueryParamsRequest is the request for Query.Params.
@@ -21,6 +25,16 @@ message QueryParamsRequest {}
 // QueryParamsResponse is the response for Query.Params.
 message QueryParamsResponse {
   Params params = 1 [
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryInflationRequest is the request for Query.Inflation.
+message QueryInflationRequest {}
+
+// QueryInflationResponse is the response for Query.Inflation.
+message QueryInflationResponse {
+  LastBlockInfo inflation = 1 [
     (gogoproto.nullable) = false
   ];
 }
