@@ -87,6 +87,24 @@ func TestParamsValidate(t *testing.T) {
 			true,
 		},
 		{
+			"invalid inflation recipients: recipient module name is empty",
+			types.Params{
+				MinInflation:     sdk.MustNewDecFromStr("0.2"),
+				MaxInflation:     sdk.MustNewDecFromStr("0.2"),
+				MinBonded:        sdk.MustNewDecFromStr("0.2"),
+				MaxBonded:        sdk.MustNewDecFromStr("0.2"),
+				InflationChange:  sdk.MustNewDecFromStr("0.2"),
+				MaxBlockDuration: time.Hour,
+				InflationRecipients: []*types.InflationRecipient{
+					{
+						Recipient: "",
+						Ratio:     sdk.MustNewDecFromStr("1"),
+					},
+				},
+			},
+			true,
+		},
+		{
 			"invalid inflation recipients: ratio doesnt add up to 1",
 			types.Params{
 				MinInflation:     sdk.MustNewDecFromStr("0.2"),

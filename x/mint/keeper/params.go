@@ -8,6 +8,9 @@ import (
 
 // SetParams sets the total set of minting parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	if err := params.Validate(); err != nil {
+		panic(err)
+	}
 	k.paramStore.SetParamSet(ctx, &params)
 }
 

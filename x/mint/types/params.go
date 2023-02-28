@@ -13,13 +13,13 @@ import (
 
 // Default param values
 var (
-	MinimumInflation      sdk.Dec            = sdk.ZeroDec()
-	MaximumInflation      sdk.Dec            = sdk.OneDec()
-	MinimumBonded         sdk.Dec            = sdk.ZeroDec()
-	MaximumBonded         sdk.Dec            = sdk.OneDec()
-	InflationChange       sdk.Dec            = sdk.OneDec()
-	MaxBlockDuration      time.Duration      = time.Minute
-	FeeCollectorRecipient InflationRecipient = InflationRecipient{
+	DefaultMinimumInflation      sdk.Dec            = sdk.ZeroDec()
+	DefaultMaximumInflation      sdk.Dec            = sdk.OneDec()
+	DefaultMinimumBonded         sdk.Dec            = sdk.ZeroDec()
+	DefaultMaximumBonded         sdk.Dec            = sdk.OneDec()
+	DefaultInflationChange       sdk.Dec            = sdk.OneDec()
+	DefaultMaxBlockDuration      time.Duration      = time.Minute
+	DefaultFeeCollectorRecipient InflationRecipient = InflationRecipient{
 		Recipient: authtypes.FeeCollectorName,
 		Ratio:     sdk.OneDec(),
 	}
@@ -27,15 +27,16 @@ var (
 
 // Parameter store keys.
 var (
-	KeyMinimumInflation                        = []byte("MinimumInflation")
-	KeyMaximumInflation                        = []byte("MaximumInflation")
-	KeyMinimumBonded                           = []byte("MinimumBonded")
-	KeyMaximumBonded                           = []byte("MaximumBonded")
-	KeyInflationChange                         = []byte("InflationChange")
-	KeyMaxBlockDuration                        = []byte("MaxBlockDuration")
-	KeyInflationRecipients                     = []byte("InflationRecipients")
-	_                      paramtypes.ParamSet = (*Params)(nil)
+	KeyMinimumInflation    = []byte("MinimumInflation")
+	KeyMaximumInflation    = []byte("MaximumInflation")
+	KeyMinimumBonded       = []byte("MinimumBonded")
+	KeyMaximumBonded       = []byte("MaximumBonded")
+	KeyInflationChange     = []byte("InflationChange")
+	KeyMaxBlockDuration    = []byte("MaxBlockDuration")
+	KeyInflationRecipients = []byte("InflationRecipients")
 )
+
+var _ paramtypes.ParamSet = (*Params)(nil)
 
 // NewParams creates a new Params instance.
 func NewParams(minInflation sdk.Dec, maxInflation sdk.Dec, minBonded sdk.Dec, maxBonded sdk.Dec, inflationChange sdk.Dec, maxBlockDuration time.Duration, inflationRecipients []*InflationRecipient) Params {
@@ -53,13 +54,13 @@ func NewParams(minInflation sdk.Dec, maxInflation sdk.Dec, minBonded sdk.Dec, ma
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return NewParams(
-		MinimumInflation,
-		MaximumInflation,
-		MinimumBonded,
-		MaximumBonded,
-		InflationChange,
-		MaxBlockDuration,
-		[]*InflationRecipient{&FeeCollectorRecipient},
+		DefaultMinimumInflation,
+		DefaultMaximumInflation,
+		DefaultMinimumBonded,
+		DefaultMaximumBonded,
+		DefaultInflationChange,
+		DefaultMaxBlockDuration,
+		[]*InflationRecipient{&DefaultFeeCollectorRecipient},
 	)
 }
 
@@ -166,6 +167,9 @@ func validateInflationRecipients(i interface{}) error {
 	}
 	inflationDistribution := sdk.ZeroDec()
 	for _, recipient := range inflationRecipients {
+		if recipient.Recipient == "" {
+			return sdkErrors.Wrap(ErrInvalidInflationRecipient, "inflation recipient module name is empty")
+		}
 		inflationDistribution = inflationDistribution.Add(recipient.Ratio)
 	}
 	if !inflationDistribution.Equal(sdk.OneDec()) {
