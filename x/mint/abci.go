@@ -19,16 +19,22 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	elapsed := getTimeElapsed(ctx, lbi, mintParams)                         // time since last minting
 	inflation := getCurrentBlockInflation(ctx, k, lbi, mintParams, elapsed) // inflation for the current block
 	mintAmount := getAmountToMint(ctx, k, inflation, elapsed)               // amount of bond tokens to mint in this block
-	mintInflation(ctx, k, mintAmount)                                       // minting and distributing inflation
+	mintInflation(ctx, k, mintAmount, mintParams)                           // minting and distributing inflation
 	updateBlockInfo(ctx, k, inflation)                                      // updating blockinfo
 }
 
 // mintInflation mints the given amount of tokens and distributes to the
-func mintInflation(ctx sdk.Context, k keeper.Keeper, mintAmount sdk.Dec) {
+func mintInflation(ctx sdk.Context, k keeper.Keeper, mintAmount sdk.Dec, mintParams types.Params) {
 	err := k.MintCoin(ctx, types.ModuleName, sdk.NewInt64Coin(k.BondDenom(ctx), mintAmount.BigInt().Int64()))
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getAmountToMint(ctx sdk.Context, k keeper.Keeper, inflation sdk.Dec, elapsed time.Duration) sdk.Dec {
+	bondedTokenSupply := k.GetBondedTokenSupply(ctx)
+	amount := inflation.MulInt(bondedTokenSupply.Amount).MulInt64(int64(elapsed / Year)) // amount := (inflation * bondedTokenSupply) * (elapsed/Year)
+	return amount
 }
 
 func getCurrentBlockInflation(ctx sdk.Context, k keeper.Keeper, lbi types.LastBlockInfo, mintParams types.Params, elapsed time.Duration) sdk.Dec {
@@ -37,17 +43,11 @@ func getCurrentBlockInflation(ctx sdk.Context, k keeper.Keeper, lbi types.LastBl
 	return inflation
 }
 
-func getAmountToMint(ctx sdk.Context, k keeper.Keeper, inflation sdk.Dec, elapsed time.Duration) sdk.Dec {
-	bondedTokenSupply := k.GetBondedTokenSupply(ctx)
-	amount := inflation.MulInt(bondedTokenSupply.Amount).MulInt64(int64(elapsed / Year))
-	return amount
-}
-
 func getBlockInflation(inflation sdk.Dec, bondedRatio sdk.Dec, mintParams types.Params, elapsed time.Duration) sdk.Dec {
 	switch {
-	case bondedRatio.LT(mintParams.MinBonded):
+	case bondedRatio.LT(mintParams.MinBonded): // if bondRatio is lower than we want, increase inflation
 		inflation = inflation.Add(mintParams.InflationChange.MulInt64(int64(elapsed)))
-	case bondedRatio.GT(mintParams.MaxBonded):
+	case bondedRatio.GT(mintParams.MaxBonded): // if bondRatio is higher than we want, decrease inflation
 		inflation = inflation.Sub(mintParams.InflationChange.MulInt64(int64(elapsed)))
 	}
 	if inflation.GT(mintParams.MaxInflation) {
@@ -59,7 +59,7 @@ func getBlockInflation(inflation sdk.Dec, bondedRatio sdk.Dec, mintParams types.
 }
 
 func getTimeElapsed(ctx sdk.Context, lbi types.LastBlockInfo, mintParams types.Params) time.Duration {
-	elapsed := ctx.BlockTime().Sub(*lbi.GetTime())
+	elapsed := ctx.BlockTime().Sub(*lbi.GetTime()) // time since last mint
 	if elapsed > mintParams.GetMaxBlockDuration() {
 		elapsed = mintParams.GetMaxBlockDuration()
 	}
