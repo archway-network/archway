@@ -24,10 +24,15 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 }
 
 // mintInflation mints the given amount of tokens and distributes to the
-func mintInflation(ctx sdk.Context, k keeper.Keeper, mintAmount sdk.Dec, mintParams types.Params) {
-	err := k.MintCoin(ctx, types.ModuleName, sdk.NewInt64Coin(k.BondDenom(ctx), mintAmount.BigInt().Int64()))
-	if err != nil {
-		panic(err)
+func mintInflation(ctx sdk.Context, k keeper.Keeper, totalCoinsToMint sdk.Dec, mintParams types.Params) {
+	denom := k.BondDenom(ctx)
+	for _, distribution := range mintParams.GetInflationRecipients() {
+		amount := totalCoinsToMint.Mul(distribution.Ratio)       // totalCoinsToMint * distribution.Ratio
+		coin := sdk.NewInt64Coin(denom, amount.BigInt().Int64()) // as sdk.Coin
+		err := k.MintCoin(ctx, distribution.Recipient, coin)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
