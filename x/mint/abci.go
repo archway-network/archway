@@ -11,7 +11,8 @@ import (
 
 const Year = 24 * time.Hour * 365
 
-// BeginBlocker mints new tokens
+// BeginBlocker mints new tokens.
+// For more details look at x/mins/spec/README.md
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	mintParams := k.GetParams(ctx)
@@ -23,7 +24,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	updateBlockInfo(ctx, k, inflation)                                      // updating blockinfo
 }
 
-// mintInflation mints the given amount of tokens and distributes to the
+// mintInflation mints the given amount of tokens and distributes to the recipients
 func mintInflation(ctx sdk.Context, k keeper.Keeper, totalCoinsToMint sdk.Dec, mintParams types.Params) {
 	denom := k.BondDenom(ctx)
 	for _, distribution := range mintParams.GetInflationRecipients() {

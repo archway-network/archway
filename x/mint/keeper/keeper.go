@@ -39,6 +39,7 @@ func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 	return k.stakingKeeper.BondedRatio(ctx)
 }
 
+// BondDenom - Bondable coin denomination
 func (k Keeper) BondDenom(ctx sdk.Context) string {
 	return k.stakingKeeper.BondDenom(ctx)
 }
@@ -48,6 +49,7 @@ func (k Keeper) MintCoin(ctx sdk.Context, name string, amt sdk.Coin) error {
 	return k.bankKeeper.MintCoins(ctx, name, sdk.NewCoins(amt))
 }
 
+// GetBondedTokenSupply retrieves the bond token supply from store
 func (k Keeper) GetBondedTokenSupply(ctx sdk.Context) sdk.Coin {
 	denom := k.BondDenom(ctx)
 	return k.bankKeeper.GetSupply(ctx, denom)
