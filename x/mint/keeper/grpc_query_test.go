@@ -67,7 +67,6 @@ func TestGRPC_Inflation(t *testing.T) {
 		Inflation: sdk.MustNewDecFromStr("0.2"),
 		Time:      &now,
 	}
-	_ = k.SetLastBlockInfo(ctx, lastBlockInfo)
 
 	t.Run("err: empty request", func(t *testing.T) {
 		_, err := queryServer.Inflation(sdk.WrapSDKContext(ctx), nil)
@@ -75,9 +74,17 @@ func TestGRPC_Inflation(t *testing.T) {
 		assert.Equal(t, status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
-	t.Run("ok: gets params", func(t *testing.T) {
+	t.Run("err: last block info not found", func(t *testing.T) {
+		_, err := queryServer.Inflation(sdk.WrapSDKContext(ctx), &types.QueryInflationRequest{})
+		assert.Error(t, err)
+		assert.Equal(t, status.Error(codes.NotFound, "inflation data not found"), err)
+	})
+
+	_ = k.SetLastBlockInfo(ctx, lastBlockInfo)
+
+	t.Run("ok: gets inflation", func(t *testing.T) {
 		res, err := queryServer.Inflation(sdk.WrapSDKContext(ctx), &types.QueryInflationRequest{})
 		assert.NoError(t, err)
-		assert.Equal(t, lastBlockInfo.Inflation, res.Inflation.Inflation)
+		assert.Equal(t, lastBlockInfo.Inflation, res.Inflation)
 	})
 }

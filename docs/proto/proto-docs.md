@@ -190,7 +190,7 @@ QueryInflationResponse is the response for Query.Inflation.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `inflation` | [LastBlockInfo](#archway.mint.v1.LastBlockInfo) |  |  |
+| `inflation` | [string](#string) |  |  |
 
 
 

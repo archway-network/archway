@@ -47,10 +47,10 @@ func (s *QueryServer) Inflation(c context.Context, request *types.QueryInflation
 
 	blockInfo, found := s.keeper.GetLastBlockInfo(ctx)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "last block info: not found")
+		return nil, status.Errorf(codes.NotFound, "inflation data not found")
 	}
 
 	return &types.QueryInflationResponse{
-		Inflation: blockInfo,
+		Inflation: blockInfo.Inflation,
 	}, nil
 }

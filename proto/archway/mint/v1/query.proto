@@ -34,7 +34,8 @@ message QueryInflationRequest {}
 
 // QueryInflationResponse is the response for Query.Inflation.
 message QueryInflationResponse {
-  LastBlockInfo inflation = 1 [
+  string inflation = 1[
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
 }
