@@ -18,7 +18,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			Time:      &time,
 		}
 	}
-	k.SetLastBlockInfo(ctx, lbi)
+	if err := k.SetLastBlockInfo(ctx, lbi); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis exports the module genesis for the current block.
