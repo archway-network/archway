@@ -18,11 +18,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params := k.GetParams(ctx)
 	lbi, found := k.GetLastBlockInfo(ctx)
 	if !found {
-		currentTime := ctx.BlockTime()
-		lbi = types.LastBlockInfo{
-			Inflation: params.MinInflation,
-			Time:      &currentTime,
-		}
+		panic("could not find last block info")
 	}
 	return types.NewGenesisState(params, lbi)
 }
