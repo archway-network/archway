@@ -3,6 +3,10 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/archway-network/archway/x/mint/types"
 )
 
@@ -22,5 +26,31 @@ func NewQueryServer(keeper Keeper) *QueryServer {
 
 // Params implements the types.QueryServer interface.
 func (s *QueryServer) Params(c context.Context, request *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	panic("unimplemented 👻")
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	return &types.QueryParamsResponse{
+		Params: s.keeper.GetParams(ctx),
+	}, nil
+}
+
+// Inflation implements the types.QueryServer interface.
+func (s *QueryServer) Inflation(c context.Context, request *types.QueryInflationRequest) (*types.QueryInflationResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	blockInfo, found := s.keeper.GetLastBlockInfo(ctx)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "last block info: not found")
+	}
+
+	return &types.QueryInflationResponse{
+		Inflation: blockInfo,
+	}, nil
 }
