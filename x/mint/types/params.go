@@ -145,13 +145,13 @@ func validateInflationChange(i interface{}) error {
 }
 
 func validateMaxBlockDuration(i interface{}) error {
-	v, ok := i.(int64)
+	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v < 0 {
-		return fmt.Errorf("max block duration must be non-negative")
+	if v <= 0 {
+		return fmt.Errorf("max block duration must be positive")
 	}
 
 	return nil
