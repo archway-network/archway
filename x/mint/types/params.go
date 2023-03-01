@@ -105,6 +105,9 @@ func (p Params) Validate() error {
 	if err := validateInflationChange(p.InflationChange); err != nil {
 		return sdkErrors.Wrap(err, "inflation_change param has invalid value, should be between 0 and 1")
 	}
+	if err := validateMaxBlockDuration(p.MaxBlockDuration); err != nil {
+		return sdkErrors.Wrap(err, "max_block_duration param has invalid value, should be greater than 0")
+	}
 	if err := validateInflationRecipients(p.InflationRecipients); err != nil {
 		return err
 	}
