@@ -60,9 +60,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -99,9 +96,11 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/archway-network/archway/wasmbinding"
+	"github.com/archway-network/archway/x/mint"
+	mintkeeper "github.com/archway-network/archway/x/mint/keeper"
+	minttypes "github.com/archway-network/archway/x/mint/types"
 	"github.com/archway-network/archway/x/rewards"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
-	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	"github.com/archway-network/archway/x/tracking"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
@@ -523,10 +522,6 @@ func NewArchwayApp(
 		appCodec,
 		keys[minttypes.StoreKey],
 		app.getSubspace(minttypes.ModuleName),
-		&stakingKeeper,
-		app.AccountKeeper,
-		mintbankkeeper.NewKeeper(app.BankKeeper, app.RewardsKeeper),
-		authtypes.FeeCollectorName,
 	)
 
 	// The gov proposal types can be individually enabled
@@ -565,7 +560,7 @@ func NewArchwayApp(
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
+		mint.NewAppModule(appCodec, app.MintKeeper),
 		slashing.NewAppModule(appCodec, app.slashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
@@ -696,7 +691,7 @@ func NewArchwayApp(
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
+		mint.NewAppModule(appCodec, app.MintKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(appCodec, app.slashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
