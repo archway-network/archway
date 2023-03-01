@@ -20,45 +20,90 @@ func TestParamsValidate(t *testing.T) {
 		{
 			"invalid minimum inflation: less than 0: should be: 0 < inflation < 1",
 			types.Params{
-				MinInflation: sdk.MustNewDecFromStr("2"),
+				MinInflation:     sdk.MustNewDecFromStr("2"),
+				MaxInflation:     sdk.MustNewDecFromStr("0.2"),
+				MinBonded:        sdk.MustNewDecFromStr("0.2"),
+				MaxBonded:        sdk.MustNewDecFromStr("0.2"),
+				InflationChange:  sdk.MustNewDecFromStr("0.2"),
+				MaxBlockDuration: time.Hour,
+				InflationRecipients: []*types.InflationRecipient{
+					{
+						Recipient: types.ModuleName,
+						Ratio:     sdk.MustNewDecFromStr("1"),
+					},
+				},
 			},
 			true,
 		},
 		{
 			"invalid maximum inflation: less than 0: should be: 0 < inflation < 1",
 			types.Params{
-				MinInflation: sdk.MustNewDecFromStr("0.2"),
-				MaxInflation: sdk.MustNewDecFromStr("2"),
+				MinInflation:     sdk.MustNewDecFromStr("0.2"),
+				MaxInflation:     sdk.MustNewDecFromStr("2"),
+				MinBonded:        sdk.MustNewDecFromStr("0.2"),
+				MaxBonded:        sdk.MustNewDecFromStr("0.2"),
+				InflationChange:  sdk.MustNewDecFromStr("0.2"),
+				MaxBlockDuration: time.Hour,
+				InflationRecipients: []*types.InflationRecipient{
+					{
+						Recipient: types.ModuleName,
+						Ratio:     sdk.MustNewDecFromStr("1"),
+					},
+				},
 			},
 			true,
 		},
 		{
 			"invalid minimum bonded: less than 0: should be: 0 < inflation < 1",
 			types.Params{
-				MinInflation: sdk.MustNewDecFromStr("0.2"),
-				MaxInflation: sdk.MustNewDecFromStr("0.2"),
-				MinBonded:    sdk.MustNewDecFromStr("2"),
+				MinInflation:     sdk.MustNewDecFromStr("0.2"),
+				MaxInflation:     sdk.MustNewDecFromStr("0.2"),
+				MinBonded:        sdk.MustNewDecFromStr("2"),
+				MaxBonded:        sdk.MustNewDecFromStr("0.2"),
+				InflationChange:  sdk.MustNewDecFromStr("0.2"),
+				MaxBlockDuration: time.Hour,
+				InflationRecipients: []*types.InflationRecipient{
+					{
+						Recipient: types.ModuleName,
+						Ratio:     sdk.MustNewDecFromStr("1"),
+					},
+				},
 			},
 			true,
 		},
 		{
 			"invalid maximum bonded: less than 0: should be: 0 < inflation < 1",
 			types.Params{
-				MinInflation: sdk.MustNewDecFromStr("0.2"),
-				MaxInflation: sdk.MustNewDecFromStr("0.2"),
-				MinBonded:    sdk.MustNewDecFromStr("0.2"),
-				MaxBonded:    sdk.MustNewDecFromStr("2"),
+				MinInflation:     sdk.MustNewDecFromStr("0.2"),
+				MaxInflation:     sdk.MustNewDecFromStr("0.2"),
+				MinBonded:        sdk.MustNewDecFromStr("0.2"),
+				MaxBonded:        sdk.MustNewDecFromStr("2"),
+				InflationChange:  sdk.MustNewDecFromStr("0.2"),
+				MaxBlockDuration: time.Hour,
+				InflationRecipients: []*types.InflationRecipient{
+					{
+						Recipient: types.ModuleName,
+						Ratio:     sdk.MustNewDecFromStr("1"),
+					},
+				},
 			},
 			true,
 		},
 		{
 			"invalid inflation change: less than 0: should be: 0 < inflation < 1",
 			types.Params{
-				MinInflation:    sdk.MustNewDecFromStr("0.2"),
-				MaxInflation:    sdk.MustNewDecFromStr("0.2"),
-				MinBonded:       sdk.MustNewDecFromStr("0.2"),
-				MaxBonded:       sdk.MustNewDecFromStr("0.2"),
-				InflationChange: sdk.MustNewDecFromStr("2"),
+				MinInflation:     sdk.MustNewDecFromStr("0.2"),
+				MaxInflation:     sdk.MustNewDecFromStr("0.2"),
+				MinBonded:        sdk.MustNewDecFromStr("0.2"),
+				MaxBonded:        sdk.MustNewDecFromStr("0.2"),
+				InflationChange:  sdk.MustNewDecFromStr("2"),
+				MaxBlockDuration: time.Hour,
+				InflationRecipients: []*types.InflationRecipient{
+					{
+						Recipient: types.ModuleName,
+						Ratio:     sdk.MustNewDecFromStr("1"),
+					},
+				},
 			},
 			true,
 		},
@@ -71,6 +116,12 @@ func TestParamsValidate(t *testing.T) {
 				MaxBonded:        sdk.MustNewDecFromStr("0.2"),
 				InflationChange:  sdk.MustNewDecFromStr("0.2"),
 				MaxBlockDuration: -1,
+				InflationRecipients: []*types.InflationRecipient{
+					{
+						Recipient: types.ModuleName,
+						Ratio:     sdk.MustNewDecFromStr("1"),
+					},
+				},
 			},
 			true,
 		},
