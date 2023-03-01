@@ -9,10 +9,20 @@ import (
 
 // InitGenesis initializes the module genesis state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	panic("unimplemented👻")
+	k.SetParams(ctx, genState.GetParams())
+	k.SetLastBlockInfo(ctx, genState.GetLastBlockInfo())
 }
 
 // ExportGenesis exports the module genesis for the current block.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	panic("unimplemented👻")
+	params := k.GetParams(ctx)
+	lbi, found := k.GetLastBlockInfo(ctx)
+	if !found {
+		currentTime := ctx.BlockTime()
+		lbi = types.LastBlockInfo{
+			Inflation: params.MinInflation,
+			Time:      &currentTime,
+		}
+	}
+	return types.NewGenesisState(params, lbi)
 }

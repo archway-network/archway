@@ -3,6 +3,7 @@ package types
 // NewGenesisState creates a new GenesisState object.
 func NewGenesisState(
 	params Params,
+	lbi LastBlockInfo,
 ) *GenesisState {
 	panic("unimplemented 👻")
 }
