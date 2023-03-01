@@ -154,7 +154,7 @@ func validateMaxBlockDuration(i interface{}) error {
 	}
 
 	if v <= 0 {
-		return fmt.Errorf("max block duration must be positive")
+		return sdkErrors.Wrap(ErrInvalidMaxBlockDuration, "max block duration must be positive")
 	}
 
 	return nil
