@@ -89,7 +89,7 @@ The following scenarios have hypothetical versions and do not reflect versions o
 
 Imagine we need to adjust 'const' (cost is the stake denom for constantine-1) token supply for constantine-1 and this requires an upgrade handler (TODO: Add link to upgrade handler description) specifically for constantine-1
 
-Current State:
+Current Hypothetical State:
 
 - archway-1 is running v1.2.1 and cosntantine-1 is also running v1.2.1
 - v1.2.1 is the latest tag on the branch release-1.2
