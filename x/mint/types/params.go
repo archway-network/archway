@@ -105,6 +105,9 @@ func (p Params) Validate() error {
 	if err := validateInflationChange(p.InflationChange); err != nil {
 		return sdkErrors.Wrap(err, "inflation_change param has invalid value, should be between 0 and 1")
 	}
+	if err := validateMaxBlockDuration(p.MaxBlockDuration); err != nil {
+		return sdkErrors.Wrap(err, "max_block_duration param has invalid value, should be greater than 0")
+	}
 	if err := validateInflationRecipients(p.InflationRecipients); err != nil {
 		return err
 	}
@@ -145,13 +148,13 @@ func validateInflationChange(i interface{}) error {
 }
 
 func validateMaxBlockDuration(i interface{}) error {
-	v, ok := i.(int64)
+	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v < 0 {
-		return fmt.Errorf("max block duration must be non-negative")
+	if v <= 0 {
+		return sdkErrors.Wrap(ErrInvalidMaxBlockDuration, "max block duration must be positive")
 	}
 
 	return nil
