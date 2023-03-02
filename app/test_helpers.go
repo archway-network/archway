@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
+	minttypes "github.com/archway-network/archway/x/mint/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"

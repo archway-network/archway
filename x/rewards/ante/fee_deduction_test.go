@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	mintTypes "github.com/archway-network/archway/x/mint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

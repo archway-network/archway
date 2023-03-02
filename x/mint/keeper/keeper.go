@@ -14,18 +14,25 @@ type Keeper struct {
 	cdc        codec.Codec
 	paramStore paramTypes.Subspace
 	storeKey   sdk.StoreKey
+	bankKeeper types.BankKeeper
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ps paramTypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ps paramTypes.Subspace, bk types.BankKeeper) Keeper {
 	return Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
 		paramStore: ps,
+		bankKeeper: bk,
 	}
 }
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+// MintCoins creates new coins from thin air and adds it to the given module account.
+func (k Keeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error {
+	return k.bankKeeper.MintCoins(ctx, name, amt)
 }

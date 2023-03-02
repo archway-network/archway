@@ -11,12 +11,14 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.GetParams())
 	lbi := genState.GetLastBlockInfo()
-	if (lbi == types.LastBlockInfo{}) {
-		time := ctx.BlockTime()
+	if (lbi.Inflation == sdk.Dec{}) {
 		lbi = types.LastBlockInfo{
 			Inflation: genState.Params.MinInflation,
-			Time:      &time,
 		}
+	}
+	if lbi.Time == nil {
+		time := ctx.BlockTime()
+		lbi.Time = &time
 	}
 	if err := k.SetLastBlockInfo(ctx, lbi); err != nil {
 		panic(err)

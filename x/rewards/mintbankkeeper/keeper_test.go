@@ -3,10 +3,10 @@ package mintbankkeeper_test
 import (
 	"testing"
 
+	mintTypes "github.com/archway-network/archway/x/mint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -134,7 +134,7 @@ func TestMintBankKeeper(t *testing.T) {
 			transferCoins, err := sdk.ParseCoinsNormalized(tc.transferCoins)
 			require.NoError(t, err)
 
-			require.NoError(t, chain.GetApp().MintKeeper.MintCoins(ctx, transferCoins))
+			require.NoError(t, chain.GetApp().MintKeeper.MintCoins(ctx, mintTypes.ModuleName, transferCoins))
 			require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, tc.srcModule, transferCoins))
 
 			// Remove rewards records which is created automagically

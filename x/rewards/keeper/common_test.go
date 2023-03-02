@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	mintTypes "github.com/archway-network/archway/x/mint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) SetupWithdrawTest(testData []withdrawTestRecordData) {
 
 		// Mint rewards for the current record
 		rewardsToMint := testRecord.Rewards
-		s.Require().NoError(s.chain.GetApp().MintKeeper.MintCoins(ctx, rewardsToMint))
+		s.Require().NoError(s.chain.GetApp().MintKeeper.MintCoins(ctx, mintTypes.ModuleName, rewardsToMint))
 		s.Require().NoError(s.chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, rewardsToMint))
 
 		// Create the record

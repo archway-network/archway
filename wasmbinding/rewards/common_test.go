@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/CosmWasm/wasmvm/types"
+	mintTypes "github.com/archway-network/archway/x/mint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -241,7 +241,7 @@ func TestRewardsWASMBindings(t *testing.T) {
 	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record1RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
 	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record2RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
 	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record3RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
-	require.NoError(t, chain.GetApp().MintKeeper.MintCoins(ctx, recordsRewards))
+	require.NoError(t, chain.GetApp().MintKeeper.MintCoins(ctx, mintTypes.ModuleName, recordsRewards))
 	require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, recordsRewards))
 
 	// Query available rewards

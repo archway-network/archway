@@ -13,6 +13,7 @@ import (
 	voterTypes "github.com/archway-network/voter/src/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	mintTypes "github.com/archway-network/archway/x/mint/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -34,6 +35,9 @@ func (s *E2ETestSuite) TestTxFees() {
 		}
 		return fmt.Sprintf("%8s", e2eTesting.HumanizeDecCoins(0, coin))
 	}
+	mintParams := mintTypes.DefaultParams()
+	mintParams.MinInflation = sdk.MustNewDecFromStr("0.1") // 10% (Archway mainnet param)
+	mintParams.MaxInflation = sdk.MustNewDecFromStr("0.1") // 10% (Archway mainnet param)
 
 	// Create a custom chain with fixed inflation (10%) and 10M block gas limit
 	chain := e2eTesting.NewTestChain(s.T(), 1,
@@ -50,11 +54,7 @@ func (s *E2ETestSuite) TestTxFees() {
 		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)), // 50 % (Archway mainnet param)
 		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),    // 20 % (Archway mainnet param)
 		// Set constant inflation rate
-		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)
-			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)
-			uint64(60*60*8766/1),      //1 seconds block time (Archway mainnet param)
-		),
+		e2eTesting.WithMintParams(mintParams),
 	)
 
 	// Check total supply
@@ -99,8 +99,7 @@ func (s *E2ETestSuite) TestTxFees() {
 	{
 		ctx := chain.GetContext()
 
-		mintParams := chain.GetApp().MintKeeper.GetParams(ctx)
-		mintedCoin := chain.GetApp().MintKeeper.GetMinter(ctx).BlockProvision(mintParams)
+		mintedCoin, _ := chain.GetApp().MintKeeper.GetBlockProvisions(ctx)
 		s.T().Logf("x/mint minted amount per block: %s", coinsToStr(mintedCoin))
 	}
 
