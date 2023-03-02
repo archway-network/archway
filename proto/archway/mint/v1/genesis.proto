@@ -12,4 +12,8 @@ message GenesisState {
   Params params = 1 [
     (gogoproto.nullable) = false
   ];
+  // last_block_info defines the previous block inflation and time
+  LastBlockInfo last_block_info = 2 [
+    (gogoproto.nullable) = false
+  ];
 }
