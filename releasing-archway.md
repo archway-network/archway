@@ -22,7 +22,7 @@ and network specific information.
   - If we're not satisfied with X.Y.0-rc.0, we'll release other rc releases,
     (X.Y.0-rc.W | W > 0) as necessary.
 - X.Y.0 (Branch: release-X.Y)
-  - Final release, cut from the release-X.Y branch cut two weeks prior.
+  - Final release, cut from the release-X.Y branch.
   - X.Y.1-rc.0 will be tagged at the same commit on the same branch.
 - X.Y.Z, Z > 0 (Branch: release-X.Y) ([Patch releases](#patch-releases))
   - [Patch releases](#patch-releases) are released as we cherrypick commits from main into
