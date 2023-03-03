@@ -120,7 +120,7 @@ func WithMintParams(inflationMin, inflationMax sdk.Dec, blocksPerYear uint64) Te
 	}
 }
 
-// WithInflationRewardsRatio sets x/rewards inflation rewards ratio parameter.
+// WithInflationRewardsRatio sets x/rewards inflation distribution recipients
 func WithInflationDistributionRecipient(recipientName string, ratio sdk.Dec) TestChainGenesisOption {
 	return func(cdc codec.Codec, genesis app.GenesisState) {
 		var mintGenesis minttypes.GenesisState
