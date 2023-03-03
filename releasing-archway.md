@@ -67,11 +67,12 @@ version changes, not new major nor minor versions).
 - Network upgrade must also follow sequential minor releases. e.g. if a network is running v1.2.Z, Z >= 0, it must first
   upgrade to v1.3.Z, Z >= 0 before upgrading to v1.4.Z, Z >= 0
 - Network upgrades may skip patch release e.g. a network running v1.2.1 may directly upgrade to v1.2.4
-- Network upgrades on archway-1 and constantine-1 must happen through software upgrade proposals.
+- Network upgrades on archway-1 and constantine-1 must happen through software upgrade proposals, with the exception of patch releases
+  e.g. for security hotfixes.
 - Once a software upgrade proposal passes, all network operator are expected to upgrade to the exact
   same archway protocol release within a reasonable timeframe.
 - Each new release must be adopted and tested on constantine-1 before being adopted on archway-1.
-- titus-1 is an unstable development network, with a single validator. Network upgrades on titus-1 are
+- titus-1 is an unstable development network, with no guarantees for stability or graceful upgrades. Network upgrades on titus-1 are
   expected to reset network state and start again from block 1 at any given time.
 
 ### Open Questions in Network upgrades:
