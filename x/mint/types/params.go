@@ -1,7 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +21,11 @@ var (
 	DefaultMaxBlockDuration      time.Duration      = time.Minute
 	DefaultFeeCollectorRecipient InflationRecipient = InflationRecipient{
 		Recipient: authtypes.FeeCollectorName,
-		Ratio:     sdk.OneDec(),
+		Ratio:     sdk.MustNewDecFromStr("0.8"),
+	}
+	DefaultRewardsModule InflationRecipient = InflationRecipient{
+		Recipient: "rewards",
+		Ratio:     sdk.MustNewDecFromStr("0.2"),
 	}
 )
 
@@ -60,7 +64,7 @@ func DefaultParams() Params {
 		DefaultMaximumBonded,
 		DefaultInflationChange,
 		DefaultMaxBlockDuration,
-		[]*InflationRecipient{&DefaultFeeCollectorRecipient},
+		[]*InflationRecipient{&DefaultFeeCollectorRecipient, &DefaultRewardsModule},
 	)
 }
 
