@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/archway-network/archway/app"
+	minttypes "github.com/archway-network/archway/x/mint/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -81,18 +82,6 @@ func WithBlockGasLimit(gasLimit int64) TestChainConsensusParamsOption {
 	}
 }
 
-// WithInflationRewardsRatio sets x/rewards inflation rewards ratio parameter.
-func WithInflationRewardsRatio(ratio sdk.Dec) TestChainGenesisOption {
-	return func(cdc codec.Codec, genesis app.GenesisState) {
-		var rewardsGenesis rewardsTypes.GenesisState
-		cdc.MustUnmarshalJSON(genesis[rewardsTypes.ModuleName], &rewardsGenesis)
-
-		rewardsGenesis.Params.InflationRewardsRatio = ratio
-
-		genesis[rewardsTypes.ModuleName] = cdc.MustMarshalJSON(&rewardsGenesis)
-	}
-}
-
 // WithMaxWithdrawRecords sets x/rewards MaxWithdrawRecords param.
 func WithMaxWithdrawRecords(num uint64) TestChainGenesisOption {
 	return func(cdc codec.Codec, genesis app.GenesisState) {
@@ -128,5 +117,21 @@ func WithMintParams(inflationMin, inflationMax sdk.Dec, blocksPerYear uint64) Te
 		mintGenesis.Params.BlocksPerYear = blocksPerYear
 
 		genesis[mintTypes.ModuleName] = cdc.MustMarshalJSON(&mintGenesis)
+	}
+}
+
+// WithInflationRewardsRatio sets x/rewards inflation rewards ratio parameter.
+func WithInflationDistributionRecipient(recipientName string, ratio sdk.Dec) TestChainGenesisOption {
+	return func(cdc codec.Codec, genesis app.GenesisState) {
+		var mintGenesis minttypes.GenesisState
+		cdc.MustUnmarshalJSON(genesis[minttypes.ModuleName], &mintGenesis)
+
+		for _, recipient := range mintGenesis.Params.GetInflationRecipients() {
+			if recipient.Recipient == recipientName {
+				recipient.Ratio = ratio
+			}
+		}
+
+		genesis[minttypes.ModuleName] = cdc.MustMarshalJSON(&mintGenesis)
 	}
 }
