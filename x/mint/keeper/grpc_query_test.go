@@ -80,7 +80,8 @@ func TestGRPC_Inflation(t *testing.T) {
 		assert.Equal(t, status.Error(codes.NotFound, "inflation data not found"), err)
 	})
 
-	_ = k.SetLastBlockInfo(ctx, lastBlockInfo)
+	err := k.SetLastBlockInfo(ctx, lastBlockInfo)
+	assert.NoError(t, err)
 
 	t.Run("ok: gets inflation", func(t *testing.T) {
 		res, err := queryServer.Inflation(sdk.WrapSDKContext(ctx), &types.QueryInflationRequest{})
