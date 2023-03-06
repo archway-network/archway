@@ -42,7 +42,7 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
 		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
-		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
+		e2eTesting.WithInflationDistributionRecipient(rewardsTypes.ModuleName, sdk.NewDecWithPrec(2, 1)),
 		// Set constant inflation rate
 		e2eTesting.WithMintParams(mintParams),
 	)

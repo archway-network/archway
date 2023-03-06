@@ -26,11 +26,12 @@ func SetupTestMintKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	cdc := encoding.Amino
 
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-	tStoreKey := sdk.NewTransientStoreKey(types.StoreKey)
+	tStoreKey := sdk.NewTransientStoreKey("transient_test")
 
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
 	stateStore.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, db)
+	stateStore.MountStoreWithDB(tStoreKey, sdk.StoreTypeTransient, db)
 	require.NoError(t, stateStore.LoadLatestVersion())
 
 	registry := codectypes.NewInterfaceRegistry()
@@ -38,12 +39,11 @@ func SetupTestMintKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	marshaler := codec.NewProtoCodec(registry)
 
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, cdc, storeKey, tStoreKey)
-	paramsKeeper.Subspace(types.ModuleName)
+	paramsKeeper.Subspace(types.ModuleName).WithKeyTable(types.ParamKeyTable())
 	subspace, _ := paramsKeeper.GetSubspace(types.ModuleName)
 
 	k := keeper.NewKeeper(marshaler, storeKey, subspace, nil)
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 
 	return k, ctx
-
 }

@@ -97,8 +97,7 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 			name: "Fail: invalid Params",
 			genesisState: rewardsTypes.GenesisState{
 				Params: rewardsTypes.Params{
-					InflationRewardsRatio: sdk.NewDecWithPrec(15, 0),
-					TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
+					TxFeeRebateRatio: sdk.NewDecWithPrec(5, 2),
 				},
 			},
 			errExpected: true,

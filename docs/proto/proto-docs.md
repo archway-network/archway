@@ -5,6 +5,7 @@
 ## Table of Contents
 
 - [archway/mint/v1/mint.proto](#archway/mint/v1/mint.proto)
+    - [InflationRecipient](#archway.mint.v1.InflationRecipient)
     - [LastBlockInfo](#archway.mint.v1.LastBlockInfo)
     - [Params](#archway.mint.v1.Params)
   
@@ -12,6 +13,8 @@
     - [GenesisState](#archway.mint.v1.GenesisState)
   
 - [archway/mint/v1/query.proto](#archway/mint/v1/query.proto)
+    - [QueryInflationRequest](#archway.mint.v1.QueryInflationRequest)
+    - [QueryInflationResponse](#archway.mint.v1.QueryInflationResponse)
     - [QueryParamsRequest](#archway.mint.v1.QueryParamsRequest)
     - [QueryParamsResponse](#archway.mint.v1.QueryParamsResponse)
   
@@ -96,6 +99,24 @@
 
 
 
+<a name="archway.mint.v1.InflationRecipient"></a>
+
+### InflationRecipient
+InflationRecipient defines the inflation recipients.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `recipient` | [string](#string) |  | recipient is the module receiving inflation, eg: x/staking, x/rewards. |
+| `ratio` | [string](#string) |  | ratio is the % of inflation being received.
+
+percentage: 0 <= x <= 1. |
+
+
+
+
+
+
 <a name="archway.mint.v1.LastBlockInfo"></a>
 
 ### LastBlockInfo
@@ -116,6 +137,29 @@ BlockInfo keeps track of the last block
 
 ### Params
 Params defines the module parameters.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `min_inflation` | [string](#string) |  | min_inflation defines the network's minimum inflation.
+
+percentage: 0 <= x <= 1 |
+| `max_inflation` | [string](#string) |  | max_inflation defines the network's maximum inflation.
+
+percentage: 0 <= x <= 1 |
+| `min_bonded` | [string](#string) |  | min_bonded defines the minimum wanted bond ratio (staked supply/total supply)
+
+percentage: 0 <= x <= 1 |
+| `max_bonded` | [string](#string) |  | max_bonded defines the maximum wanted bond ratio (staked supply/total supply)
+
+percentage: 0 <= x <= 1 |
+| `inflation_change` | [string](#string) |  | inflation_change defines how much the inflation should change if the bond ratio is not between the defined bands of min/max_bonded. This inflation change is applied to each second for which the bond ratio was not between min_bonded and max_bonded.
+
+percentage: 0 <= x <= 1. |
+| `max_block_duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  | max_block_duration defines the maximum duration of a block. this is important to have because there can be cases for which a block takes a lot longer than others, for example during upgrades. In these specific cases we don't want to have bursts of inflation in a single block.
+
+0 <= x <= max duration. |
+| `inflation_recipients` | [InflationRecipient](#archway.mint.v1.InflationRecipient) | repeated | inflation_recipients defines the list of inflation recipients. CONTRACT: the sum of the ratio of each inflation recipient must be 1. |
 
 
 
@@ -147,6 +191,7 @@ GenesisState defines the initial state of the mint module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#archway.mint.v1.Params) |  | params defines all the module parameters. |
+| `last_block_info` | [LastBlockInfo](#archway.mint.v1.LastBlockInfo) |  | last_block_info defines the previous block inflation and time |
 
 
 
@@ -166,6 +211,31 @@ GenesisState defines the initial state of the mint module.
 <p align="right"><a href="#top">Top</a></p>
 
 ## archway/mint/v1/query.proto
+
+
+
+<a name="archway.mint.v1.QueryInflationRequest"></a>
+
+### QueryInflationRequest
+QueryInflationRequest is the request for Query.Inflation.
+
+
+
+
+
+
+<a name="archway.mint.v1.QueryInflationResponse"></a>
+
+### QueryInflationResponse
+QueryInflationResponse is the response for Query.Inflation.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `inflation` | [string](#string) |  |  |
+
+
+
 
 
 
@@ -208,6 +278,7 @@ Query service for the mint module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#archway.mint.v1.QueryParamsRequest) | [QueryParamsResponse](#archway.mint.v1.QueryParamsResponse) | Params returns module parameters. | GET|/archway/mint/v1/params|
+| `Inflation` | [QueryInflationRequest](#archway.mint.v1.QueryInflationRequest) | [QueryInflationResponse](#archway.mint.v1.QueryInflationResponse) | Inflation returns last block's inflation. | GET|/archway/mint/v1/inflation|
 
  <!-- end services -->
 
@@ -278,7 +349,6 @@ Params defines the module parameters.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `inflation_rewards_ratio` | [string](#string) |  | inflation_rewards_ratio defines the percentage of minted inflation tokens that are used for dApp rewards [0.0, 1.0]. If set to 0.0, no inflation rewards are distributed. |
 | `tx_fee_rebate_ratio` | [string](#string) |  | tx_fee_rebate_ratio defines the percentage of tx fees that are used for dApp rewards [0.0, 1.0]. If set to 0.0, no fee rewards are distributed. |
 | `max_withdraw_records` | [uint64](#uint64) |  | max_withdraw_records defines the maximum number of RewardsRecord objects used for the withdrawal operation. |
 

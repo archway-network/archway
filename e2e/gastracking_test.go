@@ -35,10 +35,10 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	// Setup (create new chain here with custom params)
 	chain := e2eTesting.NewTestChain(s.T(), 1,
 		e2eTesting.WithTxFeeRebatesRewardsRatio(txFeeRebateRewardsRatio),
-		e2eTesting.WithInflationRewardsRatio(inflationRewardsRatio),
 		e2eTesting.WithBlockGasLimit(blockGasLimit),
 		// Artificially increase the minted inflation coin to get some rewards for the contract (otherwise contractOp gas / blockGasLimit ratio will be 0)
 		e2eTesting.WithMintParams(mintParams),
+		e2eTesting.WithInflationDistributionRecipient(rewardsTypes.ModuleName, inflationRewardsRatio),
 		// Set default Tx fee for non-manual transaction like Upload / Instantiate
 		e2eTesting.WithDefaultFeeAmount("10000"),
 	)

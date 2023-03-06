@@ -17,9 +17,8 @@ func (s *KeeperTestSuite) TestGRPC_Params() {
 	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
 	querySrvr := keeper.NewQueryServer(k)
 	params := rewardsTypes.Params{
-		InflationRewardsRatio: sdk.MustNewDecFromStr("0.1"),
-		TxFeeRebateRatio:      sdk.MustNewDecFromStr("0.1"),
-		MaxWithdrawRecords:    uint64(2),
+		TxFeeRebateRatio:   sdk.MustNewDecFromStr("0.1"),
+		MaxWithdrawRecords: uint64(2),
 	}
 	k.SetParams(ctx, params)
 
@@ -32,7 +31,6 @@ func (s *KeeperTestSuite) TestGRPC_Params() {
 	s.Run("ok: gets params", func() {
 		res, err := querySrvr.Params(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryParamsRequest{})
 		s.Require().NoError(err)
-		s.Require().Equal(params.InflationRewardsRatio, res.Params.InflationRewardsRatio)
 		s.Require().Equal(params.TxFeeRebateRatio, res.Params.TxFeeRebateRatio)
 		s.Require().Equal(params.MaxWithdrawRecords, res.Params.MaxWithdrawRecords)
 	})

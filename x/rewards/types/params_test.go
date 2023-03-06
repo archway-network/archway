@@ -20,53 +20,31 @@ func TestRewardsParamsValidate(t *testing.T) {
 		{
 			name: "OK",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
-				MaxWithdrawRecords:    1,
+				TxFeeRebateRatio:   sdk.NewDecWithPrec(5, 2),
+				MaxWithdrawRecords: 1,
 			},
-		},
-		{
-			name: "Fail: InflationRewardsRatio: negative",
-			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(-2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
-				MaxWithdrawRecords:    1,
-			},
-			errExpected: true,
-		},
-		{
-			name: "Fail: InflationRewardsRatio: equal to 1.0",
-			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(1, 0),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
-				MaxWithdrawRecords:    1,
-			},
-			errExpected: true,
 		},
 		{
 			name: "Fail: TxFeeRebateRatio: negative",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(-1, 2),
-				MaxWithdrawRecords:    1,
+				TxFeeRebateRatio:   sdk.NewDecWithPrec(-1, 2),
+				MaxWithdrawRecords: 1,
 			},
 			errExpected: true,
 		},
 		{
 			name: "Fail: TxFeeRebateRatio: equal to 1.0",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(1, 0),
-				MaxWithdrawRecords:    1,
+				TxFeeRebateRatio:   sdk.NewDecWithPrec(1, 0),
+				MaxWithdrawRecords: 1,
 			},
 			errExpected: true,
 		},
 		{
 			name: "Fail: MaxWithdrawRecords: empty",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(1, 0),
-				MaxWithdrawRecords:    0,
+				TxFeeRebateRatio:   sdk.NewDecWithPrec(1, 0),
+				MaxWithdrawRecords: 0,
 			},
 			errExpected: true,
 		},
