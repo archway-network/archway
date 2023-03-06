@@ -125,11 +125,20 @@ func WithInflationDistributionRecipient(recipientName string, ratio sdk.Dec) Tes
 	return func(cdc codec.Codec, genesis app.GenesisState) {
 		var mintGenesis minttypes.GenesisState
 		cdc.MustUnmarshalJSON(genesis[minttypes.ModuleName], &mintGenesis)
+		recipientFound := false
 
 		for _, recipient := range mintGenesis.Params.GetInflationRecipients() {
 			if recipient.Recipient == recipientName {
 				recipient.Ratio = ratio
+				recipientFound = true
 			}
+		}
+
+		if !recipientFound {
+			mintGenesis.Params.InflationRecipients = append(mintGenesis.Params.InflationRecipients, &minttypes.InflationRecipient{
+				Recipient: recipientName,
+				Ratio:     ratio,
+			})
 		}
 
 		genesis[minttypes.ModuleName] = cdc.MustMarshalJSON(&mintGenesis)
