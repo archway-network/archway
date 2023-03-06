@@ -5,6 +5,7 @@
 ## Table of Contents
 
 - [archway/mint/v1/mint.proto](#archway/mint/v1/mint.proto)
+    - [InflationRecipient](#archway.mint.v1.InflationRecipient)
     - [LastBlockInfo](#archway.mint.v1.LastBlockInfo)
     - [Params](#archway.mint.v1.Params)
   
@@ -12,6 +13,8 @@
     - [GenesisState](#archway.mint.v1.GenesisState)
   
 - [archway/mint/v1/query.proto](#archway/mint/v1/query.proto)
+    - [QueryInflationRequest](#archway.mint.v1.QueryInflationRequest)
+    - [QueryInflationResponse](#archway.mint.v1.QueryInflationResponse)
     - [QueryParamsRequest](#archway.mint.v1.QueryParamsRequest)
     - [QueryParamsResponse](#archway.mint.v1.QueryParamsResponse)
   
@@ -169,6 +172,31 @@ GenesisState defines the initial state of the mint module.
 
 
 
+<a name="archway.mint.v1.QueryInflationRequest"></a>
+
+### QueryInflationRequest
+QueryInflationRequest is the request for Query.Inflation.
+
+
+
+
+
+
+<a name="archway.mint.v1.QueryInflationResponse"></a>
+
+### QueryInflationResponse
+QueryInflationResponse is the response for Query.Inflation.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `inflation` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="archway.mint.v1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -208,6 +236,7 @@ Query service for the mint module.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#archway.mint.v1.QueryParamsRequest) | [QueryParamsResponse](#archway.mint.v1.QueryParamsResponse) | Params returns module parameters. | GET|/archway/mint/v1/params|
+| `Inflation` | [QueryInflationRequest](#archway.mint.v1.QueryInflationRequest) | [QueryInflationResponse](#archway.mint.v1.QueryInflationResponse) | Inflation returns last block's inflation. | GET|/archway/mint/v1/inflation|
 
  <!-- end services -->
 
