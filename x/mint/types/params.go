@@ -21,7 +21,7 @@ var (
 	DefaultMaxBlockDuration      time.Duration      = time.Minute
 	DefaultFeeCollectorRecipient InflationRecipient = InflationRecipient{
 		Recipient: authtypes.FeeCollectorName,
-		Ratio:     sdk.OneDec(),
+		Ratio:     sdk.MustNewDecFromStr("1"), // 100%
 	}
 )
 
@@ -60,7 +60,9 @@ func DefaultParams() Params {
 		DefaultMaximumBonded,
 		DefaultInflationChange,
 		DefaultMaxBlockDuration,
-		[]*InflationRecipient{&DefaultFeeCollectorRecipient},
+		[]*InflationRecipient{
+			&DefaultFeeCollectorRecipient,
+		},
 	)
 }
 

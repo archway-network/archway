@@ -101,7 +101,6 @@ import (
 	"github.com/archway-network/archway/wasmbinding"
 	"github.com/archway-network/archway/x/rewards"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
-	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	"github.com/archway-network/archway/x/tracking"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
@@ -525,7 +524,7 @@ func NewArchwayApp(
 		app.getSubspace(minttypes.ModuleName),
 		&stakingKeeper,
 		app.AccountKeeper,
-		mintbankkeeper.NewKeeper(app.BankKeeper, app.RewardsKeeper),
+		app.BankKeeper,
 		authtypes.FeeCollectorName,
 	)
 

@@ -9,9 +9,8 @@ import (
 )
 
 var (
-	InflationRewardsRatioParamKey = []byte("InflationRewardsRatio")
-	TxFeeRebateRatioParamKey      = []byte("TxFeeRebateRatio")
-	MaxWithdrawRecordsParamKey    = []byte("MaxWithdrawRecords")
+	TxFeeRebateRatioParamKey   = []byte("TxFeeRebateRatio")
+	MaxWithdrawRecordsParamKey = []byte("MaxWithdrawRecords")
 )
 
 // Limit below are var (not const) for E2E tests to change them.
@@ -25,7 +24,6 @@ var (
 )
 
 var (
-	DefaultInflationRatio     = sdk.MustNewDecFromStr("0.20") // 20%
 	DefaultTxFeeRebateRatio   = sdk.MustNewDecFromStr("0.50") // 50%
 	DefaultMaxWithdrawRecords = MaxWithdrawRecordsParamLimit
 )
@@ -38,18 +36,16 @@ func ParamKeyTable() paramTypes.KeyTable {
 }
 
 // NewParams creates a new Params instance.
-func NewParams(inflationRewardsRatio, txFeeRebateRatio sdk.Dec, maxwithdrawRecords uint64) Params {
+func NewParams(txFeeRebateRatio sdk.Dec, maxwithdrawRecords uint64) Params {
 	return Params{
-		InflationRewardsRatio: inflationRewardsRatio,
-		TxFeeRebateRatio:      txFeeRebateRatio,
-		MaxWithdrawRecords:    maxwithdrawRecords,
+		TxFeeRebateRatio:   txFeeRebateRatio,
+		MaxWithdrawRecords: maxwithdrawRecords,
 	}
 }
 
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return NewParams(
-		DefaultInflationRatio,
 		DefaultTxFeeRebateRatio,
 		DefaultMaxWithdrawRecords,
 	)
@@ -58,7 +54,6 @@ func DefaultParams() Params {
 // ParamSetPairs Implements the paramTypes.ParamSet interface.
 func (m *Params) ParamSetPairs() paramTypes.ParamSetPairs {
 	return paramTypes.ParamSetPairs{
-		paramTypes.NewParamSetPair(InflationRewardsRatioParamKey, &m.InflationRewardsRatio, validateInflationRewardsRatio),
 		paramTypes.NewParamSetPair(TxFeeRebateRatioParamKey, &m.TxFeeRebateRatio, validateTxFeeRebateRatio),
 		paramTypes.NewParamSetPair(MaxWithdrawRecordsParamKey, &m.MaxWithdrawRecords, validateMaxWithdrawRecords),
 	}
@@ -66,9 +61,6 @@ func (m *Params) ParamSetPairs() paramTypes.ParamSetPairs {
 
 // Validate perform object fields validation.
 func (m Params) Validate() error {
-	if err := validateInflationRewardsRatio(m.InflationRewardsRatio); err != nil {
-		return err
-	}
 	if err := validateTxFeeRebateRatio(m.TxFeeRebateRatio); err != nil {
 		return err
 	}
@@ -83,21 +75,6 @@ func (m Params) Validate() error {
 func (m Params) String() string {
 	bz, _ := yaml.Marshal(m)
 	return string(bz)
-}
-
-func validateInflationRewardsRatio(v interface{}) (retErr error) {
-	defer func() {
-		if retErr != nil {
-			retErr = fmt.Errorf("inflationRewardsRatio param: %w", retErr)
-		}
-	}()
-
-	p, ok := v.(sdk.Dec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", v)
-	}
-
-	return validateRatio(p)
 }
 
 func validateTxFeeRebateRatio(v interface{}) (retErr error) {

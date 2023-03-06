@@ -47,8 +47,8 @@ func (s *E2ETestSuite) TestTxFees() {
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)), // 50 % (Archway mainnet param)
-		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),    // 20 % (Archway mainnet param)
+		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),                                // 50 % (Archway mainnet param)
+		e2eTesting.WithInflationDistributionRecipient(rewardsTypes.ModuleName, sdk.NewDecWithPrec(2, 1)), // 20 % (Archway mainnet param)
 		// Set constant inflation rate
 		e2eTesting.WithMintParams(
 			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)

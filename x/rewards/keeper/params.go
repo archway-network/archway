@@ -6,12 +6,6 @@ import (
 	"github.com/archway-network/archway/x/rewards/types"
 )
 
-// InflationRewardsRatio return inflation rewards params ratio.
-func (k Keeper) InflationRewardsRatio(ctx sdk.Context) (res sdk.Dec) {
-	k.paramStore.Get(ctx, types.InflationRewardsRatioParamKey, &res)
-	return
-}
-
 // TxFeeRebateRatio return tx fee rebate rewards params ratio.
 func (k Keeper) TxFeeRebateRatio(ctx sdk.Context) (res sdk.Dec) {
 	k.paramStore.Get(ctx, types.TxFeeRebateRatioParamKey, &res)
@@ -27,7 +21,6 @@ func (k Keeper) MaxWithdrawRecords(ctx sdk.Context) (res uint64) {
 // GetParams return all module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
-		k.InflationRewardsRatio(ctx),
 		k.TxFeeRebateRatio(ctx),
 		k.MaxWithdrawRecords(ctx),
 	)
