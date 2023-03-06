@@ -13,12 +13,12 @@ message Params {
 
   // tx_fee_rebate_ratio defines the percentage of tx fees that are used for dApp rewards [0.0, 1.0].
   // If set to 0.0, no fee rewards are distributed.
-  string tx_fee_rebate_ratio = 2 [
+  string tx_fee_rebate_ratio = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
   // max_withdraw_records defines the maximum number of RewardsRecord objects used for the withdrawal operation.
-  uint64 max_withdraw_records = 3;
+  uint64 max_withdraw_records = 2;
 }
 
 // ContractMetadata defines the contract rewards distribution options for a particular contract.
