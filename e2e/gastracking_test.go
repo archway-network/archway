@@ -7,6 +7,7 @@ import (
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	voterTypes "github.com/archway-network/voter/src/types"
@@ -38,6 +39,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		e2eTesting.WithBlockGasLimit(blockGasLimit),
 		// Artificially increase the minted inflation coin to get some rewards for the contract (otherwise contractOp gas / blockGasLimit ratio will be 0)
 		e2eTesting.WithMintParams(mintParams),
+		e2eTesting.WithInflationDistributionRecipient(authTypes.FeeCollectorName, sdk.OneDec().Sub(inflationRewardsRatio)),
 		e2eTesting.WithInflationDistributionRecipient(rewardsTypes.ModuleName, inflationRewardsRatio),
 		// Set default Tx fee for non-manual transaction like Upload / Instantiate
 		e2eTesting.WithDefaultFeeAmount("10000"),
