@@ -7,12 +7,14 @@ import (
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	voterTypes "github.com/archway-network/voter/src/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg"
+	mintTypes "github.com/archway-network/archway/x/mint/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
 )
@@ -28,17 +30,16 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	txFeeRebateRewardsRatio := sdk.NewDecWithPrec(5, 1)
 	inflationRewardsRatio := sdk.NewDecWithPrec(5, 1)
 	blockGasLimit := int64(10_000_000)
+	mintParams := mintTypes.DefaultParams()
+	mintParams.MinInflation = sdk.OneDec()
 
 	// Setup (create new chain here with custom params)
 	chain := e2eTesting.NewTestChain(s.T(), 1,
 		e2eTesting.WithTxFeeRebatesRewardsRatio(txFeeRebateRewardsRatio),
 		e2eTesting.WithBlockGasLimit(blockGasLimit),
 		// Artificially increase the minted inflation coin to get some rewards for the contract (otherwise contractOp gas / blockGasLimit ratio will be 0)
-		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(8, 1),
-			sdk.NewDecWithPrec(8, 1),
-			1000000,
-		),
+		e2eTesting.WithMintParams(mintParams),
+		e2eTesting.WithInflationDistributionRecipient(authTypes.FeeCollectorName, sdk.OneDec().Sub(inflationRewardsRatio)),
 		e2eTesting.WithInflationDistributionRecipient(rewardsTypes.ModuleName, inflationRewardsRatio),
 		// Set default Tx fee for non-manual transaction like Upload / Instantiate
 		e2eTesting.WithDefaultFeeAmount("10000"),
@@ -116,10 +117,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	{
 		ctx := chain.GetContext()
 
-		mintKeeper := chain.GetApp().MintKeeper
-		mintParams := mintKeeper.GetParams(ctx)
-
-		mintedCoin := chain.GetApp().MintKeeper.GetMinter(ctx).BlockProvision(mintParams)
+		mintedCoin, _ := chain.GetApp().MintKeeper.GetBlockProvisions(ctx)
 		inflationRewards, _ := pkg.SplitCoins(sdk.NewCoins(mintedCoin), inflationRewardsRatio)
 		s.Require().Len(inflationRewards, 1)
 		blockInflationRewardsExpected = inflationRewards[0]

@@ -1,9 +1,9 @@
 package e2eTesting
 
 import (
+	mintTypes "github.com/archway-network/archway/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/archway-network/archway/app"
@@ -107,14 +107,12 @@ func WithTxFeeRebatesRewardsRatio(ratio sdk.Dec) TestChainGenesisOption {
 }
 
 // WithMintParams sets x/mint inflation calculation parameters.
-func WithMintParams(inflationMin, inflationMax sdk.Dec, blocksPerYear uint64) TestChainGenesisOption {
+func WithMintParams(mintParams mintTypes.Params) TestChainGenesisOption {
 	return func(cdc codec.Codec, genesis app.GenesisState) {
 		var mintGenesis mintTypes.GenesisState
 		cdc.MustUnmarshalJSON(genesis[mintTypes.ModuleName], &mintGenesis)
 
-		mintGenesis.Params.InflationMin = inflationMin
-		mintGenesis.Params.InflationMax = inflationMax
-		mintGenesis.Params.BlocksPerYear = blocksPerYear
+		mintGenesis.Params = mintParams
 
 		genesis[mintTypes.ModuleName] = cdc.MustMarshalJSON(&mintGenesis)
 	}

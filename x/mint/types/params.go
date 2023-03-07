@@ -1,7 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,9 +60,7 @@ func DefaultParams() Params {
 		DefaultMaximumBonded,
 		DefaultInflationChange,
 		DefaultMaxBlockDuration,
-		[]*InflationRecipient{
-			&DefaultFeeCollectorRecipient,
-		},
+		[]*InflationRecipient{&DefaultFeeCollectorRecipient},
 	)
 }
 

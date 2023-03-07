@@ -4,9 +4,9 @@ import (
 	"time"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	mintTypes "github.com/archway-network/archway/x/mint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	voterTypes "github.com/archway-network/voter/src/types"
@@ -25,6 +25,9 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		batchIncStep   = 300   // withdraw batch size increment
 		batchStartSize = 100   // withdraw batch size start value
 	)
+	mintParams := mintTypes.DefaultParams()
+	mintParams.MinInflation = sdk.MustNewDecFromStr("0.1") // 10%
+	mintParams.MaxInflation = sdk.MustNewDecFromStr("0.1") // 10%
 
 	// Create a custom chain with "close to mainnet" params
 	chain := e2eTesting.NewTestChain(s.T(), 1,
@@ -41,11 +44,7 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
 		e2eTesting.WithInflationDistributionRecipient(rewardsTypes.ModuleName, sdk.NewDecWithPrec(2, 1)),
 		// Set constant inflation rate
-		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(10, 2), // 10%
-			sdk.NewDecWithPrec(10, 2), // 10%
-			uint64(60*60*8766/1),      // 1 seconds block time
-		),
+		e2eTesting.WithMintParams(mintParams),
 	)
 	trackingKeeper, rewardsKeeper := chain.GetApp().TrackingKeeper, chain.GetApp().RewardsKeeper
 	chain.NextBlock(0)
@@ -170,7 +169,7 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		}
 
 		// Mint rewards coins
-		s.Require().NoError(chain.GetApp().MintKeeper.MintCoins(ctx, coinsToMint))
+		s.Require().NoError(chain.GetApp().MintKeeper.MintCoins(ctx, mintTypes.ModuleName, coinsToMint))
 		s.Require().NoError(chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, coinsToMint))
 
 		// Invariants check (just in case)
@@ -273,7 +272,7 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 		}
 
 		mintCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(rewardsTypes.MaxWithdrawRecordsParamLimit)))
-		s.Require().NoError(mintKeeper.MintCoins(ctx, mintCoins))
+		s.Require().NoError(mintKeeper.MintCoins(ctx, mintTypes.ModuleName, mintCoins))
 		s.Require().NoError(bankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, mintCoins))
 	}
 
@@ -347,7 +346,7 @@ func (s *E2ETestSuite) TestRewardsRecordsQueryLimit() {
 		}
 
 		mintCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(rewardsTypes.MaxRecordsQueryLimit)))
-		s.Require().NoError(mintKeeper.MintCoins(ctx, mintCoins))
+		s.Require().NoError(mintKeeper.MintCoins(ctx, mintTypes.ModuleName, mintCoins))
 		s.Require().NoError(bankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, mintCoins))
 
 		recordsExpected = records
