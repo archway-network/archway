@@ -10,7 +10,7 @@ import (
 const Year = 24 * time.Hour * 365
 
 // GetBlockProvisions gets the tokens to be minted in the current block and returns the new inflation amount as well
-func (k Keeper) GetBlockProvisions(ctx sdk.Context) (tokens sdk.Coin, blockInflation sdk.Dec) {
+func (k Keeper) GetBlockProvisions(ctx sdk.Context) (tokens sdk.Dec, blockInflation sdk.Dec) {
 	mintParams := k.GetParams(ctx)
 
 	// getting last block info
@@ -31,13 +31,12 @@ func (k Keeper) GetBlockProvisions(ctx sdk.Context) (tokens sdk.Coin, blockInfla
 
 	// inflation for the current block
 	bondedRatio := k.BondedRatio(ctx)
-	bondDenom := k.BondDenom(ctx)
 	blockInflation = getBlockInflation(lbi.Inflation, bondedRatio, mintParams, elapsed)
 
 	// amount of bond tokens to mint in this block
 	bondedTokenSupply := k.GetBondedTokenSupply(ctx)
-	tokenAmount := blockInflation.MulInt(bondedTokenSupply.Amount).MulInt64(int64(elapsed / Year)) // amount := (inflation * bondedTokenSupply) * (elapsed/Year)
-	tokens = sdk.NewInt64Coin(bondDenom, tokenAmount.BigInt().Int64())                             // as sdk.Coin
+	tokens = blockInflation.MulInt(bondedTokenSupply.Amount).MulInt64(int64(elapsed / Year)) // amount := (inflation * bondedTokenSupply) * (elapsed/Year)
+	//tokens = sdk.NewInt64Coin(bondDenom, tokenAmount.BigInt().Int64())                             // as sdk.Coin
 	return
 }
 

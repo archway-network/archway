@@ -10,11 +10,13 @@ import (
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	tokenToMint, blockInflation := k.GetBlockProvisions(ctx)
 
-	// mint the tokens to the recipients
-	err := k.MintCoins(ctx, "module", sdk.NewCoins(tokenToMint))
-	if err != nil {
-		panic(err)
+	// if no tokens to be minted
+	if tokenToMint.IsZero() {
+		return
 	}
+
+	// mint the tokens to the recipients
+	mintAndDistribute(k, ctx, tokenToMint)
 
 	// update the current block inflation
 	blockTime := ctx.BlockTime()
@@ -22,8 +24,22 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		Inflation: blockInflation,
 		Time:      &blockTime,
 	}
-	err = k.SetLastBlockInfo(ctx, lbi)
+	err := k.SetLastBlockInfo(ctx, lbi)
 	if err != nil {
 		panic(err)
+	}
+}
+
+func mintAndDistribute(k keeper.Keeper, ctx sdk.Context, tokenToMint sdk.Dec) {
+	mintParams := k.GetParams(ctx)
+	denom := k.BondDenom(ctx)
+
+	for _, distribution := range mintParams.GetInflationRecipients() {
+		amount := tokenToMint.Mul(distribution.Ratio)            // totalCoinsToMint * distribution.Ratio
+		coin := sdk.NewInt64Coin(denom, amount.BigInt().Int64()) // as sdk.Coin
+		err := k.MintCoins(ctx, distribution.Recipient, sdk.NewCoins(coin))
+		if err != nil {
+			panic(err)
+		}
 	}
 }
