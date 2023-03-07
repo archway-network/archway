@@ -523,6 +523,7 @@ func NewArchwayApp(
 		keys[minttypes.StoreKey],
 		app.getSubspace(minttypes.ModuleName),
 		app.BankKeeper,
+		app.StakingKeeper,
 	)
 
 	// The gov proposal types can be individually enabled

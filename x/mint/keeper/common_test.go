@@ -42,7 +42,7 @@ func SetupTestMintKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	paramsKeeper.Subspace(types.ModuleName).WithKeyTable(types.ParamKeyTable())
 	subspace, _ := paramsKeeper.GetSubspace(types.ModuleName)
 
-	k := keeper.NewKeeper(marshaler, storeKey, subspace, nil)
+	k := keeper.NewKeeper(marshaler, storeKey, subspace, nil, nil)
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 
 	return k, ctx
