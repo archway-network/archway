@@ -26,7 +26,7 @@ func SetupTestMintKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	cdc := encoding.Amino
 
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-	tStoreKey := sdk.NewTransientStoreKey("transient_test")
+	tStoreKey := sdk.NewTransientStoreKey(types.TStoreKey)
 
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
@@ -42,7 +42,7 @@ func SetupTestMintKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	paramsKeeper.Subspace(types.ModuleName).WithKeyTable(types.ParamKeyTable())
 	subspace, _ := paramsKeeper.GetSubspace(types.ModuleName)
 
-	k := keeper.NewKeeper(marshaler, storeKey, subspace, nil, nil)
+	k := keeper.NewKeeper(marshaler, storeKey, tStoreKey, subspace, nil, nil)
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 
 	return k, ctx

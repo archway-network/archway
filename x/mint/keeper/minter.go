@@ -9,6 +9,26 @@ import (
 
 const Year = 24 * time.Hour * 365
 
+func (k Keeper) GetInflationForRecipient(ctx sdk.Context, recipientName string) (sdk.Coin, bool) {
+	store := ctx.TransientStore(k.tStoreKey)
+
+	var mintAmount sdk.Coin
+	bz := store.Get(types.GetMintDistributionKey(recipientName))
+	if bz == nil {
+		return mintAmount, false
+	}
+
+	k.cdc.MustUnmarshal(bz, &mintAmount)
+	return mintAmount, true
+}
+
+func (k Keeper) SetInflationForRecipient(ctx sdk.Context, recipientName string, mintAmount sdk.Coin) {
+	store := ctx.TransientStore(k.tStoreKey)
+	value := k.cdc.MustMarshal(&mintAmount)
+
+	store.Set(types.GetMintDistributionKey(recipientName), value)
+}
+
 // GetBlockProvisions gets the tokens to be minted in the current block and returns the new inflation amount as well
 func (k Keeper) GetBlockProvisions(ctx sdk.Context) (tokens sdk.Dec, blockInflation sdk.Dec) {
 	mintParams := k.GetParams(ctx)

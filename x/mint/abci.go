@@ -1,13 +1,17 @@
 package mint
 
 import (
+	"time"
+
 	"github.com/archway-network/archway/x/mint/keeper"
 	"github.com/archway-network/archway/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeginBlocker mints new tokens and distributes to the inflation recipients.
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	tokenToMint, blockInflation := k.GetBlockProvisions(ctx)
 
 	// if no tokens to be minted
@@ -41,5 +45,6 @@ func mintAndDistribute(k keeper.Keeper, ctx sdk.Context, tokenToMint sdk.Dec) {
 		if err != nil {
 			panic(err)
 		}
+		k.SetInflationForRecipient(ctx, distribution.Recipient, coin) // store how much was was minted for given module
 	}
 }
