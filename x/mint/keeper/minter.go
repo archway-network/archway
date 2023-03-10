@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"math/big"
 	"time"
 
 	"github.com/archway-network/archway/x/mint/types"
@@ -9,11 +10,12 @@ import (
 
 const Year = 24 * time.Hour * 365
 
+// GetInflationForRecipient gets the sdk.Coin distributed to the given module in the current block
 func (k Keeper) GetInflationForRecipient(ctx sdk.Context, recipientName string) (sdk.Coin, bool) {
-	store := ctx.TransientStore(k.tStoreKey)
+	store := ctx.KVStore(k.storeKey)
 
 	var mintAmount sdk.Coin
-	bz := store.Get(types.GetMintDistributionKey(recipientName))
+	bz := store.Get(types.GetMintDistributionRecipientKey(ctx.BlockHeight(), recipientName))
 	if bz == nil {
 		return mintAmount, false
 	}
@@ -23,10 +25,10 @@ func (k Keeper) GetInflationForRecipient(ctx sdk.Context, recipientName string) 
 }
 
 func (k Keeper) SetInflationForRecipient(ctx sdk.Context, recipientName string, mintAmount sdk.Coin) {
-	store := ctx.TransientStore(k.tStoreKey)
+	store := ctx.KVStore(k.storeKey)
 	value := k.cdc.MustMarshal(&mintAmount)
 
-	store.Set(types.GetMintDistributionKey(recipientName), value)
+	store.Set(types.GetMintDistributionRecipientKey(ctx.BlockHeight(), recipientName), value)
 }
 
 // GetBlockProvisions gets the tokens to be minted in the current block and returns the new inflation amount as well
@@ -55,7 +57,8 @@ func (k Keeper) GetBlockProvisions(ctx sdk.Context) (tokens sdk.Dec, blockInflat
 
 	// amount of bond tokens to mint in this block
 	bondedTokenSupply := k.GetBondedTokenSupply(ctx)
-	tokens = blockInflation.MulInt(bondedTokenSupply.Amount).MulInt64(int64(elapsed / Year)) // amount := (inflation * bondedTokenSupply) * (elapsed/Year)
+
+	tokens = blockInflation.MulInt(bondedTokenSupply.Amount).Mul(sdk.NewDecFromBigInt(big.NewInt(int64(elapsed.Seconds()))).QuoInt64(int64(Year.Seconds()))) // amount := (inflation * bondedTokenSupply) * (elapsed/Year)
 	//tokens = sdk.NewInt64Coin(bondDenom, tokenAmount.BigInt().Int64())                             // as sdk.Coin
 	return
 }

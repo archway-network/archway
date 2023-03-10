@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -26,7 +27,7 @@ func SetupTestMintKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	cdc := encoding.Amino
 
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-	tStoreKey := sdk.NewTransientStoreKey(types.TStoreKey)
+	tStoreKey := sdk.NewTransientStoreKey("transient_test")
 
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
@@ -42,8 +43,42 @@ func SetupTestMintKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	paramsKeeper.Subspace(types.ModuleName).WithKeyTable(types.ParamKeyTable())
 	subspace, _ := paramsKeeper.GetSubspace(types.ModuleName)
 
-	k := keeper.NewKeeper(marshaler, storeKey, tStoreKey, subspace, nil, nil)
+	var sk MockStakingKeeper
+	var bk MockBankKeeper
+	k := keeper.NewKeeper(marshaler, storeKey, subspace, bk, sk)
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 
-	return k, ctx
+	k.SetParams(ctx, types.DefaultParams())
+	return k, ctx.WithBlockTime(time.Now())
+}
+
+type MockStakingKeeper struct {
+	BondedRatioFn func(ctx sdk.Context) sdk.Dec
+	BondDenomFn   func(ctx sdk.Context) string
+}
+
+func (k MockStakingKeeper) BondedRatio(ctx sdk.Context) sdk.Dec {
+	return sdk.MustNewDecFromStr("0.5")
+}
+
+func (k MockStakingKeeper) BondDenom(ctx sdk.Context) string {
+	return "stake"
+}
+
+type MockBankKeeper struct {
+	MintCoinsFn                   func(ctx sdk.Context, name string, amt sdk.Coins) error
+	GetSupplyFn                   func(ctx sdk.Context, denom string) sdk.Coin
+	SendCoinsFromModuleToModuleFn func(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+}
+
+func (k MockBankKeeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error {
+	return nil
+}
+
+func (k MockBankKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
+	return sdk.NewInt64Coin("stake", 50)
+}
+
+func (k MockBankKeeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
+	return nil
 }
