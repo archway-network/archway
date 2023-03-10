@@ -1,5 +1,11 @@
 # Archway Protocol Release Versioning
 
+This document captures the release and versioning strategy of archway protocol software.
+
+This document DOES NOT deal with versioning or releases of Various networks using archway protocol.
+
+This Document DOES NOT deal with API versioning or API conventions of archway protocol
+
 Reference: [Semantic Versioning](http://semver.org)
 
 Legend:
@@ -7,8 +13,13 @@ Legend:
 - **X.Y.Z** refers to the version (git tag) of Archway Protocol that is released.
 - **Network Operator** refers to an entity running a node and/or a validator and/or a relayer.
 - **archway-1** refers to the chain id of archway protocl main network.
-- **constantine-1** refers to the chain-id of the archway protocol canary public test network.
-- **titus-1** refers to the the chain-id of the archway protocol development public test network.
+- **constantine-1** refers to the chain-id of the archway protocol "staging" public test network,
+  with long term support, gurantee of state persistance during upgrades and reasonably mirrors mainnet.
+  Dapp developers may build
+  and test their dapps against this testnet before launching on mainnet.
+- **titus-1** refers to the the chain-id of the archway protocol "development" public test network.
+This network is not expected to mirror mainnet and may have experimental features. There is no guarantee of stability or state
+persistance during upgrades.
 
 Note: Please refer to https://github.com/archway-network/networks for a registry of all public networks running archway protocol
 and network specific information.
