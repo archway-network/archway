@@ -507,6 +507,15 @@ func NewArchwayApp(
 	// Setting gas recorder here to avoid cyclic loop
 	trackingWasmVm.SetGasRecorder(app.TrackingKeeper)
 
+	// Note we set up mint keeper before the x/rewards keeper as we pass it in
+	app.MintKeeper = mintkeeper.NewKeeper(
+		appCodec,
+		keys[minttypes.StoreKey],
+		app.getSubspace(minttypes.ModuleName),
+		app.BankKeeper,
+		app.StakingKeeper,
+	)
+
 	app.RewardsKeeper = rewardsKeeper.NewKeeper(
 		appCodec,
 		keys[rewardsTypes.StoreKey],
@@ -514,16 +523,8 @@ func NewArchwayApp(
 		app.TrackingKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.MintKeeper,
 		app.getSubspace(rewardsTypes.ModuleName),
-	)
-
-	// Note we set up mint keeper after the x/rewards keeper
-	app.MintKeeper = mintkeeper.NewKeeper(
-		appCodec,
-		keys[minttypes.StoreKey],
-		app.getSubspace(minttypes.ModuleName),
-		app.BankKeeper,
-		app.StakingKeeper,
 	)
 
 	// The gov proposal types can be individually enabled
@@ -607,7 +608,7 @@ func NewArchwayApp(
 		wasm.ModuleName,
 		// wasm gas tracking
 		trackingTypes.ModuleName,
-		rewardsTypes.ModuleName,
+		rewardsTypes.ModuleName, // should always be after x/mint
 	)
 
 	app.mm.SetOrderEndBlockers(

@@ -37,11 +37,18 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 func mintAndDistribute(k keeper.Keeper, ctx sdk.Context, tokenToMint sdk.Dec) {
 	mintParams := k.GetParams(ctx)
 	denom := k.BondDenom(ctx)
+	mintCoin := sdk.NewInt64Coin(denom, tokenToMint.BigInt().Int64()) // as sdk.Coin
+
+	err := k.MintCoins(ctx, sdk.NewCoins(mintCoin))
+	if err != nil {
+		panic(err)
+	}
 
 	for _, distribution := range mintParams.GetInflationRecipients() {
-		amount := tokenToMint.Mul(distribution.Ratio)            // totalCoinsToMint * distribution.Ratio
-		coin := sdk.NewInt64Coin(denom, amount.BigInt().Int64()) // as sdk.Coin
-		err := k.MintCoins(ctx, distribution.Recipient, sdk.NewCoins(coin))
+		amount := mintCoin.Amount.ToDec().Mul(distribution.Ratio) // totalCoinsToMint * distribution.Ratio
+		coin := sdk.NewInt64Coin(denom, amount.BigInt().Int64())  // as sdk.Coin
+
+		err := k.SendCoinsToModule(ctx, distribution.Recipient, sdk.NewCoins(coin))
 		if err != nil {
 			panic(err)
 		}

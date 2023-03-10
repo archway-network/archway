@@ -11,6 +11,8 @@ type BankKeeper interface {
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	// GetSupply retrieves the given token supply from store
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
+
+	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 }
 
 // StakingKeeper defines the contract needed to be fulfilled for staking and supply
