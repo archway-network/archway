@@ -169,7 +169,7 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		}
 
 		// Mint rewards coins
-		s.Require().NoError(chain.GetApp().MintKeeper.MintCoins(ctx, mintTypes.ModuleName, coinsToMint))
+		s.Require().NoError(chain.GetApp().MintKeeper.MintCoins(ctx, coinsToMint))
 		s.Require().NoError(chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, coinsToMint))
 
 		// Invariants check (just in case)
@@ -272,7 +272,7 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 		}
 
 		mintCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(rewardsTypes.MaxWithdrawRecordsParamLimit)))
-		s.Require().NoError(mintKeeper.MintCoins(ctx, mintTypes.ModuleName, mintCoins))
+		s.Require().NoError(mintKeeper.MintCoins(ctx, mintCoins))
 		s.Require().NoError(bankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, mintCoins))
 	}
 
@@ -346,7 +346,7 @@ func (s *E2ETestSuite) TestRewardsRecordsQueryLimit() {
 		}
 
 		mintCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(rewardsTypes.MaxRecordsQueryLimit)))
-		s.Require().NoError(mintKeeper.MintCoins(ctx, mintTypes.ModuleName, mintCoins))
+		s.Require().NoError(mintKeeper.MintCoins(ctx, mintCoins))
 		s.Require().NoError(bankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, mintCoins))
 
 		recordsExpected = records

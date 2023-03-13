@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) SetupWithdrawTest(testData []withdrawTestRecordData) {
 
 		// Mint rewards for the current record
 		rewardsToMint := testRecord.Rewards
-		s.Require().NoError(s.chain.GetApp().MintKeeper.MintCoins(ctx, mintTypes.ModuleName, rewardsToMint))
+		s.Require().NoError(s.chain.GetApp().MintKeeper.MintCoins(ctx, rewardsToMint))
 		s.Require().NoError(s.chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, rewardsToMint))
 
 		// Create the record
