@@ -148,7 +148,9 @@ func (a AppModule) ConsensusVersion() uint64 {
 }
 
 // BeginBlock returns the begin blocker for the module.
-func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {}
+func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {
+	BeginBlocker(ctx, a.keeper)
+}
 
 // EndBlock returns the end blocker for the module. It returns no validator updates.
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
