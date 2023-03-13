@@ -38,7 +38,9 @@ type BankKeeperExpected interface {
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
 }
 
+// BankKeeperExpected defines the interface for the x/mint module dependency.
 type MintKeeperExpected interface {
+	// GetInflationForRecipient gets the sdk.Coin distributed to the given module in the current block
 	GetInflationForRecipient(ctx sdk.Context, recipientName string) (sdk.Coin, bool)
 }
 
@@ -110,6 +112,7 @@ func (k Keeper) GetRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, p
 	return k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
 }
 
+// GetInflationForRecipient gets the sdk.Coin distributed to the x/rewards in the current block
 func (k Keeper) GetInflationForRewards(ctx sdk.Context) (sdk.Coin, bool) {
 	return k.mintKeeper.GetInflationForRecipient(ctx, types.ModuleName)
 }

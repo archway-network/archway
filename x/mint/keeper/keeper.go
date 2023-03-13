@@ -55,6 +55,7 @@ func (k Keeper) BondDenom(ctx sdk.Context) string {
 	return k.stakingKeeper.BondDenom(ctx)
 }
 
+// SendCoinsFromModuleToModule sends the given number of coins from one module account to another module account
 func (k Keeper) SendCoinsToModule(ctx sdk.Context, recipientModule string, amt sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, amt)
 }

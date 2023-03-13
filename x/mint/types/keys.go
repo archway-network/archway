@@ -19,6 +19,8 @@ var (
 	MintDistribution = []byte{0x00}
 )
 
+// GetMintDistributionRecipientKey gets the store prefix to fetch the inflation distribution for the recipient
+// returns MintDistribution + currentBlockHeight + recipientName
 func GetMintDistributionRecipientKey(blockHeight int64, recipientName string) []byte {
 	return append(append(MintDistribution, byte(blockHeight)), []byte(recipientName)...)
 }

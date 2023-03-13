@@ -39,16 +39,16 @@ func mintAndDistribute(k keeper.Keeper, ctx sdk.Context, tokenToMint sdk.Dec) {
 	denom := k.BondDenom(ctx)
 	mintCoin := sdk.NewInt64Coin(denom, tokenToMint.BigInt().Int64()) // as sdk.Coin
 
-	err := k.MintCoins(ctx, sdk.NewCoins(mintCoin))
+	err := k.MintCoins(ctx, sdk.NewCoins(mintCoin)) // mint the tokens into x/mint
 	if err != nil {
 		panic(err)
 	}
 
 	for _, distribution := range mintParams.GetInflationRecipients() {
-		amount := distribution.Ratio.MulInt(mintCoin.Amount) // totalCoinsToMint * distribution.Ratio
+		amount := distribution.Ratio.MulInt(mintCoin.Amount) // distribution.Ratio * mintedCoins
 		coin := sdk.NewCoin(denom, amount.TruncateInt())     // as sdk.Coin
 
-		err := k.SendCoinsToModule(ctx, distribution.Recipient, sdk.NewCoins(coin))
+		err := k.SendCoinsToModule(ctx, distribution.Recipient, sdk.NewCoins(coin)) // distribute the tokens from x/mint
 		if err != nil {
 			panic(err)
 		}

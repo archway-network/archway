@@ -24,6 +24,7 @@ func (k Keeper) GetInflationForRecipient(ctx sdk.Context, recipientName string) 
 	return mintAmount, true
 }
 
+// SetInflationForRecipient sets the sdk.Coin distributed to the given module for the current block
 func (k Keeper) SetInflationForRecipient(ctx sdk.Context, recipientName string, mintAmount sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
 	value := k.cdc.MustMarshal(&mintAmount)
@@ -59,7 +60,6 @@ func (k Keeper) GetBlockProvisions(ctx sdk.Context) (tokens sdk.Dec, blockInflat
 	bondedTokenSupply := k.GetBondedTokenSupply(ctx)
 
 	tokens = blockInflation.MulInt(bondedTokenSupply.Amount).Mul(sdk.NewDecFromBigInt(big.NewInt(int64(elapsed.Seconds()))).QuoInt64(int64(Year.Seconds()))) // amount := (inflation * bondedTokenSupply) * (elapsed/Year)
-	//tokens = sdk.NewInt64Coin(bondDenom, tokenAmount.BigInt().Int64())                             // as sdk.Coin
 	return
 }
 

@@ -10,7 +10,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-const REWARDSMODULE string = "rewards"
+const REWARDS_MODULE string = "rewards"
 
 func (s *KeeperTestSuite) TestBeginBlocker() {
 	currentTime := time.Now()
@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 		s.Require().True(found)
 		s.Require().True(rewardsCollected.Amount.GT(sdk.ZeroInt()))
 
-		s.Require().True(feeCollected.IsGTE(rewardsCollected)) // feeCollected should be greater than rewards
+		s.Require().True(feeCollected.IsGTE(rewardsCollected)) // feeCollected should be greater than rewards cuz we set up inflation distribution that way
 	})
 }
 
@@ -66,7 +66,7 @@ func getTestParams() types.Params {
 			Recipient: authtypes.FeeCollectorName,
 			Ratio:     sdk.MustNewDecFromStr("0.9"), // 90%
 		}, {
-			Recipient: REWARDSMODULE,
+			Recipient: REWARDS_MODULE,
 			Ratio:     sdk.MustNewDecFromStr("0.1"), // 10%
 		}})
 	return params
