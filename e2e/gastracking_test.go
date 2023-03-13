@@ -117,7 +117,8 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	{
 		ctx := chain.GetContext()
 
-		mintedCoin, _ := chain.GetApp().MintKeeper.GetBlockProvisions(ctx)
+		mintedAmount, _ := chain.GetApp().MintKeeper.GetBlockProvisions(ctx)
+		mintedCoin := sdk.NewInt64Coin(chain.GetApp().StakingKeeper.BondDenom(ctx), mintedAmount.BigInt().Int64())
 		inflationRewards, _ := pkg.SplitCoins(sdk.NewCoins(mintedCoin), inflationRewardsRatio)
 		s.Require().Len(inflationRewards, 1)
 		blockInflationRewardsExpected = inflationRewards[0]

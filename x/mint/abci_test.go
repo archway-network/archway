@@ -26,16 +26,17 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 	})
 
 	s.Run("OK: last mint was just now. should not mint any tokens", func() {
+
 		mintabci.BeginBlocker(ctx, k)
 
 		_, found := k.GetInflationForRecipient(ctx, authtypes.FeeCollectorName)
 		s.Require().False(found)
-		_, found = k.GetInflationForRecipient(ctx, REWARDSMODULE)
+		_, found = s.chain.GetApp().RewardsKeeper.GetInflationForRewards(ctx)
 		s.Require().False(found)
 	})
 
 	s.Run("OK: last mint was a 5 seconds ago. should mint some tokens and update lbi", func() {
-		ctx = ctx.WithBlockTime(currentTime)
+		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(currentTime)
 
 		mintabci.BeginBlocker(ctx, k)
 
@@ -47,7 +48,7 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 		s.Require().True(found)
 		s.Require().True(feeCollected.Amount.GT(sdk.ZeroInt()))
 
-		rewardsCollected, found := k.GetInflationForRecipient(ctx, REWARDSMODULE)
+		rewardsCollected, found := s.chain.GetApp().RewardsKeeper.GetInflationForRewards(ctx)
 		s.Require().True(found)
 		s.Require().True(rewardsCollected.Amount.GT(sdk.ZeroInt()))
 

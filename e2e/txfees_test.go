@@ -99,7 +99,8 @@ func (s *E2ETestSuite) TestTxFees() {
 	{
 		ctx := chain.GetContext()
 
-		mintedCoin, _ := chain.GetApp().MintKeeper.GetBlockProvisions(ctx)
+		mintedAmount, _ := chain.GetApp().MintKeeper.GetBlockProvisions(ctx)
+		mintedCoin := sdk.NewInt64Coin(chain.GetApp().StakingKeeper.BondDenom(ctx), mintedAmount.BigInt().Int64())
 		s.T().Logf("x/mint minted amount per block: %s", coinsToStr(mintedCoin))
 	}
 
