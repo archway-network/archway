@@ -38,6 +38,10 @@ type BankKeeperExpected interface {
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
 }
 
+type MintKeeperExpected interface {
+	GetInflationForRecipient(ctx sdk.Context, recipientName string) (sdk.Coin, bool)
+}
+
 // Keeper provides module state operations.
 type Keeper struct {
 	cdc              codec.Codec
@@ -47,10 +51,11 @@ type Keeper struct {
 	trackingKeeper   TrackingKeeperExpected
 	authKeeper       AuthKeeperExpected
 	bankKeeper       BankKeeperExpected
+	mintKeeper       MintKeeperExpected
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, mk MintKeeperExpected, ps paramTypes.Subspace) Keeper {
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
@@ -63,6 +68,7 @@ func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInf
 		trackingKeeper:   trackingKeeper,
 		authKeeper:       ak,
 		bankKeeper:       bk,
+		mintKeeper:       mk,
 	}
 }
 
@@ -102,4 +108,8 @@ func (k Keeper) GetRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, p
 	}
 
 	return k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
+}
+
+func (k Keeper) GetInflationForRewards(ctx sdk.Context) (sdk.Coin, bool) {
+	return k.mintKeeper.GetInflationForRecipient(ctx, types.ModuleName)
 }
