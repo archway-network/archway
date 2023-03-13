@@ -37,7 +37,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 func mintAndDistribute(k keeper.Keeper, ctx sdk.Context, tokenToMint sdk.Dec) {
 	mintParams := k.GetParams(ctx)
 	denom := k.BondDenom(ctx)
-	mintCoin := sdk.NewInt64Coin(denom, tokenToMint.BigInt().Int64()) // as sdk.Coin
+	mintCoin := sdk.NewCoin(denom, tokenToMint.TruncateInt()) // as sdk.Coin
 
 	err := k.MintCoins(ctx, sdk.NewCoins(mintCoin)) // mint the tokens into x/mint
 	if err != nil {
