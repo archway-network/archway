@@ -59,7 +59,8 @@ func (k Keeper) GetBlockProvisions(ctx sdk.Context) (tokens sdk.Dec, blockInflat
 	// amount of bond tokens to mint in this block
 	bondedTokenSupply := k.GetBondedTokenSupply(ctx)
 
-	tokens = blockInflation.MulInt(bondedTokenSupply.Amount).Mul(sdk.NewDecFromBigInt(big.NewInt(int64(elapsed.Seconds()))).QuoInt64(int64(Year.Seconds()))) // amount := (inflation * bondedTokenSupply) * (elapsed/Year)
+	timeElapsedRate := sdk.NewDecFromBigInt(big.NewInt(int64(elapsed.Seconds()))).QuoInt64(int64(Year.Seconds())) // (elapsed/Year)
+	tokens = blockInflation.MulInt(bondedTokenSupply.Amount).Mul(timeElapsedRate)                                 // inflation * bondedTokenSupply * timeElapsedRate
 	return
 }
 
