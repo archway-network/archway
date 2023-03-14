@@ -7,6 +7,7 @@ import (
 	mintTypes "github.com/archway-network/archway/x/mint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	voterTypes "github.com/archway-network/voter/src/types"
@@ -28,6 +29,13 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 	mintParams := mintTypes.DefaultParams()
 	mintParams.MinInflation = sdk.MustNewDecFromStr("0.1") // 10%
 	mintParams.MaxInflation = sdk.MustNewDecFromStr("0.1") // 10%
+	mintParams.InflationRecipients = []*mintTypes.InflationRecipient{{
+		Recipient: rewardsTypes.ModuleName,
+		Ratio:     sdk.NewDecWithPrec(2, 1), // 20%
+	}, {
+		Recipient: authTypes.FeeCollectorName,
+		Ratio:     sdk.NewDecWithPrec(8, 1), // 80%
+	}}
 
 	// Create a custom chain with "close to mainnet" params
 	chain := e2eTesting.NewTestChain(s.T(), 1,
@@ -40,11 +48,10 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		e2eTesting.WithDefaultFeeAmount("10000000"),
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
-		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
-		e2eTesting.WithInflationDistributionRecipient(rewardsTypes.ModuleName, sdk.NewDecWithPrec(2, 1)),
 		// Set constant inflation rate
 		e2eTesting.WithMintParams(mintParams),
+		// x/rewards distribution params
+		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
 	)
 	trackingKeeper, rewardsKeeper := chain.GetApp().TrackingKeeper, chain.GetApp().RewardsKeeper
 	chain.NextBlock(0)
