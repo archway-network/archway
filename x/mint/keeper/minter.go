@@ -48,8 +48,8 @@ func (k Keeper) GetBlockProvisions(ctx sdk.Context) (tokens sdk.Dec, blockInflat
 
 	// time since last mint
 	elapsed := ctx.BlockTime().Sub(*lbi.GetTime())
-	if elapsed > mintParams.GetMaxBlockDuration() {
-		elapsed = mintParams.GetMaxBlockDuration()
+	if maxElapsed := mintParams.GetMaxBlockDuration(); elapsed > maxElapsed {
+		elapsed = maxElapsed
 	}
 
 	// inflation for the current block
@@ -67,9 +67,9 @@ func (k Keeper) GetBlockProvisions(ctx sdk.Context) (tokens sdk.Dec, blockInflat
 func getBlockInflation(inflation sdk.Dec, bondedRatio sdk.Dec, mintParams types.Params, elapsed time.Duration) sdk.Dec {
 	switch {
 	case bondedRatio.LT(mintParams.MinBonded): // if bondRatio is lower than we want, increase inflation
-		inflation = inflation.Add(mintParams.InflationChange.MulInt64(int64(elapsed)))
+		inflation = inflation.Add(calculateInflationChange(mintParams, elapsed))
 	case bondedRatio.GT(mintParams.MaxBonded): // if bondRatio is higher than we want, decrease inflation
-		inflation = inflation.Sub(mintParams.InflationChange.MulInt64(int64(elapsed)))
+		inflation = inflation.Sub(calculateInflationChange(mintParams, elapsed))
 	}
 	if inflation.GT(mintParams.MaxInflation) {
 		inflation = mintParams.MaxInflation
@@ -77,4 +77,8 @@ func getBlockInflation(inflation sdk.Dec, bondedRatio sdk.Dec, mintParams types.
 		inflation = mintParams.MinInflation
 	}
 	return inflation
+}
+
+func calculateInflationChange(mintParams types.Params, elapsed time.Duration) sdk.Dec {
+	return mintParams.InflationChange.MulInt64(int64(elapsed.Seconds()))
 }

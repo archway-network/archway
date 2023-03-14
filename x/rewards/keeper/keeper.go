@@ -1,63 +1,36 @@
 package keeper
 
 import (
-	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/archway-network/archway/x/rewards/types"
-	trackingTypes "github.com/archway-network/archway/x/tracking/types"
 )
-
-// ContractInfoReaderExpected defines the interface for the x/wasmd module dependency.
-type ContractInfoReaderExpected interface {
-	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
-}
-
-// TrackingKeeperExpected defines the interface for the x/tracking module dependency.
-type TrackingKeeperExpected interface {
-	GetCurrentTxID(ctx sdk.Context) uint64
-	GetBlockTrackingInfo(ctx sdk.Context, height int64) trackingTypes.BlockTracking
-	RemoveBlockTrackingInfo(ctx sdk.Context, height int64)
-}
-
-// AuthKeeperExpected defines the interface for the x/auth module dependency.
-type AuthKeeperExpected interface {
-	GetModuleAccount(ctx sdk.Context, name string) authTypes.ModuleAccountI
-}
-
-// BankKeeperExpected defines the interface for the x/bank module dependency.
-type BankKeeperExpected interface {
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
-}
-
-// BankKeeperExpected defines the interface for the x/mint module dependency.
-type MintKeeperExpected interface {
-	// GetInflationForRecipient gets the sdk.Coin distributed to the given module in the current block
-	GetInflationForRecipient(ctx sdk.Context, recipientName string) (sdk.Coin, bool)
-}
 
 // Keeper provides module state operations.
 type Keeper struct {
 	cdc              codec.Codec
 	paramStore       paramTypes.Subspace
 	state            State
-	contractInfoView ContractInfoReaderExpected
-	trackingKeeper   TrackingKeeperExpected
-	authKeeper       AuthKeeperExpected
-	bankKeeper       BankKeeperExpected
-	mintKeeper       MintKeeperExpected
+	contractInfoView types.ContractInfoReader
+	trackingKeeper   types.TrackingKeeper
+	authKeeper       types.AuthKeeper
+	bankKeeper       types.BankKeeper
+	mintKeeper       types.MintKeeper
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, mk MintKeeperExpected, ps paramTypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, key sdk.StoreKey,
+	contractInfoReader types.ContractInfoReader,
+	trackingKeeper types.TrackingKeeper,
+	ak types.AuthKeeper,
+	bk types.BankKeeper,
+	mk types.MintKeeper,
+	ps paramTypes.Subspace) Keeper {
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
@@ -76,7 +49,7 @@ func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInf
 
 // SetContractInfoViewer sets the contract info view dependency.
 // Only for testing purposes.
-func (k *Keeper) SetContractInfoViewer(viewer ContractInfoReaderExpected) {
+func (k *Keeper) SetContractInfoViewer(viewer types.ContractInfoReader) {
 	k.contractInfoView = viewer
 }
 
@@ -112,7 +85,7 @@ func (k Keeper) GetRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, p
 	return k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
 }
 
-// GetInflationForRecipient gets the sdk.Coin distributed to the x/rewards in the current block
-func (k Keeper) GetInflationForRewards(ctx sdk.Context) (sdk.Coin, bool) {
+// GetInflationaryRewards gets the sdk.Coin distributed to the x/rewards in the current block
+func (k Keeper) GetInflationaryRewards(ctx sdk.Context) (sdk.Coin, bool) {
 	return k.mintKeeper.GetInflationForRecipient(ctx, types.ModuleName)
 }

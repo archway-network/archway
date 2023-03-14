@@ -14,7 +14,7 @@ import (
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	mintedTokens, found := k.GetInflationForRewards(ctx)
+	mintedTokens, found := k.GetInflationaryRewards(ctx)
 	if found {
 		// Track inflation rewards
 		k.TrackInflationRewards(ctx, mintedTokens)

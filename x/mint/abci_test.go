@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 
 		_, found := k.GetInflationForRecipient(ctx, authtypes.FeeCollectorName)
 		s.Require().False(found)
-		_, found = s.chain.GetApp().RewardsKeeper.GetInflationForRewards(ctx)
+		_, found = s.chain.GetApp().RewardsKeeper.GetInflationaryRewards(ctx)
 		s.Require().False(found)
 	})
 
@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 		s.Require().True(found)
 		s.Require().True(feeCollected.Amount.GT(sdk.ZeroInt()))
 
-		rewardsCollected, found := s.chain.GetApp().RewardsKeeper.GetInflationForRewards(ctx)
+		rewardsCollected, found := s.chain.GetApp().RewardsKeeper.GetInflationaryRewards(ctx)
 		s.Require().True(found)
 		s.Require().True(rewardsCollected.Amount.GT(sdk.ZeroInt()))
 
