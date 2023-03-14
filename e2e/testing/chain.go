@@ -31,6 +31,8 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/archway-network/archway/app"
+	mintTypes "github.com/archway-network/archway/x/mint/types"
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // TestChain keeps a test chain state and provides helper functions to simulate various operations.
@@ -195,6 +197,24 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 
 	bankGenesis := bankTypes.NewGenesisState(bankTypes.DefaultGenesisState().Params, balances, totalSupply, []bankTypes.Metadata{})
 	genState[bankTypes.ModuleName] = archApp.AppCodec().MustMarshalJSON(bankGenesis)
+
+	mintParams := mintTypes.NewParams(
+		sdk.MustNewDecFromStr("0.1"), sdk.OneDec(), // inflation
+		sdk.ZeroDec(), sdk.OneDec(), // bonded
+		sdk.MustNewDecFromStr("0.1"), // inflation change
+		time.Minute,
+		[]*mintTypes.InflationRecipient{
+			{
+				Recipient: authTypes.FeeCollectorName,
+				Ratio:     sdk.MustNewDecFromStr("0.9"),
+			},
+			{
+				Recipient: rewardsTypes.ModuleName,
+				Ratio:     sdk.MustNewDecFromStr("0.1"),
+			},
+		})
+	mintGenesis := mintTypes.NewGenesisState(mintParams, mintTypes.LastBlockInfo{})
+	genState[mintTypes.ModuleName] = archApp.AppCodec().MustMarshalJSON(mintGenesis)
 
 	signInfo := make([]slashingTypes.SigningInfo, len(validatorSet.Validators))
 	for i, v := range validatorSet.Validators {
