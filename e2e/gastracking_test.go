@@ -31,7 +31,15 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	inflationRewardsRatio := sdk.NewDecWithPrec(5, 1)
 	blockGasLimit := int64(10_000_000)
 	mintParams := mintTypes.DefaultParams()
-	mintParams.MinInflation = sdk.OneDec()
+	mintParams.MinInflation = sdk.NewDecWithPrec(8, 1)
+	mintParams.MaxInflation = sdk.NewDecWithPrec(8, 1)
+	mintParams.InflationRecipients = []*mintTypes.InflationRecipient{{
+		Recipient: rewardsTypes.ModuleName,
+		Ratio:     inflationRewardsRatio,
+	}, {
+		Recipient: authTypes.FeeCollectorName,
+		Ratio:     sdk.OneDec().Sub(inflationRewardsRatio),
+	}}
 
 	// Setup (create new chain here with custom params)
 	chain := e2eTesting.NewTestChain(s.T(), 1,
@@ -39,8 +47,6 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		e2eTesting.WithBlockGasLimit(blockGasLimit),
 		// Artificially increase the minted inflation coin to get some rewards for the contract (otherwise contractOp gas / blockGasLimit ratio will be 0)
 		e2eTesting.WithMintParams(mintParams),
-		e2eTesting.WithInflationDistributionRecipient(authTypes.FeeCollectorName, sdk.OneDec().Sub(inflationRewardsRatio)),
-		e2eTesting.WithInflationDistributionRecipient(rewardsTypes.ModuleName, inflationRewardsRatio),
 		// Set default Tx fee for non-manual transaction like Upload / Instantiate
 		e2eTesting.WithDefaultFeeAmount("10000"),
 	)
@@ -117,11 +123,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	{
 		ctx := chain.GetContext()
 
-		mintedAmount, _ := chain.GetApp().MintKeeper.GetBlockProvisions(ctx)
-		mintedCoin := sdk.NewInt64Coin(chain.GetApp().StakingKeeper.BondDenom(ctx), mintedAmount.BigInt().Int64())
-		inflationRewards, _ := pkg.SplitCoins(sdk.NewCoins(mintedCoin), inflationRewardsRatio)
-		s.Require().Len(inflationRewards, 1)
-		blockInflationRewardsExpected = inflationRewards[0]
+		blockInflationRewardsExpected, _ = chain.GetApp().RewardsKeeper.GetInflationForRewards(ctx)
 	}
 
 	// Send contract Execute Tx with fees, fetch ABCI events and Tx gas used
