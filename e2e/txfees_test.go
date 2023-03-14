@@ -8,6 +8,7 @@ import (
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	voterTypes "github.com/archway-network/voter/src/types"
@@ -38,6 +39,13 @@ func (s *E2ETestSuite) TestTxFees() {
 	mintParams := mintTypes.DefaultParams()
 	mintParams.MinInflation = sdk.MustNewDecFromStr("0.1") // 10% (Archway mainnet param)
 	mintParams.MaxInflation = sdk.MustNewDecFromStr("0.1") // 10% (Archway mainnet param)
+	mintParams.InflationRecipients = []*mintTypes.InflationRecipient{{
+		Recipient: rewardsTypes.ModuleName,
+		Ratio:     sdk.NewDecWithPrec(2, 1), // 20% (Archway mainnet param)
+	}, {
+		Recipient: authTypes.FeeCollectorName,
+		Ratio:     sdk.NewDecWithPrec(8, 1), // 80%
+	}}
 
 	// Create a custom chain with fixed inflation (10%) and 10M block gas limit
 	chain := e2eTesting.NewTestChain(s.T(), 1,
@@ -50,18 +58,15 @@ func (s *E2ETestSuite) TestTxFees() {
 		e2eTesting.WithDefaultFeeAmount("10000000"),
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
-		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),                                // 50 % (Archway mainnet param)
-		e2eTesting.WithInflationDistributionRecipient(rewardsTypes.ModuleName, sdk.NewDecWithPrec(2, 1)), // 20 % (Archway mainnet param)
-		// Set constant inflation rate
 		e2eTesting.WithMintParams(mintParams),
+		// x/rewards distribution params
+		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)), // 50 % (Archway mainnet param)
 	)
 
 	// Check total supply
 	{
 		ctx := chain.GetContext()
-
-		totalSupplyMaxAmtExpected, ok := sdk.NewIntFromString("1000000050000000") // small gap for minted coins for 2 blocks
+		totalSupplyMaxAmtExpected, ok := sdk.NewIntFromString("1000000500000000") // small gap for minted coins for 2 blocks
 		s.Require().True(ok)
 
 		totalSupplyReceived := chain.GetApp().BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
