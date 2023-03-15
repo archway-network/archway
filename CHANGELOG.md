@@ -32,6 +32,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#253](https://github.com/archway-network/archway/pull/253) - add wasm bindings for contracts to query the x/gov module.
 - [#261](https://github.com/archway-network/archway/pull/261), [#263](https://github.com/archway-network/archway/pull/263), [#264](https://github.com/archway-network/archway/pull/264), [#274](https://github.com/archway-network/archway/pull/274), [#272](https://github.com/archway-network/archway/pull/272), [#280](https://github.com/archway-network/archway/pull/280) - implementing contract premiums
+- [#303](https://github.com/archway-network/archway/pull/303) - Add archway protocol versioning and release strategy
 
 ### Changed
 
