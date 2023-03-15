@@ -207,6 +207,33 @@ func TestParamsValidate(t *testing.T) {
 			types.ErrInvalidInflationDistribution,
 		},
 		{
+			"invalid inflation recipients: same recipient multiple times",
+			types.Params{
+				MinInflation:     sdk.MustNewDecFromStr("0.2"),
+				MaxInflation:     sdk.MustNewDecFromStr("0.2"),
+				MinBonded:        sdk.MustNewDecFromStr("0.2"),
+				MaxBonded:        sdk.MustNewDecFromStr("0.2"),
+				InflationChange:  sdk.MustNewDecFromStr("0.2"),
+				MaxBlockDuration: time.Hour,
+				InflationRecipients: []*types.InflationRecipient{
+					{
+						Recipient: types.ModuleName,
+						Ratio:     sdk.MustNewDecFromStr("0.1"),
+					},
+					{
+						Recipient: types.ModuleName,
+						Ratio:     sdk.MustNewDecFromStr("0.1"),
+					},
+					{
+						Recipient: authtypes.FeeCollectorName,
+						Ratio:     sdk.MustNewDecFromStr("0.8"),
+					},
+				},
+			},
+			true,
+			types.ErrInvalidInflationRecipient,
+		},
+		{
 			"ok: valid",
 			types.Params{
 				MinInflation:     sdk.MustNewDecFromStr("0.2"),
