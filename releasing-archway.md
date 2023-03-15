@@ -34,13 +34,12 @@ and network specific information.
     (X.Y.0-rc.W | W > 0) as necessary.
 - X.Y.0 (Branch: release-X.Y)
   - Final release, cut from the release-X.Y branch.
-  - X.Y.1-rc.0 will be tagged at the same commit on the same branch.
+  - X.Y.0-rc.0 will be tagged at the same commit on the same branch.
 - X.Y.Z, Z > 0 (Branch: release-X.Y) ([Patch releases](#patch-releases))
   - [Patch releases](#patch-releases) are released as we cherrypick commits from main into
     the release-X.Y branch, as needed.
   - X.Y.Z is cut straight from the release-X.Y branch, and X.Y.Z+1-beta.0 is
-    tagged on the followup commit that updates pkg/version/base.go with the beta
-    version.
+    tagged on the followup commit.
 - X.Y.Z, Z > 0 (Branch: release-X.Y.Z) (Branched [patch releases](#patch-releases) only for hotfix situations)
   - These are rarely used and are special in that the X.Y.Z tag is branched to isolate
     the emergency/critical fix from all other changes that have landed on the
@@ -97,13 +96,12 @@ version changes, not new major nor minor versions).
 
 The following scenarios have hypothetical versions and do not reflect versions of actual live networks
 
-#### constantine-1 needs a network upgrade that only applied to constantine-1
-
-Imagine we need to adjust 'const' (cost is the stake denom for constantine-1) token supply for constantine-1 and this requires an upgrade handler (TODO: Add link to upgrade handler description) specifically for constantine-1
+#### archway-1 needs an urget critical security fix
 
 Current Hypothetical State:
 
 - archway-1 is running v1.2.1 and cosntantine-1 is also running v1.2.1
+- A critical security issue has been identified that effects v1.2.1
 - v1.2.1 is the latest tag on the branch release-1.2
 - release-1.2 also has previous tag v1.2.0 and possibly various release candidate tags e.g. v1.2.0-rc1, v1.2.0-rc2 etc
 - release-1.2 branch was cut from main branch at a previous point in time to mark the feature completeness of 1.2.Z
@@ -112,12 +110,11 @@ Current Hypothetical State:
 Upgrade Path:
 
 - Cut release-1.2.1 branch from release-1.2 at tag v1.2.1 to hold the isolated patch release
-- Add the specific upgrade handler to release-1.2.1 branch
-- Tag release-1.2.1+upgrade handler as v1.2.2
-- Upgrade constantine-1 to v1.2.2, at this point archway-1 will still be at v1.2.1
+- Add the specific security patch to release-1.2.1 branch
+- Tag release-1.2.1 + security patch as v1.2.2
+- Upgrade archway-1 to v1.2.2, at this point constantine-1 will still be at v1.2.1. Validators
+  may choose to do the upgrade with an upgrade proposal or with an emergency chain halt, depending
+  on the severity of the fix
+- Security patch will be cherry pickted on release-1.2 branch and also on main
 - Next tag on release on release-1.2 branch would be v1.2.3
-- constantine-1 will upgrade from v1.2.2 -> v1.2.3
-- archway-1 will upgrade directly from v1.2.1 to v1.2.3
-
-TODO: Add more scenarios and examples.
-
+- constantine-1 will upgrade from v1.2.1 -> v1.2.2
