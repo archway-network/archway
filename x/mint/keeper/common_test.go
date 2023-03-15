@@ -43,8 +43,25 @@ func SetupTestMintKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	paramsKeeper.Subspace(types.ModuleName).WithKeyTable(types.ParamKeyTable())
 	subspace, _ := paramsKeeper.GetSubspace(types.ModuleName)
 
-	var sk MockStakingKeeper
-	var bk MockBankKeeper
+	sk := MockStakingKeeper{
+		BondedRatioFn: func(ctx sdk.Context) sdk.Dec {
+			return sdk.MustNewDecFromStr("0.66")
+		},
+		BondDenomFn: func(ctx sdk.Context) string {
+			return "stake"
+		},
+	}
+	bk := MockBankKeeper{
+		MintCoinsFn: func(ctx sdk.Context, name string, amt sdk.Coins) error {
+			return nil
+		},
+		GetSupplyFn: func(ctx sdk.Context, denom string) sdk.Coin {
+			return sdk.NewInt64Coin("stake", 50)
+		},
+		SendCoinsFromModuleToModuleFn: func(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
+			return nil
+		},
+	}
 	k := keeper.NewKeeper(marshaler, storeKey, subspace, bk, sk)
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 
@@ -58,11 +75,17 @@ type MockStakingKeeper struct {
 }
 
 func (k MockStakingKeeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	return sdk.MustNewDecFromStr("0.5")
+	if k.BondedRatioFn == nil {
+		panic("not supposed to be called!")
+	}
+	return k.BondedRatioFn(ctx)
 }
 
 func (k MockStakingKeeper) BondDenom(ctx sdk.Context) string {
-	return "stake"
+	if k.BondDenomFn == nil {
+		panic("not supposed to be called!")
+	}
+	return k.BondDenomFn(ctx)
 }
 
 type MockBankKeeper struct {
@@ -72,13 +95,22 @@ type MockBankKeeper struct {
 }
 
 func (k MockBankKeeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error {
-	return nil
+	if k.MintCoinsFn == nil {
+		panic("not supposed to be called!")
+	}
+	return k.MintCoinsFn(ctx, name, amt)
 }
 
 func (k MockBankKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
-	return sdk.NewInt64Coin("stake", 50)
+	if k.GetSupplyFn == nil {
+		panic("not supposed to be called!")
+	}
+	return k.GetSupplyFn(ctx, denom)
 }
 
 func (k MockBankKeeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
-	return nil
+	if k.SendCoinsFromModuleToModuleFn == nil {
+		panic("not supposed to be called!")
+	}
+	return k.SendCoinsFromModuleToModuleFn(ctx, senderModule, recipientModule, amt)
 }
