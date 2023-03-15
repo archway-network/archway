@@ -20,7 +20,10 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	}
 
 	// mint the tokens to the recipients
-	mintAndDistribute(k, ctx, tokenToMint)
+	err := mintAndDistribute(k, ctx, tokenToMint)
+	if err != nil {
+		panic(err)
+	}
 
 	// update the current block inflation
 	blockTime := ctx.BlockTime()
@@ -28,30 +31,30 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		Inflation: blockInflation,
 		Time:      &blockTime,
 	}
-	err := k.SetLastBlockInfo(ctx, lbi)
+	err = k.SetLastBlockInfo(ctx, lbi)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func mintAndDistribute(k keeper.Keeper, ctx sdk.Context, tokenToMint sdk.Dec) {
+func mintAndDistribute(k keeper.Keeper, ctx sdk.Context, tokensToMint sdk.Dec) error {
 	mintParams := k.GetParams(ctx)
 	denom := k.BondDenom(ctx)
-	mintCoin := sdk.NewCoin(denom, tokenToMint.TruncateInt()) // as sdk.Coin
-
-	err := k.MintCoins(ctx, sdk.NewCoins(mintCoin)) // mint the tokens into x/mint
-	if err != nil {
-		panic(err)
-	}
 
 	for _, distribution := range mintParams.GetInflationRecipients() {
-		amount := distribution.Ratio.MulInt(mintCoin.Amount) // distribution.Ratio * mintedCoins
-		coin := sdk.NewCoin(denom, amount.TruncateInt())     // as sdk.Coin
+		amount := distribution.Ratio.Mul(tokensToMint)   // distribution.Ratio * totalMintCoins
+		coin := sdk.NewCoin(denom, amount.TruncateInt()) // as sdk.Coin
 
-		err := k.SendCoinsToModule(ctx, distribution.Recipient, sdk.NewCoins(coin)) // distribute the tokens from x/mint
+		err := k.MintCoins(ctx, sdk.NewCoins(coin)) // mint the tokens into x/mint
 		if err != nil {
-			panic(err)
+			return err
+		}
+
+		err = k.SendCoinsToModule(ctx, distribution.Recipient, sdk.NewCoins(coin)) // distribute the tokens from x/mint
+		if err != nil {
+			return err
 		}
 		k.SetInflationForRecipient(ctx, distribution.Recipient, coin) // store how much was was minted for given module
 	}
+	return nil
 }
