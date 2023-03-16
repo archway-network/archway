@@ -21,7 +21,49 @@ import (
 	"github.com/archway-network/archway/x/mint/types"
 )
 
-func SetupTestMintKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
+type options struct {
+	b MockBankKeeper
+	s MockStakingKeeper
+}
+
+func SetupTestMintKeeperWithBankKeeper(b MockBankKeeper) func(*options) {
+	return func(o *options) {
+		o.b = b
+	}
+}
+
+func SetupTestMintKeeperWithStakingKeeper(s MockStakingKeeper) func(*options) {
+	return func(o *options) {
+		o.s = s
+	}
+}
+
+func SetupTestMintKeeper(t testing.TB, opts ...func(*options)) (keeper.Keeper, sdk.Context) {
+	options := options{
+		b: MockBankKeeper{
+			MintCoinsFn: func(ctx sdk.Context, name string, amt sdk.Coins) error {
+				return nil
+			},
+			GetSupplyFn: func(ctx sdk.Context, denom string) sdk.Coin {
+				return sdk.NewCoin(denom, sdk.ZeroInt())
+			},
+			SendCoinsFromModuleToModuleFn: func(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
+				return nil
+			},
+		},
+		s: MockStakingKeeper{
+			BondedRatioFn: func(ctx sdk.Context) sdk.Dec {
+				return sdk.MustNewDecFromStr("0.5")
+			},
+			BondDenomFn: func(ctx sdk.Context) string {
+				return "stake"
+			},
+		},
+	}
+
+	for _, o := range opts {
+		o(&options)
+	}
 	encoding := cosmoscmd.MakeEncodingConfig(app.ModuleBasics)
 	appCodec := encoding.Marshaler
 	cdc := encoding.Amino
@@ -43,9 +85,7 @@ func SetupTestMintKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	paramsKeeper.Subspace(types.ModuleName).WithKeyTable(types.ParamKeyTable())
 	subspace, _ := paramsKeeper.GetSubspace(types.ModuleName)
 
-	var sk MockStakingKeeper
-	var bk MockBankKeeper
-	k := keeper.NewKeeper(marshaler, storeKey, subspace, bk, sk)
+	k := keeper.NewKeeper(marshaler, storeKey, subspace, options.b, options.s)
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 
 	k.SetParams(ctx, types.DefaultParams())
@@ -58,11 +98,11 @@ type MockStakingKeeper struct {
 }
 
 func (k MockStakingKeeper) BondedRatio(ctx sdk.Context) sdk.Dec {
-	return sdk.MustNewDecFromStr("0.5")
+	return k.BondedRatioFn(ctx)
 }
 
 func (k MockStakingKeeper) BondDenom(ctx sdk.Context) string {
-	return "stake"
+	return k.BondDenomFn(ctx)
 }
 
 type MockBankKeeper struct {
@@ -72,13 +112,13 @@ type MockBankKeeper struct {
 }
 
 func (k MockBankKeeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error {
-	return nil
+	return k.MintCoinsFn(ctx, name, amt)
 }
 
 func (k MockBankKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
-	return sdk.NewInt64Coin("stake", 50)
+	return k.GetSupplyFn(ctx, denom)
 }
 
 func (k MockBankKeeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
-	return nil
+	return k.SendCoinsFromModuleToModuleFn(ctx, senderModule, recipientModule, amt)
 }
