@@ -98,10 +98,16 @@ type MockStakingKeeper struct {
 }
 
 func (k MockStakingKeeper) BondedRatio(ctx sdk.Context) sdk.Dec {
+	if k.BondedRatioFn == nil {
+		panic("not supposed to be called!")
+	}
 	return k.BondedRatioFn(ctx)
 }
 
 func (k MockStakingKeeper) BondDenom(ctx sdk.Context) string {
+	if k.BondDenomFn == nil {
+		panic("not supposed to be called!")
+	}
 	return k.BondDenomFn(ctx)
 }
 
@@ -112,13 +118,22 @@ type MockBankKeeper struct {
 }
 
 func (k MockBankKeeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error {
+	if k.MintCoinsFn == nil {
+		panic("not supposed to be called!")
+	}
 	return k.MintCoinsFn(ctx, name, amt)
 }
 
 func (k MockBankKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
+	if k.GetSupplyFn == nil {
+		panic("not supposed to be called!")
+	}
 	return k.GetSupplyFn(ctx, denom)
 }
 
 func (k MockBankKeeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
+	if k.SendCoinsFromModuleToModuleFn == nil {
+		panic("not supposed to be called!")
+	}
 	return k.SendCoinsFromModuleToModuleFn(ctx, senderModule, recipientModule, amt)
 }
