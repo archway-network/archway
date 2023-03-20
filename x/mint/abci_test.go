@@ -26,7 +26,6 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 	})
 
 	s.Run("OK: last mint was just now. should not mint any tokens", func() {
-
 		mintabci.BeginBlocker(ctx, k)
 
 		_, found := k.GetInflationForRecipient(ctx, authtypes.FeeCollectorName)
