@@ -45,7 +45,7 @@ func SetupTestMintKeeper(t testing.TB, opts ...func(*options)) (keeper.Keeper, s
 				return nil
 			},
 			GetSupplyFn: func(ctx sdk.Context, denom string) sdk.Coin {
-				return sdk.NewCoin(denom, sdk.ZeroInt())
+				return sdk.NewInt64Coin(denom, 50)
 			},
 			SendCoinsFromModuleToModuleFn: func(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
 				return nil
