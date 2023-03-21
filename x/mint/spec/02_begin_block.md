@@ -18,9 +18,9 @@ $$
 
 where:
 
-* *$timeElapsed$* - the calculated time since the last time tokens were minted;
-* *$currentBlockTime$* - current block time;
-* *$time_{lastBlockInfo}$* - the time when last inflation was minted;
+* $timeElapsed$ - the calculated time since the last time tokens were minted;
+* $currentBlockTime$ - current block time;
+* $time_{lastBlockInfo}$ - the time when last inflation was minted;
 
 ### 2. Calculate inflation for current block
 
@@ -36,13 +36,13 @@ $$
 
 where:
 
-* *$inflation$* - the inflation for the current block;
-* *$inflation_{lastBlockInfo}$* - the inflation for the last block mint;
-* *$inflationChange_{params}$* - the inflation change rate as configured as module param;
-* *$timeElapsed$* - the calculated time since the last time tokens were minted $(1)$;
-* *$bondedRatio$* - the amount of total supply which is currently staked;
-* *$minBondedRatio_{params}$* - minimum bonded ratio to aim for as configured as module param;
-* *$maxBondedRatio_{params}$* - maximum bonded ratio to aim for as configured as module param;
+* $inflation$ - the inflation for the current block;
+* $inflation_{lastBlockInfo}$ - the inflation for the last block mint;
+* $inflationChange_{params}$ - the inflation change rate as configured as module param;
+* $timeElapsed$ - the calculated time since the last time tokens were minted $(1)$;
+* $bondedRatio$ - the amount of total supply which is currently staked;
+* $minBondedRatio_{params}$ - minimum bonded ratio to aim for as configured as module param;
+* $maxBondedRatio_{params}* - maximum bonded ratio to aim for as configured as module param;
 
 ### 3. Calculate amount of tokens to mint in the block based on the block inflation
 
@@ -53,11 +53,11 @@ $$
 
 where:
 
-* *$tokens$* - the total amount of tokens to mint in the current block;
-* *$inflation$* - the inflation calculated for the current block $(2)$;
-* *$bondedTokenSupply$* - total amount of tokens currently staked;
-* *$timeElapsed_{(seconds)}$* - the calculated time since the last time tokens were minted $(1)$, measured in seconds,
-* *$Year_{(seconds)}$* - the number of seconds in a year
+* $tokens$ - the total amount of tokens to mint in the current block;
+* $inflation$ - the inflation calculated for the current block $(2)$;
+* $bondedTokenSupply$ - total amount of tokens currently staked;
+* $timeElapsed_{(seconds)}$ - the calculated time since the last time tokens were minted $(1)$, measured in seconds,
+* $Year_{(seconds)}$ - the number of seconds in a year
 
 ## Mint Distribution
 
@@ -71,9 +71,9 @@ $$
 
 where:
 
-* *$distributionAmount_{recipient}$* - the amount of tokens to distribute to the recipient;
-* *$tokens$* - the total amount of tokens to mint in the current block $(3)$;
-* *$ratio_{recipient}$* - the percentage share of the inflation to be distributed to the recipient;
+* $distributionAmount_{recipient}$ - the amount of tokens to distribute to the recipient;
+* $tokens$ - the total amount of tokens to mint in the current block $(3)$;
+* $ratio_{recipient}$ - the percentage share of the inflation to be distributed to the recipient;
 
 
 After the mint and distribution distribution, the latest mint inflation and timestamp is updated in the module store to be used the next block.
