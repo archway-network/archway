@@ -888,6 +888,66 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
 		s.Assert().Equal(acc1.Address.String(), meta.OwnerAddress)
 		s.Assert().Equal(acc2.Address.String(), meta.RewardsAddress)
 	})
+
+	// update metadata contract to contract
+	contractXAddr := s.VoterUploadAndInstantiate(chain, acc1)
+	contractYAddr := s.VoterUploadAndInstantiate(chain, acc1)
+
+	// Set initial meta (admin as the OwnerAddress)
+	{
+		meta := rewardsTypes.ContractMetadata{
+			OwnerAddress:   acc1.Address.String(),
+			RewardsAddress: acc1.Address.String(),
+		}
+		chain.SetContractMetadata(acc1, contractXAddr, meta)
+
+		meta = rewardsTypes.ContractMetadata{
+			OwnerAddress:   contractXAddr.String(),
+			RewardsAddress: acc1.Address.String(),
+		}
+		chain.SetContractMetadata(acc1, contractYAddr, meta)
+	}
+
+	s.Run("Fail: update Contract X owner address from Contract Y: unauthorized", func() {
+		// check that contract X's metadata is as expected (acc1 is the owner)
+		meta := chain.GetContractMetadata(contractXAddr)
+		s.Assert().Equal(acc1.Address.String(), meta.OwnerAddress)
+		s.Assert().Equal(acc1.Address.String(), meta.RewardsAddress)
+
+		// update the owner of contract X to be acc2
+		req := voterCustomTypes.UpdateContractMetadataRequest{
+			ContractAddress: contractXAddr.String(),
+			OwnerAddress:    acc2.Address.String(),
+		}
+
+		// send the request from contract Y
+		err := s.VoterUpdateMetadata(chain, contractYAddr, acc1, req, false)
+
+		s.Assert().Contains(err.Error(), "unauthorized")
+	})
+
+	s.Run("OK: update Contract Y metadata from Contract X", func() {
+		// check that contract Y's metadata is as expected (X is the owner)
+		meta := chain.GetContractMetadata(contractYAddr)
+		s.Assert().Equal(contractXAddr.String(), meta.OwnerAddress)
+		s.Assert().Equal(acc1.Address.String(), meta.RewardsAddress)
+
+		// update the owner of contract Y to be acc1 and the rewards addrss to be acc2
+		req := voterCustomTypes.UpdateContractMetadataRequest{
+			ContractAddress: contractYAddr.String(),
+			OwnerAddress:    acc1.Address.String(),
+			RewardsAddress:  acc2.Address.String(),
+		}
+
+		// send the request from contract X
+		err := s.VoterUpdateMetadata(chain, contractXAddr, acc1, req, true)
+		s.NoError(err)
+
+		// check the update was successful
+		meta = chain.GetContractMetadata(contractYAddr)
+		s.Assert().Equal(acc1.Address.String(), meta.OwnerAddress)
+		s.Assert().Equal(acc2.Address.String(), meta.RewardsAddress)
+	})
 }
 
 // TestVoter_WASMBindingsRewardsRecordsQuery tests rewards records query via WASM bindings (Custom query plugin).

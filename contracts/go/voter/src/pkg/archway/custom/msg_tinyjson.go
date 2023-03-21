@@ -257,6 +257,8 @@ func tinyjsonF5cd6cf9DecodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(in *
 			continue
 		}
 		switch key {
+		case "contract_address":
+			out.ContractAddress = string(in.String())
 		case "owner_address":
 			out.OwnerAddress = string(in.String())
 		case "rewards_address":
@@ -276,8 +278,13 @@ func tinyjsonF5cd6cf9EncodeGithubComArchwayNetworkVoterSrcPkgArchwayCustom2(out 
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"owner_address\":"
+		const prefix string = ",\"contract_address\":"
 		out.RawString(prefix[1:])
+		out.String(string(in.ContractAddress))
+	}
+	{
+		const prefix string = ",\"owner_address\":"
+		out.RawString(prefix)
 		out.String(string(in.OwnerAddress))
 	}
 	{

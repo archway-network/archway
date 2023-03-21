@@ -27,10 +27,16 @@ func TestRewardsWASMBindings(t *testing.T) {
 	acc := chain.GetAccount(0)
 
 	// Set mock wasmd contract info viewer to emulate a contract being deployed
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	testContracts := e2eTesting.GenContractAddresses(3)
+	contractAddr := testContracts[0]
+	contractXAddr := testContracts[1]
+	contractYAddr := testContracts[2]
 
 	contractViewer := testutils.NewMockContractViewer()
 	contractViewer.AddContractAdmin(contractAddr.String(), acc.Address.String())
+	contractViewer.AddContractAdmin(contractXAddr.String(), acc.Address.String())
+	contractViewer.AddContractAdmin(contractYAddr.String(), acc.Address.String())
+
 	chain.GetApp().RewardsKeeper.SetContractInfoViewer(contractViewer)
 	ctx, keeper := chain.GetContext(), chain.GetApp().RewardsKeeper
 
@@ -92,6 +98,16 @@ func TestRewardsWASMBindings(t *testing.T) {
 
 		_, err := queryPlugin.GetRewardsRecords(ctx, query)
 		assert.ErrorContains(t, err, "rewardsAddress: parsing: decoding bech32 failed")
+	})
+
+	t.Run("Update metadata invalid target contract", func(t *testing.T) {
+		msg := rewardsWbTypes.UpdateContractMetadataRequest{
+			ContractAddress: "invalid",
+			OwnerAddress:    contractAddr.String(),
+		}
+
+		_, _, err := msgPlugin.UpdateContractMetadata(ctx, contractAddr, msg)
+		assert.ErrorContains(t, err, "contractAddress: parsing: decoding bech32 failed")
 	})
 
 	t.Run("Update invalid metadata", func(t *testing.T) {
@@ -184,6 +200,78 @@ func TestRewardsWASMBindings(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, contractAddr.String(), res.OwnerAddress)
 		assert.Equal(t, contractAddr.String(), res.RewardsAddress)
+	})
+
+	// Create metadata for contracts X & Y, with X as the initial owner of Y in order to modify it
+	err = keeper.SetContractMetadata(ctx, acc.Address, contractXAddr, rewardsTypes.ContractMetadata{
+		OwnerAddress:   acc.Address.String(),
+		RewardsAddress: acc.Address.String(),
+	})
+	require.NoError(t, err)
+
+	err = keeper.SetContractMetadata(ctx, acc.Address, contractYAddr, rewardsTypes.ContractMetadata{
+		OwnerAddress:   contractXAddr.String(),
+		RewardsAddress: acc.Address.String(),
+	})
+	require.NoError(t, err)
+
+	// Update metadata
+	t.Run("Update contract Y's metadata from contract X", func(t *testing.T) {
+		// check contract Y's current metadata is as expected
+		query := rewardsWbTypes.ContractMetadataRequest{
+			ContractAddress: contractYAddr.String(),
+		}
+
+		res, err := queryPlugin.GetContractMetadata(ctx, query)
+		require.NoError(t, err)
+
+		assert.Equal(t, contractXAddr.String(), res.OwnerAddress)
+		assert.Equal(t, acc.Address.String(), res.RewardsAddress)
+
+		// update the rewards address of Contract Y to be Contract X (previously acc)
+		msg := rewardsWbTypes.UpdateContractMetadataRequest{
+			ContractAddress: contractYAddr.String(),
+			RewardsAddress:  contractXAddr.String(),
+		}
+
+		_, _, err = msgPlugin.UpdateContractMetadata(ctx, contractXAddr, msg)
+
+		require.NoError(t, err)
+
+		query = rewardsWbTypes.ContractMetadataRequest{
+			ContractAddress: contractYAddr.String(),
+		}
+
+		res, err = queryPlugin.GetContractMetadata(ctx, query)
+		require.NoError(t, err)
+
+		assert.Equal(t, contractXAddr.String(), res.OwnerAddress)
+		// check successful
+		assert.Equal(t, contractXAddr.String(), res.RewardsAddress)
+	})
+
+	t.Run("Update contract X's metadata from contract Y: unauthorized", func(t *testing.T) {
+		// check contract X's current metadata is as expected
+		query := rewardsWbTypes.ContractMetadataRequest{
+			ContractAddress: contractXAddr.String(),
+		}
+
+		res, err := queryPlugin.GetContractMetadata(ctx, query)
+		require.NoError(t, err)
+
+		assert.Equal(t, acc.Address.String(), res.OwnerAddress)
+		assert.Equal(t, acc.Address.String(), res.RewardsAddress)
+
+		// attempt to update contract X from contract X (Y is not the owner)
+		msg := rewardsWbTypes.UpdateContractMetadataRequest{
+			ContractAddress: contractXAddr.String(),
+			RewardsAddress:  contractYAddr.String(),
+		}
+
+		_, _, err = msgPlugin.UpdateContractMetadata(ctx, contractYAddr, msg)
+
+		// check this was denied
+		assert.ErrorIs(t, err, rewardsTypes.ErrUnauthorized)
 	})
 
 	t.Run("SetFlatFee: contract not admin (unauthorized operation)", func(t *testing.T) {

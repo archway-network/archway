@@ -36,7 +36,14 @@ func (h MsgHandler) UpdateContractMetadata(ctx sdk.Context, contractAddr sdk.Acc
 		return nil, nil, fmt.Errorf("updateContractMetadata: %w", err)
 	}
 
-	if err := h.rewardsKeeper.SetContractMetadata(ctx, contractAddr, contractAddr, req.ToSDK()); err != nil {
+	var targetAddr sdk.AccAddress
+	var isSet bool
+
+	if targetAddr, isSet = req.MustGetContractAddressOk(); !isSet {
+		targetAddr = contractAddr
+	}
+
+	if err := h.rewardsKeeper.SetContractMetadata(ctx, contractAddr, targetAddr, req.ToSDK()); err != nil {
 		return nil, nil, err
 	}
 
