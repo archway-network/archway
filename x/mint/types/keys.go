@@ -12,11 +12,7 @@ const (
 // KV Store
 var (
 	LastBlockInfoPrefix = []byte{0x00}
-)
-
-// Transient Store
-var (
-	MintDistribution = []byte{0x00}
+	MintDistribution    = []byte{0x01}
 )
 
 // GetMintDistributionRecipientKey gets the store prefix to fetch the inflation distribution for the recipient
