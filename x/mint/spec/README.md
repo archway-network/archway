@@ -35,5 +35,4 @@ To ensure that events like chain upgrade, chain halts do not cause large amounts
 2. **[Begin-Block](02_begin_block.md)**
 3. **[Events](03_events.md)**
 4. **[Parameters](04_params.md)**
-7. **[Client](07_client.md)**
-8. **[WASM bindings](08_wasm_bindings.md)**
+5. **[Client](05_client.md)**
