@@ -42,7 +42,7 @@ where:
 * $timeElapsed$ - the calculated time since the last time tokens were minted $(1)$;
 * $bondedRatio$ - the amount of total supply which is currently staked;
 * $minBondedRatio_{params}$ - minimum bonded ratio to aim for as configured as module param;
-* $maxBondedRatio_{params}* - maximum bonded ratio to aim for as configured as module param;
+* $maxBondedRatio_{params}$ - maximum bonded ratio to aim for as configured as module param;
 
 ### 3. Calculate amount of tokens to mint in the block based on the block inflation
 
