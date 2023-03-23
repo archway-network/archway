@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// EmitBlockInflationEvent emits the BlockInflationEvent event
 func EmitBlockInflationEvent(ctx sdk.Context, tokens sdk.Dec, inflation sdk.Dec) {
 	err := ctx.EventManager().EmitTypedEvent(&BlockInflationEvent{
 		MintAmount: tokens,
@@ -16,6 +17,7 @@ func EmitBlockInflationEvent(ctx sdk.Context, tokens sdk.Dec, inflation sdk.Dec)
 	}
 }
 
+// EmitBlockInflationDistributionEvent emits the BlockInflationDistributionEvent event
 func EmitBlockInflationDistributionEvent(ctx sdk.Context, recipient string, tokens sdk.Coin) {
 	err := ctx.EventManager().EmitTypedEvent(&BlockInflationDistributionEvent{
 		Recipient: recipient,
