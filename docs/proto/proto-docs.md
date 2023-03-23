@@ -4,6 +4,10 @@
 
 ## Table of Contents
 
+- [archway/mint/v1/events.proto](#archway/mint/v1/events.proto)
+    - [BlockInflationDistributionEvent](#archway.mint.v1.BlockInflationDistributionEvent)
+    - [BlockInflationEvent](#archway.mint.v1.BlockInflationEvent)
+  
 - [archway/mint/v1/mint.proto](#archway/mint/v1/mint.proto)
     - [InflationRecipient](#archway.mint.v1.InflationRecipient)
     - [LastBlockInfo](#archway.mint.v1.LastBlockInfo)
@@ -89,6 +93,54 @@
     - [Query](#archway.tracking.v1beta1.Query)
   
 - [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="archway/mint/v1/events.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/mint/v1/events.proto
+
+
+
+<a name="archway.mint.v1.BlockInflationDistributionEvent"></a>
+
+### BlockInflationDistributionEvent
+BlockInflationDistributionEvent is emitted when new tokens are minted and distributed for an inflation recipient
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `recipient` | [string](#string) |  | recipient defines the name of the module of the inflation recipient |
+| `tokens` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | tokens defines the total number of tokens received by the inflation recipient |
+
+
+
+
+
+
+<a name="archway.mint.v1.BlockInflationEvent"></a>
+
+### BlockInflationEvent
+BlockInflationEvent is emitted when new tokens are about to be minted in the given block.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tokens_minted` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | tokens_minted defines the total number of tokens which will be minted in this block |
+| `inflation` | [string](#string) |  | inflation defines the inflation rate used in the current block for minting |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
 
 
 
