@@ -54,7 +54,7 @@ func (s ContractOpInfoState) GetContractOpInfoByTxID(txID uint64) (objs []types.
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		_, id := s.parseTxIndexKey(iterator.Key())
+		id := s.parseTxIndexKey(iterator.Key())
 
 		obj, found := s.GetContractOpInfo(id)
 		if !found {
@@ -77,7 +77,7 @@ func (s ContractOpInfoState) DeleteContractOpsByTxID(txID uint64) []uint64 {
 	var txIndexKeys [][]byte
 	var removedIDs []uint64
 	for ; iterator.Valid(); iterator.Next() {
-		_, id := s.parseTxIndexKey(iterator.Key())
+		id := s.parseTxIndexKey(iterator.Key())
 		s.deleteContractOpInfo(id)
 
 		removedIDs = append(removedIDs, id)
@@ -182,15 +182,14 @@ func (s ContractOpInfoState) buildTxIndexKey(txID, id uint64) []byte {
 }
 
 // parseTxIndexKey parses the types.ContractOperationInfo's tx index key.
-func (s ContractOpInfoState) parseTxIndexKey(key []byte) (txID, id uint64) {
+func (s ContractOpInfoState) parseTxIndexKey(key []byte) (id uint64) {
 	if len(key) != 16 {
 		panic(fmt.Errorf("invalid ContractOpInfo TxInfo index key length: %d", len(key)))
 	}
 
-	txID = sdk.BigEndianToUint64(key[:8])
 	id = sdk.BigEndianToUint64(key[8:])
 
-	return
+	return id
 }
 
 // setTxIndex adds the types.ContractOperationInfo's tx index entry.

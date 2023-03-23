@@ -51,7 +51,7 @@ func (s TxRewardsState) GetTxRewardsByBlock(height int64) (objs []types.TxReward
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		_, txID := s.parseBlockIndexKey(iterator.Key())
+		txID := s.parseBlockIndexKey(iterator.Key())
 
 		obj, found := s.GetTxRewards(txID)
 		if !found {
@@ -66,6 +66,7 @@ func (s TxRewardsState) GetTxRewardsByBlock(height int64) (objs []types.TxReward
 // Import initializes state from the module genesis data.
 func (s TxRewardsState) Import(objs []types.TxRewards) {
 	for _, obj := range objs {
+		obj := obj
 		s.setTxRewards(&obj)
 		s.setBlockIndex(obj.Height, obj.TxId)
 	}
@@ -98,7 +99,7 @@ func (s TxRewardsState) deleteTxRewardsByBlock(height int64) []uint64 {
 	var blockIndexKeys [][]byte
 	var removedTxIDs []uint64
 	for ; iterator.Valid(); iterator.Next() {
-		_, txID := s.parseBlockIndexKey(iterator.Key())
+		txID := s.parseBlockIndexKey(iterator.Key())
 		s.deleteTxRewards(txID)
 
 		removedTxIDs = append(removedTxIDs, txID)
@@ -160,7 +161,7 @@ func (s TxRewardsState) buildBlockIndexKey(height int64, txID uint64) []byte {
 }
 
 // parseBlockIndexKey parses the types.TxRewards's block index key.
-func (s TxRewardsState) parseBlockIndexKey(key []byte) (height int64, txID uint64) {
+func (s TxRewardsState) parseBlockIndexKey(key []byte) (txID uint64) {
 	if len(key) != 16 {
 		panic(fmt.Errorf("invalid TxRewards Block index key length: %d", len(key)))
 	}
@@ -169,11 +170,10 @@ func (s TxRewardsState) parseBlockIndexKey(key []byte) (height int64, txID uint6
 	if heightRaw > math.MaxInt64 {
 		panic(fmt.Errorf("invalid TxRewards Block index key height: %d", heightRaw))
 	}
-	height = int64(heightRaw)
 
 	txID = sdk.BigEndianToUint64(key[8:])
 
-	return
+	return txID
 }
 
 // setBlockIndex adds the types.TxRewards's block index entry.

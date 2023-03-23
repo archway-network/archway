@@ -22,7 +22,7 @@ import (
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v3/testing/mock"
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // SA1019: proto is deprecated
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -61,13 +61,13 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	var consensusParamsOpts []TestChainConsensusParamsOption
 	var genStateOpts []TestChainGenesisOption
 	for i, opt := range opts {
-		switch opt.(type) {
+		switch opt.(type) { //nolint:gocritic,gosimple // if you want, you could do... something mysterious here.
 		case TestChainConfigOption:
-			chainCfgOpts = append(chainCfgOpts, opt.(TestChainConfigOption))
+			chainCfgOpts = append(chainCfgOpts, opt.(TestChainConfigOption)) //nolint:gosimple // could remove type assertion
 		case TestChainConsensusParamsOption:
-			consensusParamsOpts = append(consensusParamsOpts, opt.(TestChainConsensusParamsOption))
+			consensusParamsOpts = append(consensusParamsOpts, opt.(TestChainConsensusParamsOption)) //nolint:gosimple // could remove type assertion
 		case TestChainGenesisOption:
-			genStateOpts = append(genStateOpts, opt.(TestChainGenesisOption))
+			genStateOpts = append(genStateOpts, opt.(TestChainGenesisOption)) //nolint:gosimple // could remove type assertion
 		default:
 			require.Fail(t, "Unknown chain option type", "optionIdx", i)
 		}

@@ -94,19 +94,19 @@ func (m GenesisState) Validate() error {
 	}
 
 	rewardsRecordIDMax := uint64(0)
-	rewardsRecordsIdSet := make(map[uint64]struct{})
+	rewardsRecordsIDSet := make(map[uint64]struct{})
 	for i, rewardsRecord := range m.RewardsRecords {
 		if err := rewardsRecord.Validate(); err != nil {
 			return fmt.Errorf("rewardsRecords [%d]: %w", i, err)
 		}
-		if _, ok := rewardsRecordsIdSet[rewardsRecord.Id]; ok {
+		if _, ok := rewardsRecordsIDSet[rewardsRecord.Id]; ok {
 			return fmt.Errorf("rewardsRecords [%d]: duplicated id: %d", i, rewardsRecord.Id)
 		}
 
 		if rewardsRecord.Id > rewardsRecordIDMax {
 			rewardsRecordIDMax = rewardsRecord.Id
 		}
-		rewardsRecordsIdSet[rewardsRecord.Id] = struct{}{}
+		rewardsRecordsIDSet[rewardsRecord.Id] = struct{}{}
 	}
 
 	if m.RewardsRecordLastId < rewardsRecordIDMax {

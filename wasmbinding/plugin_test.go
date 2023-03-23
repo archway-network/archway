@@ -58,25 +58,25 @@ func TestWASMBindingPlugins(t *testing.T) {
 		})
 
 		t.Run("Query gov vote", func(t *testing.T) {
-			proposalId := govTypes.DefaultStartingProposalID
+			proposalID := govTypes.DefaultStartingProposalID
 			textProposal := govTypes.NewTextProposal("foo", "bar")
 
 			anyTime := time.Now().UTC()
-			proposal, pErr := govTypes.NewProposal(textProposal, proposalId, anyTime, anyTime)
+			proposal, pErr := govTypes.NewProposal(textProposal, proposalID, anyTime, anyTime)
 			require.NoError(t, pErr)
 			govKeeper.SetProposal(ctx, proposal)
 
 			accAddrs, _ := e2etesting.GenAccounts(2)
 			depositor := accAddrs[0]
-			deposit := govTypes.NewDeposit(proposalId, depositor, nil)
+			deposit := govTypes.NewDeposit(proposalID, depositor, nil)
 			govKeeper.SetDeposit(ctx, deposit)
 
 			voter := accAddrs[1]
 			govKeeper.ActivateVotingPeriod(ctx, proposal)
-			vote := govTypes.NewVote(proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes))
+			vote := govTypes.NewVote(proposalID, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes))
 			govKeeper.SetVote(ctx, vote)
 
-			_, err := queryPlugin.Custom(ctx, []byte(fmt.Sprintf("{\"gov_vote\": {\"proposal_id\": %d, \"voter\": \"%s\"}}", proposalId, voter)))
+			_, err := queryPlugin.Custom(ctx, []byte(fmt.Sprintf("{\"gov_vote\": {\"proposal_id\": %d, \"voter\": \"%s\"}}", proposalID, voter)))
 			require.NoError(t, err)
 		})
 	})
