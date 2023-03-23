@@ -19,6 +19,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		return
 	}
 
+	// emit event of the mint amount and inflation
 	types.EmitBlockInflationEvent(
 		ctx,
 		tokenToMint,
@@ -61,6 +62,12 @@ func mintAndDistribute(k keeper.Keeper, ctx sdk.Context, tokensToMint sdk.Dec) e
 			return err
 		}
 		k.SetInflationForRecipient(ctx, distribution.Recipient, coin) // store how much was was minted for given module
+
+		types.EmitBlockInflationDistributionEvent( // emit event of the mint distribution
+			ctx,
+			distribution.Recipient,
+			coin,
+		)
 	}
 	return nil
 }

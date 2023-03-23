@@ -15,3 +15,13 @@ func EmitBlockInflationEvent(ctx sdk.Context, tokens sdk.Dec, inflation sdk.Dec)
 		panic(fmt.Errorf("sending BlockInflationEvent event: %w", err))
 	}
 }
+
+func EmitBlockInflationDistributionEvent(ctx sdk.Context, recipient string, tokens sdk.Coin) {
+	err := ctx.EventManager().EmitTypedEvent(&BlockInflationDistributionEvent{
+		Recipient: recipient,
+		Tokens:    tokens,
+	})
+	if err != nil {
+		panic(fmt.Errorf("sending BlockInflationDistributionEvent event: %w", err))
+	}
+}
