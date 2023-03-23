@@ -19,6 +19,12 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		return
 	}
 
+	types.EmitBlockInflationEvent(
+		ctx,
+		tokenToMint,
+		blockInflation,
+	)
+
 	// mint the tokens to the recipients
 	err := mintAndDistribute(k, ctx, tokenToMint)
 	if err != nil {

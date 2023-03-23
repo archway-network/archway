@@ -127,7 +127,7 @@ BlockInflationEvent is emitted when new tokens are about to be minted in the giv
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokens_minted` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | tokens_minted defines the total number of tokens which will be minted in this block |
+| `mint_amount` | [string](#string) |  | mint_amount defines the total amount of tokens which will be minted in this block |
 | `inflation` | [string](#string) |  | inflation defines the inflation rate used in the current block for minting |
 
 

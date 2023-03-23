@@ -8,9 +8,10 @@ import "cosmos/base/v1beta1/coin.proto";
 
 // BlockInflationEvent is emitted when new tokens are about to be minted in the given block.
 message BlockInflationEvent {
-    // tokens_minted defines the total number of tokens which will be minted in this block
-    cosmos.base.v1beta1.Coin tokens_minted = 1 [
-      (gogoproto.nullable) = false
+    // mint_amount defines the total amount of tokens which will be minted in this block
+    string mint_amount = 1 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+        (gogoproto.nullable) = false
     ];
     // inflation defines the inflation rate used in the current block for minting
     string inflation = 2 [
