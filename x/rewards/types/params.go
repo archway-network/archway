@@ -72,11 +72,9 @@ func (m Params) Validate() error {
 	if err := validateTxFeeRebateRatio(m.TxFeeRebateRatio); err != nil {
 		return err
 	}
-	if err := validateMaxWithdrawRecords(m.MaxWithdrawRecords); err != nil {
-		return err
-	}
+	err := validateMaxWithdrawRecords(m.MaxWithdrawRecords)
 
-	return nil
+	return err
 }
 
 // String implements the fmt.Stringer interface.

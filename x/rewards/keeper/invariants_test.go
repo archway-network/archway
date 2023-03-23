@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/types"
 )
@@ -24,7 +24,7 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 		brokenExpected bool
 	}
 
-	accAddr, _ := e2eTesting.GenAccounts(2)
+	accAddr, _ := e2etesting.GenAccounts(2)
 	mockTime := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	testCases := []testCase{
@@ -138,7 +138,7 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create chain
-			chain := e2eTesting.NewTestChain(t, 1)
+			chain := e2etesting.NewTestChain(t, 1)
 			ctx := chain.GetContext()
 
 			// Remove all pool coins (not empty due to inflation rewards for previous blocks)

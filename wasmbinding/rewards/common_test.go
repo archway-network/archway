@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	archPkg "github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/wasmbinding/pkg"
@@ -23,11 +23,11 @@ import (
 // TestRewardsWASMBindings tests the custom querier and custom message handler for the x/rewards WASM bindings.
 func TestRewardsWASMBindings(t *testing.T) {
 	// Setup
-	chain := e2eTesting.NewTestChain(t, 1)
+	chain := e2etesting.NewTestChain(t, 1)
 	acc := chain.GetAccount(0)
 
 	// Set mock wasmd contract info viewer to emulate a contract being deployed
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAddr := e2etesting.GenContractAddresses(1)[0]
 
 	contractViewer := testutils.NewMockContractViewer()
 	contractViewer.AddContractAdmin(contractAddr.String(), acc.Address.String())

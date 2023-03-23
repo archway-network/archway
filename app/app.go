@@ -231,7 +231,7 @@ var (
 // ArchwayApp extended ABCI application
 type ArchwayApp struct {
 	*baseapp.BaseApp
-	legacyAmino       *codec.LegacyAmino //nolint:staticcheck
+	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
 
@@ -479,9 +479,9 @@ func NewArchwayApp(
 		panic(err)
 	}
 
-	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
+	trackingWasmVM := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
 
-	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
+	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVM), wasmdKeeper.WithGasRegister(defaultGasRegister))
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
 	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.RewardsKeeper, &app.GovKeeper)...)
 
@@ -506,7 +506,7 @@ func NewArchwayApp(
 	)
 
 	// Setting gas recorder here to avoid cyclic loop
-	trackingWasmVm.SetGasRecorder(app.TrackingKeeper)
+	trackingWasmVM.SetGasRecorder(app.TrackingKeeper)
 
 	app.RewardsKeeper = rewardsKeeper.NewKeeper(
 		appCodec,
@@ -549,7 +549,7 @@ func NewArchwayApp(
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
-	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
@@ -801,7 +801,7 @@ func (app *ArchwayApp) ModuleAccountAddrs() map[string]bool {
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *ArchwayApp) LegacyAmino() *codec.LegacyAmino { //nolint:staticcheck
+func (app *ArchwayApp) LegacyAmino() *codec.LegacyAmino {
 	return app.legacyAmino
 }
 

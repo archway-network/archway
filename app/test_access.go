@@ -1,8 +1,6 @@
 package app
 
 import (
-	"testing"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 
@@ -19,7 +17,6 @@ import (
 )
 
 type TestSupport struct {
-	t   testing.TB
 	app *ArchwayApp
 }
 
@@ -34,6 +31,7 @@ func (s TestSupport) WasmKeeper() wasm.Keeper {
 func (s TestSupport) AppCodec() codec.Codec {
 	return s.app.appCodec
 }
+
 func (s TestSupport) ScopedWasmIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return s.app.ScopedWASMKeeper
 }

@@ -6,10 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/rewards/keeper"
-	"github.com/archway-network/archway/x/rewards/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -43,7 +42,7 @@ func (s *KeeperTestSuite) TestGRPC_ContractMetadata() {
 	querySrvr := keeper.NewQueryServer(k)
 	contractViewer := testutils.NewMockContractViewer()
 	k.SetContractInfoViewer(contractViewer)
-	contractAddr := e2eTesting.GenContractAddresses(2)
+	contractAddr := e2etesting.GenContractAddresses(2)
 	contractAdminAcc := s.chain.GetAccount(0)
 	contractViewer.AddContractAdmin(contractAddr[0].String(), contractAdminAcc.Address.String())
 	contractMeta := rewardsTypes.ContractMetadata{
@@ -140,14 +139,14 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 		contractAdminAcc := s.chain.GetAccount(0)
 		contractViewer := testutils.NewMockContractViewer()
 		k.SetContractInfoViewer(contractViewer)
-		contractAddr := e2eTesting.GenContractAddresses(1)[0]
+		contractAddr := e2etesting.GenContractAddresses(1)[0]
 		contractViewer.AddContractAdmin(contractAddr.String(), contractAdminAcc.Address.String())
 		err := k.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, rewardsTypes.ContractMetadata{
 			ContractAddress: contractAddr.String(),
 			OwnerAddress:    contractAdminAcc.Address.String(),
 		})
 		s.Require().NoError(err)
-		err = k.SetFlatFee(ctx, contractAdminAcc.Address, types.FlatFee{
+		err = k.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         expectedFlatFee,
 		})
@@ -237,7 +236,7 @@ func (s *KeeperTestSuite) TestGRPC_FlatFee() {
 	})
 
 	s.Run("err: flat fee not found", func() {
-		contractAddr := e2eTesting.GenContractAddresses(1)[0]
+		contractAddr := e2etesting.GenContractAddresses(1)[0]
 		_, err := querySrvr.FlatFee(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryFlatFeeRequest{
 			ContractAddress: contractAddr.String(),
 		})
@@ -249,14 +248,14 @@ func (s *KeeperTestSuite) TestGRPC_FlatFee() {
 		contractAdminAcc := s.chain.GetAccount(0)
 		contractViewer := testutils.NewMockContractViewer()
 		k.SetContractInfoViewer(contractViewer)
-		contractAddr := e2eTesting.GenContractAddresses(1)[0]
+		contractAddr := e2etesting.GenContractAddresses(1)[0]
 		contractViewer.AddContractAdmin(contractAddr.String(), contractAdminAcc.Address.String())
 		err := k.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, rewardsTypes.ContractMetadata{
 			ContractAddress: contractAddr.String(),
 			OwnerAddress:    contractAdminAcc.Address.String(),
 		})
 		s.Require().NoError(err)
-		err = k.SetFlatFee(ctx, contractAdminAcc.Address, types.FlatFee{
+		err = k.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         sdk.NewInt64Coin("token", 123),
 		})

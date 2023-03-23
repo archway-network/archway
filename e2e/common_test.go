@@ -7,23 +7,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 )
 
-var (
-	NilStruct = struct{}{}
-)
+var NilStruct = struct{}{}
 
 type E2ETestSuite struct {
 	suite.Suite
 
-	chainA *e2eTesting.TestChain
-	chainB *e2eTesting.TestChain
+	chainA *e2etesting.TestChain
+	chainB *e2etesting.TestChain
 }
 
 func (s *E2ETestSuite) SetupTest() {
-	s.chainA = e2eTesting.NewTestChain(s.T(), 1)
-	s.chainB = e2eTesting.NewTestChain(s.T(), 2)
+	s.chainA = e2etesting.NewTestChain(s.T(), 1)
+	s.chainB = e2etesting.NewTestChain(s.T(), 2)
 }
 
 // CosmWasmCoinsToSDK converts CosmWasm SDK coins to the Cosmos SDK coins.

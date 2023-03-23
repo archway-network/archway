@@ -73,7 +73,7 @@ func (m GenesisState) Validate() error {
 		blockRewardsHeightSet[blockRewards.Height] = struct{}{}
 	}
 
-	txRewardsIdSet := make(map[uint64]struct{})
+	txRewardsIDSet := make(map[uint64]struct{})
 	for i, txRewards := range m.TxRewards {
 		if err := txRewards.Validate(); err != nil {
 			return fmt.Errorf("txRewards [%d]: %w", i, err)
@@ -81,10 +81,10 @@ func (m GenesisState) Validate() error {
 		if _, ok := blockRewardsHeightSet[txRewards.Height]; !ok {
 			return fmt.Errorf("txRewards [%d]: height not found: %d", i, txRewards.Height)
 		}
-		if _, ok := txRewardsIdSet[txRewards.TxId]; ok {
+		if _, ok := txRewardsIDSet[txRewards.TxId]; ok {
 			return fmt.Errorf("txRewards [%d]: duplicated txId: %d", i, txRewards.TxId)
 		}
-		txRewardsIdSet[txRewards.TxId] = struct{}{}
+		txRewardsIDSet[txRewards.TxId] = struct{}{}
 	}
 
 	if !pkg.DecCoinIsZero(m.MinConsensusFee) {

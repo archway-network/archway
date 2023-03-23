@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
 )
 
@@ -16,7 +16,7 @@ func TestTrackingGenesisStateValidation(t *testing.T) {
 		errExpected bool
 	}
 
-	contractAddrs := e2eTesting.GenContractAddresses(2)
+	contractAddrs := e2etesting.GenContractAddresses(2)
 	contractAddr1, contractAddr2 := contractAddrs[0], contractAddrs[1]
 
 	testCases := []testCase{
@@ -232,7 +232,7 @@ func TestTrackingContractOperationInfoValidate(t *testing.T) {
 		errExpected bool
 	}
 
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAddr := e2etesting.GenContractAddresses(1)[0]
 
 	testCases := []testCase{
 		{

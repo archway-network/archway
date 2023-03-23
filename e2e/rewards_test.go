@@ -11,7 +11,7 @@ import (
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	voterTypes "github.com/archway-network/voter/src/types"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -27,21 +27,21 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 	)
 
 	// Create a custom chain with "close to mainnet" params
-	chain := e2eTesting.NewTestChain(s.T(), 1,
+	chain := e2etesting.NewTestChain(s.T(), 1,
 		// Set 1B total supply (10^9 * 10^6)
-		e2eTesting.WithGenAccounts(1),
-		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		e2etesting.WithGenAccounts(1),
+		e2etesting.WithGenDefaultCoinBalance("1000000000000000"),
 		// Set bonded ratio to 30%
-		e2eTesting.WithBondAmount("300000000000000"),
+		e2etesting.WithBondAmount("300000000000000"),
 		// Override the default Tx fee
-		e2eTesting.WithDefaultFeeAmount("10000000"),
+		e2etesting.WithDefaultFeeAmount("10000000"),
 		// Set block gas limit (Archway mainnet param)
-		e2eTesting.WithBlockGasLimit(100_000_000),
+		e2etesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
-		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
+		e2etesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
+		e2etesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
 		// Set constant inflation rate
-		e2eTesting.WithMintParams(
+		e2etesting.WithMintParams(
 			sdk.NewDecWithPrec(10, 2), // 10%
 			sdk.NewDecWithPrec(10, 2), // 10%
 			uint64(60*60*8766/1),      // 1 seconds block time
@@ -64,7 +64,7 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 	sendMsg := func(msg sdk.Msg) (gasEstimated, gasUsed uint64, txFees sdk.Coins) {
 		// Simulate msg
 		gasEstInfo, _, _, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{msg},
-			e2eTesting.WithSimulation(),
+			e2etesting.WithSimulation(),
 		)
 		gasEstimated = gasEstInfo.GasUsed
 		gasAdjusted := uint64(float64(gasEstimated) * 1.1)
@@ -82,8 +82,8 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 
 		// Deliver msg
 		gasUsedInfo, _, _, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{msg},
-			e2eTesting.WithTxGasLimit(gasAdjusted),
-			e2eTesting.WithMsgFees(txFees...),
+			e2etesting.WithTxGasLimit(gasAdjusted),
+			e2etesting.WithMsgFees(txFees...),
 		)
 		gasUsed = gasUsedInfo.GasUsed
 
@@ -114,7 +114,7 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		}
 
 		gasEstimated, gasUsed, txFees := sendMsg(&msg)
-		s.T().Logf("New voting: msg: gasEst=%d, gasUsed=%d, txFees=%s", gasEstimated, gasUsed, e2eTesting.HumanizeCoins(6, txFees...))
+		s.T().Logf("New voting: msg: gasEst=%d, gasUsed=%d, txFees=%s", gasEstimated, gasUsed, e2etesting.HumanizeCoins(6, txFees...))
 	}
 
 	// Get a sample rewards amount and tracking data
@@ -148,10 +148,10 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		s.T().Logf("New voting: tracking: VM / SDK gas:  %d / %d", trackingOp.VmGas, trackingOp.SdkGas)
 
 		s.T().Logf("Gas unit price: %s", gasUnitPrice)
-		s.T().Logf("Block inflationary rewards / gas limit: %s / %d", e2eTesting.HumanizeCoins(6, rewardsBlock.InflationRewards), rewardsBlock.MaxGas)
-		s.T().Logf("New voting: fee rewards: %s", e2eTesting.HumanizeCoins(6, rewardsTx.FeeRewards...))
+		s.T().Logf("Block inflationary rewards / gas limit: %s / %d", e2etesting.HumanizeCoins(6, rewardsBlock.InflationRewards), rewardsBlock.MaxGas)
+		s.T().Logf("New voting: fee rewards: %s", e2etesting.HumanizeCoins(6, rewardsTx.FeeRewards...))
 
-		s.T().Logf("New voting: rewards: %s", e2eTesting.HumanizeCoins(6, record.Rewards...))
+		s.T().Logf("New voting: rewards: %s", e2etesting.HumanizeCoins(6, record.Rewards...))
 
 		recordRewards = records[0].Rewards
 	}
@@ -202,8 +202,8 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 				batchSize,
 				mode,
 				gasEstimated, gasUsed,
-				e2eTesting.HumanizeCoins(6, txFees...),
-				e2eTesting.HumanizeCoins(6, rewards...),
+				e2etesting.HumanizeCoins(6, txFees...),
+				e2etesting.HumanizeCoins(6, rewards...),
 			)
 
 			// Next batch params
@@ -238,9 +238,9 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 
 	rewardsTypes.MaxWithdrawRecordsParamLimit = uint64(29500) // an actual value is (thisValue - 1), refer to the query below
 
-	chain := e2eTesting.NewTestChain(s.T(), 1,
-		e2eTesting.WithBlockGasLimit(100_000_000),
-		e2eTesting.WithMaxWithdrawRecords(rewardsTypes.MaxWithdrawRecordsParamLimit),
+	chain := e2etesting.NewTestChain(s.T(), 1,
+		e2etesting.WithBlockGasLimit(100_000_000),
+		e2etesting.WithMaxWithdrawRecords(rewardsTypes.MaxWithdrawRecordsParamLimit),
 	)
 	bankKeeper, mintKeeper, rewardsKeeper := chain.GetApp().BankKeeper, chain.GetApp().MintKeeper, chain.GetApp().RewardsKeeper
 
@@ -293,7 +293,7 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 			Msg:      reqBz,
 		}
 
-		gasUsed, _, _, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{&msg}, e2eTesting.WithTxGasLimit(100_000_000))
+		gasUsed, _, _, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{&msg}, e2etesting.WithTxGasLimit(100_000_000))
 
 		msgBz, err := msg.Marshal()
 		s.Require().NoError(err)
@@ -314,7 +314,7 @@ func (s *E2ETestSuite) TestRewardsRecordsQueryLimit() {
 
 	rewardsTypes.MaxRecordsQueryLimit = uint64(7716) // an actual value is (thisValue - 1), refer to the query below
 
-	chain := e2eTesting.NewTestChain(s.T(), 1)
+	chain := e2etesting.NewTestChain(s.T(), 1)
 	bankKeeper, mintKeeper, rewardsKeeper := chain.GetApp().BankKeeper, chain.GetApp().MintKeeper, chain.GetApp().RewardsKeeper
 
 	// Upload a new contract and set its address as the rewardsAddress

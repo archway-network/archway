@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/rewards/ante"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
@@ -108,8 +108,8 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 			feeRewardsRatio, err := sdk.NewDecFromStr(tc.feeRebateRatio)
 			require.NoError(t, err)
 
-			chain := e2eTesting.NewTestChain(t, 1,
-				e2eTesting.WithTxFeeRebatesRewardsRatio(feeRewardsRatio),
+			chain := e2etesting.NewTestChain(t, 1,
+				e2etesting.WithTxFeeRebatesRewardsRatio(feeRewardsRatio),
 			)
 			acc := chain.GetAccount(0)
 			ctx := chain.GetContext()

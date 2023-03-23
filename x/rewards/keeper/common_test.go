@@ -7,14 +7,14 @@ import (
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	chain *e2eTesting.TestChain
+	chain *e2etesting.TestChain
 }
 
 // withdrawTestRecordData is a helper struct to store RewardsRecord data for Withdraw tests.
@@ -25,7 +25,7 @@ type withdrawTestRecordData struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.chain = e2eTesting.NewTestChain(s.T(), 1)
+	s.chain = e2etesting.NewTestChain(s.T(), 1)
 }
 
 // SetupWithdrawTest is a helper function to setup the test environment for Withdraw tests.

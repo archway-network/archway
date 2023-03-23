@@ -66,7 +66,7 @@ func (k Keeper) IngestGasRecord(ctx sdk.Context, records []wasmTypes.ContractGas
 // GetGasCalculationFn implements the wasmTypes.ContractGasProcessor interface.
 // It is called by the wasmd to get the gas consumption adjustment function for a contract.
 // This is a no-op function since we don't change gas values atm.
-func (k Keeper) GetGasCalculationFn(ctx sdk.Context, contractAddrBz string) (func(operationId uint64, gasInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo, error) {
+func (k Keeper) GetGasCalculationFn(_ sdk.Context, _ string) (func(operationId uint64, gasInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo, error) {
 	return func(operationID uint64, gasConsumptionInfo wasmTypes.GasConsumptionInfo) wasmTypes.GasConsumptionInfo {
 		return gasConsumptionInfo
 	}, nil

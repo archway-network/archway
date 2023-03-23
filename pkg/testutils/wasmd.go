@@ -28,7 +28,7 @@ func (v *MockContractViewer) AddContractAdmin(contractAddr, adminAddr string) {
 }
 
 // GetContractInfo returns a contract info if admin is set.
-func (v MockContractViewer) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmdTypes.ContractInfo {
+func (v MockContractViewer) GetContractInfo(_ sdk.Context, contractAddress sdk.AccAddress) *wasmdTypes.ContractInfo {
 	adminAddr, found := v.contractAdminSet[contractAddress.String()]
 	if !found {
 		return nil
@@ -48,6 +48,6 @@ func NewMockMessenger() *MockMessenger {
 }
 
 // DispatchMsg implements the wasmKeeper.Messenger interface.
-func (m MockMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmVmTypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
+func (m MockMessenger) DispatchMsg(_ sdk.Context, _ sdk.AccAddress, _ string, _ wasmVmTypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
 	return nil, nil, nil
 }

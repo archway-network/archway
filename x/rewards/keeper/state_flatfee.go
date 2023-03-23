@@ -61,7 +61,7 @@ func (s FlatFeeState) Export() []types.FlatFee {
 	iterator := store.Iterator(nil, nil)
 	defer iterator.Close()
 
-	var fees = make([]types.FlatFee, 0)
+	fees := make([]types.FlatFee, 0)
 	for ; iterator.Valid(); iterator.Next() {
 		var coin sdk.Coin
 		contractAddr := sdk.AccAddress(iterator.Key())

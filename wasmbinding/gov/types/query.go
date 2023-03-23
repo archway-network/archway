@@ -25,7 +25,7 @@ type (
 
 	Vote struct {
 		// ProposalId is the proposal identifier.
-		ProposalId uint64 `json:"proposal_id"`
+		ProposalID uint64 `json:"proposal_id"`
 		// Voter is the bech32 encoded account address of the voter.
 		Voter string `json:"voter"`
 		// Option is the voting option from the enum.
@@ -69,7 +69,7 @@ func (v VoteOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.String())
 }
 
-func (s *VoteOption) UnmarshalJSON(b []byte) error {
+func (v *VoteOption) UnmarshalJSON(b []byte) error {
 	var j string
 	err := json.Unmarshal(b, &j)
 	if err != nil {
@@ -80,7 +80,7 @@ func (s *VoteOption) UnmarshalJSON(b []byte) error {
 	if !ok {
 		return fmt.Errorf("invalid vote option '%v'", j)
 	}
-	*s = voteOption
+	*v = voteOption
 	return nil
 }
 
@@ -112,7 +112,7 @@ func (r VoteRequest) MustGetVoter() sdk.AccAddress {
 func NewVoteResponse(vote govTypes.Vote) VoteResponse {
 	resp := VoteResponse{
 		Vote: Vote{
-			ProposalId: vote.ProposalId,
+			ProposalID: vote.ProposalId,
 			Voter:      vote.Voter,
 			Options:    make([]WeightedVoteOption, 0, len(vote.Options)),
 		},

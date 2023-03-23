@@ -89,7 +89,6 @@ func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	cdc    codec.Codec
 	keeper keeper.Keeper
 }
 
@@ -148,7 +147,7 @@ func (a AppModule) ConsensusVersion() uint64 {
 }
 
 // BeginBlock returns the begin blocker for the module.
-func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {}
+func (a AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the module. It returns no validator updates.
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
@@ -158,7 +157,7 @@ func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Vali
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the module.
-func (a AppModule) GenerateGenesisState(input *module.SimulationState) {}
+func (a AppModule) GenerateGenesisState(_ *module.SimulationState) {}
 
 // ProposalContents doesn't return any content functions for governance proposals.
 func (a AppModule) ProposalContents(_ module.SimulationState) []simTypes.WeightedProposalContent {
@@ -166,13 +165,12 @@ func (a AppModule) ProposalContents(_ module.SimulationState) []simTypes.Weighte
 }
 
 // RandomizedParams creates randomized param changes for the simulator.
-func (a AppModule) RandomizedParams(r *rand.Rand) []simTypes.ParamChange {
+func (a AppModule) RandomizedParams(_ *rand.Rand) []simTypes.ParamChange {
 	return []simTypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for the module's types.
 func (a AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-
 }
 
 // WeightedOperations returns all the module operations with their respective weights.

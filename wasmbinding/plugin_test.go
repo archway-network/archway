@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/wasmbinding"
 )
@@ -20,9 +20,9 @@ import (
 // Happy paths are tested in the integration tests.
 func TestWASMBindingPlugins(t *testing.T) {
 	// Setup
-	chain := e2eTesting.NewTestChain(t, 1)
+	chain := e2etesting.NewTestChain(t, 1)
 	mockMessenger := testutils.NewMockMessenger()
-	mockContractAddr := e2eTesting.GenContractAddresses(1)[0]
+	mockContractAddr := e2etesting.GenContractAddresses(1)[0]
 	ctx := chain.GetContext()
 
 	// Create custom plugins
@@ -66,7 +66,7 @@ func TestWASMBindingPlugins(t *testing.T) {
 			require.NoError(t, pErr)
 			govKeeper.SetProposal(ctx, proposal)
 
-			accAddrs, _ := e2eTesting.GenAccounts(2)
+			accAddrs, _ := e2etesting.GenAccounts(2)
 			depositor := accAddrs[0]
 			deposit := govTypes.NewDeposit(proposalId, depositor, nil)
 			govKeeper.SetDeposit(ctx, deposit)

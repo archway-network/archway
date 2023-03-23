@@ -3,7 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -11,7 +11,7 @@ import (
 // Test updates the initial state with new records and checks that they were merged.
 func (s *KeeperTestSuite) TestFlatFeeImportExport() {
 	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
-	contractAddrs := e2eTesting.GenContractAddresses(2)
+	contractAddrs := e2etesting.GenContractAddresses(2)
 
 	newFlatFees := []rewardsTypes.FlatFee{
 		{

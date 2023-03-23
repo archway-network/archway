@@ -53,6 +53,7 @@ func (s BlockRewardsState) DeleteBlockRewards(height int64) {
 // Import initializes state from the module genesis data.
 func (s BlockRewardsState) Import(objs []types.BlockRewards) {
 	for _, obj := range objs {
+		obj := obj
 		s.setBlockRewards(&obj)
 	}
 }

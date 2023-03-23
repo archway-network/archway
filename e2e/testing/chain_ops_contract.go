@@ -1,8 +1,8 @@
-package e2eTesting
+package e2etesting
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 
@@ -15,7 +15,7 @@ import (
 func (chain *TestChain) UploadContract(sender Account, wasmPath string, instantiatePerms wasmdTypes.AccessConfig) (codeID uint64) {
 	t := chain.t
 
-	wasmBlob, err := ioutil.ReadFile(wasmPath)
+	wasmBlob, err := os.ReadFile(wasmPath)
 	require.NoError(t, err)
 
 	txMsg := wasmdTypes.MsgStoreCode{
@@ -70,7 +70,7 @@ func (chain *TestChain) InstantiateContract(sender Account, codeID uint64, admin
 	require.NoError(t, err)
 	instResp = resp.Data
 
-	return
+	return contractAddr, instResp
 }
 
 // SmartQueryContract queries a contract and returns the result.

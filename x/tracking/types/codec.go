@@ -9,10 +9,10 @@ import (
 
 // RegisterLegacyAminoCodec registers the necessary interfaces and concrete types on the provided LegacyAmino codec.
 // These types are used for Amino JSON serialization.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+func RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers interfaces types with the interface registry.
-func RegisterInterfaces(registry types.InterfaceRegistry) {}
+func RegisterInterfaces(_ types.InterfaceRegistry) {}
 
 var (
 	ModuleCdc = codec.NewAminoCodec(amino)

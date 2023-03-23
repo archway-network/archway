@@ -66,11 +66,9 @@ func (m MsgSetContractMetadata) ValidateBasic() error {
 		return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
 
-	if err := m.Metadata.Validate(false); err != nil {
-		return err
-	}
+	err := m.Metadata.Validate(false)
 
-	return nil
+	return err
 }
 
 // NewMsgWithdrawRewardsByLimit creates a new MsgWithdrawRewards instance using the records limit oneof option.

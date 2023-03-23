@@ -5,17 +5,17 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	chain *e2eTesting.TestChain
+	chain *e2etesting.TestChain
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.chain = e2eTesting.NewTestChain(s.T(), 1)
+	s.chain = e2etesting.NewTestChain(s.T(), 1)
 }
 
 func TestTrackingKeeper(t *testing.T) {

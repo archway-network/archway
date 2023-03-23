@@ -1,4 +1,4 @@
-package e2eTesting
+package e2etesting
 
 import (
 	"context"
@@ -11,15 +11,13 @@ import (
 	"github.com/archway-network/archway/app"
 )
 
-var (
-	_ grpc.ClientConnInterface = (*grpcClient)(nil)
-)
+var _ grpc.ClientConnInterface = (*grpcClient)(nil)
 
 type grpcClient struct {
 	app *app.ArchwayApp
 }
 
-func (c grpcClient) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+func (c grpcClient) Invoke(_ context.Context, method string, args interface{}, reply interface{}, _ ...grpc.CallOption) error {
 	req := args.(codec.ProtoMarshaler)
 	resp := c.app.Query(abci.RequestQuery{
 		Data:   c.app.AppCodec().MustMarshal(req),
@@ -37,7 +35,7 @@ func (c grpcClient) Invoke(ctx context.Context, method string, args interface{},
 	return nil
 }
 
-func (c grpcClient) NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+func (c grpcClient) NewStream(_ context.Context, _ *grpc.StreamDesc, _ string, _ ...grpc.CallOption) (grpc.ClientStream, error) {
 	panic("not supported")
 }
 

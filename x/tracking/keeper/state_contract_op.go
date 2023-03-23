@@ -93,6 +93,7 @@ func (s ContractOpInfoState) DeleteContractOpsByTxID(txID uint64) []uint64 {
 // Import initializes state from the module genesis data.
 func (s ContractOpInfoState) Import(lastID uint64, objs []types.ContractOperationInfo) {
 	for _, obj := range objs {
+		obj := obj
 		s.setContractOpInfo(&obj)
 		s.setTxIndex(obj.TxId, obj.Id)
 	}

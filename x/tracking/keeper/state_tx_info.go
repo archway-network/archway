@@ -68,7 +68,7 @@ func (s TxInfoState) GetTxInfosByBlock(height int64) (objs []types.TxInfo) {
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		_, id := s.parseBlockIndexKey(iterator.Key())
+		id := s.parseBlockIndexKey(iterator.Key())
 
 		obj, found := s.GetTxInfo(id)
 		if !found {
@@ -91,7 +91,7 @@ func (s TxInfoState) DeleteTxInfosByBlock(height int64) []uint64 {
 	var blockIndexKeys [][]byte
 	var removedIDs []uint64
 	for ; iterator.Valid(); iterator.Next() {
-		_, id := s.parseBlockIndexKey(iterator.Key())
+		id := s.parseBlockIndexKey(iterator.Key())
 		s.deleteTxInfo(id)
 
 		removedIDs = append(removedIDs, id)
@@ -186,12 +186,11 @@ func (s TxInfoState) buildBlockIndexKey(height int64, id uint64) []byte {
 }
 
 // parseBlockIndexKey parses the types.TxInfo's block index key.
-func (s TxInfoState) parseBlockIndexKey(key []byte) (height int64, id uint64) {
+func (s TxInfoState) parseBlockIndexKey(key []byte) (id uint64) {
 	if len(key) != 16 {
 		panic(fmt.Errorf("invalid TxInfo Block index key length: %d", len(key)))
 	}
 
-	height = int64(sdk.BigEndianToUint64(key[:8]))
 	id = sdk.BigEndianToUint64(key[8:])
 
 	return

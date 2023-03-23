@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -18,8 +18,8 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 		errExpected  bool
 	}
 
-	accAddrs, _ := e2eTesting.GenAccounts(2)
-	contractAddrs := e2eTesting.GenContractAddresses(2)
+	accAddrs, _ := e2etesting.GenAccounts(2)
+	contractAddrs := e2etesting.GenContractAddresses(2)
 
 	mockTime := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
 

@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/rewards/keeper"
 	rewardstypes "github.com/archway-network/archway/x/rewards/types"
@@ -20,7 +20,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 	contractAdminAcc, otherAcc := s.chain.GetAccount(0), s.chain.GetAccount(1)
 	contractViewer := testutils.NewMockContractViewer()
 	k.SetContractInfoViewer(contractViewer)
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAddr := e2etesting.GenContractAddresses(1)[0]
 
 	server := keeper.NewMsgServer(k)
 
@@ -233,7 +233,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetFlatFee() {
 	contractAdminAcc, otherAcc := s.chain.GetAccount(0), s.chain.GetAccount(1)
 	contractViewer := testutils.NewMockContractViewer()
 	k.SetContractInfoViewer(contractViewer)
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAddr := e2etesting.GenContractAddresses(1)[0]
 
 	server := keeper.NewMsgServer(k)
 

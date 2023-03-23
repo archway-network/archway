@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/tracking/types"
 )
@@ -11,7 +11,7 @@ import (
 func (s *KeeperTestSuite) TestGenesisImportExport() {
 	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().TrackingKeeper
 
-	contractAddrs := e2eTesting.GenContractAddresses(2)
+	contractAddrs := e2etesting.GenContractAddresses(2)
 
 	var genesisStateInitial types.GenesisState
 	s.Run("Check export of the initial genesis", func() {

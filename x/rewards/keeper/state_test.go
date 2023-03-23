@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -35,8 +35,8 @@ func (s *KeeperTestSuite) TestStates() {
 
 	// Fixtures
 	startBlock, startTime := ctx.BlockHeight(), ctx.BlockTime()
-	contractAddrs := e2eTesting.GenContractAddresses(3)
-	accAddrs, _ := e2eTesting.GenAccounts(3)
+	contractAddrs := e2etesting.GenContractAddresses(3)
+	accAddrs, _ := e2etesting.GenAccounts(3)
 	coin1 := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(100)}
 	coin2 := sdk.Coin{Denom: "uarch", Amount: sdk.NewInt(200)}
 

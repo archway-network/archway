@@ -1,4 +1,4 @@
-package e2eTesting
+package e2etesting
 
 import (
 	"fmt"
@@ -98,10 +98,10 @@ func (chain *TestChain) SendIBCPacket(packet exported.PacketI) {
 	require.NotNil(t, packet)
 
 	capPath := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
-	cap, ok := chain.app.ScopedIBCKeeper.GetCapability(chain.GetContext(), capPath)
+	portCap, ok := chain.app.ScopedIBCKeeper.GetCapability(chain.GetContext(), capPath)
 	require.True(t, ok)
 
-	require.NoError(t, chain.app.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), cap, packet))
+	require.NoError(t, chain.app.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), portCap, packet))
 
 	chain.NextBlock(0)
 }

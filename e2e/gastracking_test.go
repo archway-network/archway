@@ -11,7 +11,7 @@ import (
 
 	voterTypes "github.com/archway-network/voter/src/types"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
@@ -30,28 +30,28 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	blockGasLimit := int64(10_000_000)
 
 	// Setup (create new chain here with custom params)
-	chain := e2eTesting.NewTestChain(s.T(), 1,
-		e2eTesting.WithTxFeeRebatesRewardsRatio(txFeeRebateRewardsRatio),
-		e2eTesting.WithInflationRewardsRatio(inflationRewardsRatio),
-		e2eTesting.WithBlockGasLimit(blockGasLimit),
+	chain := e2etesting.NewTestChain(s.T(), 1,
+		e2etesting.WithTxFeeRebatesRewardsRatio(txFeeRebateRewardsRatio),
+		e2etesting.WithInflationRewardsRatio(inflationRewardsRatio),
+		e2etesting.WithBlockGasLimit(blockGasLimit),
 		// Artificially increase the minted inflation coin to get some rewards for the contract (otherwise contractOp gas / blockGasLimit ratio will be 0)
-		e2eTesting.WithMintParams(
+		e2etesting.WithMintParams(
 			sdk.NewDecWithPrec(8, 1),
 			sdk.NewDecWithPrec(8, 1),
 			1000000,
 		),
 		// Set default Tx fee for non-manual transaction like Upload / Instantiate
-		e2eTesting.WithDefaultFeeAmount("10000"),
+		e2etesting.WithDefaultFeeAmount("10000"),
 	)
 	trackingKeeper, rewardsKeeper := chain.GetApp().TrackingKeeper, chain.GetApp().RewardsKeeper
 
 	senderAcc := chain.GetAccount(0)
 	contractAddr := s.VoterUploadAndInstantiate(chain, senderAcc)
-	accAddrs, accPrivKeys := e2eTesting.GenAccounts(1) // an empty account
+	accAddrs, accPrivKeys := e2etesting.GenAccounts(1) // an empty account
 
 	// Inputs
 	txFees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)))
-	rewardsAcc := e2eTesting.Account{
+	rewardsAcc := e2etesting.Account{
 		Address: accAddrs[0],
 		PrivKey: accPrivKeys[0],
 	}
@@ -95,11 +95,11 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 
 	// Check x/rewards metadata set event
 	s.Run("Check metadata set event", func() {
-		eventContractAddr := e2eTesting.GetStringEventAttribute(abciEvents,
+		eventContractAddr := e2etesting.GetStringEventAttribute(abciEvents,
 			"archway.rewards.v1beta1.ContractMetadataSetEvent",
 			"contract_address",
 		)
-		eventMetadataBz := e2eTesting.GetStringEventAttribute(abciEvents,
+		eventMetadataBz := e2etesting.GetStringEventAttribute(abciEvents,
 			"archway.rewards.v1beta1.ContractMetadataSetEvent",
 			"metadata",
 		)
@@ -147,7 +147,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 			}),
 		}
 		gasInfo, _, events, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{&msg},
-			e2eTesting.WithMsgFees(txFees...),
+			e2etesting.WithMsgFees(txFees...),
 		)
 
 		txGasUsed = gasInfo.GasUsed
@@ -231,23 +231,23 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 
 	// Check x/rewards calculation event
 	s.Run("Check calculation event", func() {
-		eventContractAddr := e2eTesting.GetStringEventAttribute(abciEvents,
+		eventContractAddr := e2etesting.GetStringEventAttribute(abciEvents,
 			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
 			"contract_address",
 		)
-		eventGasConsumedBz := e2eTesting.GetStringEventAttribute(abciEvents,
+		eventGasConsumedBz := e2etesting.GetStringEventAttribute(abciEvents,
 			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
 			"gas_consumed",
 		)
-		eventInflationRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
+		eventInflationRewardsBz := e2etesting.GetStringEventAttribute(abciEvents,
 			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
 			"inflation_rewards",
 		)
-		eventFeeRebateRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
+		eventFeeRebateRewardsBz := e2etesting.GetStringEventAttribute(abciEvents,
 			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
 			"fee_rebate_rewards",
 		)
-		eventMetadataBz := e2eTesting.GetStringEventAttribute(abciEvents,
+		eventMetadataBz := e2etesting.GetStringEventAttribute(abciEvents,
 			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
 			"metadata",
 		)
@@ -274,13 +274,13 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	// Withdraw rewards and check x/rewards withdraw event (spend all account coins as fees)
 	s.Run("Withdraw rewards and check distribution event", func() {
 		msg := rewardsTypes.NewMsgWithdrawRewardsByLimit(rewardsAcc.Address, 1000)
-		_, _, msgEvents, _ := chain.SendMsgs(rewardsAcc, true, []sdk.Msg{msg}, e2eTesting.WithMsgFees(rewardsAccInitialBalance...))
+		_, _, msgEvents, _ := chain.SendMsgs(rewardsAcc, true, []sdk.Msg{msg}, e2etesting.WithMsgFees(rewardsAccInitialBalance...))
 
-		eventRewardsAddr := e2eTesting.GetStringEventAttribute(msgEvents,
+		eventRewardsAddr := e2etesting.GetStringEventAttribute(msgEvents,
 			"archway.rewards.v1beta1.RewardsWithdrawEvent",
 			"reward_address",
 		)
-		eventRewardsBz := e2eTesting.GetStringEventAttribute(msgEvents,
+		eventRewardsBz := e2etesting.GetStringEventAttribute(msgEvents,
 			"archway.rewards.v1beta1.RewardsWithdrawEvent",
 			"rewards",
 		)

@@ -1,4 +1,4 @@
-package e2eTesting
+package e2etesting
 
 import (
 	"fmt"

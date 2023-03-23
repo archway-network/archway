@@ -3,7 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
@@ -14,7 +14,7 @@ func (s *KeeperTestSuite) TestSetFlatFee() {
 	contractViewer := testutils.NewMockContractViewer()
 	keeper.SetContractInfoViewer(contractViewer)
 
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAddr := e2etesting.GenContractAddresses(1)[0]
 	fee := sdk.NewInt64Coin("test", 10)
 
 	s.Run("Fail: non-existing contract metadata", func() {

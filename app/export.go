@@ -73,7 +73,7 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 
 	// withdraw all validator commission
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator()) //nolint:errcheck
+		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
 		return false
 	})
 
@@ -89,7 +89,7 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 		if err != nil {
 			panic(err)
 		}
-		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr) //nolint:errcheck
+		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
 	}
 
 	// clear validator slash events

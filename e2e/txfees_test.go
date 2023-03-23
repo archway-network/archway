@@ -12,7 +12,7 @@ import (
 
 	voterTypes "github.com/archway-network/voter/src/types"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -25,35 +25,35 @@ func (s *E2ETestSuite) TestTxFees() {
 	)
 
 	coinsToStr := func(coins ...sdk.Coin) string {
-		return fmt.Sprintf("%12s", e2eTesting.HumanizeCoins(6, coins...))
+		return fmt.Sprintf("%12s", e2etesting.HumanizeCoins(6, coins...))
 	}
 
 	minConfFeeToStr := func(coin sdk.DecCoin) string {
 		if coin.IsZero() {
 			return "-"
 		}
-		return fmt.Sprintf("%8s", e2eTesting.HumanizeDecCoins(0, coin))
+		return fmt.Sprintf("%8s", e2etesting.HumanizeDecCoins(0, coin))
 	}
 
 	// Create a custom chain with fixed inflation (10%) and 10M block gas limit
-	chain := e2eTesting.NewTestChain(s.T(), 1,
+	chain := e2etesting.NewTestChain(s.T(), 1,
 		// Set 1B total supply (10^9 * 10^6) (Archway mainnet param)
-		e2eTesting.WithGenAccounts(1),
-		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		e2etesting.WithGenAccounts(1),
+		e2etesting.WithGenDefaultCoinBalance("1000000000000000"),
 		// Set bonded ratio to 30%
-		e2eTesting.WithBondAmount("300000000000000"),
+		e2etesting.WithBondAmount("300000000000000"),
 		// Override the default Tx fee
-		e2eTesting.WithDefaultFeeAmount("10000000"),
+		e2etesting.WithDefaultFeeAmount("10000000"),
 		// Set block gas limit (Archway mainnet param)
-		e2eTesting.WithBlockGasLimit(100_000_000),
+		e2etesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)), // 50 % (Archway mainnet param)
-		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),    // 20 % (Archway mainnet param)
+		e2etesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)), // 50 % (Archway mainnet param)
+		e2etesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),    // 20 % (Archway mainnet param)
 		// Set constant inflation rate
-		e2eTesting.WithMintParams(
+		e2etesting.WithMintParams(
 			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)
 			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)
-			uint64(60*60*8766/1),      //1 seconds block time (Archway mainnet param)
+			2000000,                   // todo: fix blocks per year
 		),
 	)
 
@@ -71,8 +71,8 @@ func (s *E2ETestSuite) TestTxFees() {
 	senderAcc := chain.GetAccount(0)
 	contractAddr := s.VoterUploadAndInstantiate(chain, senderAcc)
 
-	accAddrs, accPrivKeys := e2eTesting.GenAccounts(1) // an empty account
-	rewardsAcc := e2eTesting.Account{
+	accAddrs, accPrivKeys := e2etesting.GenAccounts(1) // an empty account
+	rewardsAcc := e2etesting.Account{
 		Address: accAddrs[0],
 		PrivKey: accPrivKeys[0],
 	}
@@ -123,7 +123,7 @@ func (s *E2ETestSuite) TestTxFees() {
 
 				// Check the event from the previous BeginBlocker
 				if len(abciEvents) > 0 {
-					eventFeeBz := e2eTesting.GetStringEventAttribute(abciEvents,
+					eventFeeBz := e2etesting.GetStringEventAttribute(abciEvents,
 						"archway.rewards.v1beta1.MinConsensusFeeSetEvent",
 						"fee",
 					)
@@ -157,8 +157,8 @@ func (s *E2ETestSuite) TestTxFees() {
 			}
 
 			gasUsed, res, err := chain.SendMsgsRaw(senderAcc, []sdk.Msg{&msg},
-				e2eTesting.WithMsgFees(txFee),
-				e2eTesting.WithTxGasLimit(txGasLimit),
+				e2etesting.WithMsgFees(txFee),
+				e2etesting.WithTxGasLimit(txGasLimit),
 			)
 			if err != nil {
 				s.Require().ErrorIs(err, sdkErrors.ErrInsufficientFee)
@@ -207,11 +207,11 @@ func (s *E2ETestSuite) TestTxFees() {
 		var inflationRewards sdk.Coin
 		var feeRebateRewards sdk.Coins
 		{
-			eventInflationRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
+			eventInflationRewardsBz := e2etesting.GetStringEventAttribute(abciEvents,
 				"archway.rewards.v1beta1.ContractRewardCalculationEvent",
 				"inflation_rewards",
 			)
-			eventFeeRebateRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
+			eventFeeRebateRewardsBz := e2etesting.GetStringEventAttribute(abciEvents,
 				"archway.rewards.v1beta1.ContractRewardCalculationEvent",
 				"fee_rebate_rewards",
 			)
@@ -232,8 +232,8 @@ func (s *E2ETestSuite) TestTxFees() {
 
 			msg := rewardsTypes.NewMsgWithdrawRewardsByLimit(rewardsAcc.Address, 1000)
 			_, _, err := chain.SendMsgsRaw(rewardsAcc, []sdk.Msg{msg},
-				e2eTesting.WithMsgFees(withdrawTxFees),
-				e2eTesting.WithTxGasLimit(withdrawGas),
+				e2etesting.WithMsgFees(withdrawTxFees),
+				e2etesting.WithTxGasLimit(withdrawGas),
 			)
 			s.Require().NoError(err)
 		}

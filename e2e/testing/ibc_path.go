@@ -1,4 +1,4 @@
-package e2eTesting
+package e2etesting
 
 import (
 	"bytes"
@@ -186,13 +186,6 @@ func (e *IBCEndpoint) ChannelID() string {
 	return e.channelID
 }
 
-// sendPacket sends an IBC packet through the channel keeper and updates the counterparty client.
-func (e *IBCEndpoint) sendPacket(packet exported.PacketI) {
-	e.srcChain.SendIBCPacket(packet)
-	e.dstEndpoint.updateIBCClient()
-	e.updateIBCClient()
-}
-
 // sendPacketReceive receives a packet on the source chain and updates the counterparty client.
 func (e *IBCEndpoint) sendPacketReceive(packet channelTypes.Packet) {
 	srcChain, dstChain := e.srcChain, e.dstEndpoint.srcChain
@@ -335,9 +328,7 @@ func (e *IBCEndpoint) sendConnectionOpenInit() {
 	const (
 		defDelayPeriod uint64 = 0
 	)
-	var (
-		version = connectionTypes.ExportedVersionsToProto(connectionTypes.GetCompatibleVersions())[0]
-	)
+	version := connectionTypes.ExportedVersionsToProto(connectionTypes.GetCompatibleVersions())[0]
 
 	t, srcChain, dstChain := e.t, e.srcChain, e.dstEndpoint.srcChain
 	srcChainClientID, dstChainClientID := e.clientID, e.dstEndpoint.clientID
@@ -364,9 +355,7 @@ func (e *IBCEndpoint) sendConnectionOpenTry() {
 	const (
 		defDelayPeriod uint64 = 0
 	)
-	var (
-		version = connectionTypes.ExportedVersionsToProto(connectionTypes.GetCompatibleVersions())[0]
-	)
+	version := connectionTypes.ExportedVersionsToProto(connectionTypes.GetCompatibleVersions())[0]
 
 	t, srcChain, dstChain := e.t, e.srcChain, e.dstEndpoint.srcChain
 	srcChainClientID, dstChainClientID, srcChainConnectionID, dstChainConnectionID := e.clientID, e.dstEndpoint.clientID, e.connectionID, e.dstEndpoint.connectionID
@@ -404,9 +393,7 @@ func (e *IBCEndpoint) sendConnectionOpenTry() {
 
 // sendConnectionOpenAck sends a ConnectionOpenAck message to the source chain.
 func (e *IBCEndpoint) sendConnectionOpenAck() {
-	var (
-		version = connectionTypes.ExportedVersionsToProto(connectionTypes.GetCompatibleVersions())[0]
-	)
+	version := connectionTypes.ExportedVersionsToProto(connectionTypes.GetCompatibleVersions())[0]
 
 	srcChain := e.srcChain
 	srcChainConnectionID, dstChainConnectionID := e.connectionID, e.dstEndpoint.connectionID

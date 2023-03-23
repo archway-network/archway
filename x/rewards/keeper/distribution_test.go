@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
@@ -50,8 +50,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 	)
 
 	// Generate empty addresses
-	accAddrs, _ := e2eTesting.GenAccounts(10)
-	contractAddrs := e2eTesting.GenContractAddresses(10)
+	accAddrs, _ := e2etesting.GenAccounts(10)
+	contractAddrs := e2etesting.GenContractAddresses(10)
 	testCases := []testCase{
 		{
 			name: "No-op",
@@ -512,8 +512,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create chain with block gas limit
-			chain := e2eTesting.NewTestChain(t, 1,
-				e2eTesting.WithBlockGasLimit(tc.blockGasLimit),
+			chain := e2etesting.NewTestChain(t, 1,
+				e2etesting.WithBlockGasLimit(tc.blockGasLimit),
 			)
 			acc := chain.GetAccount(0)
 

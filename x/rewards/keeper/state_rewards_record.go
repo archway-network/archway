@@ -82,7 +82,7 @@ func (s RewardsRecordState) GetRewardsRecordByRewardsAddressPaginated(rewardsAdd
 
 	var objs []types.RewardsRecord
 	pageRes, err := query.Paginate(store, pageReq, func(key, _ []byte) error {
-		id := s.parseIdKey(key)
+		id := s.parseIDKey(key)
 
 		obj, found := s.GetRewardsRecord(id)
 		if !found {
@@ -110,6 +110,7 @@ func (s RewardsRecordState) DeleteRewardsRecords(objs ...types.RewardsRecord) {
 // Import initializes state from the module genesis data.
 func (s RewardsRecordState) Import(lastID uint64, objs []types.RewardsRecord) {
 	for _, obj := range objs {
+		obj := obj
 		s.setRewardsRecord(&obj)
 		s.setAddressIndex(obj.Id, obj.MustGetRewardsAddress())
 	}
@@ -207,7 +208,7 @@ func (s RewardsRecordState) parseAddressIndexKey(key []byte) (rewardsAddr sdk.Ac
 }
 
 // parseIdKey parses the 2nd part of the types.RewardsRecord's RewardsAddress index key (ID).
-func (s RewardsRecordState) parseIdKey(key []byte) uint64 {
+func (s RewardsRecordState) parseIDKey(key []byte) uint64 {
 	// Check min length
 	if len(key) != 8 {
 		panic(fmt.Errorf("invalid RewardsRecord RewardsAddress index key min length (ID): %d", len(key)))

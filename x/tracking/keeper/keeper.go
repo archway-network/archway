@@ -4,7 +4,6 @@ import (
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/archway-network/archway/x/tracking/types"
@@ -14,9 +13,8 @@ import (
 type Keeper struct {
 	WasmGasRegister wasmKeeper.GasRegister
 
-	cdc        codec.Codec
-	paramStore paramTypes.Subspace
-	state      State
+	cdc   codec.Codec
+	state State
 }
 
 // NewKeeper creates a new Keeper instance.

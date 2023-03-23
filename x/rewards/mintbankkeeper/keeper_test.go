@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
@@ -119,9 +119,9 @@ func TestMintBankKeeper(t *testing.T) {
 			inflationRewardsRatio, err := sdk.NewDecFromStr(tc.inflationRewardsRatio)
 			require.NoError(t, err)
 
-			chain := e2eTesting.NewTestChain(t, 1,
-				e2eTesting.WithInflationRewardsRatio(inflationRewardsRatio),
-				e2eTesting.WithBlockGasLimit(tc.blockMaxGas),
+			chain := e2etesting.NewTestChain(t, 1,
+				e2etesting.WithInflationRewardsRatio(inflationRewardsRatio),
+				e2etesting.WithBlockGasLimit(tc.blockMaxGas),
 			)
 			ctx := chain.GetContext()
 

@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
@@ -13,7 +13,7 @@ func (s *KeeperTestSuite) TestSetContractMetadata() {
 	contractViewer := testutils.NewMockContractViewer()
 	keeper.SetContractInfoViewer(contractViewer)
 
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAddr := e2etesting.GenContractAddresses(1)[0]
 
 	s.Run("Fail: non-existing contract", func() {
 		err := keeper.SetContractMetadata(ctx, otherAcc.Address, contractAddr, rewardsTypes.ContractMetadata{})

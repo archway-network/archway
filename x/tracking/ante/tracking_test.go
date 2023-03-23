@@ -6,13 +6,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/tracking/ante"
 )
 
 func TestTrackingAnteHandler(t *testing.T) {
-	chain := e2eTesting.NewTestChain(t, 1)
+	chain := e2etesting.NewTestChain(t, 1)
 	ctx, keeper := chain.GetContext(), chain.GetApp().TrackingKeeper
 
 	anteHandler := ante.NewTxGasTrackingDecorator(keeper)

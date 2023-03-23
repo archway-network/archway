@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	e2etesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -16,10 +16,10 @@ func TestMsgSetContractMetadataValidateBasic(t *testing.T) {
 		errExpected bool
 	}
 
-	accAddrs, _ := e2eTesting.GenAccounts(1)
+	accAddrs, _ := e2etesting.GenAccounts(1)
 	accAddr := accAddrs[0]
 
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAddr := e2etesting.GenContractAddresses(1)[0]
 
 	testCases := []testCase{
 		{
@@ -72,7 +72,7 @@ func TestMsgWithdrawRewardsValidateBasic(t *testing.T) {
 		errExpected bool
 	}
 
-	accAddrs, _ := e2eTesting.GenAccounts(1)
+	accAddrs, _ := e2etesting.GenAccounts(1)
 	accAddr := accAddrs[0]
 
 	testCases := []testCase{
@@ -199,10 +199,10 @@ func TestMsgSetFlatFeeValidateBasic(t *testing.T) {
 		errExpected bool
 	}
 
-	accAddrs, _ := e2eTesting.GenAccounts(1)
+	accAddrs, _ := e2etesting.GenAccounts(1)
 	accAddr := accAddrs[0]
 
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAddr := e2etesting.GenContractAddresses(1)[0]
 
 	testCases := []testCase{
 		{

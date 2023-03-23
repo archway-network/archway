@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -64,16 +62,6 @@ func (s ContractMetadataState) Export() (objs []types.ContractMetadata) {
 // buildContractMetadataKey returns the key used to store a types.ContractMetadata object.
 func (s ContractMetadataState) buildContractMetadataKey(contractAddr sdk.AccAddress) []byte {
 	return contractAddr.Bytes()
-}
-
-// parseContractMetadataKey parses and validates types.ContractMetadata storage key.
-func (s ContractMetadataState) parseContractMetadataKey(key []byte) sdk.AccAddress {
-	addr := sdk.AccAddress(key)
-	if err := sdk.VerifyAddressFormat(addr); err != nil {
-		panic(fmt.Errorf("invalid contract address key: %w", err))
-	}
-
-	return addr
 }
 
 // getContractMetadata returns a types.ContractMetadata object by contract address.
