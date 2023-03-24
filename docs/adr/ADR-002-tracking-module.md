@@ -18,8 +18,8 @@ Archway requires an economically efficient way to track contract gas usage, in o
 contracts are rewarded fairly, deep inspection on what happens during `wasm` execution is required. Interactions between
 contracts need to be recorded and during each interaction we store the gas usage of a contract.
 
-Archway uses `gas` as a way to reward contracts. In fact `gas` is seen as contracts bringing volume into the network,
-and the network rewards.
+Archway uses gas as a way to reward contracts; In fact, it is the measure of contracts bringing volume to the network,
+and the protocol rewards accordingly.
 
 ## Architecture
 
