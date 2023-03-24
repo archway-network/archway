@@ -31,7 +31,7 @@ to the block number.
 The `tracking.Keeper` is designed to work with our `x/wasmd` fork, and it implements the `ContractGasProcessor` interface.
 When a transaction involves a `WASM contract`, a new `ContractGasOperation` is generated with its own unique, steadily increasing ID.
 This operation records the type of operation, the gas used by the virtual machine (VM), and the gas used when accessing the store.
-If the `WASM contract interacts with another contract, whether by querying or executing, an additional ContractGasOperation is created. 
+If the `WASM contract` interacts with another contract, whether by querying or executing, an additional ContractGasOperation is created. 
 We also establish an index linking the contract gas operation ID to the transaction ID.
 
 This setup allows us to accurately determine the influence of each contract on a transaction, taking into account the gas volume.
