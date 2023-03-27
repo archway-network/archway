@@ -22,9 +22,7 @@ const (
 	ValidAddr            = "01234567890abcdefghijklmnopqrstu"
 )
 
-var (
-	EmptyStruct = struct{}{}
-)
+var EmptyStruct = struct{}{}
 
 type ContractTestSuite struct {
 	suite.Suite
