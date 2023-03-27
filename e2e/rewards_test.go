@@ -1,8 +1,9 @@
 package e2e
 
 import (
-	"github.com/stretchr/testify/require"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

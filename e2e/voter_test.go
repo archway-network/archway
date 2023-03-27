@@ -79,7 +79,7 @@ func (s *E2ETestSuite) TestVoter_ExecuteQueryAndReply() {
 
 		s.VoterRelease(chain, contractAddr, acc1)
 		// Asserts were disabled since the contract always returns 0 coins (refer to Voter's handleReplyBankMsg function)
-		//s.Assert().EqualValues(contractCoinsExp, releasedCoinsRcv)
+		// s.Assert().EqualValues(contractCoinsExp, releasedCoinsRcv)
 
 		acc1BalanceAfter := chain.GetBalance(acc1.Address)
 		acc1BalanceExpected := acc1BalanceBefore.Add(contractCoinsExp...).Sub(chain.GetDefaultTxFee())
@@ -87,7 +87,7 @@ func (s *E2ETestSuite) TestVoter_ExecuteQueryAndReply() {
 
 		releaseStats := s.VoterGetReleaseStats(chain, contractAddr)
 		s.Assert().EqualValues(1, releaseStats.Count)
-		//s.Assert().EqualValues(releasedCoinsRcv, s.CosmWasmCoinsToSDK(releaseStats.TotalAmount...))
+		// s.Assert().EqualValues(releasedCoinsRcv, s.CosmWasmCoinsToSDK(releaseStats.TotalAmount...))
 	})
 }
 
@@ -785,8 +785,8 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataQuery() {
 
 	getAndCmpMetas := func(metaExp rewardsTypes.ContractMetadata) {
 		// wasmvm v1.0.0 (wasmd for us) has disabled the Stargate query, so we skip this case
-		//metaRcvStargate := s.VoterGetMetadata(chain, contractAddr, true, true)
-		//cmpMetas(metaExp, metaRcvStargate)
+		// metaRcvStargate := s.VoterGetMetadata(chain, contractAddr, true, true)
+		// cmpMetas(metaExp, metaRcvStargate)
 
 		metaRcvCustom := s.VoterGetMetadata(chain, contractAddr, false, true)
 		cmpMetas(metaExp, metaRcvCustom)
