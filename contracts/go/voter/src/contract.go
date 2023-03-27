@@ -1,6 +1,7 @@
 package src
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/CosmWasm/cosmwasm-go/std"
@@ -52,6 +53,23 @@ func Execute(deps *std.Deps, env stdTypes.Env, info stdTypes.MessageInfo, msgBz 
 		return handleMsgUpdateMetadata(*msg.CustomUpdateMetadata)
 	case msg.CustomWithdrawRewards != nil:
 		return handleMsgWithdrawRewards(deps, *msg.CustomWithdrawRewards)
+	case msg.Fail != nil:
+		return nil, errors.New("this call fails")
+	case msg.ReplyOnError != nil:
+		// this path sends a message that fails to the contract address provided.
+		wasmMsg := stdTypes.ExecuteMsg{
+			ContractAddr: *msg.ReplyOnError,
+			Msg:          []byte(`{"fail":{}}`),
+			Funds:        nil,
+		}
+		return &stdTypes.Response{
+			Messages: []stdTypes.SubMsg{
+				stdTypes.ReplyOnError(wasmMsg, 3),
+			},
+			Data:       nil,
+			Attributes: nil,
+			Events:     nil,
+		}, nil
 	}
 
 	return nil, types.NewErrInvalidRequest("unknown execute request")
@@ -82,6 +100,10 @@ func Sudo(deps *std.Deps, env stdTypes.Env, msgBz []byte) (*stdTypes.Response, e
 // SubMsg identification is done via stdTypes.SubMsg.ID field.
 func Reply(deps *std.Deps, env stdTypes.Env, reply stdTypes.Reply) (*stdTypes.Response, error) {
 	deps.Api.Debug("Reply called")
+
+	if reply.ID == 3 {
+		return new(stdTypes.Response), nil
+	}
 
 	replyType, found, err := state.GetReplyMsgType(deps.Storage, reply.ID)
 	if err != nil {

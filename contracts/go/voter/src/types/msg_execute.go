@@ -27,6 +27,10 @@ type MsgExecute struct {
 	CustomUpdateMetadata *archwayCustomTypes.UpdateContractMetadataRequest `json:",omitempty"`
 	// CustomWithdrawRewards calls WASM bindings WithdrawRewards custom msg.
 	CustomWithdrawRewards *archwayCustomTypes.WithdrawRewardsRequest `json:",omitempty"`
+	// Fail causes the contract to fail
+	Fail *struct{} `json:",omitempty"`
+	// ReplyOnError causes the contract to send a message to the provided destination.
+	ReplyOnError *string `json:",omitempty"`
 }
 
 // ReleaseResponse defines MsgExecute.Release response.
