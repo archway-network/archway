@@ -543,6 +543,26 @@ func tinyjson8d55ca79DecodeGithubComArchwayNetworkVoterSrcTypes5(in *jlexer.Lexe
 				}
 				(*out.CustomWithdrawRewards).UnmarshalTinyJSON(in)
 			}
+		case "fail":
+			if in.IsNull() {
+				in.Skip()
+				out.Fail = nil
+			} else {
+				if out.Fail == nil {
+					out.Fail = new(struct{})
+				}
+				tinyjson8d55ca79Decode(in, out.Fail)
+			}
+		case "reply_on_error":
+			if in.IsNull() {
+				in.Skip()
+				out.ReplyOnError = nil
+			} else {
+				if out.ReplyOnError == nil {
+					out.ReplyOnError = new(string)
+				}
+				*out.ReplyOnError = string(in.String())
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -622,6 +642,26 @@ func tinyjson8d55ca79EncodeGithubComArchwayNetworkVoterSrcTypes5(out *jwriter.Wr
 			out.RawString(prefix)
 		}
 		(*in.CustomWithdrawRewards).MarshalTinyJSON(out)
+	}
+	if in.Fail != nil {
+		const prefix string = ",\"fail\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		tinyjson8d55ca79Encode(out, *in.Fail)
+	}
+	if in.ReplyOnError != nil {
+		const prefix string = ",\"reply_on_error\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(*in.ReplyOnError))
 	}
 	out.RawByte('}')
 }

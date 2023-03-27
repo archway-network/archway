@@ -3,6 +3,8 @@ package e2e
 import (
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -374,4 +376,178 @@ func (s *E2ETestSuite) TestRewardsRecordsQueryLimit() {
 
 	// Invariants extra check
 	chain.NextBlock(0)
+}
+
+// TestTXFailsAfterAnteHandler tests when a TX succeeds at ante handler level, but fails at msg exec level
+// which means both tracking and rewards ante run, but then no concrete rewards or tracking happen.
+func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
+	// Create a custom chain with "close to mainnet" params
+	chain := e2eTesting.NewTestChain(s.T(), 1,
+		// Set 1B total supply (10^9 * 10^6)
+		e2eTesting.WithGenAccounts(1),
+		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		// Set bonded ratio to 30%
+		e2eTesting.WithBondAmount("300000000000000"),
+		// Override the default Tx fee
+		e2eTesting.WithDefaultFeeAmount("10000000"),
+		// Set block gas limit (Archway mainnet param)
+		e2eTesting.WithBlockGasLimit(100_000_000),
+		// x/rewards distribution params
+		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
+		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
+		// Set constant inflation rate
+		e2eTesting.WithMintParams(
+			sdk.NewDecWithPrec(10, 2), // 10%
+			sdk.NewDecWithPrec(10, 2), // 10%
+			uint64(60*60*8766/1),      // 1 seconds block time
+		),
+	)
+	rewardsKeeper := chain.GetApp().RewardsKeeper
+
+	// Upload a new contract and set its address as the rewardsAddress
+	senderAcc := chain.GetAccount(0)
+	contractAddr := s.VoterUploadAndInstantiate(chain, senderAcc)
+
+	chain.SetContractMetadata(senderAcc, contractAddr, rewardsTypes.ContractMetadata{
+		ContractAddress: contractAddr.String(),
+		OwnerAddress:    senderAcc.Address.String(),
+		RewardsAddress:  contractAddr.String(),
+	})
+
+	sendMsg := func(msg sdk.Msg, passes bool) (gasEstimated, gasUsed uint64, txFees sdk.Coins) {
+		// Simulate msg
+		gasEstInfo, _, _, _ := chain.SendMsgs(senderAcc, passes, []sdk.Msg{msg},
+			e2eTesting.WithSimulation(),
+		)
+		gasEstimated = gasEstInfo.GasUsed
+		gasAdjusted := uint64(float64(gasEstimated) * 1.1)
+
+		// Estimate Tx fees
+		gasPrice, ok := rewardsKeeper.GetMinConsensusFee(chain.GetContext())
+		s.Require().True(ok)
+
+		txFees = sdk.NewCoins(
+			sdk.NewCoin(
+				gasPrice.Denom,
+				gasPrice.Amount.MulInt64(int64(gasAdjusted)).RoundInt(),
+			),
+		)
+
+		// Deliver msg
+		gasUsedInfo, _, _, _ := chain.SendMsgs(senderAcc, passes, []sdk.Msg{msg},
+			e2eTesting.WithTxGasLimit(gasAdjusted),
+			e2eTesting.WithMsgFees(txFees...),
+		)
+		gasUsed = gasUsedInfo.GasUsed
+
+		return
+	}
+	rk := chain.GetApp().RewardsKeeper
+
+	// send a message that passes the ante handler but not the wasm execution step
+	sendMsg(&wasmdTypes.MsgExecuteContract{
+		Sender:   senderAcc.Address.String(),
+		Contract: contractAddr.String(),
+		Msg:      []byte(`{"fail": {}}`),
+		Funds:    nil,
+	}, false)
+
+	chain.NextBlock(1 * time.Second)
+
+	// no rewards because the TX failed.
+	rewards := rk.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	require.Empty(s.T(), rewards)
+}
+
+// TestSubMsgRevert tests when a contract calls another contract but the sub message reverts,
+// and the execution of the caller contract still proceeds because the sub message is sent with
+// a reply on error flag.
+func (s *E2ETestSuite) TestSubMsgRevert() {
+	// Create a custom chain with "close to mainnet" params
+	chain := e2eTesting.NewTestChain(s.T(), 1,
+		// Set 1B total supply (10^9 * 10^6)
+		e2eTesting.WithGenAccounts(2),
+		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		// Set bonded ratio to 30%
+		e2eTesting.WithBondAmount("300000000000000"),
+		// Override the default Tx fee
+		e2eTesting.WithDefaultFeeAmount("10000000"),
+		// Set block gas limit (Archway mainnet param)
+		e2eTesting.WithBlockGasLimit(100_000_000),
+		// x/rewards distribution params
+		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
+		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
+		// Set constant inflation rate
+		e2eTesting.WithMintParams(
+			sdk.NewDecWithPrec(10, 2), // 10%
+			sdk.NewDecWithPrec(10, 2), // 10%
+			uint64(60*60*8766/1),      // 1 seconds block time
+		),
+	)
+	rewardsKeeper := chain.GetApp().RewardsKeeper
+
+	// Upload a new contract and set its address as the rewardsAddress
+	senderAcc := chain.GetAccount(0)
+	calledAcc := chain.GetAccount(1)
+	contractAddr := s.VoterUploadAndInstantiate(chain, senderAcc)
+	calledContractAddr := s.VoterUploadAndInstantiate(chain, calledAcc)
+
+	chain.SetContractMetadata(senderAcc, contractAddr, rewardsTypes.ContractMetadata{
+		ContractAddress: contractAddr.String(),
+		OwnerAddress:    senderAcc.Address.String(),
+		RewardsAddress:  contractAddr.String(),
+	})
+
+	chain.SetContractMetadata(calledAcc, calledContractAddr, rewardsTypes.ContractMetadata{
+		ContractAddress: calledContractAddr.String(),
+		OwnerAddress:    calledAcc.Address.String(),
+		RewardsAddress:  calledContractAddr.String(),
+	})
+
+	sendMsg := func(msg sdk.Msg, passes bool) (gasEstimated, gasUsed uint64, txFees sdk.Coins) {
+		// Simulate msg
+		gasEstInfo, _, _, _ := chain.SendMsgs(senderAcc, passes, []sdk.Msg{msg},
+			e2eTesting.WithSimulation(),
+		)
+		gasEstimated = gasEstInfo.GasUsed
+		gasAdjusted := uint64(float64(gasEstimated) * 1.1)
+
+		// Estimate Tx fees
+		gasPrice, ok := rewardsKeeper.GetMinConsensusFee(chain.GetContext())
+		s.Require().True(ok)
+
+		txFees = sdk.NewCoins(
+			sdk.NewCoin(
+				gasPrice.Denom,
+				gasPrice.Amount.MulInt64(int64(gasAdjusted)).RoundInt(),
+			),
+		)
+
+		// Deliver msg
+		gasUsedInfo, _, _, _ := chain.SendMsgs(senderAcc, passes, []sdk.Msg{msg},
+			e2eTesting.WithTxGasLimit(gasAdjusted),
+			e2eTesting.WithMsgFees(txFees...),
+		)
+		gasUsed = gasUsedInfo.GasUsed
+
+		return
+	}
+	rk := chain.GetApp().RewardsKeeper
+
+	// send a message that passes the ante handler but not the wasm execution step
+	sendMsg(&wasmdTypes.MsgExecuteContract{
+		Sender:   senderAcc.Address.String(),
+		Contract: contractAddr.String(),
+		Msg:      []byte(`{"reply_on_error": "` + calledContractAddr.String() + `"}`),
+		Funds:    nil,
+	}, true)
+
+	chain.NextBlock(1 * time.Second)
+
+	// has rewards because of reply on error
+	rewards := rk.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	require.NotEmpty(s.T(), rewards)
+	// does not have rewards because it failed
+	rewards = rk.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(calledContractAddr)
+	require.Empty(s.T(), rewards)
 }
