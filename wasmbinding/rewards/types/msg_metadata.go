@@ -10,6 +10,8 @@ import (
 
 // UpdateContractMetadataRequest is the Msg.UpdateMetadata request.
 type UpdateContractMetadataRequest struct {
+	// ContractAddress if not empty, specifies the target contract.
+	ContractAddress string `json:"contract_address"`
 	// OwnerAddress if not empty, changes the contract metadata ownership.
 	OwnerAddress string `json:"owner_address"`
 	// RewardsAddress if not empty, changes the rewards distribution destination address.
@@ -19,6 +21,12 @@ type UpdateContractMetadataRequest struct {
 // Validate performs request fields validation.
 func (r UpdateContractMetadataRequest) Validate() error {
 	changeCnt := 0
+
+	if r.ContractAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(r.ContractAddress); err != nil {
+			return fmt.Errorf("contractAddress: parsing: %w", err)
+		}
+	}
 
 	if r.OwnerAddress != "" {
 		if _, err := sdk.AccAddressFromBech32(r.OwnerAddress); err != nil {
@@ -47,6 +55,22 @@ func (r UpdateContractMetadataRequest) ToSDK() rewardsTypes.ContractMetadata {
 		OwnerAddress:   r.OwnerAddress,
 		RewardsAddress: r.RewardsAddress,
 	}
+}
+
+// MustGetContractAddressOk returns the target contract address as sdk.AccAddress if set.
+// CONTRACT: panics in case of an error.
+func (r UpdateContractMetadataRequest) MustGetContractAddressOk() (sdk.AccAddress, bool) {
+	if r.ContractAddress == "" {
+		return nil, false
+	}
+
+	addr, err := sdk.AccAddressFromBech32(r.ContractAddress)
+	if err != nil {
+		// Should not happen since we validate the request before this call
+		panic(fmt.Errorf("wasm bindings: meta update: parsing contractAddress: %w", err))
+	}
+
+	return addr, true
 }
 
 // MustGetOwnerAddressOk returns the contract owner address as sdk.AccAddress if set to be updated.
