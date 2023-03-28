@@ -31,19 +31,19 @@ func NewRewardsMsgHandler(rk KeeperWriterExpected) MsgHandler {
 }
 
 // UpdateContractMetadata updates the contract metadata.
-func (h MsgHandler) UpdateContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress, req rewardsMsgTypes.UpdateContractMetadataRequest) ([]sdk.Event, [][]byte, error) {
+func (h MsgHandler) UpdateContractMetadata(ctx sdk.Context, senderAddr sdk.AccAddress, req rewardsMsgTypes.UpdateContractMetadataRequest) ([]sdk.Event, [][]byte, error) {
 	if err := req.Validate(); err != nil {
 		return nil, nil, fmt.Errorf("updateContractMetadata: %w", err)
 	}
 
-	var targetAddr sdk.AccAddress
+	var contractAddr sdk.AccAddress
 	var isSet bool
 
-	if targetAddr, isSet = req.MustGetContractAddressOk(); !isSet {
-		targetAddr = contractAddr
+	if contractAddr, isSet = req.MustGetContractAddressOk(); !isSet {
+		contractAddr = senderAddr
 	}
 
-	if err := h.rewardsKeeper.SetContractMetadata(ctx, contractAddr, targetAddr, req.ToSDK()); err != nil {
+	if err := h.rewardsKeeper.SetContractMetadata(ctx, senderAddr, contractAddr, req.ToSDK()); err != nil {
 		return nil, nil, err
 	}
 
