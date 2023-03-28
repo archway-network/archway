@@ -18,10 +18,6 @@ The rewards are divided in two different forms:
 - Tx Fee Rebates: a proportion of the transaction fees (defined by governance)
 - Inflationary Rewards: a proportion of Proof of Stake inflationary rewards (defined by governance)
 
-It also defines a self-defense mechanism, called `MinimumConsensusFee` that ensures that contract rewards are always lower
-than the total amount of tx fees collected, this ensures that there are no incentives to fill archway blocks with garbage data 
-in order to gain profits.
-
 ## Architecture
 
 ## Participating in `x/rewards`
@@ -101,6 +97,9 @@ rewards saved in `TxRewards` and turn them into `RewardRecord`
 
 Based on the weight (measured as `total_gas_of_contract_in_block`/`total_block_gas`) a contract had in the block we take
 part of the rewards saved in `InflationaryRewards` and turn them into `RewardRecord`.
+
+Not all rewards will be allocated, the unallocated rewards are sent to a `TreasuryPool` which will be using the funds in
+the future.
 
 Sequence diagram:
 
