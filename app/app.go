@@ -684,6 +684,7 @@ func NewArchwayApp(
 
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
+	app.setupUpgrades()
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
