@@ -28,9 +28,10 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ## [Unreleased]
 
+## [v0.3.0]
+
 ### Added
 
-- [#253](https://github.com/archway-network/archway/pull/253) - add wasm bindings for contracts to query the x/gov module.
 - [#261](https://github.com/archway-network/archway/pull/261), [#263](https://github.com/archway-network/archway/pull/263), [#264](https://github.com/archway-network/archway/pull/264), [#274](https://github.com/archway-network/archway/pull/274), [#272](https://github.com/archway-network/archway/pull/272), [#280](https://github.com/archway-network/archway/pull/280) - implementing contract premiums
 - [#303](https://github.com/archway-network/archway/pull/303) - Add archway protocol versioning and release strategy
 - [#326](https://github.com/archway-network/archway/pull/326) - Allow contracts to update another contract's metadata when it is the owner
@@ -40,6 +41,12 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#267](https://github.com/archway-network/archway/pull/267) - update `querySrvr.EstimateTxFees` to also consider contract flat fee when returning the estimated fees.
 - [#271](https://github.com/archway-network/archway/pull/271) - update the x/rewards/min_cons_fee antehandler to check for contract flat fees
 - [#275](https://github.com/archway-network/archway/pull/275) - update the x/rewards/genesis to import/export for contract flat fees
+
+## [v0.2.0]
+
+### Added 
+
+- [#253](https://github.com/archway-network/archway/pull/253) - add wasm bindings for contracts to query the x/gov module.
 
 ## [v0.1.0]
 
