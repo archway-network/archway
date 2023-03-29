@@ -204,6 +204,9 @@ localnet:
 release:
 	docker run --rm -v "$(CURDIR)":/code -w /code goreleaser/goreleaser-cross:v1.19.5 --skip-publish --rm-dist
 
+check-vuln-deps:
+	go list -json -deps ./... | docker run --rm -i sonatypecommunity/nancy:latest sleuth
+
 .PHONY: all install install-debug \
 	go-mod-cache draw-deps clean build format \
 	test test-all test-build test-cover test-unit test-race \
