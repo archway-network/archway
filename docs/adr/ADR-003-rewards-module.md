@@ -130,3 +130,6 @@ like the time at which the rewards were accrued, the reason for which rewards ne
 contracts which re-distribute rewards to always be able to lazily compute the history of inputs (balance changes with respect
 to accrued rewards).
 
+### Spec
+
+For the full spec refer to the [spec folder](../../x/rewards/spec).
