@@ -16,8 +16,9 @@ jobs:
       steps:
         - name: Checkout
           uses: actions/checkout@v3
-          with:
-            set-safe-directory: '/__w/archway/archway'
+        
+        - name: Set safe directory 
+          run: git config --system --add safe.directory '/__w/archway/archway'
 
         - name: Set up Go
           uses: actions/setup-go@v3
