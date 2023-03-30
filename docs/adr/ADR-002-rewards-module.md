@@ -1,4 +1,4 @@
-# ADR-003 rewards module
+# ADR-002 rewards module
 
 ## Status
 
@@ -7,7 +7,7 @@ Already implemented.
 ## Abstract
 
 We propose a new module called `x/rewards`, this module consumes information gathered by `x/tracking` to create `RewardsRecords`.
-The `RewardsRecords` define claims that contract can convert into money, the claims are associated with gas consumption
+The `RewardsRecords` define claims that contract can convert into `archway coins`, the claims are associated with gas consumption
 that a contract has caused in a specific TX in a specific block, this `RewardRecord` can come from either inflationary rewards
 or from a portion of the TX fees.
 
@@ -57,7 +57,7 @@ sequenceDiagram
 
 The execution flow of `x/rewards` starts at the `AnteHandler`, `x/rewards` has two ante handlers, the first one is the 
 `MinimumConsensusFee` which ensures that transactions have a minimum fee. More info on how the minimum consensus fee is 
-calculated can be found [here](https://gist.github.com/fdymylja/48dc9f2bf9f81d9bf5650b0dd06efc95).
+calculated can be found [here](ADR-003-minimum-consensus-fee.md).
 
 After we ensure that the minimum consensus fee is reached, the second `x/rewards` `AnteHandler` runs (NOTE: it runs after
 the `x/tracking` `AnteHandler`), it uses the unique transaction ID of `x/tracking`. It extends the canonical cosmos-sdk's

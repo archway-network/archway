@@ -1,4 +1,4 @@
-# ADR-004 Archway minimum consensus fee
+# ADR-003 Archway minimum consensus fee
 
 ## Status
 
