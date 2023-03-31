@@ -64,7 +64,7 @@ sequenceDiagram
     K->>S: Save ContractGasOperation + Index ContractGasOperation ID to TX ID
 ```
 
-### Spec
+### Technical Specification
 
 For the full spec refer to the [spec folder](../../x/tracking/spec).
 
