@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 		s.Require().EqualValues(expectedFee.Amount, fees.AmountOf("stake"))
 	})
 
-	s.Run("ok: gets estimated tx fees inclulding contract flat fee", func() {
+	s.Run("ok: gets estimated tx fees inclulding contract flat fee(diff denom)", func() {
 		expectedFlatFee := sdk.NewInt64Coin("token", 123)
 		contractAdminAcc := s.chain.GetAccount(0)
 		contractViewer := testutils.NewMockContractViewer()
@@ -158,6 +158,31 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 		s.Require().NotNil(res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
 		s.Require().Equal(expectedFlatFee.Amount, fees.AmountOf("token"))
+	})
+
+	s.Run("ok: gets estimated tx fees inclulding contract flat fee(same denom)", func() {
+		expectedFlatFee := sdk.NewInt64Coin("stake", 123)
+		contractAdminAcc := s.chain.GetAccount(0)
+		contractViewer := testutils.NewMockContractViewer()
+		k.SetContractInfoViewer(contractViewer)
+		contractAddr := e2eTesting.GenContractAddresses(1)[0]
+		contractViewer.AddContractAdmin(contractAddr.String(), contractAdminAcc.Address.String())
+		err := k.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, rewardsTypes.ContractMetadata{
+			ContractAddress: contractAddr.String(),
+			OwnerAddress:    contractAdminAcc.Address.String(),
+		})
+		s.Require().NoError(err)
+		err = k.SetFlatFee(ctx, contractAdminAcc.Address, types.FlatFee{
+			ContractAddress: contractAddr.String(),
+			FlatFee:         expectedFlatFee,
+		})
+		s.Require().NoError(err)
+
+		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 0, ContractAddress: contractAddr.String()})
+		s.Require().NoError(err)
+		s.Require().NotNil(res)
+		fees := sdk.NewCoins(res.EstimatedFee...)
+		s.Require().Equal(expectedFlatFee.Amount, fees.AmountOf("stake"))
 	})
 }
 
