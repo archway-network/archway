@@ -2,6 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- 
 ### Added
 
 Contains the new features.
@@ -24,9 +25,17 @@ Contains bug fixes.
 
 ### Improvements
 
-Contains all the PRs that improved the code without changing the behaviours.
+Contains all the PRs that improved the code without changing the behaviours. 
+-->
 
-## [Unreleased]
+## [v0.3.1]
+
+### Fixed
+
+- [#335](https://github.com/archway-network/archway/pull/335) - fixed `EstimateTxFees` erroring when minConsFee and contract premium are same denom
+
+
+## [v0.3.0]
 
 ### Added
 
