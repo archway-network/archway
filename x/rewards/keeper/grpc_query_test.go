@@ -135,6 +135,16 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 		s.Require().EqualValues(expectedFee.Amount, fees.AmountOf("stake"))
 	})
 
+	minConsFee := sdk.NewInt64Coin("stake", 100)
+	s.Run("ok: gets estimated tx fees (custom minconsfee set)", func() {
+		s.chain.GetApp().RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(sdk.NewDecCoinFromCoin(minConsFee))
+		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1})
+		s.Require().NoError(err)
+		s.Require().NotNil(res)
+		fees := sdk.NewCoins(res.EstimatedFee...)
+		s.Require().EqualValues(minConsFee.Amount, fees.AmountOf("stake"))
+	})
+
 	s.Run("ok: gets estimated tx fees inclulding contract flat fee(diff denom)", func() {
 		expectedFlatFee := sdk.NewInt64Coin("token", 123)
 		contractAdminAcc := s.chain.GetAccount(0)
@@ -153,11 +163,12 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 		})
 		s.Require().NoError(err)
 
-		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 0, ContractAddress: contractAddr.String()})
+		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1, ContractAddress: contractAddr.String()})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
 		s.Require().Equal(expectedFlatFee.Amount, fees.AmountOf("token"))
+		s.Require().EqualValues(minConsFee.Amount, fees.AmountOf("stake"))
 	})
 
 	s.Run("ok: gets estimated tx fees inclulding contract flat fee(same denom)", func() {
@@ -178,11 +189,11 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 		})
 		s.Require().NoError(err)
 
-		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 0, ContractAddress: contractAddr.String()})
+		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1, ContractAddress: contractAddr.String()})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
-		s.Require().Equal(expectedFlatFee.Amount, fees.AmountOf("stake"))
+		s.Require().Equal(expectedFlatFee.Add(minConsFee).Amount, fees.AmountOf("stake"))
 	})
 }
 
