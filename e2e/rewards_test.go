@@ -414,12 +414,16 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 		RewardsAddress:  contractAddr.String(),
 	})
 
+	err := chain.GetApp().RewardsKeeper.SetFlatFee(chain.GetContext(), senderAcc.Address, rewardsTypes.FlatFee{
+		ContractAddress: contractAddr.String(),
+		FlatFee:         sdk.NewInt64Coin("stake", 1000),
+	})
+	require.NoError(s.T(), err)
+
 	sendMsg := func(msg sdk.Msg, passes bool) (gasEstimated, gasUsed uint64, txFees sdk.Coins) {
 		// Simulate msg
-		gasEstInfo, _, _, _ := chain.SendMsgs(senderAcc, passes, []sdk.Msg{msg},
-			e2eTesting.WithSimulation(),
-		)
-		gasEstimated = gasEstInfo.GasUsed
+		_, _, _, _ = chain.SendMsgs(senderAcc, passes, []sdk.Msg{msg})
+		gasEstimated = 0
 		gasAdjusted := uint64(float64(gasEstimated) * 1.1)
 
 		// Estimate Tx fees
