@@ -41,3 +41,13 @@ func (k Keeper) GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Co
 
 	return fee, true
 }
+
+func (k Keeper) CreateFlatFeeRewardsRecords(ctx sdk.Context, contractAddress sdk.AccAddress, flatfee sdk.Coin) {
+	rewardsRecordState := k.state.RewardsRecord(ctx)
+	calculationHeight, calculationTime := ctx.BlockHeight(), ctx.BlockTime()
+
+	metadata := k.GetContractMetadata(ctx, contractAddress)
+	rewardsAddr := sdk.MustAccAddressFromBech32(metadata.RewardsAddress)
+
+	rewardsRecordState.CreateRewardsRecord(rewardsAddr, sdk.NewCoins(flatfee), calculationHeight, calculationTime)
+}

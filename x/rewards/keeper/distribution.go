@@ -37,9 +37,23 @@ type (
 func (k Keeper) AllocateBlockRewards(ctx sdk.Context, height int64) {
 	blockDistrState := k.estimateBlockGasUsage(ctx, height)
 	blockDistrState = k.estimateBlockRewards(ctx, blockDistrState)
+	k.createFlatFeeRewards(ctx, height)
 	k.createRewardsRecords(ctx, blockDistrState)
 	k.cleanupRewardsPool(ctx, blockDistrState)
 	k.cleanupTracking(ctx, height)
+}
+
+func (k Keeper) createFlatFeeRewards(ctx sdk.Context, height int64) {
+	blockGasTrackingInfo := k.trackingKeeper.GetBlockTrackingInfo(ctx, height)
+	for _, txs := range blockGasTrackingInfo.GetTxs() {
+		for _, contractOp := range txs.GetContractOperations() {
+			contractAddr := sdk.MustAccAddressFromBech32(contractOp.ContractAddress)
+			fee, found := k.GetFlatFee(ctx, contractAddr)
+			if found {
+				k.CreateFlatFeeRewardsRecords(ctx, contractAddr, fee)
+			}
+		}
+	}
 }
 
 // estimateBlockGasUsage creates a new distribution state for the given block height.
