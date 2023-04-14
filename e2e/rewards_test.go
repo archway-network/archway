@@ -414,7 +414,7 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 		RewardsAddress:  contractAddr.String(),
 	})
 
-	err := chain.GetApp().RewardsKeeper.SetFlatFee(chain.GetContext(), senderAcc.Address, rewardsTypes.FlatFee{
+	err := rewardsKeeper.SetFlatFee(chain.GetContext(), senderAcc.Address, rewardsTypes.FlatFee{
 		ContractAddress: contractAddr.String(),
 		FlatFee:         sdk.NewInt64Coin("stake", 1000),
 	})
