@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	"github.com/archway-network/archway/pkg"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
@@ -100,32 +98,19 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 		return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
+	var flatFees sdk.Coins
 	// Check if transaction has wasmd operations
 	hasWasmMsgs := false
-	for _, msg := range tx.GetMsgs() {
-		// We can use switch here, but breaking the for loop from switch is less readable
-		if _, ok := msg.(*wasmdTypes.MsgExecuteContract); ok {
-			hasWasmMsgs = true
-			break
+	for _, m := range tx.GetMsgs() {
+		flatFees, hwm, err := GetContractFlatFees(ctx, dfd.rewardsKeeper, dfd.codec, m)
+		if err != nil {
+			return err
 		}
-		if _, ok := msg.(*wasmdTypes.MsgMigrateContract); ok {
-			hasWasmMsgs = true
-			break
+		if !hasWasmMsgs {
+			hasWasmMsgs = hwm //set hasWasmMsgs as true if its false. if its true, do nothing
 		}
+		flatFees = flatFees.Add(flatFees...)
 	}
-
-	// var flatFees sdk.Coins
-	// for _, m := range tx.GetMsgs() {
-	// 	flatFees, _, err := GetContractFlatFees(ctx, dfd.rewardsKeeper, dfd.codec, m)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	flatFees = flatFees.Add(flatFees...)
-	// }
-
-	// if !flatFees.Empty() {
-
-	// }
 
 	// Send everything to the fee collector account if rewards are disabled or transaction is not wasm related
 	rebateRatio := dfd.rewardsKeeper.TxFeeRebateRatio(ctx)
@@ -134,6 +119,13 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
 		}
 		return nil
+	}
+
+	if !flatFees.Empty() {
+		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authTypes.FeeCollectorName, flatFees); err != nil {
+			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+		}
+		fees = fees.Sub(flatFees) // reduce flatfees from the sent fees amount
 	}
 
 	// Split the fees between the fee collector account and the rewards collector account
