@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	bankTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/archway-network/archway/pkg"
 )
@@ -16,7 +15,6 @@ import (
 type MinFeeDecorator struct {
 	codec         codec.BinaryCodec
 	rewardsKeeper RewardsKeeperExpected
-	bankKeeper    bankTypes.BankKeeper
 }
 
 // NewMinFeeDecorator returns a new MinFeeDecorator instance.
