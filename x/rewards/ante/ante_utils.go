@@ -37,6 +37,7 @@ func GetContractFlatFees(ctx sdk.Context, rk RewardsKeeperExpected, codec codec.
 				rk.CreateFlatFeeRewardsRecords(ctx, ca, fee)
 				return sdk.NewCoins(fee), true, nil
 			}
+			return nil, true, nil
 		}
 	case *authz.MsgExec: // if msg is authz msg, unwrap the msg and check if any are wasmTypes.MsgExecuteContract
 		{

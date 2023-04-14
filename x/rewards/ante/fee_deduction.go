@@ -102,14 +102,14 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 	// Check if transaction has wasmd operations
 	hasWasmMsgs := false
 	for _, m := range tx.GetMsgs() {
-		flatFees, hwm, err := GetContractFlatFees(ctx, dfd.rewardsKeeper, dfd.codec, m)
+		fees, hwm, err := GetContractFlatFees(ctx, dfd.rewardsKeeper, dfd.codec, m)
 		if err != nil {
 			return err
 		}
 		if !hasWasmMsgs {
 			hasWasmMsgs = hwm //set hasWasmMsgs as true if its false. if its true, do nothing
 		}
-		flatFees = flatFees.Add(flatFees...)
+		flatFees = flatFees.Add(fees...)
 	}
 
 	// Send everything to the fee collector account if rewards are disabled or transaction is not wasm related

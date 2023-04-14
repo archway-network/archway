@@ -30,7 +30,9 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 		rewardsBalanceDiffExpected      string // expected x/rewards module balance diff [sdk.Coins]
 	}
 
-	mockWasmExecuteMsg := &wasmdTypes.MsgExecuteContract{}
+	mockWasmExecuteMsg := &wasmdTypes.MsgExecuteContract{
+		Contract: e2eTesting.GenContractAddresses(1)[0].String(),
+	}
 
 	newStakeCoin := func(amt uint64) sdk.Coin {
 		return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(amt))
