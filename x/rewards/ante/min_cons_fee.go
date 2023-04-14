@@ -14,6 +14,7 @@ import (
 type RewardsFeeReaderExpected interface {
 	GetMinConsensusFee(ctx sdk.Context) (sdk.DecCoin, bool)
 	GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Coin, bool)
+	CreateFlatFeeRewardsRecords(ctx sdk.Context, contractAddress sdk.AccAddress, flatfee sdk.Coin)
 }
 
 // MinFeeDecorator rejects transaction if its fees are less than minimum fees defined by the x/rewards module.
@@ -87,6 +88,7 @@ func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) (sdk.
 			}
 			fee, found := mfd.rewardsKeeper.GetFlatFee(ctx, ca)
 			if found {
+				mfd.rewardsKeeper.CreateFlatFeeRewardsRecords(ctx, ca, fee)
 				return sdk.NewCoins(fee), nil
 			}
 		}
