@@ -3,6 +3,7 @@ package ante
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -16,26 +17,22 @@ import (
 
 var _ sdk.AnteDecorator = DeductFeeDecorator{}
 
-// TxFeeRewardsKeeperExpected defines the expected interface for the x/rewards keeper.
-type TxFeeRewardsKeeperExpected interface {
-	TxFeeRebateRatio(ctx sdk.Context) sdk.Dec
-	TrackFeeRebatesRewards(ctx sdk.Context, rewards sdk.Coins)
-}
-
 // DeductFeeDecorator deducts fees from the first signer of the tx.
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error.
 // Call next AnteHandler if fees successfully deducted.
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator.
 type DeductFeeDecorator struct {
+	codec          codec.BinaryCodec
 	ak             ante.AccountKeeper
 	bankKeeper     authTypes.BankKeeper
 	feegrantKeeper ante.FeegrantKeeper
-	rewardsKeeper  TxFeeRewardsKeeperExpected
+	rewardsKeeper  RewardsKeeperExpected
 }
 
 // NewDeductFeeDecorator returns a new DeductFeeDecorator instance.
-func NewDeductFeeDecorator(ak ante.AccountKeeper, bk authTypes.BankKeeper, fk ante.FeegrantKeeper, rk TxFeeRewardsKeeperExpected) DeductFeeDecorator {
+func NewDeductFeeDecorator(codec codec.BinaryCodec, ak ante.AccountKeeper, bk authTypes.BankKeeper, fk ante.FeegrantKeeper, rk RewardsKeeperExpected) DeductFeeDecorator {
 	return DeductFeeDecorator{
+		codec:          codec,
 		ak:             ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
@@ -116,6 +113,19 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 			break
 		}
 	}
+
+	// var flatFees sdk.Coins
+	// for _, m := range tx.GetMsgs() {
+	// 	flatFees, _, err := GetContractFlatFees(ctx, dfd.rewardsKeeper, dfd.codec, m)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	flatFees = flatFees.Add(flatFees...)
+	// }
+
+	// if !flatFees.Empty() {
+
+	// }
 
 	// Send everything to the fee collector account if rewards are disabled or transaction is not wasm related
 	rebateRatio := dfd.rewardsKeeper.TxFeeRebateRatio(ctx)

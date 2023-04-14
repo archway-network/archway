@@ -132,7 +132,7 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 			)
 
 			// Call the deduction Ante handler manually
-			anteHandler := ante.NewDeductFeeDecorator(chain.GetApp().AccountKeeper, chain.GetApp().BankKeeper, chain.GetApp().FeeGrantKeeper, chain.GetApp().RewardsKeeper)
+			anteHandler := ante.NewDeductFeeDecorator(chain.GetAppCodec(), chain.GetApp().AccountKeeper, chain.GetApp().BankKeeper, chain.GetApp().FeeGrantKeeper, chain.GetApp().RewardsKeeper)
 			_, err = anteHandler.AnteHandle(ctx, tx, false, testutils.NoopAnteHandler)
 			if tc.errExpected {
 				require.Error(t, err)
