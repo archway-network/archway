@@ -414,9 +414,10 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 		RewardsAddress:  contractAddr.String(),
 	})
 
+	flatFees := sdk.NewInt64Coin("stake", 1000)
 	err := rewardsKeeper.SetFlatFee(chain.GetContext(), senderAcc.Address, rewardsTypes.FlatFee{
 		ContractAddress: contractAddr.String(),
-		FlatFee:         sdk.NewInt64Coin("stake", 1000),
+		FlatFee:         flatFees,
 	})
 	require.NoError(s.T(), err)
 
@@ -446,7 +447,6 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 
 		return
 	}
-	rk := chain.GetApp().RewardsKeeper
 
 	// send a message that passes the ante handler but not the wasm execution step
 	sendMsg(&wasmdTypes.MsgExecuteContract{
@@ -459,8 +459,8 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 	chain.NextBlock(1 * time.Second)
 
 	// no rewards because the TX failed.
-	rewards := rk.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
-	require.Empty(s.T(), rewards)
+	rewards := rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	require.Equal(s.T(), flatFees, rewards[0].Rewards[0])
 }
 
 // TestSubMsgRevert tests when a contract calls another contract but the sub message reverts,
