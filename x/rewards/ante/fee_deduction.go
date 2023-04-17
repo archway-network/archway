@@ -102,14 +102,16 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 	// Check if transaction has wasmd operations
 	hasWasmMsgs := false
 	for _, m := range tx.GetMsgs() {
-		fees, hwm, err := GetContractFlatFees(ctx, dfd.rewardsKeeper, dfd.codec, m)
+		contractFlatFees, hwm, err := GetContractFlatFees(ctx, dfd.rewardsKeeper, dfd.codec, m)
 		if err != nil {
 			return err
 		}
 		if !hasWasmMsgs {
 			hasWasmMsgs = hwm //set hasWasmMsgs as true if its false. if its true, do nothing
 		}
-		flatFees = flatFees.Add(fees...)
+		for _, cff := range contractFlatFees {
+			flatFees = flatFees.Add(cff.FlatFees...)
+		}
 	}
 
 	// Send everything to the fee collector account if rewards are disabled or transaction is not wasm related
@@ -122,7 +124,7 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 	}
 
 	if !flatFees.Empty() {
-		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authTypes.FeeCollectorName, flatFees); err != nil {
+		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), rewardsTypes.ContractRewardCollector, flatFees); err != nil {
 			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
 		}
 		fees = fees.Sub(flatFees) // reduce flatfees from the sent fees amount

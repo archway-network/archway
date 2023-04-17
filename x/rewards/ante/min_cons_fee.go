@@ -55,11 +55,14 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 
 	// Get flatfees for any contracts being called in the tx.msgs
 	for _, m := range tx.GetMsgs() {
-		flatFees, _, err := GetContractFlatFees(ctx, mfd.rewardsKeeper, mfd.codec, m)
+		contractFlatFees, _, err := GetContractFlatFees(ctx, mfd.rewardsKeeper, mfd.codec, m)
 		if err != nil {
 			return ctx, err
 		}
-		expectedFees = expectedFees.Add(flatFees...)
+		for _, cff := range contractFlatFees {
+			mfd.rewardsKeeper.CreateFlatFeeRewardsRecords(ctx, cff.ContractAddress, cff.FlatFees)
+			expectedFees = expectedFees.Add(cff.FlatFees...)
+		}
 	}
 
 	txFees := feeTx.GetFee()
