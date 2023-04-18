@@ -1,4 +1,4 @@
-# ADR 004 - Contract premiums
+# ADR 004 - Contract Premiums
 
 ## Status
 

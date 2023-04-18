@@ -92,6 +92,45 @@
             "required": false,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "contract_address",
+            "description": "contract_address whose flat fee is considered when estimating tx fees.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/archway/rewards/v1/flat_fee": {
+      "get": {
+        "summary": "FlatFee returns the flat fee set by the contract owner for the provided contract_address",
+        "operationId": "FlatFee",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/archway.rewards.v1beta1.QueryFlatFeeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/grpc.gateway.runtime.Error"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "contract_address",
+            "description": "contract_address is the contract address (bech32 encoded).",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -343,11 +382,24 @@
           "description": "gas_unit_price defines the minimum transaction fee per gas unit."
         },
         "estimated_fee": {
-          "$ref": "#/definitions/cosmos.base.v1beta1.Coin",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cosmos.base.v1beta1.Coin"
+          },
           "description": "estimated_fee is the estimated transaction fee for a given gas limit."
         }
       },
       "description": "QueryEstimateTxFeesResponse is the response for Query.EstimateTxFees."
+    },
+    "archway.rewards.v1beta1.QueryFlatFeeResponse": {
+      "type": "object",
+      "properties": {
+        "flat_fee_amount": {
+          "$ref": "#/definitions/cosmos.base.v1beta1.Coin",
+          "description": "flat_fee_amount defines the minimum flat fee set by the contract_owner per contract execution."
+        }
+      },
+      "title": "QueryFlatFeeResponse is the response for Query.FlatFee"
     },
     "archway.rewards.v1beta1.QueryOutstandingRewardsResponse": {
       "type": "object",
