@@ -538,7 +538,7 @@ func (s *E2ETestSuite) TestRewardsFlatFees() {
 
 	// Lets now do the same operations a bunch of times - and by a bunch of times i mean ten times
 	// this should generate quite a few rewards records
-	// each msg execute is in seperate block
+	// each msg execute is in separate block
 	for i := 0; i < 10; i++ {
 		// contract execution to trigger rewards distribution
 		req := voterTypes.MsgExecute{

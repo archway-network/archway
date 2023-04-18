@@ -42,6 +42,7 @@ func (k Keeper) GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Co
 	return fee, true
 }
 
+// CreateFlatFeeRewardsRecords creates a rewards record for the flatfees of the given contract
 func (k Keeper) CreateFlatFeeRewardsRecords(ctx sdk.Context, contractAddress sdk.AccAddress, flatfees sdk.Coins) {
 	rewardsRecordState := k.state.RewardsRecord(ctx)
 	calculationHeight, calculationTime := ctx.BlockHeight(), ctx.BlockTime()
