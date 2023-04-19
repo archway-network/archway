@@ -460,6 +460,7 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 
 	// no rewards because the TX failed.
 	rewards := rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	require.Len(s.T(), rewards, 1)
 	require.Equal(s.T(), flatFees, rewards[0].Rewards[0])
 }
 
