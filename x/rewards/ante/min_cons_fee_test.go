@@ -117,6 +117,7 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 	contractViewer.AddContractAdmin(contractFlatFeeDiffDenomSet.String(), contractAdminAcc.Address.String())
 	var metaCurrentDiff rewardsTypes.ContractMetadata
 	metaCurrentDiff.ContractAddress = contractFlatFeeDiffDenomSet.String()
+	metaCurrentDiff.RewardsAddress = contractAdminAcc.Address.String()
 	metaCurrentDiff.OwnerAddress = contractAdminAcc.Address.String()
 	err = chain.GetApp().RewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractFlatFeeDiffDenomSet, metaCurrentDiff)
 	require.NoError(t, err)
@@ -132,6 +133,7 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 	contractViewer.AddContractAdmin(contractFlatFeeSameDenomSet.String(), contractAdminAcc.Address.String())
 	var metaCurrentSame rewardsTypes.ContractMetadata
 	metaCurrentSame.ContractAddress = contractFlatFeeSameDenomSet.String()
+	metaCurrentSame.RewardsAddress = contractAdminAcc.Address.String()
 	metaCurrentSame.OwnerAddress = contractAdminAcc.Address.String()
 	err = chain.GetApp().RewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractFlatFeeSameDenomSet, metaCurrentSame)
 	require.NoError(t, err)

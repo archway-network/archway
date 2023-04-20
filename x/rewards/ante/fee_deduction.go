@@ -3,12 +3,11 @@ package ante
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/archway-network/archway/pkg"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
@@ -16,26 +15,22 @@ import (
 
 var _ sdk.AnteDecorator = DeductFeeDecorator{}
 
-// TxFeeRewardsKeeperExpected defines the expected interface for the x/rewards keeper.
-type TxFeeRewardsKeeperExpected interface {
-	TxFeeRebateRatio(ctx sdk.Context) sdk.Dec
-	TrackFeeRebatesRewards(ctx sdk.Context, rewards sdk.Coins)
-}
-
 // DeductFeeDecorator deducts fees from the first signer of the tx.
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error.
 // Call next AnteHandler if fees successfully deducted.
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator.
 type DeductFeeDecorator struct {
+	codec          codec.BinaryCodec
 	ak             ante.AccountKeeper
 	bankKeeper     authTypes.BankKeeper
 	feegrantKeeper ante.FeegrantKeeper
-	rewardsKeeper  TxFeeRewardsKeeperExpected
+	rewardsKeeper  RewardsKeeperExpected
 }
 
 // NewDeductFeeDecorator returns a new DeductFeeDecorator instance.
-func NewDeductFeeDecorator(ak ante.AccountKeeper, bk authTypes.BankKeeper, fk ante.FeegrantKeeper, rk TxFeeRewardsKeeperExpected) DeductFeeDecorator {
+func NewDeductFeeDecorator(codec codec.BinaryCodec, ak ante.AccountKeeper, bk authTypes.BankKeeper, fk ante.FeegrantKeeper, rk RewardsKeeperExpected) DeductFeeDecorator {
 	return DeductFeeDecorator{
+		codec:          codec,
 		ak:             ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
@@ -103,17 +98,19 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 		return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
+	var flatFees sdk.Coins
 	// Check if transaction has wasmd operations
 	hasWasmMsgs := false
-	for _, msg := range tx.GetMsgs() {
-		// We can use switch here, but breaking the for loop from switch is less readable
-		if _, ok := msg.(*wasmdTypes.MsgExecuteContract); ok {
-			hasWasmMsgs = true
-			break
+	for _, m := range tx.GetMsgs() {
+		contractFlatFees, hwm, err := GetContractFlatFees(ctx, dfd.rewardsKeeper, dfd.codec, m)
+		if err != nil {
+			return err
 		}
-		if _, ok := msg.(*wasmdTypes.MsgMigrateContract); ok {
-			hasWasmMsgs = true
-			break
+		if !hasWasmMsgs {
+			hasWasmMsgs = hwm //set hasWasmMsgs as true if its false. if its true, do nothing
+		}
+		for _, cff := range contractFlatFees {
+			flatFees = flatFees.Add(cff.FlatFees...)
 		}
 	}
 
@@ -124,6 +121,13 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
 		}
 		return nil
+	}
+
+	if !flatFees.Empty() {
+		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), rewardsTypes.ContractRewardCollector, flatFees); err != nil {
+			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+		}
+		fees = fees.Sub(flatFees) // reduce flatfees from the sent fees amount
 	}
 
 	// Split the fees between the fee collector account and the rewards collector account

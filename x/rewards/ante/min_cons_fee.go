@@ -1,20 +1,12 @@
 package ante
 
 import (
-	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 
 	"github.com/archway-network/archway/pkg"
 )
-
-// RewardsFeeReaderExpected defines the expected interface for the x/rewards keeper.
-type RewardsFeeReaderExpected interface {
-	GetMinConsensusFee(ctx sdk.Context) (sdk.DecCoin, bool)
-	GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Coin, bool)
-}
 
 // MinFeeDecorator rejects transaction if its fees are less than minimum fees defined by the x/rewards module.
 // Estimation is done using the minimum consensus fee value which is the minimum gas unit price.
@@ -22,11 +14,11 @@ type RewardsFeeReaderExpected interface {
 // CONTRACT: Tx must implement FeeTx interface to use MinFeeDecorator.
 type MinFeeDecorator struct {
 	codec         codec.BinaryCodec
-	rewardsKeeper RewardsFeeReaderExpected
+	rewardsKeeper RewardsKeeperExpected
 }
 
 // NewMinFeeDecorator returns a new MinFeeDecorator instance.
-func NewMinFeeDecorator(codec codec.BinaryCodec, rk RewardsFeeReaderExpected) MinFeeDecorator {
+func NewMinFeeDecorator(codec codec.BinaryCodec, rk RewardsKeeperExpected) MinFeeDecorator {
 	return MinFeeDecorator{
 		codec:         codec,
 		rewardsKeeper: rk,
@@ -63,11 +55,14 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 
 	// Get flatfees for any contracts being called in the tx.msgs
 	for _, m := range tx.GetMsgs() {
-		flatFees, err := mfd.getContractFlatFees(ctx, m)
+		contractFlatFees, _, err := GetContractFlatFees(ctx, mfd.rewardsKeeper, mfd.codec, m)
 		if err != nil {
 			return ctx, err
 		}
-		expectedFees = expectedFees.Add(flatFees...)
+		for _, cff := range contractFlatFees {
+			mfd.rewardsKeeper.CreateFlatFeeRewardsRecords(ctx, cff.ContractAddress, cff.FlatFees)
+			expectedFees = expectedFees.Add(cff.FlatFees...)
+		}
 	}
 
 	txFees := feeTx.GetFee()
@@ -75,38 +70,4 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 		return next(ctx, tx, simulate)
 	}
 	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, expectedFees.String())
-}
-
-func (mfd MinFeeDecorator) getContractFlatFees(ctx sdk.Context, m sdk.Msg) (sdk.Coins, error) {
-	switch msg := m.(type) {
-	case *wasmTypes.MsgExecuteContract: // if msg is contract execute, fetch flatfee for msg.Contract address
-		{
-			ca, err := sdk.AccAddressFromBech32(msg.Contract)
-			if err != nil {
-				return nil, err
-			}
-			fee, found := mfd.rewardsKeeper.GetFlatFee(ctx, ca)
-			if found {
-				return sdk.NewCoins(fee), nil
-			}
-		}
-	case *authz.MsgExec: // if msg is authz msg, unwrap the msg and check if any are wasmTypes.MsgExecuteContract
-		{
-			var flatfees sdk.Coins
-			for _, v := range msg.Msgs {
-				var wrappedMsg sdk.Msg
-				err := mfd.codec.UnpackAny(v, &wrappedMsg)
-				if err != nil {
-					return nil, sdkErrors.Wrapf(sdkErrors.ErrUnauthorized, "error decoding authz messages")
-				}
-				fees, err := mfd.getContractFlatFees(ctx, wrappedMsg)
-				if err != nil {
-					return nil, err
-				}
-				flatfees = flatfees.Add(fees...)
-			}
-			return flatfees, nil
-		}
-	}
-	return nil, nil
 }
