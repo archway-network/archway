@@ -2,8 +2,10 @@ package app
 
 import (
 	"fmt"
+
 	"github.com/archway-network/archway/app/upgrades"
-	upgrade03 "github.com/archway-network/archway/app/upgrades/03"
+	upgrade_0_3 "github.com/archway-network/archway/app/upgrades/03"
+	upgrade_0_4 "github.com/archway-network/archway/app/upgrades/04"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -11,7 +13,8 @@ import (
 
 var (
 	Upgrades = []upgrades.Upgrade{
-		upgrade03.Upgrade,
+		upgrade_0_3.Upgrade, // v0.3.0
+		upgrade_0_4.Upgrade, // v0.4.0
 	}
 )
 
