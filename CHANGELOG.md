@@ -30,6 +30,21 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Improvements
+
+
+## [v0.4.0]
+
 ### Fixed
 
 - [#338](https://github.com/archway-network/archway/pull/338) - fixed issue where contract premium was not completly being sent to the rewards address
