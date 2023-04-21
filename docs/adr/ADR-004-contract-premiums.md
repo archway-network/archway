@@ -15,8 +15,12 @@ Contract developers can use contract premiums to define a custom fee, that is ap
 Contract premiums can be used to cover hidden costs of a smart contract, for example a NFT marketplace which delivers goods
 can use contract premiums to cover delivery costs.
 
-The reason for which contract premiums are useful instead of using `x/wasm` `funds` is because of fee predictability.
-In fact `Contract Premiums` define a standardised way to define contract custom fees and can be used by wallets to predict fees.
+The reasons for using contract premiums over using `x/wasm` `funds` are:
+1. Fee predictability: Contract Premiums define a standardized way to define contract custom fees and can be used by wallets to predict fees
+2. Rewards on Msg Fail: When using Contract Premiums rewards will be distributed even when the contract msg execution fails. Using the x/wasm funds way would not reward the developer if the msg execution failed due to bad input by the user.
+3. Rewards withdrawal: Contract Premiums sends all the rewards to the configured rewards address. Using the x/wasm funds option would send all the funds to the smart contract unless custom transfer logic is implemented.
+4. Easier regulatory compliance: Using contract premiums, developer receives the rewards only when they explicitly request to withdraw (similar to how staking rewards works). Using x/wasm funds to receive the funds, which happens immediately, might complicate the tax situation based on the jurisdiction. 
+5. One configuration to rule them all: Once set, Contract Premiums are applied to all Msg Executions exposed by the contract, as opposed having to be configured for every msg.
 
 ### Proposal
 
