@@ -38,6 +38,8 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Removed
 
+- [#344](https://github.com/archway-network/archway/pull/344) - removed un used ci files
+
 ### Fixed
 
 ### Improvements
