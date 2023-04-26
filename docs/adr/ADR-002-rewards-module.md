@@ -7,7 +7,7 @@ Already implemented.
 ## Abstract
 
 We propose a new module called `x/rewards`, this module consumes information gathered by `x/tracking` to create `RewardsRecords`.
-The `RewardsRecords` define claims that contracts can convert into `archway coins`, the claims are associated with gas consumption
+The `RewardsRecords` define claims that contracts can convert into `ARCH tokens`, the claims are associated with gas consumption
 that a contract has caused in a specific TX in a specific block, this `RewardRecord` can come from either inflationary rewards
 or from a portion of the TX fees.
 

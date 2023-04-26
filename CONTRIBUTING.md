@@ -105,18 +105,27 @@ Requirements to be merged:
 
 ### PR Title & Description
 
-Title format: `<impact>: <issue #> - <short description>`
+Title format: `<type>: <issue #> - <description>`
 
-Impact:
+Please follow the Conventional Commits standard as specified [here](https://www.conventionalcommits.org/en/v1.0.0/).
 
-- _Breaking_ (major version bump)
-- _Feature_ (minor version bump)
-- _Fix_ (patch version bump)
+Type:
 
-Other acceptable impact indicators are:
+Please use the following types based on the [Angular convention](https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines).
 
-- _Docs_
-- _Tests_
+- _build_: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
+- _ci_: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)
+- _docs_: Documentation only changes
+- _feat_: A new feature _(minor version bump)_
+- _fix_: A bug fix _(patch version bump)_
+- _perf_: A code change that improves performance
+- _refactor_: A code change that neither fixes a bug nor adds a feature
+- _style_: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+- _test_: Adding missing tests or correcting existing tests
+
+Breaking Changes:
+
+Indicate breaking changes by appending `!` to the type, and/or including `BREAKING CHANGE: ...` in the footer.
 
 The PR __title__ is more than a mere commit message. It should convey something of substantial significance... A review of the repository pull request titles should provide a very clear progression path, that makes sense to someone visiting the repository for the first time.
 
@@ -127,7 +136,7 @@ Do add references to any applicable issues at the very end using the notation: `
 Example:
 
 ```
-Docs: #123 - Updates & Quality Control
+docs: #123 - Updates & Quality Control
 
 Add contribution guidelines to provide an overview of the processes and policies to ensure quality collaboration and coordination within the repository.
 
@@ -137,6 +146,8 @@ Fixes #123, #125, #127
 ```
 
 ### Commits & Commit Messages
+
+Commit Messages follow the same conventions as outlined above for PR Titles.
 
 Make smaller commits more often. This allows the commit log to tell the story of what has changed, and why.
 
@@ -149,7 +160,7 @@ Reference issues at the very end using the notation: `Fixes #123`.
 Example:
 
 ```
-Add contribution guidelines
+docs: Add contribution guidelines
 
 Contribution guidelines provide an overview of the processes and policies to ensure quality collaboration and coordination within the repository.
 
