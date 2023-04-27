@@ -28,6 +28,29 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
 
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+- [#344](https://github.com/archway-network/archway/pull/344) - removed un used ci files
+
+### Fixed
+
+### Improvements
+
+
+## [v0.4.0]
+
+### Fixed
+
+- [#338](https://github.com/archway-network/archway/pull/338) - fixed issue where contract premium was not completly being sent to the rewards address
+
 ## [v0.3.1]
 
 ### Fixed

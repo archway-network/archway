@@ -16,8 +16,8 @@ jobs:
       steps:
         - name: Checkout
           uses: actions/checkout@v3
-        
-        - name: Set safe directory 
+
+        - name: Set safe directory
           run: git config --system --add safe.directory '/__w/archway/archway'
 
         - name: Set up Go
@@ -25,7 +25,6 @@ jobs:
           with:
             go-version-file: go.mod
 
-        # Add QEMU to support multi arch build in the future
         - name: Set up QEMU
           uses: docker/setup-qemu-action@v2
 

@@ -414,9 +414,10 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 		RewardsAddress:  contractAddr.String(),
 	})
 
-	err := chain.GetApp().RewardsKeeper.SetFlatFee(chain.GetContext(), senderAcc.Address, rewardsTypes.FlatFee{
+	flatFees := sdk.NewInt64Coin("stake", 1000)
+	err := rewardsKeeper.SetFlatFee(chain.GetContext(), senderAcc.Address, rewardsTypes.FlatFee{
 		ContractAddress: contractAddr.String(),
-		FlatFee:         sdk.NewInt64Coin("stake", 1000),
+		FlatFee:         flatFees,
 	})
 	require.NoError(s.T(), err)
 
@@ -446,7 +447,6 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 
 		return
 	}
-	rk := chain.GetApp().RewardsKeeper
 
 	// send a message that passes the ante handler but not the wasm execution step
 	sendMsg(&wasmdTypes.MsgExecuteContract{
@@ -458,9 +458,154 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 
 	chain.NextBlock(1 * time.Second)
 
-	// no rewards because the TX failed.
-	rewards := rk.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
-	require.Empty(s.T(), rewards)
+	// only rewards record for contract premiums. no rewards record for feerebaes/inflation because because the TX failed.
+	rewards := rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	require.Len(s.T(), rewards, 1)
+	require.Equal(s.T(), flatFees, rewards[0].Rewards[0])
+}
+
+// TestRewardsFlatFees tests that a contract which has flatfees set, on a successful execution against
+// the contract the relevant rewards records have been created
+func (s *E2ETestSuite) TestRewardsFlatFees() {
+	// Create a custom chain with "close to mainnet" params
+	chain := e2eTesting.NewTestChain(s.T(), 1,
+		// Set 1B total supply (10^9 * 10^6)
+		e2eTesting.WithGenAccounts(2),
+		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		// Set bonded ratio to 30%
+		e2eTesting.WithBondAmount("300000000000000"),
+		// Override the default Tx fee
+		e2eTesting.WithDefaultFeeAmount("10000000"),
+		// Set block gas limit (Archway mainnet param)
+		e2eTesting.WithBlockGasLimit(100_000_000),
+		// x/rewards distribution params
+		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
+		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
+		// Set constant inflation rate
+		e2eTesting.WithMintParams(
+			sdk.NewDecWithPrec(10, 2), // 10%
+			sdk.NewDecWithPrec(10, 2), // 10%
+			uint64(60*60*8766/1),      // 1 seconds block time
+		),
+	)
+	rewardsKeeper := chain.GetApp().RewardsKeeper
+
+	// Upload a new contract and set its address as the rewardsAddress
+	senderAcc := chain.GetAccount(0)
+	contractAddr := s.VoterUploadAndInstantiate(chain, senderAcc)
+
+	// Setting contract metadata with rewards address to be itself
+	chain.SetContractMetadata(senderAcc, contractAddr, rewardsTypes.ContractMetadata{
+		ContractAddress: contractAddr.String(),
+		OwnerAddress:    senderAcc.Address.String(),
+		RewardsAddress:  contractAddr.String(),
+	})
+
+	// Setting contract flatfee to be 1000 stake
+	flatFees := sdk.NewInt64Coin("stake", 1000)
+	err := rewardsKeeper.SetFlatFee(chain.GetContext(), senderAcc.Address, rewardsTypes.FlatFee{
+		ContractAddress: contractAddr.String(),
+		FlatFee:         flatFees,
+	})
+	require.NoError(s.T(), err)
+
+	// contract execution to trigger rewards distribution
+	req := voterTypes.MsgExecute{
+		NewVoting: &voterTypes.NewVotingRequest{
+			Name:        "Test",
+			VoteOptions: []string{"Yes", "No"},
+			Duration:    uint64(time.Minute),
+		},
+	}
+	reqBz, err := req.MarshalJSON()
+	s.Require().NoError(err)
+
+	msg := wasmdTypes.MsgExecuteContract{
+		Sender:   senderAcc.Address.String(),
+		Contract: contractAddr.String(),
+		Msg:      reqBz,
+		Funds:    sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, DefNewVotingCostAmt)),
+	}
+	_, _, _, err = chain.SendMsgs(senderAcc, true, []sdk.Msg{&msg})
+	require.NoError(s.T(), err)
+
+	chain.NextBlock(1 * time.Second)
+
+	// should find two rewards records
+	// 1. Flatfee rewards record
+	// 2. InflationaryRewards + FeeRewards rewards record
+	rewards := rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	require.Len(s.T(), rewards, 2)
+	require.Equal(s.T(), flatFees, rewards[0].Rewards[0]) // the first rewards record matches our set flat fees
+	require.Equal(s.T(), sdk.NewInt64Coin("stake", 4999724), rewards[1].Rewards[0])
+
+	// Setting up a second contract which also has flat fees enabled
+	sender2Acc := chain.GetAccount(1)
+	contract2Addr := s.VoterUploadAndInstantiate(chain, sender2Acc)
+	chain.SetContractMetadata(sender2Acc, contract2Addr, rewardsTypes.ContractMetadata{
+		ContractAddress: contract2Addr.String(),
+		OwnerAddress:    sender2Acc.Address.String(),
+		RewardsAddress:  contract2Addr.String(),
+	})
+	flatFees2 := sdk.NewInt64Coin("stake", 20)
+	err = rewardsKeeper.SetFlatFee(chain.GetContext(), sender2Acc.Address, rewardsTypes.FlatFee{
+		ContractAddress: contract2Addr.String(),
+		FlatFee:         flatFees2,
+	})
+	require.NoError(s.T(), err)
+
+	// Lets now do the same operations a bunch of times - and by a bunch of times i mean ten times
+	// this should generate quite a few rewards records - and by quite a few i mean 50 times
+	// each loop the following are executed
+	// 1. execute contract1 and move to next block
+	// 2. execute contract2 and move to next block
+	// 3. execute contract1,contract1(again),contarct2 in a single msg and move to the next block
+	for i := 0; i < 10; i++ {
+		// execute contract1 and move to next block
+		_, _, _, err = chain.SendMsgs(senderAcc, true, []sdk.Msg{&wasmdTypes.MsgExecuteContract{
+			Sender:   senderAcc.Address.String(),
+			Contract: contractAddr.String(),
+			Msg:      reqBz,
+			Funds:    sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, DefNewVotingCostAmt)),
+		}})
+		require.NoError(s.T(), err)
+		chain.NextBlock(1 * time.Second)
+
+		// execute contract2 and move to next block
+		_, _, _, err = chain.SendMsgs(sender2Acc, true, []sdk.Msg{&wasmdTypes.MsgExecuteContract{
+			Sender:   sender2Acc.Address.String(),
+			Contract: contract2Addr.String(),
+			Msg:      reqBz,
+			Funds:    sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, DefNewVotingCostAmt)),
+		}})
+		require.NoError(s.T(), err)
+		chain.NextBlock(1 * time.Second)
+
+		// execute contract1,contract1(again),contarct2 in a single msg and move to the next block
+		_, _, _, err = chain.SendMsgs(senderAcc, true, []sdk.Msg{&wasmdTypes.MsgExecuteContract{
+			Sender:   senderAcc.Address.String(),
+			Contract: contractAddr.String(),
+			Msg:      reqBz,
+			Funds:    sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, DefNewVotingCostAmt)),
+		}, &wasmdTypes.MsgExecuteContract{
+			Sender:   senderAcc.Address.String(),
+			Contract: contractAddr.String(),
+			Msg:      reqBz,
+			Funds:    sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, DefNewVotingCostAmt)),
+		}, &wasmdTypes.MsgExecuteContract{
+			Sender:   senderAcc.Address.String(),
+			Contract: contract2Addr.String(),
+			Msg:      reqBz,
+			Funds:    sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, DefNewVotingCostAmt)),
+		}})
+		require.NoError(s.T(), err)
+		chain.NextBlock(1 * time.Second)
+	}
+	rewards = rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	require.Len(s.T(), rewards, 52) // why 52? cuz we already had 2 rewards record. we made 10 loops with 2 txs for this contract. And second txs contains 2 msgs. so 2 + (10 * (2 + 3)) = 52
+
+	rewards = rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contract2Addr)
+	require.Len(s.T(), rewards, 40) // why 40? cuz we made 10 loops with 2 txs for this contract. and each msg creates two records. so 10 * 2 * 2 = 40
 }
 
 // TestSubMsgRevert tests when a contract calls another contract but the sub message reverts,
