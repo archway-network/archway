@@ -11,15 +11,13 @@ import (
 
 // UPGRADES
 
-var (
-	Upgrades = []upgrades.Upgrade{
-		upgrade_0_3.Upgrade, // v0.3.0
-		upgrade_0_4.Upgrade, // v0.4.0
-	}
-)
+var Upgrades = []upgrades.Upgrade{
+	upgrade_0_3.Upgrade, // v0.3.0
+	upgrade_0_4.Upgrade, // v0.4.0
+}
 
 func (app *ArchwayApp) setupUpgrades() {
-	app.setUpgradeStoreLoaders()
+	app.setUpgradeHandlers()
 	app.setUpgradeStoreLoaders()
 }
 

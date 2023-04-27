@@ -172,7 +172,6 @@ func (a AppModule) RandomizedParams(r *rand.Rand) []simTypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for the module's types.
 func (a AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-
 }
 
 // WeightedOperations returns all the module operations with their respective weights.
