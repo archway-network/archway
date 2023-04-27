@@ -105,10 +105,10 @@ func (s *QueryServer) EstimateTxFees(c context.Context, request *types.QueryEsti
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	fees := []sdk.Coin{}
+	var fees sdk.Coins
 	minConsFee, found := s.keeper.GetMinConsensusFee(ctx)
 	if found {
-		fees = append(fees, sdk.Coin{
+		fees = fees.Add(sdk.Coin{
 			Denom:  minConsFee.Denom,
 			Amount: minConsFee.Amount.MulInt64(int64(request.GasLimit)).RoundInt(),
 		})
@@ -121,13 +121,13 @@ func (s *QueryServer) EstimateTxFees(c context.Context, request *types.QueryEsti
 		}
 		contractFlatFee, found := s.keeper.GetFlatFee(ctx, contractAddr)
 		if found {
-			fees = append(fees, contractFlatFee)
+			fees = fees.Add(contractFlatFee)
 		}
 	}
 
 	return &types.QueryEstimateTxFeesResponse{
 		GasUnitPrice: minConsFee,
-		EstimatedFee: sdk.NewCoins(fees...).Sort(),
+		EstimatedFee: fees.Sort(),
 	}, nil
 }
 
