@@ -1,11 +1,12 @@
 package upgrade03
 
 import (
-	"github.com/archway-network/archway/app/upgrades"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	"github.com/archway-network/archway/app/upgrades"
 )
 
 const Name = "v0.4.0"

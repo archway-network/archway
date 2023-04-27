@@ -3,10 +3,11 @@ package app
 import (
 	"fmt"
 
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	"github.com/archway-network/archway/app/upgrades"
 	upgrade_0_3 "github.com/archway-network/archway/app/upgrades/03"
 	upgrade_0_4 "github.com/archway-network/archway/app/upgrades/04"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // UPGRADES
