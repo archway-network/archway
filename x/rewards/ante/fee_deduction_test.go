@@ -30,7 +30,9 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 		rewardsBalanceDiffExpected      string // expected x/rewards module balance diff [sdk.Coins]
 	}
 
-	mockWasmExecuteMsg := &wasmdTypes.MsgExecuteContract{}
+	mockWasmExecuteMsg := &wasmdTypes.MsgExecuteContract{
+		Contract: e2eTesting.GenContractAddresses(1)[0].String(),
+	}
 
 	newStakeCoin := func(amt uint64) sdk.Coin {
 		return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(amt))
@@ -132,7 +134,7 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 			)
 
 			// Call the deduction Ante handler manually
-			anteHandler := ante.NewDeductFeeDecorator(chain.GetApp().AccountKeeper, chain.GetApp().BankKeeper, chain.GetApp().FeeGrantKeeper, chain.GetApp().RewardsKeeper)
+			anteHandler := ante.NewDeductFeeDecorator(chain.GetAppCodec(), chain.GetApp().AccountKeeper, chain.GetApp().BankKeeper, chain.GetApp().FeeGrantKeeper, chain.GetApp().RewardsKeeper)
 			_, err = anteHandler.AnteHandle(ctx, tx, false, testutils.NoopAnteHandler)
 			if tc.errExpected {
 				require.Error(t, err)

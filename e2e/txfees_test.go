@@ -53,7 +53,7 @@ func (s *E2ETestSuite) TestTxFees() {
 		e2eTesting.WithMintParams(
 			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)
 			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)
-			uint64(60*60*8766/1),      //1 seconds block time (Archway mainnet param)
+			uint64(60*60*8766/1),      // 1 seconds block time (Archway mainnet param)
 		),
 	)
 

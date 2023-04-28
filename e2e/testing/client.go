@@ -11,9 +11,7 @@ import (
 	"github.com/archway-network/archway/app"
 )
 
-var (
-	_ grpc.ClientConnInterface = (*grpcClient)(nil)
-)
+var _ grpc.ClientConnInterface = (*grpcClient)(nil)
 
 type grpcClient struct {
 	app *app.ArchwayApp

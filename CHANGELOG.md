@@ -2,6 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- 
 ### Added
 
 Contains the new features.
@@ -24,15 +25,49 @@ Contains bug fixes.
 
 ### Improvements
 
-Contains all the PRs that improved the code without changing the behaviours.
+Contains all the PRs that improved the code without changing the behaviours. 
+-->
 
 ## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+- [#344](https://github.com/archway-network/archway/pull/344) - removed un used ci files
+
+### Fixed
+
+### Improvements
+
+- [#342](https://github.com/archway-network/archway/pull/342) - updated the contract premium ADR docs to elaborate on difference between using Contract Premiums and using x/wasmd funds
+
+
+## [v0.4.0]
+
+### Fixed
+
+- [#338](https://github.com/archway-network/archway/pull/338) - fixed issue where contract premium was not completly being sent to the rewards address
+
+## [v0.3.1]
+
+### Fixed
+
+- [#335](https://github.com/archway-network/archway/pull/335) - fixed `EstimateTxFees` erroring when minConsFee and contract premium are same denom
+
+
+## [v0.3.0]
 
 ### Added
 
 - [#253](https://github.com/archway-network/archway/pull/253) - add wasm bindings for contracts to query the x/gov module.
 - [#261](https://github.com/archway-network/archway/pull/261), [#263](https://github.com/archway-network/archway/pull/263), [#264](https://github.com/archway-network/archway/pull/264), [#274](https://github.com/archway-network/archway/pull/274), [#272](https://github.com/archway-network/archway/pull/272), [#280](https://github.com/archway-network/archway/pull/280) - implementing contract premiums
 - [#303](https://github.com/archway-network/archway/pull/303) - Add archway protocol versioning and release strategy
+- [#326](https://github.com/archway-network/archway/pull/326) - Allow contracts to update another contract's metadata when it is the owner
 
 ### Changed
 

@@ -10,9 +10,7 @@ import (
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
-var (
-	NilStruct = struct{}{}
-)
+var NilStruct = struct{}{}
 
 type E2ETestSuite struct {
 	suite.Suite

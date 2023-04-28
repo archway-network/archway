@@ -20,6 +20,8 @@ type (
 
 type (
 	UpdateContractMetadataRequest struct {
+		// ContractAddress if not empty, specifies the target contract.
+		ContractAddress string
 		// OwnerAddress if not empty, changes the contract metadata ownership.
 		OwnerAddress string
 		// RewardsAddress if not empty, changes the rewards distribution destination address.

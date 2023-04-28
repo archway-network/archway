@@ -20,13 +20,22 @@ func TestUpdateContractMetadataRequestValidate(t *testing.T) {
 		{
 			name: "OK: UpdateMetadata",
 			msg: UpdateContractMetadataRequest{
-				OwnerAddress:   "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
-				RewardsAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				OwnerAddress:    "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+				RewardsAddress:  "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
 			},
 		},
 		{
 			name:        "Fail: invalid UpdateMetadataRequest: no changes",
 			msg:         UpdateContractMetadataRequest{},
+			errExpected: true,
+		},
+		{
+			name: "Fail: invalid UpdateMetadataRequest: invalid ContractAddress",
+			msg: UpdateContractMetadataRequest{
+				ContractAddress: "invalid",
+				OwnerAddress:    "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+			},
 			errExpected: true,
 		},
 		{
@@ -53,6 +62,42 @@ func TestUpdateContractMetadataRequestValidate(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestUpdateContractMetadataRequestMustGetContractAddressOk(t *testing.T) {
+	type testCase struct {
+		name         string
+		msg          UpdateContractMetadataRequest
+		addrExpected bool
+	}
+
+	testCases := []testCase{
+		{
+			name: "UpdateMetadata has Contract Address",
+			msg: UpdateContractMetadataRequest{
+				ContractAddress: "cosmos1zj8lgj0zp06c8n4rreyzgu3tls9yhy4mm4vu8c",
+			},
+			addrExpected: true,
+		},
+		{
+			name:         "UpdateMetadataRequest does not have Contract Address",
+			msg:          UpdateContractMetadataRequest{},
+			addrExpected: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			addr, isSet := tc.msg.MustGetContractAddressOk()
+			if tc.addrExpected {
+				assert.NotEmpty(t, addr)
+				assert.True(t, isSet)
+				return
+			}
+			assert.Empty(t, addr)
+			assert.False(t, isSet)
 		})
 	}
 }
