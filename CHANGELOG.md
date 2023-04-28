@@ -34,6 +34,8 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Changed
 
+- [#320](https://github.com/archway-network/archway/pull/320) - Run the lint and test GH actions on all PRs
+
 ### Deprecated
 
 ### Removed
@@ -74,9 +76,6 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#267](https://github.com/archway-network/archway/pull/267) - update `querySrvr.EstimateTxFees` to also consider contract flat fee when returning the estimated fees.
 - [#271](https://github.com/archway-network/archway/pull/271) - update the x/rewards/min_cons_fee antehandler to check for contract flat fees
 - [#275](https://github.com/archway-network/archway/pull/275) - update the x/rewards/genesis to import/export for contract flat fees
-
-### Chore
-- [#320](https://github.com/archway-network/archway/pull/320) - Run the lint and test GH actions on all PRs
 
 ## [v0.1.0]
 
