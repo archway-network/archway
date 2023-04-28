@@ -34,6 +34,8 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Changed
 
+- [#320](https://github.com/archway-network/archway/pull/320) - Run the lint and test GH actions on all PRs
+
 ### Deprecated
 
 ### Removed
