@@ -87,7 +87,7 @@ ifeq ($(OS),Windows_NT)
 	echo unable to build on windows systems
 	exit 1
 else
-	go build -mod=readonly $(BUILD_FLAGS) -o build/archwayd ./cmd/archwayd
+	docker run --rm -v "$(CURDIR)":/code -w /code -e LIBWASM_VERSION=$(LIBWASM_VERSION) goreleaser/goreleaser-cross:v1.19.5 build --clean --skip-validate
 endif
 
 build-contract-tests-hooks:
@@ -193,19 +193,31 @@ proto-lint:
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against-input $(HTTPS_GIT)#branch=master
 
-build-docker:
-	docker build . -t archwayd:latest
-
-
-build-release: build-docker
-	mkdir -p $(CURRENT_DIR)/releases
-	docker run --rm --platform linux/amd64 -ti -v $(CURRENT_DIR)/releases:/root/.archway --entrypoint /bin/sh archwayd:latest -c "cp /usr/bin/archwayd /root/.archway"
-
 localnet:
 	docker-compose up
 
+release-dryrun:
+	$(DOCKER) run \
+		--rm \
+		-v "$(CURDIR)":/code \
+		-w /code \
+		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		goreleaser/goreleaser-cross:v1.19.5 \
+		--skip-publish \
+		--clean \
+		--skip-validate
+
 release:
-	docker run --rm -v "$(CURDIR)":/code -w /code -e LIBWASM_VERSION=$(LIBWASM_VERSION) goreleaser/goreleaser-cross:v1.19.5 --skip-publish --rm-dist
+	$(DOCKER) run \
+		--rm \
+		-v "$(CURDIR)":/code \
+		-w /code \
+		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		goreleaser/goreleaser-cross:v1.19.5 \
+		--skip-publish \
+		--clean
 
 check-vuln-deps:
 	go list -json -deps ./... | docker run --rm -i sonatypecommunity/nancy:latest sleuth
