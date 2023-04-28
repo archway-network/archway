@@ -77,30 +77,3 @@ jobs:
         with:
           config: ${{ secrets.GKE_SHARED_NONPROD_GH_ACTIONS_BOT_KUBECONFIG }}
           command: apply -n testnets -f ci/titus-1.yaml
-
-  deploy-constantine:
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
-
-    needs:
-      - build-docker-image
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Get latest release tag
-        id: latesttag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-
-      - name: Update NODE_VERSION
-        run: |
-          sed -i -e "s|NODE_VERSION|${{ steps.latesttag.outputs.tag }}|g" ci/constantine-1.yaml
-
-      - name: Deploy Chain
-        uses: steebchen/kubectl@v2.0.0
-        with:
-          config: ${{ secrets.GKE_SHARED_NONPROD_GH_ACTIONS_BOT_KUBECONFIG }}
-          command: apply -n testnets -f ci/constantine-1.yaml
