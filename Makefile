@@ -205,7 +205,7 @@ localnet:
 	docker-compose up
 
 release:
-	docker run --rm -v "$(CURDIR)":/code -w /code -e LIBWASM_VERSION=$(LIBWASM_VERSION) goreleaser/goreleaser-cross:v1.19.5 --skip-publish --clean
+	docker run --rm -v "$(CURDIR)":/code -w /code -e LIBWASM_VERSION=$(LIBWASM_VERSION) goreleaser/goreleaser-cross:v1.19.5 --skip-publish --rm-dist
 
 check-vuln-deps:
 	go list -json -deps ./... | docker run --rm -i sonatypecommunity/nancy:latest sleuth
