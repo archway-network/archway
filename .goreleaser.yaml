@@ -7,7 +7,7 @@ builds:
     hooks:
       pre:
         - wget https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.x86_64.a -O /lib/libwasmvm_muslc.a
-        - apt install musl-dev
+        - apt install musl-dev=1.2.2-1
     goos:
       - linux
     goarch:
@@ -30,7 +30,7 @@ builds:
     hooks:
       pre:
         - wget https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.aarch64.a -O /usr/local/lib/libwasmvm_muslc.a
-        - apt install musl-dev
+        - apt install musl-dev=1.2.2-1
     goos:
       - linux
     goarch:
