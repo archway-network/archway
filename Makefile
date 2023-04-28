@@ -15,6 +15,9 @@ DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(
 HTTPS_GIT := https://github.com/archway-network/archway.git
 CURRENT_DIR := $(shell pwd)
 
+# library versions
+LIBWASM_VERSION = $(shell go list -m -f '{{ .Version }}' github.com/CosmWasm/wasmvm)
+
 export GO111MODULE = on
 
 # process build tags
@@ -202,7 +205,7 @@ localnet:
 	docker-compose up
 
 release:
-	docker run --rm -v "$(CURDIR)":/code -w /code goreleaser/goreleaser-cross:v1.19.5 --skip-publish --rm-dist
+	docker run --rm -v "$(CURDIR)":/code -w /code -e LIBWASM_VERSION=$(LIBWASM_VERSION) goreleaser/goreleaser-cross:v1.19.5 --skip-publish --clean
 
 check-vuln-deps:
 	go list -json -deps ./... | docker run --rm -i sonatypecommunity/nancy:latest sleuth

@@ -1,13 +1,12 @@
 before:
   hooks:
+    - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.LIBWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /lib/libwasmvm_muslc.a
+    - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.LIBWASM_VERSION }}/libwasmvm_muslc.aarch64.a -O /usr/local/lib/libwasmvm_muslc.a
+    - apt install musl-dev=1.2.2-1
 builds:
   - id: linux-amd64
     main: ./cmd/archwayd
     binary: archwayd
-    hooks:
-      pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.x86_64.a -O /lib/libwasmvm_muslc.a
-        - apt install musl-dev=1.2.2-1
     goos:
       - linux
     goarch:
@@ -27,10 +26,6 @@ builds:
   - id: linux-arm64
     main: ./cmd/archwayd
     binary: archwayd
-    hooks:
-      pre:
-        - wget https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.aarch64.a -O /usr/local/lib/libwasmvm_muslc.a
-        - apt install musl-dev=1.2.2-1
     goos:
       - linux
     goarch:
