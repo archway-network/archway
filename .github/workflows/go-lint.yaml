@@ -1,16 +1,14 @@
 name: Linter
 
-# Run on every master merge and on PRs.
+# Run on every master merge and on all PRs.
 on:
   push:
     branches: [main]
     tags: [v*]
 
   pull_request:
-    branches: [main]
 
   workflow_dispatch:
-    branches: [main]
     
 permissions:
   contents: read
@@ -22,7 +20,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
 
       - uses: actions/checkout@v3
 
