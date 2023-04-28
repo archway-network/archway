@@ -169,10 +169,15 @@ func validateInflationRecipients(i interface{}) error {
 		return sdkErrors.Wrap(ErrInvalidInflationRecipient, "inflation recipients not found")
 	}
 	inflationDistribution := sdk.ZeroDec()
+	recipientSeen := map[string]bool{} // to check of same recipient has been configured more than once
 	for _, recipient := range inflationRecipients {
 		if recipient.Recipient == "" {
 			return sdkErrors.Wrap(ErrInvalidInflationRecipient, "inflation recipient module name is empty")
 		}
+		if recipientSeen[recipient.Recipient] {
+			return sdkErrors.Wrap(ErrInvalidInflationRecipient, "inflation recipient module cannot be configured more than once")
+		}
+		recipientSeen[recipient.Recipient] = true
 		inflationDistribution = inflationDistribution.Add(recipient.Ratio)
 	}
 	if !inflationDistribution.Equal(sdk.OneDec()) {
