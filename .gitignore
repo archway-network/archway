@@ -1,6 +1,7 @@
 contracts/*.wasm
 target/
 build/
+*.DS_Store
 
 .idea/
 .vscode/
