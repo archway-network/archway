@@ -1,4 +1,4 @@
-package upgrade03
+package upgrade04
 
 import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
