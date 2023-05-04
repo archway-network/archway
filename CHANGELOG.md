@@ -32,6 +32,8 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
+- [#330](https://github.com/archway-network/archway/pull/330) Proper chain upgrade flow.
+
 ### Changed
 
 - [#320](https://github.com/archway-network/archway/pull/320) - Run the lint and test GH actions on all PRs
