@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -871,7 +873,8 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
 		req := voterCustomTypes.UpdateContractMetadataRequest{
 			RewardsAddress: acc2.Address.String(),
 		}
-		s.VoterUpdateMetadata(chain, contractAddr, acc1, req, true)
+		err := s.VoterUpdateMetadata(chain, contractAddr, acc1, req, true)
+		require.NoError(s.T(), err)
 
 		meta := chain.GetContractMetadata(contractAddr)
 		s.Assert().Equal(contractAddr.String(), meta.OwnerAddress)
@@ -882,7 +885,8 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsMetadataUpdate() {
 		req := voterCustomTypes.UpdateContractMetadataRequest{
 			OwnerAddress: acc1.Address.String(),
 		}
-		s.VoterUpdateMetadata(chain, contractAddr, acc1, req, true)
+		err := s.VoterUpdateMetadata(chain, contractAddr, acc1, req, true)
+		require.NoError(s.T(), err)
 
 		meta := chain.GetContractMetadata(contractAddr)
 		s.Assert().Equal(acc1.Address.String(), meta.OwnerAddress)
@@ -1108,12 +1112,13 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
 
 	// Withdraw using records limit
 	s.Run("Withdraw using records limit and check Reply stats", func() {
-		s.VoterWithdrawRewards(
+		err := s.VoterWithdrawRewards(
 			chain, contractAddr, acc1,
 			pkg.Uint64Ptr(2),
 			nil,
 			true,
 		)
+		require.NoError(s.T(), err)
 
 		rewardsExpected := sdk.NewCoins()
 		rewardsExpected = rewardsExpected.Add(recordsExpected[0].Rewards...)
@@ -1127,12 +1132,13 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
 
 	// Withdraw the rest using record IDs
 	s.Run("Withdraw using record IDs and check Reply stats", func() {
-		s.VoterWithdrawRewards(
+		err := s.VoterWithdrawRewards(
 			chain, contractAddr, acc1,
 			nil,
 			[]uint64{recordsExpected[2].Id, recordsExpected[3].Id},
 			true,
 		)
+		require.NoError(s.T(), err)
 
 		stats := s.VoterGetWithdrawStats(chain, contractAddr)
 		s.Assert().EqualValues(2, stats.Count)

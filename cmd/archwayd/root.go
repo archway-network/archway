@@ -76,7 +76,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			// This backend returns an error for every GetKey (by address / by name) request.
 			dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
 			if dryRun {
-				cmd.Flags().Set(flags.FlagDryRun, "false")
+				_ = cmd.Flags().Set(flags.FlagDryRun, "false")
 			}
 
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
@@ -99,8 +99,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			//    This prevents the in-memory Keyring re-creation (override) during the
 			//    client.GetClientTxContext's ReadPersistentCommandFlags sub-call.
 			if dryRun {
-				cmd.Flags().Set(flags.FlagDryRun, "true")
-				cmd.Flags().Set(flags.FlagKeyringBackend, "")
+				_ = cmd.Flags().Set(flags.FlagDryRun, "true")
+				_ = cmd.Flags().Set(flags.FlagKeyringBackend, "")
 			}
 
 			return server.InterceptConfigsPreRunHandler(cmd, "", nil)

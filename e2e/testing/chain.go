@@ -22,7 +22,7 @@ import (
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v3/testing/mock"
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -61,13 +61,13 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	var consensusParamsOpts []TestChainConsensusParamsOption
 	var genStateOpts []TestChainGenesisOption
 	for i, opt := range opts {
-		switch opt.(type) {
+		switch opt := opt.(type) {
 		case TestChainConfigOption:
-			chainCfgOpts = append(chainCfgOpts, opt.(TestChainConfigOption))
+			chainCfgOpts = append(chainCfgOpts, opt)
 		case TestChainConsensusParamsOption:
-			consensusParamsOpts = append(consensusParamsOpts, opt.(TestChainConsensusParamsOption))
+			consensusParamsOpts = append(consensusParamsOpts, opt)
 		case TestChainGenesisOption:
-			genStateOpts = append(genStateOpts, opt.(TestChainGenesisOption))
+			genStateOpts = append(genStateOpts, opt)
 		default:
 			require.Fail(t, "Unknown chain option type", "optionIdx", i)
 		}
@@ -329,6 +329,15 @@ func (chain *TestChain) NextBlock(skipTime time.Duration) []abci.Event {
 	bbEvents := chain.BeginBlock()
 
 	return append(ebEvents, bbEvents...)
+}
+
+func (chain *TestChain) GoToHeight(height int64, skipTime time.Duration) {
+	if chain.GetBlockHeight() > height {
+		panic("can't go to past height")
+	}
+	for chain.GetBlockHeight() < height {
+		chain.NextBlock(skipTime)
+	}
 }
 
 // BeginBlock begins a new block.
