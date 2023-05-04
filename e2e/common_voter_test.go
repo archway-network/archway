@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/hex"
 	"encoding/json"
+	"github.com/stretchr/testify/require"
 	"strconv"
 	"strings"
 	"time"
@@ -121,7 +122,8 @@ func (s *E2ETestSuite) VoterVote(chain *e2eTesting.TestChain, contractAddr sdk.A
 		}),
 	}
 
-	chain.SendMsgs(acc, true, []sdk.Msg{&msg})
+	_, _, _, err = chain.SendMsgs(acc, true, []sdk.Msg{&msg})
+	require.NoError(s.T(), err)
 }
 
 // VoterIBCVote adds a vote for an existing voting over IBC.

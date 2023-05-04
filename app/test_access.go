@@ -1,8 +1,6 @@
 package app
 
 import (
-	"testing"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 
@@ -19,7 +17,6 @@ import (
 )
 
 type TestSupport struct {
-	t   testing.TB
 	app *ArchwayApp
 }
 

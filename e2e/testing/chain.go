@@ -331,6 +331,15 @@ func (chain *TestChain) NextBlock(skipTime time.Duration) []abci.Event {
 	return append(ebEvents, bbEvents...)
 }
 
+func (chain *TestChain) GoToHeight(height int64, skipTime time.Duration) {
+	if chain.GetBlockHeight() > height {
+		panic("can't go to past height")
+	}
+	for chain.GetBlockHeight() < height {
+		chain.NextBlock(skipTime)
+	}
+}
+
 // BeginBlock begins a new block.
 func (chain *TestChain) BeginBlock() []abci.Event {
 	const blockDur = 5 * time.Second
