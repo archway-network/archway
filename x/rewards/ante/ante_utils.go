@@ -14,6 +14,7 @@ type RewardsKeeperExpected interface {
 	GetMinConsensusFee(ctx sdk.Context) (sdk.DecCoin, bool)
 	GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Coin, bool)
 	CreateFlatFeeRewardsRecords(ctx sdk.Context, contractAddress sdk.AccAddress, flatfee sdk.Coins)
+	MinimumPriceOfGas(ctx sdk.Context) sdk.Coin
 
 	// Used in DeductFeeDecorator
 	TxFeeRebateRatio(ctx sdk.Context) sdk.Dec

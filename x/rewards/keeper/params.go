@@ -24,12 +24,19 @@ func (k Keeper) MaxWithdrawRecords(ctx sdk.Context) (res uint64) {
 	return
 }
 
+func (k Keeper) MinimumPriceOfGas(ctx sdk.Context) sdk.Coin {
+	var res sdk.Coin
+	k.paramStore.Get(ctx, types.MinPriceOfGasParamKey, &res)
+	return res
+}
+
 // GetParams return all module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
 		k.InflationRewardsRatio(ctx),
 		k.TxFeeRebateRatio(ctx),
 		k.MaxWithdrawRecords(ctx),
+		k.MinimumPriceOfGas(ctx),
 	)
 }
 

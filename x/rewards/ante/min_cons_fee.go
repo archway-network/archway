@@ -4,8 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/archway-network/archway/pkg"
 )
 
 // MinFeeDecorator rejects transaction if its fees are less than minimum fees defined by the x/rewards module.
@@ -38,20 +36,8 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 	}
 
 	var expectedFees sdk.Coins // All the fees which need to be paid for the given tx. includes min consensus fee + every contract flat fee
-	gasUnitPrice, found := mfd.rewardsKeeper.GetMinConsensusFee(ctx)
-	if found {
-		// Estimate the minimum fee expected
-		// We use RoundInt here since minimum fee must be GTE calculated amount
-		txGasLimit := pkg.NewDecFromUint64(feeTx.GetGas())
-		if txGasLimit.IsZero() {
-			return ctx, sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "tx gas limit is not set")
-		}
-		minFeeExpected := sdk.Coin{
-			Denom:  gasUnitPrice.Denom,
-			Amount: gasUnitPrice.Amount.Mul(txGasLimit).RoundInt(),
-		}
-		expectedFees = expectedFees.Add(minFeeExpected)
-	}
+	computationalGasPrice := mfd.calcComputationalFees(ctx, feeTx.GetGas())
+	expectedFees = expectedFees.Add(computationalGasPrice)
 
 	// Get flatfees for any contracts being called in the tx.msgs
 	for _, m := range tx.GetMsgs() {
@@ -70,4 +56,22 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 		return next(ctx, tx, simulate)
 	}
 	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, expectedFees.String())
+}
+
+func (mfd MinFeeDecorator) calcComputationalFees(ctx sdk.Context, gasLimit uint64) sdk.Coin {
+	minPoG := mfd.rewardsKeeper.MinimumPriceOfGas(ctx)
+	antiDoSPoG, found := mfd.rewardsKeeper.GetMinConsensusFee(ctx)
+	// no anti dos price of gas is set, then we fallback to the minimum price of gas
+	if !found {
+		return sdk.NewCoin(minPoG.Denom, sdk.NewIntFromUint64(gasLimit).Mul(minPoG.Amount))
+	}
+	// otherwise we need to compute the fees in both cases and see which is higher
+	if minPoG.Denom != antiDoSPoG.Denom {
+		panic("conflict between minPoG denom and antiDoSPog denom")
+	}
+
+	gasLimitInt := sdk.NewIntFromUint64(gasLimit)
+	minPoGAmt := gasLimitInt.Mul(minPoG.Amount)
+	minAntiDoSPoG := sdk.NewDecFromInt(gasLimitInt).Mul(antiDoSPoG.Amount).RoundInt()
+	return sdk.NewCoin(minPoG.Denom, sdk.MaxInt(minPoGAmt, minAntiDoSPoG))
 }
