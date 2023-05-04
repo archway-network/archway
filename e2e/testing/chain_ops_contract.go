@@ -2,7 +2,7 @@ package e2eTesting
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io/ioutil" //nolint: staticcheck
 
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 

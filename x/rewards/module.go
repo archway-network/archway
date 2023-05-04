@@ -89,7 +89,6 @@ func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	cdc    codec.Codec
 	keeper keeper.Keeper
 }
 

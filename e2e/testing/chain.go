@@ -22,7 +22,7 @@ import (
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v3/testing/mock"
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -61,13 +61,13 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	var consensusParamsOpts []TestChainConsensusParamsOption
 	var genStateOpts []TestChainGenesisOption
 	for i, opt := range opts {
-		switch opt.(type) {
+		switch opt := opt.(type) {
 		case TestChainConfigOption:
-			chainCfgOpts = append(chainCfgOpts, opt.(TestChainConfigOption))
+			chainCfgOpts = append(chainCfgOpts, opt)
 		case TestChainConsensusParamsOption:
-			consensusParamsOpts = append(consensusParamsOpts, opt.(TestChainConsensusParamsOption))
+			consensusParamsOpts = append(consensusParamsOpts, opt)
 		case TestChainGenesisOption:
-			genStateOpts = append(genStateOpts, opt.(TestChainGenesisOption))
+			genStateOpts = append(genStateOpts, opt)
 		default:
 			require.Fail(t, "Unknown chain option type", "optionIdx", i)
 		}

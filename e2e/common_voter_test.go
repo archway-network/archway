@@ -3,10 +3,11 @@ package e2e
 import (
 	"encoding/hex"
 	"encoding/json"
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	cwMath "github.com/CosmWasm/cosmwasm-go/std/math"
 	cwSdkTypes "github.com/CosmWasm/cosmwasm-go/std/types"

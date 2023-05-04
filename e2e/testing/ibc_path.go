@@ -187,6 +187,8 @@ func (e *IBCEndpoint) ChannelID() string {
 }
 
 // sendPacket sends an IBC packet through the channel keeper and updates the counterparty client.
+//
+// nolint: unused
 func (e *IBCEndpoint) sendPacket(packet exported.PacketI) {
 	e.srcChain.SendIBCPacket(packet)
 	e.dstEndpoint.updateIBCClient()
