@@ -144,7 +144,7 @@ Params defines the module parameters.
 | `inflation_rewards_ratio` | [string](#string) |  | inflation_rewards_ratio defines the percentage of minted inflation tokens that are used for dApp rewards [0.0, 1.0]. If set to 0.0, no inflation rewards are distributed. |
 | `tx_fee_rebate_ratio` | [string](#string) |  | tx_fee_rebate_ratio defines the percentage of tx fees that are used for dApp rewards [0.0, 1.0]. If set to 0.0, no fee rewards are distributed. |
 | `max_withdraw_records` | [uint64](#uint64) |  | max_withdraw_records defines the maximum number of RewardsRecord objects used for the withdrawal operation. |
-| `min_price_of_gas` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | min_price_of_gas defines the minimum price for each single unit of gas in the network. during the min consensus fee ante handler we will be taking the max between min consensus fee and minimum price of gas to compute the minimum tx computational fees, which are independent from contract flat fees (premiums) |
+| `min_price_of_gas` | [cosmos.base.v1beta1.DecCoin](#cosmos.base.v1beta1.DecCoin) |  | min_price_of_gas defines the minimum price for each single unit of gas in the network. during the min consensus fee ante handler we will be taking the max between min consensus fee and minimum price of gas to compute the minimum tx computational fees, which are independent from contract flat fees (premiums) |
 
 
 

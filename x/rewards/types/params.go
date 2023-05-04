@@ -29,7 +29,7 @@ var (
 	DefaultInflationRatio     = sdk.MustNewDecFromStr("0.20") // 20%
 	DefaultTxFeeRebateRatio   = sdk.MustNewDecFromStr("0.50") // 50%
 	DefaultMaxWithdrawRecords = MaxWithdrawRecordsParamLimit
-	DefaultMinPriceOfGas      = sdk.NewCoin("stake", sdk.ZeroInt())
+	DefaultMinPriceOfGas      = sdk.NewDecCoin("stake", sdk.ZeroInt())
 )
 
 var _ paramTypes.ParamSet = (*Params)(nil)
@@ -40,7 +40,7 @@ func ParamKeyTable() paramTypes.KeyTable {
 }
 
 // NewParams creates a new Params instance.
-func NewParams(inflationRewardsRatio, txFeeRebateRatio sdk.Dec, maxwithdrawRecords uint64, minPriceOfGas sdk.Coin) Params {
+func NewParams(inflationRewardsRatio, txFeeRebateRatio sdk.Dec, maxwithdrawRecords uint64, minPriceOfGas sdk.DecCoin) Params {
 	return Params{
 		InflationRewardsRatio: inflationRewardsRatio,
 		TxFeeRebateRatio:      txFeeRebateRatio,
@@ -163,7 +163,7 @@ func validateMinPriceOfGas(v interface{}) (retErr error) {
 		}
 	}()
 
-	p, ok := v.(sdk.Coin)
+	p, ok := v.(sdk.DecCoin)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}

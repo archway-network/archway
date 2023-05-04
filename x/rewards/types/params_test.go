@@ -91,7 +91,7 @@ func TestRewardsParamsValidate(t *testing.T) {
 				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
 				TxFeeRebateRatio:      sdk.NewDecWithPrec(1, 0),
 				MaxWithdrawRecords:    1000,
-				MinPriceOfGas:         sdk.Coin{Denom: "stake", Amount: sdk.NewInt(-100)},
+				MinPriceOfGas:         sdk.DecCoin{Denom: "stake", Amount: sdk.NewDec(-100)},
 			},
 			errExpected: true,
 		},

@@ -96,7 +96,7 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 
 			chain.GetApp().RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(minConsFee)
 			params := chain.GetApp().RewardsKeeper.GetParams(ctx)
-			coin, err := sdk.ParseCoinNormalized(tc.minPoG)
+			coin, err := sdk.ParseDecCoin(tc.minPoG)
 			require.NoError(t, err)
 			params.MinPriceOfGas = coin
 			chain.GetApp().RewardsKeeper.SetParams(ctx, params)

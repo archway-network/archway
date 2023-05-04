@@ -24,8 +24,8 @@ func (k Keeper) MaxWithdrawRecords(ctx sdk.Context) (res uint64) {
 	return
 }
 
-func (k Keeper) MinimumPriceOfGas(ctx sdk.Context) sdk.Coin {
-	var res sdk.Coin
+func (k Keeper) MinimumPriceOfGas(ctx sdk.Context) sdk.DecCoin {
+	var res sdk.DecCoin
 	k.paramStore.Get(ctx, types.MinPriceOfGasParamKey, &res)
 	return res
 }

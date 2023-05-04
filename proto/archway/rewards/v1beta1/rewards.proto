@@ -30,7 +30,7 @@ message Params {
   // during the min consensus fee ante handler we will be taking the max between min consensus
   // fee and minimum price of gas to compute the minimum tx computational fees, which are independent
   // from contract flat fees (premiums)
-  cosmos.base.v1beta1.Coin min_price_of_gas = 4 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.DecCoin min_price_of_gas = 4 [ (gogoproto.nullable) = false ];
 }
 
 // ContractMetadata defines the contract rewards distribution options for a particular contract.
