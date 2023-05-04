@@ -60,6 +60,9 @@ func (k Keeper) ComputationalPriceOfGas(ctx sdk.Context) sdk.DecCoin {
 	if !found {
 		return minPoG
 	}
+	if minPoG.Denom != antiDoSPoG.Denom {
+		panic("conflict between anti dos denom and min price of gas denom")
+	}
 	return sdk.NewDecCoinFromDec(minPoG.Denom, sdk.MaxDec(minPoG.Amount, antiDoSPoG.Amount))
 }
 
