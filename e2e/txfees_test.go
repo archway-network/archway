@@ -20,7 +20,7 @@ import (
 // Test configures a chain based on the Archway mainnet parameters.
 func (s *E2ETestSuite) TestTxFees() {
 	const (
-		txGasLimit        = 200_000
+		txGasLimit        = 201_000
 		txFeeAmtIncrement = 1000
 	)
 

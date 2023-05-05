@@ -20,6 +20,7 @@ func (s *KeeperTestSuite) TestGRPC_Params() {
 		InflationRewardsRatio: sdk.MustNewDecFromStr("0.1"),
 		TxFeeRebateRatio:      sdk.MustNewDecFromStr("0.1"),
 		MaxWithdrawRecords:    uint64(2),
+		MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 	}
 	k.SetParams(ctx, params)
 
@@ -32,9 +33,7 @@ func (s *KeeperTestSuite) TestGRPC_Params() {
 	s.Run("ok: gets params", func() {
 		res, err := querySrvr.Params(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryParamsRequest{})
 		s.Require().NoError(err)
-		s.Require().Equal(params.InflationRewardsRatio, res.Params.InflationRewardsRatio)
-		s.Require().Equal(params.TxFeeRebateRatio, res.Params.TxFeeRebateRatio)
-		s.Require().Equal(params.MaxWithdrawRecords, res.Params.MaxWithdrawRecords)
+		s.Require().Equal(params, res.Params)
 	})
 }
 

@@ -33,6 +33,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Added
 
 - [#330](https://github.com/archway-network/archway/pull/330) Proper chain upgrade flow.
+- [#351](https://github.com/archway-network/archway/pull/351) Add minimum price of gas.
 
 ### Changed
 
