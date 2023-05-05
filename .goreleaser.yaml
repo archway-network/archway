@@ -105,6 +105,7 @@ dockers:
   - use: buildx
     goos: linux
     goarch: amd64
+    dockerfile: Dockerfile.debug
     image_templates:
       - "ghcr.io/archway-network/{{ .ProjectName }}:{{ .Version }}-amd64-debug"
     build_flag_templates:
@@ -120,6 +121,7 @@ dockers:
   - use: buildx
     goos: linux
     goarch: arm64
+    dockerfile: Dockerfile.debug
     image_templates:
       - "ghcr.io/archway-network/{{ .ProjectName }}:{{ .Version }}-arm64v8-debug"
     build_flag_templates:
