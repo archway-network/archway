@@ -31,16 +31,19 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
-- [#330](https://github.com/archway-network/archway/pull/330) Proper chain upgrade flow.
-- [#351](https://github.com/archway-network/archway/pull/351) Add minimum price of gas.
-- [#339](https://github.com/archway-network/archway/pull/339) Updates & Quality Control
-    - Docs: Community Contribution Guidelines
-    - Docs: Security Policy
-    - Docs: ADR Log Index
+- [#330](https://github.com/archway-network/archway/pull/330) - Proper chain upgrade flow.
+- [#351](https://github.com/archway-network/archway/pull/351) - Add minimum price of gas.
+- [#339](https://github.com/archway-network/archway/pull/339) - Updates & Quality Control
+    - Community Contribution Guidelines
+    - Security Policy
+    - ADR Log Index
+    - Bug report template
+    - Feature request template
+    - General issue template
 ### Changed
 
 - [#320](https://github.com/archway-network/archway/pull/320) - Run the lint and test GH actions on all PRs
-- [#339](https://github.com/archway-network/archway/pull/339) - docs: Updates & Quality Control
+- [#339](https://github.com/archway-network/archway/pull/339) - Updates & Quality Control
     - README.md
     - docs/README.md
 
