@@ -88,6 +88,14 @@ ifeq ($(OS),Windows_NT)
 	echo unable to build on windows systems
 	exit 1
 else
+	go build -mod=readonly $(BUILD_FLAGS) -o build/archwayd ./cmd/archwayd
+endif
+
+build-all: go.sum
+ifeq ($(OS),Windows_NT)
+	echo unable to build on windows systems
+	exit 1
+else
 	docker run --rm -v "$(CURDIR)":/code -w /code -e LIBWASM_VERSION=$(LIBWASM_VERSION) goreleaser/goreleaser-cross:$(GORELEASER_VERSION) build --clean --skip-validate
 endif
 
