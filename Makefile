@@ -7,6 +7,7 @@ LEDGER_ENABLED ?= true
 # SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
+GORELEASER_VERSION = v1.19.5
 
 # for dockerized protobuf tools
 DOCKER := $(shell which docker)
@@ -87,7 +88,7 @@ ifeq ($(OS),Windows_NT)
 	echo unable to build on windows systems
 	exit 1
 else
-	docker run --rm -v "$(CURDIR)":/code -w /code -e LIBWASM_VERSION=$(LIBWASM_VERSION) goreleaser/goreleaser-cross:v1.19.5 build --clean --skip-validate
+	docker run --rm -v "$(CURDIR)":/code -w /code -e LIBWASM_VERSION=$(LIBWASM_VERSION) goreleaser/goreleaser-cross:$(GORELEASER_VERSION) build --clean --skip-validate
 endif
 
 build-contract-tests-hooks:
@@ -203,7 +204,7 @@ release-dryrun:
 		-w /code \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		goreleaser/goreleaser-cross:v1.19.5 \
+		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
 		--skip-publish \
 		--clean \
 		--skip-validate
@@ -215,7 +216,7 @@ release:
 		-w /code \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		goreleaser/goreleaser-cross:v1.19.5 \
+		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
 		--skip-publish \
 		--clean
 
