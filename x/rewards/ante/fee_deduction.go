@@ -107,7 +107,7 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 			return err
 		}
 		if !hasWasmMsgs {
-			hasWasmMsgs = hwm //set hasWasmMsgs as true if its false. if its true, do nothing
+			hasWasmMsgs = hwm // set hasWasmMsgs as true if its false. if its true, do nothing
 		}
 		for _, cff := range contractFlatFees {
 			flatFees = flatFees.Add(cff.FlatFees...)

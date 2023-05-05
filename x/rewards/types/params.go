@@ -12,6 +12,7 @@ var (
 	InflationRewardsRatioParamKey = []byte("InflationRewardsRatio")
 	TxFeeRebateRatioParamKey      = []byte("TxFeeRebateRatio")
 	MaxWithdrawRecordsParamKey    = []byte("MaxWithdrawRecords")
+	MinPriceOfGasParamKey         = []byte("MinPriceOfGas")
 )
 
 // Limit below are var (not const) for E2E tests to change them.
@@ -28,6 +29,7 @@ var (
 	DefaultInflationRatio     = sdk.MustNewDecFromStr("0.20") // 20%
 	DefaultTxFeeRebateRatio   = sdk.MustNewDecFromStr("0.50") // 50%
 	DefaultMaxWithdrawRecords = MaxWithdrawRecordsParamLimit
+	DefaultMinPriceOfGas      = sdk.NewDecCoin("stake", sdk.ZeroInt())
 )
 
 var _ paramTypes.ParamSet = (*Params)(nil)
@@ -38,11 +40,12 @@ func ParamKeyTable() paramTypes.KeyTable {
 }
 
 // NewParams creates a new Params instance.
-func NewParams(inflationRewardsRatio, txFeeRebateRatio sdk.Dec, maxwithdrawRecords uint64) Params {
+func NewParams(inflationRewardsRatio, txFeeRebateRatio sdk.Dec, maxwithdrawRecords uint64, minPriceOfGas sdk.DecCoin) Params {
 	return Params{
 		InflationRewardsRatio: inflationRewardsRatio,
 		TxFeeRebateRatio:      txFeeRebateRatio,
 		MaxWithdrawRecords:    maxwithdrawRecords,
+		MinPriceOfGas:         minPriceOfGas,
 	}
 }
 
@@ -52,6 +55,7 @@ func DefaultParams() Params {
 		DefaultInflationRatio,
 		DefaultTxFeeRebateRatio,
 		DefaultMaxWithdrawRecords,
+		DefaultMinPriceOfGas,
 	)
 }
 
@@ -61,6 +65,7 @@ func (m *Params) ParamSetPairs() paramTypes.ParamSetPairs {
 		paramTypes.NewParamSetPair(InflationRewardsRatioParamKey, &m.InflationRewardsRatio, validateInflationRewardsRatio),
 		paramTypes.NewParamSetPair(TxFeeRebateRatioParamKey, &m.TxFeeRebateRatio, validateTxFeeRebateRatio),
 		paramTypes.NewParamSetPair(MaxWithdrawRecordsParamKey, &m.MaxWithdrawRecords, validateMaxWithdrawRecords),
+		paramTypes.NewParamSetPair(MinPriceOfGasParamKey, &m.MinPriceOfGas, validateMinPriceOfGas),
 	}
 }
 
@@ -75,7 +80,9 @@ func (m Params) Validate() error {
 	if err := validateMaxWithdrawRecords(m.MaxWithdrawRecords); err != nil {
 		return err
 	}
-
+	if err := validateMinPriceOfGas(m.MinPriceOfGas); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -147,4 +154,19 @@ func validateMaxWithdrawRecords(v interface{}) (retErr error) {
 	}
 
 	return nil
+}
+
+func validateMinPriceOfGas(v interface{}) (retErr error) {
+	defer func() {
+		if retErr != nil {
+			retErr = fmt.Errorf("minPriceOfGas param: %w", retErr)
+		}
+	}()
+
+	p, ok := v.(sdk.DecCoin)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	return p.Validate()
 }
