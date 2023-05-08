@@ -248,7 +248,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 			"fee_rebate_rewards",
 		)
 		eventMetadataBz := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1zd.ContractRewardCalculationEvent",
+			"archway.rewards.v1.ContractRewardCalculationEvent",
 			"metadata",
 		)
 
