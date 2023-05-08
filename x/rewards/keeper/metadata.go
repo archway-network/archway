@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/archway-network/archway/x/rewards/types"
 )
@@ -17,6 +18,16 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 	contractInfo := k.contractInfoView.GetContractInfo(ctx, contractAddr)
 	if contractInfo == nil {
 		return types.ErrContractNotFound
+	}
+
+	if metaUpdates.RewardsAddress != "" {
+		addr, err := sdk.AccAddressFromBech32(metaUpdates.RewardsAddress)
+		if err != nil {
+			return err
+		}
+		if k.isModuleAccount(ctx, addr) {
+			return types.ErrInvalidRequest.Wrap("rewards address cannot be a module account")
+		}
 	}
 
 	// Check ownership
@@ -65,4 +76,13 @@ func (k Keeper) GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress
 	}
 
 	return &meta
+}
+
+func (k Keeper) isModuleAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
+	acc := k.authKeeper.GetAccount(ctx, addr)
+	if acc == nil {
+		return false
+	}
+	_, ok := acc.(authtypes.ModuleAccountI)
+	return ok
 }
