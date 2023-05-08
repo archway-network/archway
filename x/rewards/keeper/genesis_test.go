@@ -37,6 +37,7 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 		sdk.NewDecWithPrec(99, 2),
 		sdk.NewDecWithPrec(98, 2),
 		1001,
+		types.DefaultMinPriceOfGas,
 	)
 
 	newMetadata := []types.ContractMetadata{

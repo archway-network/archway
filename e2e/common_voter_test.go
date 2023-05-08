@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	cwMath "github.com/CosmWasm/cosmwasm-go/std/math"
 	cwSdkTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -121,7 +123,8 @@ func (s *E2ETestSuite) VoterVote(chain *e2eTesting.TestChain, contractAddr sdk.A
 		}),
 	}
 
-	chain.SendMsgs(acc, true, []sdk.Msg{&msg})
+	_, _, _, err = chain.SendMsgs(acc, true, []sdk.Msg{&msg})
+	require.NoError(s.T(), err)
 }
 
 // VoterIBCVote adds a vote for an existing voting over IBC.

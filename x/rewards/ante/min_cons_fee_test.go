@@ -24,6 +24,7 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 		txFees     string // transaction fees [sdk.Coins]
 		txGasLimit uint64 // transaction gas limit
 		minConsFee string // min consensus fee [sdk.DecCoin]
+		minPoG     string
 		// Output expected
 		errExpected error // concrete error expected (or nil if no error expected)
 	}
@@ -34,18 +35,21 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 			txFees:     "200stake",
 			txGasLimit: 1000,
 			minConsFee: "0.1stake",
+			minPoG:     "0stake",
 		},
 		{
 			name:       "OK: 100stake fee == 100stake min fee",
 			txFees:     "100stake",
 			txGasLimit: 1000,
 			minConsFee: "0.1stake",
+			minPoG:     "0stake",
 		},
 		{
 			name:        "Fail: 99stake fee < 100stake min fee",
 			txFees:      "99stake",
 			txGasLimit:  1000,
 			minConsFee:  "0.1stake",
+			minPoG:      "0stake",
 			errExpected: sdkErrors.ErrInsufficientFee,
 		},
 		{
@@ -53,12 +57,30 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 			txFees:     "100stake",
 			txGasLimit: 1000,
 			minConsFee: "0stake",
+			minPoG:     "0stake",
 		},
 		{
 			name:       "OK: expected fee is too low (zero)",
 			txFees:     "1stake",
 			txGasLimit: 1000,
 			minConsFee: "0.000000000001stake",
+			minPoG:     "0stake",
+		},
+		{
+			name:        "OK: min PoG used, min cons fee not set",
+			txFees:      "1000stake",
+			txGasLimit:  1000,
+			minConsFee:  "0stake",
+			minPoG:      "1stake",
+			errExpected: nil,
+		},
+		{
+			name:        "OK: min PoG used, min cons fee lower",
+			txFees:      "1000stake",
+			txGasLimit:  1000,
+			minConsFee:  "0.1stake",
+			minPoG:      "1stake",
+			errExpected: nil,
 		},
 	}
 
@@ -73,6 +95,11 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 			require.NoError(t, err)
 
 			chain.GetApp().RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(minConsFee)
+			params := chain.GetApp().RewardsKeeper.GetParams(ctx)
+			coin, err := sdk.ParseDecCoin(tc.minPoG)
+			require.NoError(t, err)
+			params.MinPriceOfGas = coin
+			chain.GetApp().RewardsKeeper.SetParams(ctx, params)
 
 			// Build transaction
 			txFees, err := sdk.ParseCoinsNormalized(tc.txFees)

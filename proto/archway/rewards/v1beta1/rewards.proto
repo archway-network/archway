@@ -25,6 +25,12 @@ message Params {
   ];
   // max_withdraw_records defines the maximum number of RewardsRecord objects used for the withdrawal operation.
   uint64 max_withdraw_records = 3;
+
+  // min_price_of_gas defines the minimum price for each single unit of gas in the network.
+  // during the min consensus fee ante handler we will be taking the max between min consensus
+  // fee and minimum price of gas to compute the minimum tx computational fees, which are independent
+  // from contract flat fees (premiums)
+  cosmos.base.v1beta1.DecCoin min_price_of_gas = 4 [ (gogoproto.nullable) = false ];
 }
 
 // ContractMetadata defines the contract rewards distribution options for a particular contract.

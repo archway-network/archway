@@ -53,9 +53,22 @@ func (k Keeper) GetMinConsensusFee(ctx sdk.Context) (sdk.DecCoin, bool) {
 	return fee, true
 }
 
+// ComputationalPriceOfGas returns the minimum price of each unit of gas.
+func (k Keeper) ComputationalPriceOfGas(ctx sdk.Context) sdk.DecCoin {
+	minPoG := k.MinimumPriceOfGas(ctx)
+	antiDoSPoG, found := k.GetMinConsensusFee(ctx)
+	if !found {
+		return minPoG
+	}
+	if minPoG.Denom != antiDoSPoG.Denom {
+		panic("conflict between anti dos denom and min price of gas denom")
+	}
+	return sdk.NewDecCoinFromDec(minPoG.Denom, sdk.MaxDec(minPoG.Amount, antiDoSPoG.Amount))
+}
+
 // calculateMinConsensusFee calculates the minimum consensus fee amount using the formula:
 //
-//	-1 * ( BlockRewards / ( GasLimit * (TxFeeRatio - 1) ) )
+//	[ -1 * ( BlockRewards / ( GasLimit * (TxFeeRatio - 1) ) ]
 //
 // A simplified expression is used, original from specs: -1 * ( BlockRewards / ( GasLimit * TxFeeRatio - GasLimit ) )
 func calculateMinConsensusFeeAmt(blockRewards, gasLimit, txFeeRatio sdk.Dec) sdk.Dec {
