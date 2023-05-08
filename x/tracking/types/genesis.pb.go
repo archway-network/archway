@@ -30,7 +30,8 @@ type GenesisState struct {
 	TxInfoLastId uint64 `protobuf:"varint,1,opt,name=tx_info_last_id,json=txInfoLastId,proto3" json:"tx_info_last_id,omitempty"`
 	// tx_infos defines a list of all the tracked transactions.
 	TxInfos []TxInfo `protobuf:"bytes,2,rep,name=tx_infos,json=txInfos,proto3" json:"tx_infos"`
-	// contract_op_info_last_id defines the last unique ID for ContractOperationInfo objs.
+	// contract_op_info_last_id defines the last unique ID for
+	// ContractOperationInfo objs.
 	ContractOpInfoLastId uint64 `protobuf:"varint,3,opt,name=contract_op_info_last_id,json=contractOpInfoLastId,proto3" json:"contract_op_info_last_id,omitempty"`
 	// contract_op_infos defines a list of all the tracked contract operations.
 	ContractOpInfos []ContractOperationInfo `protobuf:"bytes,4,rep,name=contract_op_infos,json=contractOpInfos,proto3" json:"contract_op_infos"`

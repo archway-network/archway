@@ -103,7 +103,8 @@ BlockRewards defines block related rewards distribution data.
 <a name="archway.rewards.v1beta1.ContractMetadata"></a>
 
 ### ContractMetadata
-ContractMetadata defines the contract rewards distribution options for a particular contract.
+ContractMetadata defines the contract rewards distribution options for a
+particular contract.
 
 
 | Field | Type | Label | Description |
@@ -154,11 +155,12 @@ Params defines the module parameters.
 <a name="archway.rewards.v1beta1.RewardsRecord"></a>
 
 ### RewardsRecord
-RewardsRecord defines a record that is used to distribute rewards later (lazy distribution).
-This record is being created by the x/rewards EndBlocker and pruned after the rewards are distributed.
-An actual rewards x/bank transfer might be triggered by a Tx (via CLI for example) or by a contract via WASM bindings.
-For a contract to trigger rewards transfer, contract address must be set as the rewards_address in a
-corresponding ContractMetadata.
+RewardsRecord defines a record that is used to distribute rewards later (lazy
+distribution). This record is being created by the x/rewards EndBlocker and
+pruned after the rewards are distributed. An actual rewards x/bank transfer
+might be triggered by a Tx (via CLI for example) or by a contract via WASM
+bindings. For a contract to trigger rewards transfer, contract address must
+be set as the rewards_address in a corresponding ContractMetadata.
 
 
 | Field | Type | Label | Description |
@@ -226,7 +228,8 @@ ContractFlatFeeSetEvent is emitted when the contract flat fee is updated
 <a name="archway.rewards.v1beta1.ContractMetadataSetEvent"></a>
 
 ### ContractMetadataSetEvent
-ContractMetadataSetEvent is emitted when the contract metadata is created or updated.
+ContractMetadataSetEvent is emitted when the contract metadata is created or
+updated.
 
 
 | Field | Type | Label | Description |
@@ -242,7 +245,8 @@ ContractMetadataSetEvent is emitted when the contract metadata is created or upd
 <a name="archway.rewards.v1beta1.ContractRewardCalculationEvent"></a>
 
 ### ContractRewardCalculationEvent
-ContractRewardCalculationEvent is emitted when the contract reward is calculated.
+ContractRewardCalculationEvent is emitted when the contract reward is
+calculated.
 
 
 | Field | Type | Label | Description |
@@ -276,8 +280,9 @@ MinConsensusFeeSetEvent is emitted when the minimum consensus fee is updated.
 <a name="archway.rewards.v1beta1.RewardsWithdrawEvent"></a>
 
 ### RewardsWithdrawEvent
-RewardsWithdrawEvent is emitted when credited rewards for a specific rewards_address are distributed.
-Event could be triggered by a transaction (via CLI for example) or by a contract via WASM bindings.
+RewardsWithdrawEvent is emitted when credited rewards for a specific
+rewards_address are distributed. Event could be triggered by a transaction
+(via CLI for example) or by a contract via WASM bindings.
 
 
 | Field | Type | Label | Description |
@@ -363,7 +368,8 @@ BlockTracking is the tracking information for a block.
 <a name="archway.rewards.v1beta1.QueryBlockRewardsTrackingRequest"></a>
 
 ### QueryBlockRewardsTrackingRequest
-QueryBlockRewardsTrackingRequest is the request for Query.BlockRewardsTracking.
+QueryBlockRewardsTrackingRequest is the request for
+Query.BlockRewardsTracking.
 
 
 
@@ -373,7 +379,8 @@ QueryBlockRewardsTrackingRequest is the request for Query.BlockRewardsTracking.
 <a name="archway.rewards.v1beta1.QueryBlockRewardsTrackingResponse"></a>
 
 ### QueryBlockRewardsTrackingResponse
-QueryBlockRewardsTrackingResponse is the response for Query.BlockRewardsTracking.
+QueryBlockRewardsTrackingResponse is the response for
+Query.BlockRewardsTracking.
 
 
 | Field | Type | Label | Description |

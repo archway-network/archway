@@ -534,10 +534,11 @@ type MsgClient interface {
 	// Method is authorized to the contract owner (admin if no metadata exists).
 	SetContractMetadata(ctx context.Context, in *MsgSetContractMetadata, opts ...grpc.CallOption) (*MsgSetContractMetadataResponse, error)
 	// WithdrawRewards performs collected rewards distribution.
-	// Rewards might be credited from multiple contracts (rewards_address must be set in the corresponding contract metadata).
+	// Rewards might be credited from multiple contracts (rewards_address must be
+	// set in the corresponding contract metadata).
 	WithdrawRewards(ctx context.Context, in *MsgWithdrawRewards, opts ...grpc.CallOption) (*MsgWithdrawRewardsResponse, error)
-	// SetFlatFee sets or updates or removes the flat fee to interact with the contract
-	// Method is authorized to the contract owner.
+	// SetFlatFee sets or updates or removes the flat fee to interact with the
+	// contract Method is authorized to the contract owner.
 	SetFlatFee(ctx context.Context, in *MsgSetFlatFee, opts ...grpc.CallOption) (*MsgSetFlatFeeResponse, error)
 }
 
@@ -582,10 +583,11 @@ type MsgServer interface {
 	// Method is authorized to the contract owner (admin if no metadata exists).
 	SetContractMetadata(context.Context, *MsgSetContractMetadata) (*MsgSetContractMetadataResponse, error)
 	// WithdrawRewards performs collected rewards distribution.
-	// Rewards might be credited from multiple contracts (rewards_address must be set in the corresponding contract metadata).
+	// Rewards might be credited from multiple contracts (rewards_address must be
+	// set in the corresponding contract metadata).
 	WithdrawRewards(context.Context, *MsgWithdrawRewards) (*MsgWithdrawRewardsResponse, error)
-	// SetFlatFee sets or updates or removes the flat fee to interact with the contract
-	// Method is authorized to the contract owner.
+	// SetFlatFee sets or updates or removes the flat fee to interact with the
+	// contract Method is authorized to the contract owner.
 	SetFlatFee(context.Context, *MsgSetFlatFee) (*MsgSetFlatFeeResponse, error)
 }
 

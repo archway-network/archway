@@ -205,7 +205,8 @@ func (m *QueryContractMetadataResponse) GetMetadata() ContractMetadata {
 	return ContractMetadata{}
 }
 
-// QueryBlockRewardsTrackingRequest is the request for Query.BlockRewardsTracking.
+// QueryBlockRewardsTrackingRequest is the request for
+// Query.BlockRewardsTracking.
 type QueryBlockRewardsTrackingRequest struct {
 }
 
@@ -242,7 +243,8 @@ func (m *QueryBlockRewardsTrackingRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryBlockRewardsTrackingRequest proto.InternalMessageInfo
 
-// QueryBlockRewardsTrackingResponse is the response for Query.BlockRewardsTracking.
+// QueryBlockRewardsTrackingResponse is the response for
+// Query.BlockRewardsTracking.
 type QueryBlockRewardsTrackingResponse struct {
 	Block BlockTracking `protobuf:"bytes,1,opt,name=block,proto3" json:"block"`
 }
@@ -328,8 +330,9 @@ var xxx_messageInfo_QueryRewardsPoolRequest proto.InternalMessageInfo
 type QueryRewardsPoolResponse struct {
 	// undistributed_funds are undistributed yet tokens (ready for withdrawal).
 	UndistributedFunds []types.Coin `protobuf:"bytes,1,rep,name=undistributed_funds,json=undistributedFunds,proto3" json:"undistributed_funds"`
-	// treasury_funds are treasury tokens available (no mechanism is available to withdraw ATM).
-	// Treasury tokens are collected on a block basis. Those tokens are unused block rewards.
+	// treasury_funds are treasury tokens available (no mechanism is available to
+	// withdraw ATM). Treasury tokens are collected on a block basis. Those tokens
+	// are unused block rewards.
 	TreasuryFunds []types.Coin `protobuf:"bytes,2,rep,name=treasury_funds,json=treasuryFunds,proto3" json:"treasury_funds"`
 }
 
@@ -546,7 +549,8 @@ func (m *BlockTracking) GetTxRewards() []TxRewards {
 
 // QueryRewardsRecordsRequest is the request for Query.RewardsRecords.
 type QueryRewardsRecordsRequest struct {
-	// rewards_address is the target address to query records for (bech32 encoded).
+	// rewards_address is the target address to query records for (bech32
+	// encoded).
 	RewardsAddress string `protobuf:"bytes,1,opt,name=rewards_address,json=rewardsAddress,proto3" json:"rewards_address,omitempty"`
 	// pagination is an optional pagination options for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -656,7 +660,8 @@ func (m *QueryRewardsRecordsResponse) GetPagination() *query.PageResponse {
 
 // QueryOutstandingRewardsRequest is the request for Query.OutstandingRewards.
 type QueryOutstandingRewardsRequest struct {
-	// rewards_address is the target address to query calculated rewards for (bech32 encoded).
+	// rewards_address is the target address to query calculated rewards for
+	// (bech32 encoded).
 	RewardsAddress string `protobuf:"bytes,1,opt,name=rewards_address,json=rewardsAddress,proto3" json:"rewards_address,omitempty"`
 }
 
@@ -704,7 +709,8 @@ func (m *QueryOutstandingRewardsRequest) GetRewardsAddress() string {
 type QueryOutstandingRewardsResponse struct {
 	// total_rewards is the total rewards credited to the rewards_address.
 	TotalRewards []types.Coin `protobuf:"bytes,1,rep,name=total_rewards,json=totalRewards,proto3" json:"total_rewards"`
-	// records_num is the total number of RewardsRecord objects stored for the rewards_address.
+	// records_num is the total number of RewardsRecord objects stored for the
+	// rewards_address.
 	RecordsNum uint64 `protobuf:"varint,2,opt,name=records_num,json=recordsNum,proto3" json:"records_num,omitempty"`
 }
 
@@ -803,7 +809,8 @@ func (m *QueryFlatFeeRequest) GetContractAddress() string {
 
 // QueryFlatFeeResponse is the response for Query.FlatFee
 type QueryFlatFeeResponse struct {
-	// flat_fee_amount defines the minimum flat fee set by the contract_owner per contract execution.
+	// flat_fee_amount defines the minimum flat fee set by the contract_owner per
+	// contract execution.
 	FlatFeeAmount types.Coin `protobuf:"bytes,1,opt,name=flat_fee_amount,json=flatFeeAmount,proto3" json:"flat_fee_amount"`
 }
 
@@ -964,14 +971,18 @@ type QueryClient interface {
 	BlockRewardsTracking(ctx context.Context, in *QueryBlockRewardsTrackingRequest, opts ...grpc.CallOption) (*QueryBlockRewardsTrackingResponse, error)
 	// RewardsPool returns the current undistributed rewards pool funds.
 	RewardsPool(ctx context.Context, in *QueryRewardsPoolRequest, opts ...grpc.CallOption) (*QueryRewardsPoolResponse, error)
-	// EstimateTxFees returns the estimated transaction fees for the given transaction
-	// gas limit using the minimum consensus fee value for the current block.
+	// EstimateTxFees returns the estimated transaction fees for the given
+	// transaction gas limit using the minimum consensus fee value for the current
+	// block.
 	EstimateTxFees(ctx context.Context, in *QueryEstimateTxFeesRequest, opts ...grpc.CallOption) (*QueryEstimateTxFeesResponse, error)
-	// RewardsRecords returns the paginated list of RewardsRecord objects stored for the provided rewards_address.
+	// RewardsRecords returns the paginated list of RewardsRecord objects stored
+	// for the provided rewards_address.
 	RewardsRecords(ctx context.Context, in *QueryRewardsRecordsRequest, opts ...grpc.CallOption) (*QueryRewardsRecordsResponse, error)
-	// OutstandingRewards returns total rewards credited from different contracts for the provided rewards_address.
+	// OutstandingRewards returns total rewards credited from different contracts
+	// for the provided rewards_address.
 	OutstandingRewards(ctx context.Context, in *QueryOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryOutstandingRewardsResponse, error)
-	// FlatFee returns the flat fee set by the contract owner for the provided contract_address
+	// FlatFee returns the flat fee set by the contract owner for the provided
+	// contract_address
 	FlatFee(ctx context.Context, in *QueryFlatFeeRequest, opts ...grpc.CallOption) (*QueryFlatFeeResponse, error)
 }
 
@@ -1065,14 +1076,18 @@ type QueryServer interface {
 	BlockRewardsTracking(context.Context, *QueryBlockRewardsTrackingRequest) (*QueryBlockRewardsTrackingResponse, error)
 	// RewardsPool returns the current undistributed rewards pool funds.
 	RewardsPool(context.Context, *QueryRewardsPoolRequest) (*QueryRewardsPoolResponse, error)
-	// EstimateTxFees returns the estimated transaction fees for the given transaction
-	// gas limit using the minimum consensus fee value for the current block.
+	// EstimateTxFees returns the estimated transaction fees for the given
+	// transaction gas limit using the minimum consensus fee value for the current
+	// block.
 	EstimateTxFees(context.Context, *QueryEstimateTxFeesRequest) (*QueryEstimateTxFeesResponse, error)
-	// RewardsRecords returns the paginated list of RewardsRecord objects stored for the provided rewards_address.
+	// RewardsRecords returns the paginated list of RewardsRecord objects stored
+	// for the provided rewards_address.
 	RewardsRecords(context.Context, *QueryRewardsRecordsRequest) (*QueryRewardsRecordsResponse, error)
-	// OutstandingRewards returns total rewards credited from different contracts for the provided rewards_address.
+	// OutstandingRewards returns total rewards credited from different contracts
+	// for the provided rewards_address.
 	OutstandingRewards(context.Context, *QueryOutstandingRewardsRequest) (*QueryOutstandingRewardsResponse, error)
-	// FlatFee returns the flat fee set by the contract owner for the provided contract_address
+	// FlatFee returns the flat fee set by the contract owner for the provided
+	// contract_address
 	FlatFee(context.Context, *QueryFlatFeeRequest) (*QueryFlatFeeResponse, error)
 }
 

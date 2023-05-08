@@ -32,18 +32,21 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params defines the module parameters.
 type Params struct {
-	// inflation_rewards_ratio defines the percentage of minted inflation tokens that are used for dApp rewards [0.0, 1.0].
-	// If set to 0.0, no inflation rewards are distributed.
+	// inflation_rewards_ratio defines the percentage of minted inflation tokens
+	// that are used for dApp rewards [0.0, 1.0]. If set to 0.0, no inflation
+	// rewards are distributed.
 	InflationRewardsRatio github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=inflation_rewards_ratio,json=inflationRewardsRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation_rewards_ratio"`
-	// tx_fee_rebate_ratio defines the percentage of tx fees that are used for dApp rewards [0.0, 1.0].
-	// If set to 0.0, no fee rewards are distributed.
+	// tx_fee_rebate_ratio defines the percentage of tx fees that are used for
+	// dApp rewards [0.0, 1.0]. If set to 0.0, no fee rewards are distributed.
 	TxFeeRebateRatio github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=tx_fee_rebate_ratio,json=txFeeRebateRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"tx_fee_rebate_ratio"`
-	// max_withdraw_records defines the maximum number of RewardsRecord objects used for the withdrawal operation.
+	// max_withdraw_records defines the maximum number of RewardsRecord objects
+	// used for the withdrawal operation.
 	MaxWithdrawRecords uint64 `protobuf:"varint,3,opt,name=max_withdraw_records,json=maxWithdrawRecords,proto3" json:"max_withdraw_records,omitempty"`
-	// min_price_of_gas defines the minimum price for each single unit of gas in the network.
-	// during the min consensus fee ante handler we will be taking the max between min consensus
-	// fee and minimum price of gas to compute the minimum tx computational fees, which are independent
-	// from contract flat fees (premiums)
+	// min_price_of_gas defines the minimum price for each single unit of gas in
+	// the network. during the min consensus fee ante handler we will be taking
+	// the max between min consensus fee and minimum price of gas to compute the
+	// minimum tx computational fees, which are independent from contract flat
+	// fees (premiums)
 	MinPriceOfGas types.DecCoin `protobuf:"bytes,4,opt,name=min_price_of_gas,json=minPriceOfGas,proto3" json:"min_price_of_gas"`
 }
 
@@ -93,13 +96,15 @@ func (m *Params) GetMinPriceOfGas() types.DecCoin {
 	return types.DecCoin{}
 }
 
-// ContractMetadata defines the contract rewards distribution options for a particular contract.
+// ContractMetadata defines the contract rewards distribution options for a
+// particular contract.
 type ContractMetadata struct {
 	// contract_address defines the contract address (bech32 encoded).
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	// owner_address is the contract owner address that can modify contract reward options (bech32 encoded).
-	// That could be the contract admin or the contract itself.
-	// If owner_address is set to contract address, contract can modify the metadata on its own using WASM bindings.
+	// owner_address is the contract owner address that can modify contract reward
+	// options (bech32 encoded). That could be the contract admin or the contract
+	// itself. If owner_address is set to contract address, contract can modify
+	// the metadata on its own using WASM bindings.
 	OwnerAddress string `protobuf:"bytes,2,opt,name=owner_address,json=ownerAddress,proto3" json:"owner_address,omitempty"`
 	// rewards_address is an address to distribute rewards to (bech32 encoded).
 	// If not set (empty), rewards are not distributed for this contract.
@@ -165,7 +170,8 @@ type BlockRewards struct {
 	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
 	// inflation_rewards is the rewards to be distributed.
 	InflationRewards types.Coin `protobuf:"bytes,2,opt,name=inflation_rewards,json=inflationRewards,proto3" json:"inflation_rewards"`
-	// max_gas defines the maximum gas for the block that is used to distribute inflation rewards (consensus parameter).
+	// max_gas defines the maximum gas for the block that is used to distribute
+	// inflation rewards (consensus parameter).
 	MaxGas uint64 `protobuf:"varint,3,opt,name=max_gas,json=maxGas,proto3" json:"max_gas,omitempty"`
 }
 
@@ -224,7 +230,8 @@ func (m *BlockRewards) GetMaxGas() uint64 {
 
 // TxRewards defines transaction related rewards distribution data.
 type TxRewards struct {
-	// tx_id is the tracking transaction ID (x/tracking is the data source for this value).
+	// tx_id is the tracking transaction ID (x/tracking is the data source for
+	// this value).
 	TxId uint64 `protobuf:"varint,1,opt,name=tx_id,json=txId,proto3" json:"tx_id,omitempty"`
 	// height defines the block height.
 	Height int64 `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
@@ -285,11 +292,12 @@ func (m *TxRewards) GetFeeRewards() []types.Coin {
 	return nil
 }
 
-// RewardsRecord defines a record that is used to distribute rewards later (lazy distribution).
-// This record is being created by the x/rewards EndBlocker and pruned after the rewards are distributed.
-// An actual rewards x/bank transfer might be triggered by a Tx (via CLI for example) or by a contract via WASM bindings.
-// For a contract to trigger rewards transfer, contract address must be set as the rewards_address in a
-// corresponding ContractMetadata.
+// RewardsRecord defines a record that is used to distribute rewards later (lazy
+// distribution). This record is being created by the x/rewards EndBlocker and
+// pruned after the rewards are distributed. An actual rewards x/bank transfer
+// might be triggered by a Tx (via CLI for example) or by a contract via WASM
+// bindings. For a contract to trigger rewards transfer, contract address must
+// be set as the rewards_address in a corresponding ContractMetadata.
 type RewardsRecord struct {
 	// id is the unique ID of the record.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`

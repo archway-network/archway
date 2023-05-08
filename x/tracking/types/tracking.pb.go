@@ -147,8 +147,9 @@ type ContractOperationInfo struct {
 	// vm_gas is the gas consumption reported by the WASM VM.
 	// Value is adjusted by this module (CalculateUpdatedGas func).
 	VmGas uint64 `protobuf:"varint,5,opt,name=vm_gas,json=vmGas,proto3" json:"vm_gas,omitempty"`
-	// sdk_gas is the gas consumption reported by the SDK gas meter and the WASM GasRegister (cost of Execute/Query/etc).
-	// Value is adjusted by this module (CalculateUpdatedGas func).
+	// sdk_gas is the gas consumption reported by the SDK gas meter and the WASM
+	// GasRegister (cost of Execute/Query/etc). Value is adjusted by this module
+	// (CalculateUpdatedGas func).
 	SdkGas uint64 `protobuf:"varint,6,opt,name=sdk_gas,json=sdkGas,proto3" json:"sdk_gas,omitempty"`
 }
 
@@ -275,7 +276,8 @@ func (m *BlockTracking) GetTxs() []TxTracking {
 type TxTracking struct {
 	// info defines the transaction details.
 	Info TxInfo `protobuf:"bytes,1,opt,name=info,proto3" json:"info"`
-	// contract_operations defines the list of contract operations consumed by the transaction.
+	// contract_operations defines the list of contract operations consumed by the
+	// transaction.
 	ContractOperations []ContractOperationInfo `protobuf:"bytes,2,rep,name=contract_operations,json=contractOperations,proto3" json:"contract_operations"`
 }
 

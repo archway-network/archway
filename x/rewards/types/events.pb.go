@@ -25,7 +25,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ContractMetadataSetEvent is emitted when the contract metadata is created or updated.
+// ContractMetadataSetEvent is emitted when the contract metadata is created or
+// updated.
 type ContractMetadataSetEvent struct {
 	// contract_address defines the contract address.
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
@@ -80,11 +81,13 @@ func (m *ContractMetadataSetEvent) GetMetadata() ContractMetadata {
 	return ContractMetadata{}
 }
 
-// ContractRewardCalculationEvent is emitted when the contract reward is calculated.
+// ContractRewardCalculationEvent is emitted when the contract reward is
+// calculated.
 type ContractRewardCalculationEvent struct {
 	// contract_address defines the contract address.
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	// gas_consumed defines the total gas consumption by all WASM operations within one transaction.
+	// gas_consumed defines the total gas consumption by all WASM operations
+	// within one transaction.
 	GasConsumed uint64 `protobuf:"varint,2,opt,name=gas_consumed,json=gasConsumed,proto3" json:"gas_consumed,omitempty"`
 	// inflation_rewards defines the inflation rewards portions of the rewards.
 	InflationRewards types.Coin `protobuf:"bytes,3,opt,name=inflation_rewards,json=inflationRewards,proto3" json:"inflation_rewards"`
@@ -162,8 +165,9 @@ func (m *ContractRewardCalculationEvent) GetMetadata() *ContractMetadata {
 	return nil
 }
 
-// RewardsWithdrawEvent is emitted when credited rewards for a specific rewards_address are distributed.
-// Event could be triggered by a transaction (via CLI for example) or by a contract via WASM bindings.
+// RewardsWithdrawEvent is emitted when credited rewards for a specific
+// rewards_address are distributed. Event could be triggered by a transaction
+// (via CLI for example) or by a contract via WASM bindings.
 type RewardsWithdrawEvent struct {
 	// rewards_address defines the rewards address rewards are distributed to.
 	RewardAddress string `protobuf:"bytes,1,opt,name=reward_address,json=rewardAddress,proto3" json:"reward_address,omitempty"`
@@ -266,9 +270,11 @@ func (m *MinConsensusFeeSetEvent) GetFee() types.DecCoin {
 
 // ContractFlatFeeSetEvent is emitted when the contract flat fee is updated
 type ContractFlatFeeSetEvent struct {
-	// contract_address defines the bech32 address of the contract for which the flat fee is set
+	// contract_address defines the bech32 address of the contract for which the
+	// flat fee is set
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	// flat_fee defines the amount that has been set as the minimum fee for the contract
+	// flat_fee defines the amount that has been set as the minimum fee for the
+	// contract
 	FlatFee types.Coin `protobuf:"bytes,2,opt,name=flat_fee,json=flatFee,proto3" json:"flat_fee"`
 }
 

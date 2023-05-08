@@ -39,7 +39,8 @@ type GenesisState struct {
 	MinConsensusFee types.DecCoin `protobuf:"bytes,5,opt,name=min_consensus_fee,json=minConsensusFee,proto3" json:"min_consensus_fee"`
 	// rewards_record_last_id defines the last unique ID for a RewardsRecord objs.
 	RewardsRecordLastId uint64 `protobuf:"varint,6,opt,name=rewards_record_last_id,json=rewardsRecordLastId,proto3" json:"rewards_record_last_id,omitempty"`
-	// rewards_records defines a list of all active (undistributed) rewards records.
+	// rewards_records defines a list of all active (undistributed) rewards
+	// records.
 	RewardsRecords []RewardsRecord `protobuf:"bytes,7,rep,name=rewards_records,json=rewardsRecords,proto3" json:"rewards_records"`
 	// flat_fees defines a list of contract flat fee.
 	FlatFees []FlatFee `protobuf:"bytes,8,rep,name=flat_fees,json=flatFees,proto3" json:"flat_fees"`
