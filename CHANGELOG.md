@@ -41,6 +41,9 @@ Contains all the PRs that improved the code without changing the behaviours.
     - Feature request template
     - General issue template
 
+### Fixed
+
+- [#365](https://github.com/archway-network/archway/pull/356) - x/rewards genesis runs before x/genutil to correctly process genesis txs.
 
 ### Changed
 
