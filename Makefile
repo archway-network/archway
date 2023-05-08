@@ -19,6 +19,9 @@ CURRENT_DIR := $(shell pwd)
 # library versions
 LIBWASM_VERSION = $(shell go list -m -f '{{ .Version }}' github.com/CosmWasm/wasmvm)
 
+# Release environment variable
+RELEASE ?= false
+
 export GO111MODULE = on
 
 # process build tags
@@ -211,6 +214,7 @@ release-dryrun:
 		-v "$(CURDIR)":/code \
 		-w /code \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
+		-e RELEASE=$(RELEASE) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
 		--skip-publish \
@@ -223,9 +227,9 @@ release:
 		-v "$(CURDIR)":/code \
 		-w /code \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
+		-e RELEASE=$(RELEASE) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
-		--skip-publish \
 		--clean
 
 check-vuln-deps:

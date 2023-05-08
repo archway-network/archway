@@ -76,7 +76,7 @@ dockers:
     goos: linux
     goarch: amd64
     image_templates:
-      - "ghcr.io/archway-network/{{ .ProjectName }}:{{ .Version }}-amd64"
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
@@ -91,7 +91,7 @@ dockers:
     goos: linux
     goarch: arm64
     image_templates:
-      - "ghcr.io/archway-network/{{ .ProjectName }}:{{ .Version }}-arm64v8"
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/arm64"
@@ -107,7 +107,7 @@ dockers:
     goarch: amd64
     dockerfile: Dockerfile.debug
     image_templates:
-      - "ghcr.io/archway-network/{{ .ProjectName }}:{{ .Version }}-amd64-debug"
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64-debug{{else}}{{ .ShortCommit }}-amd64-debug{{end}}'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
@@ -123,7 +123,7 @@ dockers:
     goarch: arm64
     dockerfile: Dockerfile.debug
     image_templates:
-      - "ghcr.io/archway-network/{{ .ProjectName }}:{{ .Version }}-arm64v8-debug"
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8-debug{{else}}{{ .ShortCommit }}-arm64v8-debug{{end}}'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/arm64"
@@ -135,9 +135,9 @@ dockers:
       - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
       - "--label=org.opencontainers.image.licenses=Apache-2.0"
 docker_manifests:
-  - name_template: ghcr.io/archway-network/{{ .ProjectName }}:{{ .Version }}
+  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}{{if eq .Env.RELEASE}}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
     image_templates:
-      - ghcr.io/arhcway-network/{{ .ProjectName }}:{{ .Version }}-amd64
-      - ghcr.io/arhcway-network/{{ .ProjectName }}:{{ .Version }}-arm64v8
-      - ghcr.io/arhcway-network/{{ .ProjectName }}:{{ .Version }}-amd64-debug
-      - ghcr.io/arhcway-network/{{ .ProjectName }}:{{ .Version }}-arm64v8-debug
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64-debug{{else}}{{ .ShortCommit }}-amd64-debug{{end}}'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8-debug{{else}}{{ .ShortCommit }}-arm64v8-debug{{end}}'
