@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	"github.com/archway-network/archway/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/archway-network/archway/x/rewards/types"
 )
 
 // SetContractMetadata creates or updates the contract metadata verifying the ownership:
