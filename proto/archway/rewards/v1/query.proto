@@ -1,5 +1,5 @@
 syntax = "proto3";
-package archway.rewards.v1beta1;
+package archway.rewards.v1;
 
 option go_package = "github.com/archway-network/archway/x/rewards/types";
 
@@ -7,7 +7,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "archway/rewards/v1beta1/rewards.proto";
+import "archway/rewards/v1/rewards.proto";
 
 // Query service for the tracking module.
 service Query {
