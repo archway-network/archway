@@ -6,6 +6,7 @@
 2. [ADR-002: Rewards Module](adr/ADR-002-rewards-module.md) - **Implemented**
 3. [ADR-003: Minimum Consensus Fee](adr/ADR-003-minimum-consensus-fee.md) - **Implemented**
 4. [ADR-004: Contract Premiums](adr/ADR-004-contract-premiums.md) - **Implemented**
+5. [ADR-005: Introducing Minimum Price of Gas for Transaction Fees](adr/ADR-005-minimum-price-of-gas.md) - **Implemented**
 
 ## Module Specifications
 
