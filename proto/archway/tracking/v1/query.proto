@@ -1,11 +1,11 @@
 syntax = "proto3";
-package archway.tracking.v1beta1;
+package archway.tracking.v1;
 
 option go_package = "github.com/archway-network/archway/x/tracking/types";
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "archway/tracking/v1beta1/tracking.proto";
+import "archway/tracking/v1/tracking.proto";
 
 // Query service for the tracking module.
 service Query {

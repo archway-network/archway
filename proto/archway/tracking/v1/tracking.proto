@@ -1,5 +1,5 @@
 syntax = "proto3";
-package archway.tracking.v1beta1;
+package archway.tracking.v1;
 
 option go_package = "github.com/archway-network/archway/x/tracking/types";
 
