@@ -90,6 +90,6 @@ This is fair because the contract developer, who sets the contract premium, is a
 Once the UI knows which is the message that needs to be sent to the contract, it needs to set the fees for the TX,
 in order to correctly set fees it needs to:
 1. Simulate the TX, using the standard Simulate TX endpoint of `cosmos-sdk`, this returns the estimated `gas_limit` for the TX.
-2. Send a query to the archway [EstimateTxFees](../../proto/archway/rewards/v1beta1/query.proto?L32) 
+2. Send a query to the archway [EstimateTxFees](../../proto/archway/rewards/v1/query.proto?L32) 
 gRPC query method, and feed it the `gas_limit` returned in step `1.` and the contract being interacted with. 
 3. Set the fee in the wallet TX.

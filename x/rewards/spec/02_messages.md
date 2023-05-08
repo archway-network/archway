@@ -8,7 +8,7 @@ Section describes the processing of the module messages.
 
 ## MsgSetContractMetadata
 
-A contract metadata is created / updated using the [MsgSetContractMetadata](../../../proto/archway/rewards/v1beta1/tx.proto#L22) message.
+A contract metadata is created / updated using the [MsgSetContractMetadata](../../../proto/archway/rewards/v1/tx.proto#L22) message.
 
 On success:
 
@@ -24,7 +24,7 @@ Metadata can also be updated by a contract ([WASM bindings section](08_wasm_bind
 
 ## MsgWithdrawRewards
 
-Contract(s) rewards are withdrawn using the [MsgWithdrawRewards](../../../proto/archway/rewards/v1beta1/tx.proto#L36) message.
+Contract(s) rewards are withdrawn using the [MsgWithdrawRewards](../../../proto/archway/rewards/v1/tx.proto#L36) message.
 This operation fetches a specific amount of `RewardsRecord` objects created for a particular `rewards_address`, transfers tracked tokens and prunes those objects.
 There are two operation modes (one of) for this message:
 
@@ -44,13 +44,13 @@ This message is expected to fail if:
 
 Returns:
 
-* The message [response](../../../proto/archway/rewards/v1beta1/tx.proto#L59) contains the total amount of rewards tokens transferred (empty if this rewards address has no rewards yet);
+* The message [response](../../../proto/archway/rewards/v1/tx.proto#L59) contains the total amount of rewards tokens transferred (empty if this rewards address has no rewards yet);
 
 This *withdrawal* operation can also be triggered by a contract ([WASM bindings section](08_wasm_bindings.md)).
 
 ## MsgSetFlatFee
 
-A contract flat fee is created / updated / deleted using the [MsgSetFlatFee](../../../proto/archway/rewards/v1beta1/tx.proto#L74) message.
+A contract flat fee is created / updated / deleted using the [MsgSetFlatFee](../../../proto/archway/rewards/v1/tx.proto#L74) message.
 
 An empty or zero _flat_fee_ removes the fee for the contract if it already exists.
 

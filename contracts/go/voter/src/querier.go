@@ -249,7 +249,7 @@ func queryCustomMetadataCustom(deps *std.Deps, env stdTypes.Env) (*types.CustomM
 
 // queryCustomMetadataStargate returns a contract metadata using Stargate query.
 func queryCustomMetadataStargate(deps *std.Deps, env stdTypes.Env) (*types.CustomMetadataResponse, error) {
-	const queryPath = "/archway.rewards.v1beta1.Query/ContractMetadata"
+	const queryPath = "/archway.rewards.v1.Query/ContractMetadata"
 
 	queryData := archwayProtoTypes.QueryContractMetadataRequest{
 		ContractAddress: env.Contract.Address,
