@@ -29,6 +29,7 @@ type TrackingKeeperExpected interface {
 // AuthKeeperExpected defines the interface for the x/auth module dependency.
 type AuthKeeperExpected interface {
 	GetModuleAccount(ctx sdk.Context, name string) authTypes.ModuleAccountI
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authTypes.AccountI
 }
 
 // BankKeeperExpected defines the interface for the x/bank module dependency.

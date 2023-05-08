@@ -657,6 +657,7 @@ func NewArchwayApp(
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
+		rewardsTypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
@@ -671,7 +672,6 @@ func NewArchwayApp(
 		wasm.ModuleName,
 		// wasm gas tracking
 		trackingTypes.ModuleName,
-		rewardsTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
 	)

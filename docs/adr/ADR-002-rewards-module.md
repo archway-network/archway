@@ -23,8 +23,11 @@ The rewards are divided in two different forms:
 ## Participating in `x/rewards`
 
 In order to participate in `x/rewards`, the admin of the contract needs to register the contract to the `x/rewards` module
-it does so by sending a `SetContractMetadata` message in a transaction, the admin of the contract also sets a `WithdrawAddress`, which
-will be the address able to claim the contract's rewards.
+it does so by sending a `SetContractMetadata` message in a transaction, the admin of the contract also sets a `RewardswAddress`, which
+will be the address able to claim the contract's rewards. 
+
+The `RewardsAddress` can be anything, from an account to a contract, it cannot be a module account, since modules manage
+their own balance, this avoids the possibility of invariances being broken.
 
 ### Hook on x/mint `BeginBlock`
 

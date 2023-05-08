@@ -40,12 +40,18 @@ Contains all the PRs that improved the code without changing the behaviours.
     - Bug report template
     - Feature request template
     - General issue template
+
+### Fixed
+
+- [#365](https://github.com/archway-network/archway/pull/356) - x/rewards genesis runs before x/genutil to correctly process genesis txs.
+
 ### Changed
 
 - [#320](https://github.com/archway-network/archway/pull/320) - Run the lint and test GH actions on all PRs
 - [#339](https://github.com/archway-network/archway/pull/339) - Updates & Quality Control
     - README.md
     - docs/README.md
+- [#365](https://github.com/archway-network/archway/pull/356) - Disallow setting module accounts as reward address
 
 ### Removed
 
