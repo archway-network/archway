@@ -1,42 +1,31 @@
 syntax = "proto3";
-package archway.rewards.v1beta1;
+package archway.rewards.v1;
 
 option go_package = "github.com/archway-network/archway/x/rewards/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "archway/rewards/v1beta1/rewards.proto";
+import "archway/rewards/v1/rewards.proto";
 
 // GenesisState defines the initial state of the tracking module.
 message GenesisState {
   // params defines all the module parameters.
-  Params params = 1 [
-    (gogoproto.nullable) = false
-  ];
+  Params params = 1 [ (gogoproto.nullable) = false ];
   // contracts_metadata defines a list of all contracts metadata.
-  repeated ContractMetadata contracts_metadata = 2 [
-    (gogoproto.nullable) = false
-  ];
+  repeated ContractMetadata contracts_metadata = 2
+      [ (gogoproto.nullable) = false ];
   // block_rewards defines a list of all block rewards objects.
-  repeated BlockRewards block_rewards = 3 [
-    (gogoproto.nullable) = false
-  ];
+  repeated BlockRewards block_rewards = 3 [ (gogoproto.nullable) = false ];
   // tx_rewards defines a list of all tx rewards objects.
-  repeated TxRewards tx_rewards = 4 [
-    (gogoproto.nullable) = false
-  ];
+  repeated TxRewards tx_rewards = 4 [ (gogoproto.nullable) = false ];
   // min_consensus_fee defines the minimum gas unit price.
-  cosmos.base.v1beta1.DecCoin min_consensus_fee = 5 [
-    (gogoproto.nullable) = false
-  ];
+  cosmos.base.v1beta1.DecCoin min_consensus_fee = 5
+      [ (gogoproto.nullable) = false ];
   // rewards_record_last_id defines the last unique ID for a RewardsRecord objs.
   uint64 rewards_record_last_id = 6;
-  // rewards_records defines a list of all active (undistributed) rewards records.
-  repeated RewardsRecord rewards_records = 7 [
-    (gogoproto.nullable) = false
-  ];
+  // rewards_records defines a list of all active (undistributed) rewards
+  // records.
+  repeated RewardsRecord rewards_records = 7 [ (gogoproto.nullable) = false ];
   // flat_fees defines a list of contract flat fee.
-  repeated FlatFee flat_fees = 8 [
-    (gogoproto.nullable) = false
-  ];
+  repeated FlatFee flat_fees = 8 [ (gogoproto.nullable) = false ];
 }

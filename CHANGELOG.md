@@ -29,6 +29,10 @@ Contains all the PRs that improved the code without changing the behaviours.
 -->
 ## [Unreleased]
 
+### Breaking Changes 
+
+- [#357](https://github.com/archway-network/archway/pull/357) - Bumping the proto versions for x/rewards and x/tracking from `v1beta1` to `v1`
+
 ### Added
 
 - [#330](https://github.com/archway-network/archway/pull/330) - Proper chain upgrade flow.

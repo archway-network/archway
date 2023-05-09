@@ -6,13 +6,13 @@ order: 1
 
 Section describes all stored by the module objects and their storage keys.
 
-Refer to the [rewards.proto](../../../proto/archway/rewards/v1beta1/rewards.proto) for objects fields description.
+Refer to the [rewards.proto](../../../proto/archway/rewards/v1/rewards.proto) for objects fields description.
 
 ## Params
 
 - Params: `Paramsspace("rewards") -> legacy_amino(params)`
 
-[Params](../../../proto/archway/rewards/v1beta1/rewards.proto#L11) is a module-wide configuration structure.
+[Params](../../../proto/archway/rewards/v1/rewards.proto#L11) is a module-wide configuration structure.
 
 ## Pool
 
@@ -20,7 +20,7 @@ Refer to the [rewards.proto](../../../proto/archway/rewards/v1beta1/rewards.prot
 
 ## ContractMetadata
 
-[ContractMetadata](../../../proto/archway/rewards/v1beta1/rewards.proto#L31) object is used to store per contract rewards specific parameters.
+[ContractMetadata](../../../proto/archway/rewards/v1/rewards.proto#L31) object is used to store per contract rewards specific parameters.
 
 Example:
 
@@ -52,7 +52,7 @@ Storage keys:
 
 ## BlockRewards
 
-[BlockRewards](../../../proto/archway/rewards/v1beta1/rewards.proto#L46) object is used to track the inflationary rewards per block that are distributed to dApps in the **BeginBlocker**.
+[BlockRewards](../../../proto/archway/rewards/v1/rewards.proto#L46) object is used to track the inflationary rewards per block that are distributed to dApps in the **BeginBlocker**.
 
 Example:
 
@@ -80,7 +80,7 @@ Storage keys:
 
 ## TxRewards
 
-[TxRewards](../../../proto/archway/rewards/v1beta1/rewards.proto#L60) object is used to track the tx fee rebate rewards per transaction that are distributed to dApps in the BeginBlocker.
+[TxRewards](../../../proto/archway/rewards/v1/rewards.proto#L60) object is used to track the tx fee rebate rewards per transaction that are distributed to dApps in the BeginBlocker.
 
 Example:
 
@@ -122,7 +122,7 @@ Storage keys:
 
 ## RewardsRecord
 
-[RewardsRecord](../../../proto/archway/rewards/v1beta1/rewards.proto#L78) object is used to track calculated rewards for a particular rewards account within the **BeginBlocker**.
+[RewardsRecord](../../../proto/archway/rewards/v1/rewards.proto#L78) object is used to track calculated rewards for a particular rewards account within the **BeginBlocker**.
 Those records are used later to withdraw calculated rewards for a particular address.
 
 Example:

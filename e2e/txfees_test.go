@@ -124,7 +124,7 @@ func (s *E2ETestSuite) TestTxFees() {
 				// Check the event from the previous BeginBlocker
 				if len(abciEvents) > 0 {
 					eventFeeBz := e2eTesting.GetStringEventAttribute(abciEvents,
-						"archway.rewards.v1beta1.MinConsensusFeeSetEvent",
+						"archway.rewards.v1.MinConsensusFeeSetEvent",
 						"fee",
 					)
 
@@ -208,11 +208,11 @@ func (s *E2ETestSuite) TestTxFees() {
 		var feeRebateRewards sdk.Coins
 		{
 			eventInflationRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
-				"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+				"archway.rewards.v1.ContractRewardCalculationEvent",
 				"inflation_rewards",
 			)
 			eventFeeRebateRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
-				"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+				"archway.rewards.v1.ContractRewardCalculationEvent",
 				"fee_rebate_rewards",
 			)
 
