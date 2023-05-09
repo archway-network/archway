@@ -36,3 +36,5 @@ $(find "$(pwd)/proto" -maxdepth 5 -name '*.proto')
 # move proto files to the right places
 cp -r github.com/archway-network/archway/* ./
 rm -rf github.com
+
+chown -R $USER_ID:$GROUP_ID ./*

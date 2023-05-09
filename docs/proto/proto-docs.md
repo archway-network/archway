@@ -704,7 +704,7 @@ MsgWithdrawRewards is the request for Msg.WithdrawRewards.
 <a name="archway.rewards.v1.MsgWithdrawRewards.RecordIDs"></a>
 
 ### MsgWithdrawRewards.RecordIDs
-
+RecordIDs specifies which records to return by ID.
 
 
 | Field | Type | Label | Description |
@@ -719,7 +719,7 @@ MsgWithdrawRewards is the request for Msg.WithdrawRewards.
 <a name="archway.rewards.v1.MsgWithdrawRewards.RecordsLimit"></a>
 
 ### MsgWithdrawRewards.RecordsLimit
-
+RecordsLimit sets the maximum number of records to return, default 1.
 
 
 | Field | Type | Label | Description |

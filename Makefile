@@ -15,6 +15,8 @@ BUF_IMAGE=bufbuild/buf@sha256:9dc5d6645f8f8a2d5aaafc8957fbbb5ea64eada98a84cb0965
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(BUF_IMAGE)
 HTTPS_GIT := https://github.com/archway-network/archway.git
 CURRENT_DIR := $(shell pwd)
+USER_ID := $(shell id -u)
+GROUP_ID := $(shell id -g)
 
 # library versions
 LIBWASM_VERSION = $(shell go list -m -f '{{ .Version }}' github.com/CosmWasm/wasmvm)
@@ -185,7 +187,7 @@ proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protocgen.sh
+	$(DOCKER) run -e "USER_ID=$(USER_ID)" -e "GROUP_ID=$(GROUP_ID)" --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protocgen.sh
 	./scripts/dontcover.sh ./x/tracking
 	./scripts/dontcover.sh ./x/rewards
 
