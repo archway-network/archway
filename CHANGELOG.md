@@ -171,6 +171,7 @@ Archway Network - Capture the value you create!
 - [#368](https://github.com/archway-network/archway/pull/368) - github actions should fetch tags as well for deploy workflow
 - [#369](https://github.com/archway-network/archway/pull/369) - CODEOWNERS: small set to expand, not large set that filters
 - [#370](https://github.com/archway-network/archway/pull/370) - login to ghcr
+- [#371](https://github.com/archway-network/archway/pull/371) - generated protobuf files belong to USER
 
 ### Changed
 
