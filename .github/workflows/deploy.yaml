@@ -43,7 +43,7 @@ jobs:
         - name: GoReleaser
           run: make release
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 
   deploy-titus:
     runs-on: ubuntu-latest
