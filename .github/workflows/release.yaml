@@ -8,8 +8,6 @@ jobs:
   release:
       name: Release
       runs-on: ubuntu-latest
-      permissions:
-        packages: write
 
       steps:
         - name: Checkout
