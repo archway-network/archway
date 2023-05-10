@@ -1,4 +1,13 @@
 * @archway-network/Protocol
 
-.github/*   @archway-network/Protocol @archway-network/NetX
-ci/*        @archway-network/NetX
+.github/*               @archway-network/Protocol @archway-network/NetX
+docker-compose.yaml     @archway-network/Protocol @archway-network/NetX
+Dockerfile              @archway-network/Protocol @archway-network/NetX
+Makefile                @archway-network/Protocol @archway-network/NetX
+releasing-archway.md    @archway-network/Protocol @archway-network/NetX
+
+ci/*                    @archway-network/NetX
+Dockerfile.debug        @archway-network/NetX
+Dockerfile.deprecated   @archway-network/NetX
+.golangci.yml           @archway-network/NetX
+.goreleaser.yaml        @archway-network/NetX
