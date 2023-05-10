@@ -51,7 +51,7 @@ archives:
     builds:
       - archwayd-linux-amd64
       - archwayd-linux-arm64
-    name_template: 'archwayd_{{if eq .Env.RELEASE "true"}}{{ .Version }}{{else}}{{ .ShortCommit }}_{{ .Os }}_{{ .Arch }}'
+    name_template: 'archwayd_{{if eq .Env.RELEASE "true"}}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}_{{ .Os }}_{{ .Arch }}'
     wrap_in_directory: false
     format: zip
     rlcp: true
