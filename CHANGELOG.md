@@ -27,17 +27,36 @@ Contains bug fixes.
 
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
-
 ## [Unreleased]
+
+### Breaking Changes 
+
+- [#357](https://github.com/archway-network/archway/pull/357) - Bumping the proto versions for x/rewards and x/tracking from `v1beta1` to `v1`
 
 ### Added
 
-- [#330](https://github.com/archway-network/archway/pull/330) Proper chain upgrade flow.
-- [#351](https://github.com/archway-network/archway/pull/351) Add minimum price of gas.
+- [#330](https://github.com/archway-network/archway/pull/330) - Proper chain upgrade flow.
+- [#351](https://github.com/archway-network/archway/pull/351) - Add minimum price of gas.
+- [#339](https://github.com/archway-network/archway/pull/339) - Updates & Quality Control
+    - Community Contribution Guidelines
+    - Security Policy
+    - ADR Log Index
+    - Bug report template
+    - Feature request template
+    - General issue template
+
+### Fixed
+
+- [#365](https://github.com/archway-network/archway/pull/356) - x/rewards genesis runs before x/genutil to correctly process genesis txs.
 
 ### Changed
 
 - [#320](https://github.com/archway-network/archway/pull/320) - Run the lint and test GH actions on all PRs
+- [#339](https://github.com/archway-network/archway/pull/339) - Updates & Quality Control
+    - README.md
+    - docs/README.md
+- [#365](https://github.com/archway-network/archway/pull/356) - Disallow setting module accounts as reward address
+- [#355](https://github.com/archway-network/archway/pull/355) - chore: Update titus genesis defaults
 
 ### Deprecated
 
@@ -45,12 +64,9 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#344](https://github.com/archway-network/archway/pull/344) - removed un used ci files
 
-### Fixed
-
 ### Improvements
 
 - [#342](https://github.com/archway-network/archway/pull/342) - updated the contract premium ADR docs to elaborate on difference between using Contract Premiums and using x/wasmd funds
-
 
 ## [v0.4.0]
 

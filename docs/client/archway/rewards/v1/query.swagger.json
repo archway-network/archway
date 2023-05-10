@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "archway/rewards/v1beta1/query.proto",
+    "title": "archway/rewards/v1/query.proto",
     "version": "version not set"
   },
   "consumes": [
@@ -19,7 +19,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/archway.rewards.v1beta1.QueryBlockRewardsTrackingResponse"
+              "$ref": "#/definitions/archway.rewards.v1.QueryBlockRewardsTrackingResponse"
             }
           },
           "default": {
@@ -42,7 +42,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/archway.rewards.v1beta1.QueryContractMetadataResponse"
+              "$ref": "#/definitions/archway.rewards.v1.QueryContractMetadataResponse"
             }
           },
           "default": {
@@ -68,13 +68,13 @@
     },
     "/archway/rewards/v1/estimate_tx_fees": {
       "get": {
-        "summary": "EstimateTxFees returns the estimated transaction fees for the given transaction\ngas limit using the minimum consensus fee value for the current block.",
+        "summary": "EstimateTxFees returns the estimated transaction fees for the given\ntransaction gas limit using the minimum consensus fee value for the current\nblock.",
         "operationId": "EstimateTxFees",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/archway.rewards.v1beta1.QueryEstimateTxFeesResponse"
+              "$ref": "#/definitions/archway.rewards.v1.QueryEstimateTxFeesResponse"
             }
           },
           "default": {
@@ -108,13 +108,13 @@
     },
     "/archway/rewards/v1/flat_fee": {
       "get": {
-        "summary": "FlatFee returns the flat fee set by the contract owner for the provided contract_address",
+        "summary": "FlatFee returns the flat fee set by the contract owner for the provided\ncontract_address",
         "operationId": "FlatFee",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/archway.rewards.v1beta1.QueryFlatFeeResponse"
+              "$ref": "#/definitions/archway.rewards.v1.QueryFlatFeeResponse"
             }
           },
           "default": {
@@ -140,13 +140,13 @@
     },
     "/archway/rewards/v1/outstanding_rewards": {
       "get": {
-        "summary": "OutstandingRewards returns total rewards credited from different contracts for the provided rewards_address.",
+        "summary": "OutstandingRewards returns total rewards credited from different contracts\nfor the provided rewards_address.",
         "operationId": "OutstandingRewards",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/archway.rewards.v1beta1.QueryOutstandingRewardsResponse"
+              "$ref": "#/definitions/archway.rewards.v1.QueryOutstandingRewardsResponse"
             }
           },
           "default": {
@@ -159,7 +159,7 @@
         "parameters": [
           {
             "name": "rewards_address",
-            "description": "rewards_address is the target address to query calculated rewards for (bech32 encoded).",
+            "description": "rewards_address is the target address to query calculated rewards for\n(bech32 encoded).",
             "in": "query",
             "required": false,
             "type": "string"
@@ -178,7 +178,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/archway.rewards.v1beta1.QueryParamsResponse"
+              "$ref": "#/definitions/archway.rewards.v1.QueryParamsResponse"
             }
           },
           "default": {
@@ -201,7 +201,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/archway.rewards.v1beta1.QueryRewardsPoolResponse"
+              "$ref": "#/definitions/archway.rewards.v1.QueryRewardsPoolResponse"
             }
           },
           "default": {
@@ -218,13 +218,13 @@
     },
     "/archway/rewards/v1/rewards_records": {
       "get": {
-        "summary": "RewardsRecords returns the paginated list of RewardsRecord objects stored for the provided rewards_address.",
+        "summary": "RewardsRecords returns the paginated list of RewardsRecord objects stored\nfor the provided rewards_address.",
         "operationId": "RewardsRecords",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/archway.rewards.v1beta1.QueryRewardsRecordsResponse"
+              "$ref": "#/definitions/archway.rewards.v1.QueryRewardsRecordsResponse"
             }
           },
           "default": {
@@ -237,7 +237,7 @@
         "parameters": [
           {
             "name": "rewards_address",
-            "description": "rewards_address is the target address to query records for (bech32 encoded).",
+            "description": "rewards_address is the target address to query records for (bech32\nencoded).",
             "in": "query",
             "required": false,
             "type": "string"
@@ -282,7 +282,7 @@
     }
   },
   "definitions": {
-    "archway.rewards.v1beta1.BlockRewards": {
+    "archway.rewards.v1.BlockRewards": {
       "type": "object",
       "properties": {
         "height": {
@@ -297,29 +297,29 @@
         "max_gas": {
           "type": "string",
           "format": "uint64",
-          "description": "max_gas defines the maximum gas for the block that is used to distribute inflation rewards (consensus parameter)."
+          "description": "max_gas defines the maximum gas for the block that is used to distribute\r\ninflation rewards (consensus parameter)."
         }
       },
       "description": "BlockRewards defines block related rewards distribution data."
     },
-    "archway.rewards.v1beta1.BlockTracking": {
+    "archway.rewards.v1.BlockTracking": {
       "type": "object",
       "properties": {
         "inflation_rewards": {
-          "$ref": "#/definitions/archway.rewards.v1beta1.BlockRewards",
+          "$ref": "#/definitions/archway.rewards.v1.BlockRewards",
           "description": "inflation_rewards defines the inflation rewards for the block."
         },
         "tx_rewards": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/archway.rewards.v1beta1.TxRewards"
+            "$ref": "#/definitions/archway.rewards.v1.TxRewards"
           },
           "description": "tx_rewards defines the transaction rewards for the block."
         }
       },
       "description": "BlockTracking is the tracking information for a block."
     },
-    "archway.rewards.v1beta1.ContractMetadata": {
+    "archway.rewards.v1.ContractMetadata": {
       "type": "object",
       "properties": {
         "contract_address": {
@@ -328,53 +328,57 @@
         },
         "owner_address": {
           "type": "string",
-          "description": "owner_address is the contract owner address that can modify contract reward options (bech32 encoded).\nThat could be the contract admin or the contract itself.\nIf owner_address is set to contract address, contract can modify the metadata on its own using WASM bindings."
+          "description": "owner_address is the contract owner address that can modify contract reward\r\noptions (bech32 encoded). That could be the contract admin or the contract\r\nitself. If owner_address is set to contract address, contract can modify\r\nthe metadata on its own using WASM bindings."
         },
         "rewards_address": {
           "type": "string",
-          "description": "rewards_address is an address to distribute rewards to (bech32 encoded).\nIf not set (empty), rewards are not distributed for this contract."
+          "description": "rewards_address is an address to distribute rewards to (bech32 encoded).\r\nIf not set (empty), rewards are not distributed for this contract."
         }
       },
-      "description": "ContractMetadata defines the contract rewards distribution options for a particular contract."
+      "description": "ContractMetadata defines the contract rewards distribution options for a\r\nparticular contract."
     },
-    "archway.rewards.v1beta1.Params": {
+    "archway.rewards.v1.Params": {
       "type": "object",
       "properties": {
         "inflation_rewards_ratio": {
           "type": "string",
-          "description": "inflation_rewards_ratio defines the percentage of minted inflation tokens that are used for dApp rewards [0.0, 1.0].\nIf set to 0.0, no inflation rewards are distributed."
+          "description": "inflation_rewards_ratio defines the percentage of minted inflation tokens\r\nthat are used for dApp rewards [0.0, 1.0]. If set to 0.0, no inflation\r\nrewards are distributed."
         },
         "tx_fee_rebate_ratio": {
           "type": "string",
-          "description": "tx_fee_rebate_ratio defines the percentage of tx fees that are used for dApp rewards [0.0, 1.0].\nIf set to 0.0, no fee rewards are distributed."
+          "description": "tx_fee_rebate_ratio defines the percentage of tx fees that are used for\r\ndApp rewards [0.0, 1.0]. If set to 0.0, no fee rewards are distributed."
         },
         "max_withdraw_records": {
           "type": "string",
           "format": "uint64",
-          "description": "max_withdraw_records defines the maximum number of RewardsRecord objects used for the withdrawal operation."
+          "description": "max_withdraw_records defines the maximum number of RewardsRecord objects\r\nused for the withdrawal operation."
+        },
+        "min_price_of_gas": {
+          "$ref": "#/definitions/cosmos.base.v1beta1.DecCoin",
+          "title": "min_price_of_gas defines the minimum price for each single unit of gas in\r\nthe network. during the min consensus fee ante handler we will be taking\r\nthe max between min consensus fee and minimum price of gas to compute the\r\nminimum tx computational fees, which are independent from contract flat\r\nfees (premiums)"
         }
       },
       "description": "Params defines the module parameters."
     },
-    "archway.rewards.v1beta1.QueryBlockRewardsTrackingResponse": {
+    "archway.rewards.v1.QueryBlockRewardsTrackingResponse": {
       "type": "object",
       "properties": {
         "block": {
-          "$ref": "#/definitions/archway.rewards.v1beta1.BlockTracking"
+          "$ref": "#/definitions/archway.rewards.v1.BlockTracking"
         }
       },
-      "description": "QueryBlockRewardsTrackingResponse is the response for Query.BlockRewardsTracking."
+      "description": "QueryBlockRewardsTrackingResponse is the response for\nQuery.BlockRewardsTracking."
     },
-    "archway.rewards.v1beta1.QueryContractMetadataResponse": {
+    "archway.rewards.v1.QueryContractMetadataResponse": {
       "type": "object",
       "properties": {
         "metadata": {
-          "$ref": "#/definitions/archway.rewards.v1beta1.ContractMetadata"
+          "$ref": "#/definitions/archway.rewards.v1.ContractMetadata"
         }
       },
       "description": "QueryContractMetadataResponse is the response for Query.ContractMetadata."
     },
-    "archway.rewards.v1beta1.QueryEstimateTxFeesResponse": {
+    "archway.rewards.v1.QueryEstimateTxFeesResponse": {
       "type": "object",
       "properties": {
         "gas_unit_price": {
@@ -391,17 +395,17 @@
       },
       "description": "QueryEstimateTxFeesResponse is the response for Query.EstimateTxFees."
     },
-    "archway.rewards.v1beta1.QueryFlatFeeResponse": {
+    "archway.rewards.v1.QueryFlatFeeResponse": {
       "type": "object",
       "properties": {
         "flat_fee_amount": {
           "$ref": "#/definitions/cosmos.base.v1beta1.Coin",
-          "description": "flat_fee_amount defines the minimum flat fee set by the contract_owner per contract execution."
+          "description": "flat_fee_amount defines the minimum flat fee set by the contract_owner per\ncontract execution."
         }
       },
       "title": "QueryFlatFeeResponse is the response for Query.FlatFee"
     },
-    "archway.rewards.v1beta1.QueryOutstandingRewardsResponse": {
+    "archway.rewards.v1.QueryOutstandingRewardsResponse": {
       "type": "object",
       "properties": {
         "total_rewards": {
@@ -414,21 +418,21 @@
         "records_num": {
           "type": "string",
           "format": "uint64",
-          "description": "records_num is the total number of RewardsRecord objects stored for the rewards_address."
+          "description": "records_num is the total number of RewardsRecord objects stored for the\nrewards_address."
         }
       },
       "description": "QueryOutstandingRewardsResponse is the response for Query.OutstandingRewards."
     },
-    "archway.rewards.v1beta1.QueryParamsResponse": {
+    "archway.rewards.v1.QueryParamsResponse": {
       "type": "object",
       "properties": {
         "params": {
-          "$ref": "#/definitions/archway.rewards.v1beta1.Params"
+          "$ref": "#/definitions/archway.rewards.v1.Params"
         }
       },
       "description": "QueryParamsResponse is the response for Query.Params."
     },
-    "archway.rewards.v1beta1.QueryRewardsPoolResponse": {
+    "archway.rewards.v1.QueryRewardsPoolResponse": {
       "type": "object",
       "properties": {
         "undistributed_funds": {
@@ -443,18 +447,18 @@
           "items": {
             "$ref": "#/definitions/cosmos.base.v1beta1.Coin"
           },
-          "description": "treasury_funds are treasury tokens available (no mechanism is available to withdraw ATM).\nTreasury tokens are collected on a block basis. Those tokens are unused block rewards."
+          "description": "treasury_funds are treasury tokens available (no mechanism is available to\nwithdraw ATM). Treasury tokens are collected on a block basis. Those tokens\nare unused block rewards."
         }
       },
       "description": "QueryRewardsPoolResponse is the response for Query.RewardsPool."
     },
-    "archway.rewards.v1beta1.QueryRewardsRecordsResponse": {
+    "archway.rewards.v1.QueryRewardsRecordsResponse": {
       "type": "object",
       "properties": {
         "records": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/archway.rewards.v1beta1.RewardsRecord"
+            "$ref": "#/definitions/archway.rewards.v1.RewardsRecord"
           },
           "description": "records is the list of rewards records."
         },
@@ -465,7 +469,7 @@
       },
       "description": "QueryRewardsRecordsResponse is the response for Query.RewardsRecords."
     },
-    "archway.rewards.v1beta1.RewardsRecord": {
+    "archway.rewards.v1.RewardsRecord": {
       "type": "object",
       "properties": {
         "id": {
@@ -495,15 +499,15 @@
           "description": "calculated_time defines the block time of rewards calculation event."
         }
       },
-      "description": "RewardsRecord defines a record that is used to distribute rewards later (lazy distribution).\nThis record is being created by the x/rewards EndBlocker and pruned after the rewards are distributed.\nAn actual rewards x/bank transfer might be triggered by a Tx (via CLI for example) or by a contract via WASM bindings.\nFor a contract to trigger rewards transfer, contract address must be set as the rewards_address in a\ncorresponding ContractMetadata."
+      "description": "RewardsRecord defines a record that is used to distribute rewards later (lazy\r\ndistribution). This record is being created by the x/rewards EndBlocker and\r\npruned after the rewards are distributed. An actual rewards x/bank transfer\r\nmight be triggered by a Tx (via CLI for example) or by a contract via WASM\r\nbindings. For a contract to trigger rewards transfer, contract address must\r\nbe set as the rewards_address in a corresponding ContractMetadata."
     },
-    "archway.rewards.v1beta1.TxRewards": {
+    "archway.rewards.v1.TxRewards": {
       "type": "object",
       "properties": {
         "tx_id": {
           "type": "string",
           "format": "uint64",
-          "description": "tx_id is the tracking transaction ID (x/tracking is the data source for this value)."
+          "description": "tx_id is the tracking transaction ID (x/tracking is the data source for\r\nthis value)."
         },
         "height": {
           "type": "string",

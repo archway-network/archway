@@ -1,16 +1,17 @@
 syntax = "proto3";
-package archway.tracking.v1beta1;
+package archway.tracking.v1;
 
 option go_package = "github.com/archway-network/archway/x/tracking/types";
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "archway/tracking/v1beta1/tracking.proto";
+import "archway/tracking/v1/tracking.proto";
 
 // Query service for the tracking module.
 service Query {
   // BlockGasTracking returns block gas tracking for the current block
-  rpc BlockGasTracking(QueryBlockGasTrackingRequest) returns (QueryBlockGasTrackingResponse) {
+  rpc BlockGasTracking(QueryBlockGasTrackingRequest)
+      returns (QueryBlockGasTrackingResponse) {
     option (google.api.http).get = "/archway/tracking/v1/block_gas_tracking";
   }
 }
@@ -20,7 +21,5 @@ message QueryBlockGasTrackingRequest {}
 
 // QueryBlockGasTrackingResponse is the response for Query.BlockGasTracking.
 message QueryBlockGasTrackingResponse {
-  BlockTracking block = 1 [
-    (gogoproto.nullable) = false
-  ];
+  BlockTracking block = 1 [ (gogoproto.nullable) = false ];
 }

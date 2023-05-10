@@ -9,8 +9,11 @@ parent:
 
 ## Abstract
 
-The module enables Cosmos SDK-based blockchain to calculate and distribute dApp rewards within the Archway protocol.
-Module introduces a concept of *minimal consensus fee* to set the lower bound of a transaction fee. Module also introduces a concept of *contract flat fee* which a contract owner can set as the minimum fee that the contract expects to perform a transaction
+This module uses information gathered by `x/tracking` to calculate and create `RewardsRecords` which in turn are used to distribute rewards to dApps within the Archway protocol.
+
+The module introduces a *minimum consensus fee* to set a lower bound for transaction fees.
+
+The module introduces *contract premiums* which allow contract owners to define a custom flat fee for interacting with the smart contract.
 
 ### dApp rewards
 

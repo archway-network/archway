@@ -9,7 +9,7 @@ parent:
 
 ## Abstract
 
-The tracking module measures gas consumption per transaction.
+The tracking module measures contract gas consumption per block and per transaction.
 
 > Only CosmWasm *Execute* and *Migrate* messages.
 

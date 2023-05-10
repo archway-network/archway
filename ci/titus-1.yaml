@@ -288,7 +288,11 @@ data:
           "params": {
             "inflation_rewards_ratio": "0.200000000000000000",
             "tx_fee_rebate_ratio": "0.500000000000000000",
-            "max_withdraw_records": "25000"
+            "max_withdraw_records": "25000",
+            "min_price_of_gas": {
+              "denom": "utitus",
+              "amount": "0.000000000000000000"
+            }
           },
           "contracts_metadata": [],
           "block_rewards": [],
@@ -298,7 +302,8 @@ data:
             "amount": "0"
           },
           "rewards_record_last_id": "0",
-          "rewards_records": []
+          "rewards_records": [],
+          "flat_fees": []
         },
         "slashing": {
           "params": {
@@ -347,7 +352,8 @@ data:
           "params": {
             "code_upload_access": {
               "permission": "Everybody",
-              "address": ""
+              "address": "",
+              "addresses": []
             },
             "instantiate_default_permission": "Everybody"
           },

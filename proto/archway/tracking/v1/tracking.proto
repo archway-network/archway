@@ -1,5 +1,5 @@
 syntax = "proto3";
-package archway.tracking.v1beta1;
+package archway.tracking.v1;
 
 option go_package = "github.com/archway-network/archway/x/tracking/types";
 
@@ -7,14 +7,14 @@ import "gogoproto/gogo.proto";
 
 // ContractOperation denotes which operation consumed gas.
 enum ContractOperation {
-  CONTRACT_OPERATION_UNSPECIFIED = 0; // Invalid or unknown operation
+  CONTRACT_OPERATION_UNSPECIFIED = 0;   // Invalid or unknown operation
   CONTRACT_OPERATION_INSTANTIATION = 1; // Instantiate operation
-  CONTRACT_OPERATION_EXECUTION = 2; // Execute operation
-  CONTRACT_OPERATION_QUERY = 3; // Query
-  CONTRACT_OPERATION_MIGRATE = 4; // Migrate operation
-  CONTRACT_OPERATION_IBC = 5; // IBC operations
-  CONTRACT_OPERATION_SUDO = 6; // Sudo operation
-  CONTRACT_OPERATION_REPLY = 7; // Reply callback operation
+  CONTRACT_OPERATION_EXECUTION = 2;     // Execute operation
+  CONTRACT_OPERATION_QUERY = 3;         // Query
+  CONTRACT_OPERATION_MIGRATE = 4;       // Migrate operation
+  CONTRACT_OPERATION_IBC = 5;           // IBC operations
+  CONTRACT_OPERATION_SUDO = 6;          // Sudo operation
+  CONTRACT_OPERATION_REPLY = 7;         // Reply callback operation
 }
 
 // TxInfo keeps a transaction gas tracking data.
@@ -47,8 +47,9 @@ message ContractOperationInfo {
   // vm_gas is the gas consumption reported by the WASM VM.
   // Value is adjusted by this module (CalculateUpdatedGas func).
   uint64 vm_gas = 5;
-  // sdk_gas is the gas consumption reported by the SDK gas meter and the WASM GasRegister (cost of Execute/Query/etc).
-  // Value is adjusted by this module (CalculateUpdatedGas func).
+  // sdk_gas is the gas consumption reported by the SDK gas meter and the WASM
+  // GasRegister (cost of Execute/Query/etc). Value is adjusted by this module
+  // (CalculateUpdatedGas func).
   uint64 sdk_gas = 6;
 }
 
@@ -57,9 +58,7 @@ message BlockTracking {
   option (gogoproto.goproto_stringer) = false;
 
   // txs defines the list of transactions tracked in the block.
-  repeated TxTracking txs = 1 [
-    (gogoproto.nullable) = false
-  ];
+  repeated TxTracking txs = 1 [ (gogoproto.nullable) = false ];
 }
 
 // TxTracking is the tracking information for a single transaction.
@@ -67,11 +66,9 @@ message TxTracking {
   option (gogoproto.goproto_stringer) = false;
 
   // info defines the transaction details.
-  TxInfo info = 1 [
-    (gogoproto.nullable) = false
-  ];
-  // contract_operations defines the list of contract operations consumed by the transaction.
-  repeated ContractOperationInfo contract_operations = 2 [
-    (gogoproto.nullable) = false
-  ];
+  TxInfo info = 1 [ (gogoproto.nullable) = false ];
+  // contract_operations defines the list of contract operations consumed by the
+  // transaction.
+  repeated ContractOperationInfo contract_operations = 2
+      [ (gogoproto.nullable) = false ];
 }

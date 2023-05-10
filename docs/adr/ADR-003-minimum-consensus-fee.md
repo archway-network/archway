@@ -1,4 +1,4 @@
-# ADR-003 Archway minimum consensus fee
+# ADR-003 Archway Minimum Consensus Fee
 
 ## Status
 
@@ -6,7 +6,7 @@ Already Implemented.
 
 ## Abstract
 
-This document proposes the introduction of a consensus fee, which defines the price for each unit of gas of a tx.
+This document proposes the introduction of a minimum consensus fee, which defines the price for each unit of gas of a tx.
 
 ## Context
 

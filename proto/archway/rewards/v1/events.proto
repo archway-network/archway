@@ -1,0 +1,62 @@
+syntax = "proto3";
+package archway.rewards.v1;
+
+option go_package = "github.com/archway-network/archway/x/rewards/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "archway/rewards/v1/rewards.proto";
+
+// ContractMetadataSetEvent is emitted when the contract metadata is created or
+// updated.
+message ContractMetadataSetEvent {
+  // contract_address defines the contract address.
+  string contract_address = 1;
+  // metadata defines the new contract metadata state.
+  ContractMetadata metadata = 2 [ (gogoproto.nullable) = false ];
+}
+
+// ContractRewardCalculationEvent is emitted when the contract reward is
+// calculated.
+message ContractRewardCalculationEvent {
+  // contract_address defines the contract address.
+  string contract_address = 1;
+  // gas_consumed defines the total gas consumption by all WASM operations
+  // within one transaction.
+  uint64 gas_consumed = 2;
+  // inflation_rewards defines the inflation rewards portions of the rewards.
+  cosmos.base.v1beta1.Coin inflation_rewards = 3
+      [ (gogoproto.nullable) = false ];
+  // fee_rebate_rewards defines the fee rebate rewards portions of the rewards.
+  repeated cosmos.base.v1beta1.Coin fee_rebate_rewards = 4
+      [ (gogoproto.nullable) = false ];
+  // metadata defines the contract metadata (if set).
+  ContractMetadata metadata = 5;
+}
+
+// RewardsWithdrawEvent is emitted when credited rewards for a specific
+// rewards_address are distributed. Event could be triggered by a transaction
+// (via CLI for example) or by a contract via WASM bindings.
+message RewardsWithdrawEvent {
+  // rewards_address defines the rewards address rewards are distributed to.
+  string reward_address = 1;
+  // rewards defines the total rewards being distributed.
+  repeated cosmos.base.v1beta1.Coin rewards = 2
+      [ (gogoproto.nullable) = false ];
+}
+
+// MinConsensusFeeSetEvent is emitted when the minimum consensus fee is updated.
+message MinConsensusFeeSetEvent {
+  // fee defines the updated minimum gas unit price.
+  cosmos.base.v1beta1.DecCoin fee = 1 [ (gogoproto.nullable) = false ];
+}
+
+// ContractFlatFeeSetEvent is emitted when the contract flat fee is updated
+message ContractFlatFeeSetEvent {
+  // contract_address defines the bech32 address of the contract for which the
+  // flat fee is set
+  string contract_address = 1;
+  // flat_fee defines the amount that has been set as the minimum fee for the
+  // contract
+  cosmos.base.v1beta1.Coin flat_fee = 2 [ (gogoproto.nullable) = false ];
+}

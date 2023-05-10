@@ -96,11 +96,11 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	// Check x/rewards metadata set event
 	s.Run("Check metadata set event", func() {
 		eventContractAddr := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1beta1.ContractMetadataSetEvent",
+			"archway.rewards.v1.ContractMetadataSetEvent",
 			"contract_address",
 		)
 		eventMetadataBz := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1beta1.ContractMetadataSetEvent",
+			"archway.rewards.v1.ContractMetadataSetEvent",
 			"metadata",
 		)
 
@@ -232,23 +232,23 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	// Check x/rewards calculation event
 	s.Run("Check calculation event", func() {
 		eventContractAddr := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+			"archway.rewards.v1.ContractRewardCalculationEvent",
 			"contract_address",
 		)
 		eventGasConsumedBz := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+			"archway.rewards.v1.ContractRewardCalculationEvent",
 			"gas_consumed",
 		)
 		eventInflationRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+			"archway.rewards.v1.ContractRewardCalculationEvent",
 			"inflation_rewards",
 		)
 		eventFeeRebateRewardsBz := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+			"archway.rewards.v1.ContractRewardCalculationEvent",
 			"fee_rebate_rewards",
 		)
 		eventMetadataBz := e2eTesting.GetStringEventAttribute(abciEvents,
-			"archway.rewards.v1beta1.ContractRewardCalculationEvent",
+			"archway.rewards.v1.ContractRewardCalculationEvent",
 			"metadata",
 		)
 
@@ -277,11 +277,11 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		_, _, msgEvents, _ := chain.SendMsgs(rewardsAcc, true, []sdk.Msg{msg}, e2eTesting.WithMsgFees(rewardsAccInitialBalance...))
 
 		eventRewardsAddr := e2eTesting.GetStringEventAttribute(msgEvents,
-			"archway.rewards.v1beta1.RewardsWithdrawEvent",
+			"archway.rewards.v1.RewardsWithdrawEvent",
 			"reward_address",
 		)
 		eventRewardsBz := e2eTesting.GetStringEventAttribute(msgEvents,
-			"archway.rewards.v1beta1.RewardsWithdrawEvent",
+			"archway.rewards.v1.RewardsWithdrawEvent",
 			"rewards",
 		)
 
