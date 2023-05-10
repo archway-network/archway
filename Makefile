@@ -211,11 +211,11 @@ localnet:
 release-dryrun:
 	$(DOCKER) run \
 		--rm \
-		-v "$(CURDIR)":/code \
-		-w /code \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-e RELEASE=$(RELEASE) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/github.com/archway-network/archway \
+		-w /go/src/github.com/archway-network/archway \
 		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
 		--skip-publish \
 		--clean \
@@ -224,12 +224,12 @@ release-dryrun:
 release:
 	$(DOCKER) run \
 		--rm \
-		-v "$(CURDIR)":/code \
-		-w /code \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-e RELEASE=$(RELEASE) \
 		-e GITHUB_TOKEN="$(GITHUB_TOKEN)" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/github.com/archway-network/archway \
+		-w /go/src/github.com/archway-network/archway \
 		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
 		--clean
 
