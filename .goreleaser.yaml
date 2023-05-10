@@ -68,9 +68,7 @@ archives:
     files:
       - none*
 checksum:
-  # You can change the name of the checksums file.
-  # Default is `{{ .ProjectName }}_{{ .Version }}_checksums.txt`.
-  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  name_template: '{{ .ProjectName }}_{{if eq .Env.RELEASE "true"}}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}_checksums.txt'
 dockers:
   - use: buildx
     goos: linux
