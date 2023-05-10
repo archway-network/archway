@@ -21,6 +21,7 @@ LIBWASM_VERSION = $(shell go list -m -f '{{ .Version }}' github.com/CosmWasm/was
 
 # Release environment variable
 RELEASE ?= false
+GORELEASER_SKIP_VALIDATE ?= false
 
 export GO111MODULE = on
 
@@ -208,6 +209,19 @@ proto-check-breaking:
 localnet:
 	docker-compose up
 
+docker-build:
+	$(DOCKER) run \
+		--rm \
+		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
+		-e RELEASE=$(RELEASE) \
+		-e GITHUB_TOKEN="$(GITHUB_TOKEN)" \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/github.com/archway-network/archway \
+		-w /go/src/github.com/archway-network/archway \
+		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
+		--clean
+		--snapshot
+
 release-dryrun:
 	$(DOCKER) run \
 		--rm \
@@ -231,7 +245,8 @@ release:
 		-v `pwd`:/go/src/github.com/archway-network/archway \
 		-w /go/src/github.com/archway-network/archway \
 		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
-		--clean
+		--clean \
+		--skip-validate=$(GORELEASER_SKIP_VALIDATE)
 
 check-vuln-deps:
 	go list -json -deps ./... | docker run --rm -i sonatypecommunity/nancy:latest sleuth
