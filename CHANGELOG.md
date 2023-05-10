@@ -53,6 +53,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#365](https://github.com/archway-network/archway/pull/365) - add release tests
 - [#367](https://github.com/archway-network/archway/pull/367) - use snapshot for non release builds
 - [#372](https://github.com/archway-network/archway/pull/372) - add docker config to release pipeline
+- [#375](https://github.com/archway-network/archway/pull/375) - add missing colon from manifest
 
 ### Fixed
 

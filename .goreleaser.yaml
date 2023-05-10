@@ -135,11 +135,11 @@ dockers:
       - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
       - "--label=org.opencontainers.image.licenses=Apache-2.0"
 docker_manifests:
-  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}{{if eq .Env.RELEASE "true" }}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
+  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true" }}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
     image_templates:
       - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
       - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
-  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}{{if eq .Env.RELEASE "true" }}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-debug'
+  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true" }}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-debug'
     image_templates:
       - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64-debug{{else}}{{ .ShortCommit }}-amd64-debug{{end}}'
       - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8-debug{{else}}{{ .ShortCommit }}-arm64v8-debug{{end}}'
