@@ -56,19 +56,11 @@ jobs:
       name: Check release
       runs-on: ubuntu-latest
 
-      container:
-        image: goreleaser/goreleaser-cross:v1.19.5
-        options: --user root
-
       steps:
         - name: Checkout
           uses: actions/checkout@v3
 
-        - name: Set safe directory
-          run: git config --system --add safe.directory '/__w/archway/archway'
         - run: git fetch --prune --unshallow
-
-        - run: pwd ; ls -la
 
         - name: Set up Go
           uses: actions/setup-go@v3
@@ -81,9 +73,7 @@ jobs:
         - name: Set up Docker Buildx
           uses: docker/setup-buildx-action@v2
 
-        - name: Install package
-          run: apt install wget
-
+        - run: pwd ; ls -la
         - name: GoReleaser
           run: make release-dryrun
           env:
