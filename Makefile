@@ -217,9 +217,9 @@ release-dryrun:
 		-v `pwd`:/go/src/github.com/archway-network/archway \
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src/github.com/archway-network/archway \
-		--entrypoint "sh"
+		--entrypoint "sh" \
 		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
-		-c "pwd"
+		-c "ls -la"
 		# --skip-publish \
 		# --clean \
 		# --skip-validate
