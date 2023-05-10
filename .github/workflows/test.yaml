@@ -77,4 +77,4 @@ jobs:
           run: make release-dryrun
           env:
             RELEASE: false
-            GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+            GITHUB_TOKEN: ""
