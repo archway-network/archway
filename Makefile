@@ -216,7 +216,7 @@ release-dryrun:
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/github.com/archway-network/archway \
 		-v `pwd`/sysroot:/sysroot \
-		-w /go/src/github.com/archway-network/archway \
+		-w /sysroot \
 		--entrypoint "sh" \
 		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
 		-c "ls -la"
