@@ -73,7 +73,6 @@ jobs:
         - name: Set up Docker Buildx
           uses: docker/setup-buildx-action@v2
 
-        - run: pwd ; ls -la
         - name: GoReleaser
           run: make release-dryrun
           env:
