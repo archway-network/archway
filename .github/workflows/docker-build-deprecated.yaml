@@ -1,4 +1,5 @@
-name: Build and Deploy
+# DEPRECATED
+name: Build deprecated docker image
 
 on:
   push:
