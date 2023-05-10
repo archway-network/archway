@@ -35,6 +35,7 @@ jobs:
         - name: GoReleaser
           run: make release
           env:
+            GORELEASER_SKIP_VALIDATE: true
             GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 
   deploy-titus:

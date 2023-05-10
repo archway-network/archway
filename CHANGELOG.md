@@ -51,6 +51,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#363](https://github.com/archway-network/archway/pull/363) - move safe dir up in the pipeline
 - [#364](https://github.com/archway-network/archway/pull/364) - add CODEOWNERS
 - [#365](https://github.com/archway-network/archway/pull/365) - add release tests
+- [#367](https://github.com/archway-network/archway/pull/367) - use snapshot for non release builds
 
 ### Fixed
 
