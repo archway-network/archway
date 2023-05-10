@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
 
     needs:
-      - build-docker-image
+      - release-dev
 
     steps:
       - name: Checkout code
