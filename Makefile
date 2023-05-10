@@ -214,7 +214,7 @@ release-dryrun:
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-e RELEASE=$(RELEASE) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v `/__w/archway/archway`:/go/src/github.com/archway-network/archway \
+		-v /__w/archway/archway:/go/src/github.com/archway-network/archway \
 		-w /go/src/github.com/archway-network/archway \
 		--entrypoint "sh" \
 		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
