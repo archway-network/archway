@@ -215,6 +215,7 @@ release-dryrun:
 		-e RELEASE=$(RELEASE) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/github.com/archway-network/archway \
+		-v `pwd`/sysroot:/sysroot \
 		-w /go/src/github.com/archway-network/archway \
 		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
 		--skip-publish \

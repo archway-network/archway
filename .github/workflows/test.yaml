@@ -66,6 +66,7 @@ jobs:
 
         - name: Set safe directory
           run: git config --system --add safe.directory '/__w/archway/archway'
+        - run: git fetch --prune --unshallow
 
         - name: Set up Go
           uses: actions/setup-go@v3
