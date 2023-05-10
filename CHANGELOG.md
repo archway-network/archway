@@ -49,6 +49,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#361](https://github.com/archway-network/archway/pull/361) - Readd missing deprecated Dockerhub build phase
 - [#362](https://github.com/archway-network/archway/pull/362) - wrong reference in the deploy pipeline
 - [#363](https://github.com/archway-network/archway/pull/363) - move safe dir up in the pipeline
+- [#364](https://github.com/archway-network/archway/pull/364) - add CODEOWNERS
 - [#365](https://github.com/archway-network/archway/pull/365) - add release tests
 - [#367](https://github.com/archway-network/archway/pull/367) - use snapshot for non release builds
 
@@ -56,6 +57,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#365](https://github.com/archway-network/archway/pull/356) - x/rewards genesis runs before x/genutil to correctly process genesis txs.
 - [#366](https://github.com/archway-network/archway/pull/366) - github actions should fetch tags as well
+- [#368](https://github.com/archway-network/archway/pull/368) - github actions should fetch tags as well for deploy workflwo
 
 ### Changed
 
