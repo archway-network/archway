@@ -47,6 +47,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#347](https://github.com/archway-network/archway/pull/347) - Unified release for cross compiled binaries and docker images
 - [#360](https://github.com/archway-network/archway/pull/360) - Fix github access token for release workflow
 - [#361](https://github.com/archway-network/archway/pull/361) - Readd missing deprecated Dockerhub build phase
+- [#362](https://github.com/archway-network/archway/pull/362) - wrong reference in the deploy pipeline
 
 ### Fixed
 
