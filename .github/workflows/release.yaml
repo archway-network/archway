@@ -32,11 +32,11 @@ jobs:
           uses: docker/login-action@v2
           with:
             registry: ghcr.io
-            username: github-actions-bot
-            password: ${{ secrets.GH_ACCESS_TOKEN }}
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
 
         - name: GoReleaser
           run: make release
           env:
             RELEASE: true
-            GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
