@@ -58,6 +58,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#365](https://github.com/archway-network/archway/pull/356) - x/rewards genesis runs before x/genutil to correctly process genesis txs.
 - [#366](https://github.com/archway-network/archway/pull/366) - github actions should fetch tags as well
 - [#368](https://github.com/archway-network/archway/pull/368) - github actions should fetch tags as well for deploy workflow
+- [#369](https://github.com/archway-network/archway/pull/369) - CODEOWNERS: small set to expand, not large set that filters
 - [#370](https://github.com/archway-network/archway/pull/370) - login to ghcr
 
 ### Changed
