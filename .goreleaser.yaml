@@ -3,8 +3,10 @@ before:
     - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.LIBWASM_VERSION }}/libwasmvm_muslc.x86_64.a -O /lib/libwasmvm_muslc.a
     - wget https://github.com/CosmWasm/wasmvm/releases/download/{{ .Env.LIBWASM_VERSION }}/libwasmvm_muslc.aarch64.a -O /usr/local/lib/libwasmvm_muslc.a
     - apt install musl-dev=1.2.2-1
+env:
+  - CGO_ENABLED=1
 builds:
-  - id: linux-amd64
+  - id: archwayd-linux-amd64
     main: ./cmd/archwayd
     binary: archwayd
     goos:
@@ -12,18 +14,19 @@ builds:
     goarch:
       - amd64
     env:
-      - CGO_ENABLED=1
       - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
     flags:
       - -mod=readonly
+      - -trimpath
     ldflags:
       - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=archway -X github.com/cosmos/cosmos-sdk/version.AppName=archway -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -linkmode=external
-      - -extldflags '-Wl,-z,muldefs -static -lm'
+      - -extldflags '-Wl,-z,muldefs --static -lm'
     tags:
       - netgo
       - muslc
-  - id: linux-arm64
+  - id: archwayd-linux-arm64
     main: ./cmd/archwayd
     binary: archwayd
     goos:
@@ -31,14 +34,110 @@ builds:
     goarch:
       - arm64
     env:
-      - CGO_ENABLED=1
       - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
     flags:
       - -mod=readonly
+      - -trimpath
     ldflags:
       - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=archway -X github.com/cosmos/cosmos-sdk/version.AppName=archway -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -linkmode=external
-      - -extldflags '-Wl,-z,muldefs -static -lm'
+      - -extldflags '-Wl,-z,muldefs --static -lm'
     tags:
       - netgo
       - muslc
+archives:
+  - id: w/version
+    builds:
+      - archwayd-linux-amd64
+      - archwayd-linux-arm64
+    name_template: "archwayd_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    wrap_in_directory: false
+    format: zip
+    rlcp: true
+    files:
+      - none*
+  - id: wo/version
+    builds:
+      - archwayd-linux-amd64
+      - archwayd-linux-arm64
+    name_template: "archwayd_{{ .Os }}_{{ .Arch }}"
+    wrap_in_directory: false
+    format: zip
+    rlcp: true
+    files:
+      - none*
+checksum:
+  # You can change the name of the checksums file.
+  # Default is `{{ .ProjectName }}_{{ .Version }}_checksums.txt`.
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+dockers:
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.url=https://archway.io"
+      - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.url=https://archway.io"
+      - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile.debug
+    image_templates:
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64-debug{{else}}{{ .ShortCommit }}-amd64-debug{{end}}'
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.url=https://archway.io"
+      - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    dockerfile: Dockerfile.debug
+    image_templates:
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8-debug{{else}}{{ .ShortCommit }}-arm64v8-debug{{end}}'
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.url=https://archway.io"
+      - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+docker_manifests:
+  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}{{if eq .Env.RELEASE}}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
+    image_templates:
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64-debug{{else}}{{ .ShortCommit }}-amd64-debug{{end}}'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8-debug{{else}}{{ .ShortCommit }}-arm64v8-debug{{end}}'

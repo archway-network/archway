@@ -34,9 +34,8 @@ jobs:
         - name: Install package
           run: apt install wget
 
-        - name: Run GoReleaser
-          uses: goreleaser/goreleaser-action@v3
-          with:
-            args: release --rm-dist --config .goreleaser.yaml
+        - name: GoReleaser
+          run: make release
           env:
+            RELEASE: true
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

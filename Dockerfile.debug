@@ -1,4 +1,4 @@
-FROM scratch
+FROM alpine:3.17
 
 COPY ./archwayd /usr/bin/archwayd
 
