@@ -75,6 +75,7 @@ Contains all the PRs that improved the code without changing the behaviours.
     - docs/README.md
 - [#365](https://github.com/archway-network/archway/pull/356) - Disallow setting module accounts as reward address
 - [#355](https://github.com/archway-network/archway/pull/355) - chore: Update titus genesis defaults
+- [#373](https://github.com/archway-network/archway/pull/373) - Update codeowners
 
 ### Deprecated
 
