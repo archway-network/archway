@@ -49,6 +49,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#361](https://github.com/archway-network/archway/pull/361) - Readd missing deprecated Dockerhub build phase
 - [#362](https://github.com/archway-network/archway/pull/362) - wrong reference in the deploy pipeline
 - [#363](https://github.com/archway-network/archway/pull/363) - move safe dir up in the pipeline
+- [#364](https://github.com/archway-network/archway/pull/364) - add CODEOWNERS
 - [#365](https://github.com/archway-network/archway/pull/365) - add release tests
 
 ### Fixed
