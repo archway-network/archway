@@ -228,6 +228,7 @@ release:
 		-w /code \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-e RELEASE=$(RELEASE) \
+		-e GITHUB_TOKEN="$(GITHUB_TOKEN)" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
 		--clean
