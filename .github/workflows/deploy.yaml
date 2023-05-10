@@ -43,7 +43,7 @@ jobs:
         - name: GoReleaser
           run: make release
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 
   deploy-titus:
     runs-on: ubuntu-latest
@@ -59,7 +59,7 @@ jobs:
 
       - name: Inject version and secrets to titus-1.yaml
         run: |
-          sed -i -e "s|NODE_VERSION|${{ steps.vars.outputr.short_sha }}|g" ci/titus-1.yaml
+          sed -i -e "s|NODE_VERSION|${{ steps.vars.output.short_sha }}|g" ci/titus-1.yaml
           sed -i -e "s|TITUS_1_ACCOUNT_MNEMONIC_B64|${{ secrets.TITUS_1_ACCOUNT_MNEMONIC_B64 }}|g" ci/titus-1.yaml
           sed -i -e "s|TITUS_1_FAUCET_ACCOUNT_MNEMONIC_B64|${{ secrets.TITUS_1_FAUCET_ACCOUNT_MNEMONIC_B64 }}|g" ci/titus-1.yaml
           sed -i -e "s|TITUS_1_PRIV_VALIDATOR_KEY_B64|${{ secrets.TITUS_1_PRIV_VALIDATOR_KEY_B64 }}|g" ci/titus-1.yaml
