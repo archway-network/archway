@@ -55,6 +55,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#372](https://github.com/archway-network/archway/pull/372) - add docker config to release pipeline
 - [#375](https://github.com/archway-network/archway/pull/375) - add missing colon from manifest
 - [#376](https://github.com/archway-network/archway/pull/376) - fix checksum naming
+- [#377](https://github.com/archway-network/archway/pull/377) - artifact naming
 
 ### Fixed
 
