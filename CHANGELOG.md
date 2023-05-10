@@ -48,6 +48,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#360](https://github.com/archway-network/archway/pull/360) - Fix github access token for release workflow
 - [#361](https://github.com/archway-network/archway/pull/361) - Readd missing deprecated Dockerhub build phase
 - [#362](https://github.com/archway-network/archway/pull/362) - wrong reference in the deploy pipeline
+- [#363](https://github.com/archway-network/archway/pull/363) - move safe dir up in the pipeline
 
 ### Fixed
 
