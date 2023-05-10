@@ -50,6 +50,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#362](https://github.com/archway-network/archway/pull/362) - wrong reference in the deploy pipeline
 - [#363](https://github.com/archway-network/archway/pull/363) - move safe dir up in the pipeline
 - [#365](https://github.com/archway-network/archway/pull/365) - add release tests
+- [#367](https://github.com/archway-network/archway/pull/367) - use snapshot for non release builds
 
 ### Fixed
 
