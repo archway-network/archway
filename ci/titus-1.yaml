@@ -426,7 +426,7 @@ spec:
     p2p: true
     rpc: true
   image:
-    name: ghcr.io/archway-network/archway/archwayd
+    name: ghcr.io/archway-network/archwayd
     version: NODE_VERSION
     imagePullPolicy: Always
   init:
