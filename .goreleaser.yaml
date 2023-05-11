@@ -47,20 +47,40 @@ builds:
       - netgo
       - muslc
 release:
-  skip_upload: '{{ .Env.SKIP_UPLOAD }}'
+  skip_upload: '{{ if .Env.RELEASE eq "true" }}false{{else}}true{{end}}'
 archives:
   - id: w/version
     builds:
       - archwayd-linux-amd64
       - archwayd-linux-arm64
-    name_template: 'archwayd_{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}_{{ .Os }}_{{ .Arch }}'
+    name_template: '{{ .ProjectName }}d_v{{ .Version }}_{{ .Os }}_{{ .Arch }}'
     wrap_in_directory: false
     format: zip
     rlcp: true
     files:
       - none*
+  - id: wo/version
+    builds:
+      - archwayd-linux-amd64
+      - archwayd-linux-arm64
+    name_template: '{{ .ProjectName }}d_{{ .Os }}_{{ .Arch }}'
+    wrap_in_directory: false
+    format: zip
+    rlcp: true
+    files:
+      - none*
+  - id: binary
+    builds:
+      - archwayd-linux-amd64
+      - archwayd-linux-arm64
+    name_template: '{{ .ProjectName }}d_{{ .Os }}_{{ .Arch }}'
+    wrap_in_directory: false
+    format: binary
+    rlcp: true
+    files:
+      - none*
 checksum:
-  name_template: '{{ .ProjectName }}d_{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}_checksums.txt'
+  name_template: '{{ .ProjectName }}d_v{{ .Version }}_checksums.txt'
 dockers:
   - use: buildx
     goos: linux

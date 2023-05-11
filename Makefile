@@ -22,7 +22,6 @@ LIBWASM_VERSION = $(shell go list -m -f '{{ .Version }}' github.com/CosmWasm/was
 # Release environment variable
 RELEASE ?= false
 GORELEASER_SKIP_VALIDATE ?= false
-SKIP_UPLOAD ?= false
 
 export GO111MODULE = on
 
@@ -215,7 +214,6 @@ docker-build:
 		--rm \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-e RELEASE=$(RELEASE) \
-		-e SKIP_UPLOAD=$(SKIP_UPLOAD) \
 		-e GITHUB_TOKEN="$(GITHUB_TOKEN)" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/github.com/archway-network/archway \
@@ -229,7 +227,6 @@ release-dryrun:
 		--rm \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-e RELEASE=$(RELEASE) \
-		-e SKIP_UPLOAD=$(SKIP_UPLOAD) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/github.com/archway-network/archway \
 		-w /go/src/github.com/archway-network/archway \
@@ -243,7 +240,6 @@ release:
 		--rm \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-e RELEASE=$(RELEASE) \
-		-e SKIP_UPLOAD=$(SKIP_UPLOAD) \
 		-e GITHUB_TOKEN="$(GITHUB_TOKEN)" \
 		-v $(HOME)/.docker/config.json:/root/.docker/config.json \
 		-v /var/run/docker.sock:/var/run/docker.sock \

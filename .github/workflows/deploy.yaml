@@ -36,7 +36,6 @@ jobs:
         - name: GoReleaser
           run: make release
           env:
-            SKIP_UPLOAD: true
             GORELEASER_SKIP_VALIDATE: true
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
