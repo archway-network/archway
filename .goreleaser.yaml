@@ -47,7 +47,7 @@ builds:
       - netgo
       - muslc
 release:
-  skip_upload: '{{ if .Env.RELEASE eq "true" }}false{{else}}true{{end}}'
+  skip_upload: '{{ if eq .Env.RELEASE "true" }}false{{else}}true{{end}}'
 archives:
   - id: w/version
     builds:
