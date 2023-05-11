@@ -46,6 +46,8 @@ builds:
     tags:
       - netgo
       - muslc
+release:
+  skip_upload: '{{ .Env.SKIP_UPLOAD }}'
 archives:
   - id: w/version
     builds:

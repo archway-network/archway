@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    # branches: [main]
+    branches: [main]
 
 jobs:
   release-dev:
@@ -36,6 +36,7 @@ jobs:
         - name: GoReleaser
           run: make release
           env:
+            SKIP_UPLOAD: true
             GORELEASER_SKIP_VALIDATE: true
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
