@@ -20,7 +20,7 @@ builds:
       - -mod=readonly
       - -trimpath
     ldflags:
-      - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=archway -X github.com/cosmos/cosmos-sdk/version.AppName=archway -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=archway -X github.com/cosmos/cosmos-sdk/version.AppName=archway -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -linkmode=external
       - -extldflags '-Wl,-z,muldefs --static -lm'
     tags:
@@ -58,7 +58,7 @@ archives:
     files:
       - none*
 checksum:
-  name_template: '{{ .ProjectName }}_{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}_checksums.txt'
+  name_template: '{{ .ProjectName }}d_{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}_checksums.txt'
 dockers:
   - use: buildx
     goos: linux
@@ -69,8 +69,8 @@ dockers:
       - "--pull"
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version=v{{.Version}}"
       - "--label=org.opencontainers.image.url=https://archway.io"
@@ -85,8 +85,8 @@ dockers:
       - "--pull"
       - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version=v{{.Version}}"
       - "--label=org.opencontainers.image.url=https://archway.io"
@@ -102,8 +102,8 @@ dockers:
       - "--pull"
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version=v{{.Version}}"
       - "--label=org.opencontainers.image.url=https://archway.io"
@@ -119,8 +119,8 @@ dockers:
       - "--pull"
       - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version=v{{.Version}}"
       - "--label=org.opencontainers.image.url=https://archway.io"
