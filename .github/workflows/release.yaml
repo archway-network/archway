@@ -37,5 +37,4 @@ jobs:
           run: make release
           env:
             RELEASE: true
-            ARCHIVE: zip
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
