@@ -4,6 +4,7 @@ name: Build deprecated docker image
 on:
   push:
     branches: [main]
+    tags: [v*]
 jobs:
   build-docker-image:
     runs-on: ubuntu-latest
