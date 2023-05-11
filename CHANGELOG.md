@@ -57,6 +57,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#376](https://github.com/archway-network/archway/pull/376) - fix checksum naming
 - [#377](https://github.com/archway-network/archway/pull/377) - artifact naming
 - [#378](https://github.com/archway-network/archway/pull/378) - missing end parameter
+- [#380](https://github.com/archway-network/archway/pull/380) - titus deployment
 
 ### Fixed
 

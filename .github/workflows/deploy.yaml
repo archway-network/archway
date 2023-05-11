@@ -15,12 +15,6 @@ jobs:
           with:
             fetch-depth: 0
 
-        - name: Set short git commit SHA
-          id: vars
-          run: |
-            calculatedSha=$(git rev-parse --short ${{ github.sha }})
-            echo "::set-output name=short_sha::$calculatedSha"
-
         - name: Set up Go
           uses: actions/setup-go@v3
           with:
@@ -57,9 +51,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set short git commit SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Inject version and secrets to titus-1.yaml
         run: |
-          sed -i -e "s|NODE_VERSION|${{ steps.vars.output.short_sha }}|g" ci/titus-1.yaml
+          sed -i -e "s|NODE_VERSION|${{ steps.vars.outputs.sha_short }}|g" ci/titus-1.yaml
           sed -i -e "s|TITUS_1_ACCOUNT_MNEMONIC_B64|${{ secrets.TITUS_1_ACCOUNT_MNEMONIC_B64 }}|g" ci/titus-1.yaml
           sed -i -e "s|TITUS_1_FAUCET_ACCOUNT_MNEMONIC_B64|${{ secrets.TITUS_1_FAUCET_ACCOUNT_MNEMONIC_B64 }}|g" ci/titus-1.yaml
           sed -i -e "s|TITUS_1_PRIV_VALIDATOR_KEY_B64|${{ secrets.TITUS_1_PRIV_VALIDATOR_KEY_B64 }}|g" ci/titus-1.yaml
