@@ -2,18 +2,10 @@
 * @archway-network/Protocol
 
 # Protocol & NetX
-Dockerfile              @archway-network/Protocol @archway-network/NetX
-Makefile                @archway-network/Protocol @archway-network/NetX
 CHANGELOG.md            @archway-network/Protocol @archway-network/NetX
-SECURITY.md             @archway-network/Protocol @archway-network/NetX
 releasing-archway.md    @archway-network/Protocol @archway-network/NetX
-
-# NetX catch-all
-*.yml                   @archway-network/NetX
-*.yaml                  @archway-network/NetX
-*.json                  @archway-network/NetX
 
 # NetX Specific
 .github/workflows/*     @archway-network/NetX
 ci/*                    @archway-network/NetX
-Dockerfile.*            @archway-network/NetX
+Dockerfile*             @archway-network/NetX
