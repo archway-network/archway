@@ -20,7 +20,7 @@ builds:
       - -mod=readonly
       - -trimpath
     ldflags:
-      - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=archway -X github.com/cosmos/cosmos-sdk/version.AppName=archway -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=archway -X github.com/cosmos/cosmos-sdk/version.AppName=archway -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -linkmode=external
       - -extldflags '-Wl,-z,muldefs --static -lm'
     tags:
@@ -40,39 +40,61 @@ builds:
       - -mod=readonly
       - -trimpath
     ldflags:
-      - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=archway -X github.com/cosmos/cosmos-sdk/version.AppName=archway -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
+      - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=archway -X github.com/cosmos/cosmos-sdk/version.AppName=archway -X github.com/cosmos/cosmos-sdk/version.Version=v{{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
       - -linkmode=external
       - -extldflags '-Wl,-z,muldefs --static -lm'
     tags:
       - netgo
       - muslc
+release:
+  skip_upload: '{{ if eq .Env.RELEASE "true" }}false{{else}}true{{end}}'
 archives:
   - id: w/version
     builds:
       - archwayd-linux-amd64
       - archwayd-linux-arm64
-    name_template: 'archwayd_{{if eq .Env.RELEASE "true"}}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}_{{ .Os }}_{{ .Arch }}'
+    name_template: '{{ .ProjectName }}d_v{{ .Version }}_{{ .Os }}_{{ .Arch }}'
     wrap_in_directory: false
     format: zip
     rlcp: true
     files:
       - none*
+  - id: wo/version
+    builds:
+      - archwayd-linux-amd64
+      - archwayd-linux-arm64
+    name_template: '{{ .ProjectName }}d_{{ .Os }}_{{ .Arch }}'
+    wrap_in_directory: false
+    format: zip
+    rlcp: true
+    files:
+      - none*
+  - id: binary
+    builds:
+      - archwayd-linux-amd64
+      - archwayd-linux-arm64
+    name_template: '{{ .ProjectName }}d_{{ .Os }}_{{ .Arch }}'
+    wrap_in_directory: false
+    format: binary
+    rlcp: true
+    files:
+      - none*
 checksum:
-  name_template: '{{ .ProjectName }}_{{if eq .Env.RELEASE "true"}}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}_checksums.txt'
+  name_template: '{{ .ProjectName }}d_v{{ .Version }}_checksums.txt'
 dockers:
   - use: buildx
     goos: linux
     goarch: amd64
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.version=v{{.Version}}"
       - "--label=org.opencontainers.image.url=https://archway.io"
       - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
       - "--label=org.opencontainers.image.licenses=Apache-2.0"
@@ -80,15 +102,15 @@ dockers:
     goos: linux
     goarch: arm64
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.version=v{{.Version}}"
       - "--label=org.opencontainers.image.url=https://archway.io"
       - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
       - "--label=org.opencontainers.image.licenses=Apache-2.0"
@@ -97,15 +119,15 @@ dockers:
     goarch: amd64
     dockerfile: Dockerfile.debug
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}-debug:{{if eq .Env.RELEASE "true"}}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.version=v{{.Version}}"
       - "--label=org.opencontainers.image.url=https://archway.io"
       - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
       - "--label=org.opencontainers.image.licenses=Apache-2.0"
@@ -114,24 +136,24 @@ dockers:
     goarch: arm64
     dockerfile: Dockerfile.debug
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}-debug:{{if eq .Env.RELEASE "true"}}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.version=v{{.Version}}"
       - "--label=org.opencontainers.image.url=https://archway.io"
       - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
       - "--label=org.opencontainers.image.licenses=Apache-2.0"
 docker_manifests:
-  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true" }}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
+  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true" }}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
-      - 'ghcr.io/archway-network/{{ .ProjectName }}:{{if eq .Env.RELEASE "true"}}{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
-  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}-debug:{{if eq .Env.RELEASE "true" }}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
+  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true" }}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}-debug:{{if eq .Env.RELEASE "true"}}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
-      - 'ghcr.io/archway-network/{{ .ProjectName }}-debug:{{if eq .Env.RELEASE "true"}}{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
