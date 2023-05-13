@@ -5,8 +5,6 @@ import (
 	"os"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -18,10 +16,6 @@ import (
 )
 
 var emptyWasmOpts []wasm.Option = nil
-
-func TestA(t *testing.T) {
-	t.Log(sdk.DefaultPowerReduction.String()) // 1_000_000_000_000_000_000
-}
 
 func TestArchwaydExport(t *testing.T) {
 	db := db.NewMemDB()
