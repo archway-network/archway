@@ -40,6 +40,12 @@ func defaultChainConfig() chainConfig {
 	}
 }
 
+func WithValidatorsNum(num int) TestChainConfigOption {
+	return func(cfg *chainConfig) {
+		cfg.ValidatorsNum = num
+	}
+}
+
 // WithGenAccounts sets the number of genesis accounts
 func WithGenAccounts(num int) TestChainConfigOption {
 	return func(cfg *chainConfig) {
