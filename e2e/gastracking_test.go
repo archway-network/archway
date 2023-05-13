@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"encoding/json"
+	archway "github.com/archway-network/archway/types"
 	"strconv"
 	"time"
 
@@ -41,7 +42,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 			1000000,
 		),
 		// Set default Tx fee for non-manual transaction like Upload / Instantiate
-		e2eTesting.WithDefaultFeeAmount("10000"),
+		e2eTesting.WithDefaultFeeAmount("500000000000000"),
 	)
 	trackingKeeper, rewardsKeeper := chain.GetApp().TrackingKeeper, chain.GetApp().RewardsKeeper
 
@@ -50,7 +51,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	accAddrs, accPrivKeys := e2eTesting.GenAccounts(1) // an empty account
 
 	// Inputs
-	txFees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)))
+	txFees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000_000_000)))
 	rewardsAcc := e2eTesting.Account{
 		Address: accAddrs[0],
 		PrivKey: accPrivKeys[0],
@@ -81,7 +82,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	}
 
 	// Send some coins to the rewardsAcc to pay withdraw Tx fees
-	rewardsAccInitialBalance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000)))
+	rewardsAccInitialBalance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1).Mul(archway.DefaultPowerReduction)))
 	{
 		s.Require().NoError(
 			chain.GetApp().BankKeeper.SendCoins(

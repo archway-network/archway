@@ -236,8 +236,6 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 // TestRewardsParamMaxWithdrawRecordsLimit check the x/rewards's MaxWithdrawRecords param limit (rough estimation).
 // Limit is defined by the block gas limit (100M).
 func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
-	s.T().Skip("Skipped to save CI time, should be used manually to estimate a new limit")
-
 	rewardsTypes.MaxWithdrawRecordsParamLimit = uint64(29500) // an actual value is (thisValue - 1), refer to the query below
 
 	chain := e2eTesting.NewTestChain(s.T(), 1,
@@ -312,8 +310,6 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 // TestRewardsRecordsQueryLimit defines the x/rewards's RewardsRecords query limit (rough estimation).
 // Limit is defined by the max CosmWasm VM.
 func (s *E2ETestSuite) TestRewardsRecordsQueryLimit() {
-	s.T().Skip("Skipped to save CI time, should be used manually to estimate a new limit")
-
 	rewardsTypes.MaxRecordsQueryLimit = uint64(7716) // an actual value is (thisValue - 1), refer to the query below
 
 	chain := e2eTesting.NewTestChain(s.T(), 1)

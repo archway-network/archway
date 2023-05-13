@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 	"io"
-	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -112,6 +111,7 @@ import (
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 
 	archwayappparams "github.com/archway-network/archway/app/params"
+	archway "github.com/archway-network/archway/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -229,12 +229,10 @@ var (
 	_ servertypes.Application = (*ArchwayApp)(nil)
 )
 
-const BaseDenomUnit = 18
-
 func init() {
 	// sets the default power reduction in order to ensure that on high precision numbers, which is a default for archway
 	// the network does not get stalled due to an integer overflow in some edge cases.
-	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(BaseDenomUnit), nil)) // 10^18
+	sdk.DefaultPowerReduction = archway.DefaultPowerReduction
 }
 
 // ArchwayApp extended ABCI application

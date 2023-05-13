@@ -1,6 +1,7 @@
 package e2eTesting
 
 import (
+	archway "github.com/archway-network/archway/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -33,9 +34,9 @@ func defaultChainConfig() chainConfig {
 	return chainConfig{
 		ValidatorsNum:    1,
 		GenAccountsNum:   5,
-		GenBalanceAmount: "1000000000",
-		BondAmount:       "1000000",
-		DefaultFeeAmt:    "100",
+		GenBalanceAmount: archway.DefaultPowerReduction.MulRaw(100).String(),
+		BondAmount:       archway.DefaultPowerReduction.MulRaw(1).String(),
+		DefaultFeeAmt:    archway.DefaultPowerReduction.QuoRaw(10).String(), // 0.1
 	}
 }
 
