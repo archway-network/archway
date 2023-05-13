@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"os"
 	"testing"
 
@@ -16,6 +17,10 @@ import (
 )
 
 var emptyWasmOpts []wasm.Option = nil
+
+func TestA(t *testing.T) {
+	t.Log(sdk.DefaultPowerReduction.String()) // 1_000_000_000_000_000_000
+}
 
 func TestArchwaydExport(t *testing.T) {
 	db := db.NewMemDB()

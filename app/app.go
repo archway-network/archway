@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -227,6 +228,14 @@ var (
 	_ simapp.App              = (*ArchwayApp)(nil)
 	_ servertypes.Application = (*ArchwayApp)(nil)
 )
+
+const BaseDenomUnit = 18
+
+func init() {
+	// sets the default power reduction in order to ensure that on high precision numbers, which is a default for archway
+	// the network does not get stalled due to an integer overflow in some edge cases.
+	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(BaseDenomUnit), nil)) // 10^18
+}
 
 // ArchwayApp extended ABCI application
 type ArchwayApp struct {
