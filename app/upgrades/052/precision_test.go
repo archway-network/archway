@@ -6,12 +6,13 @@
 package upgrade052_test
 
 import (
+	"testing"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	archway "github.com/archway-network/archway/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestPrecisionBreakages(t *testing.T) {

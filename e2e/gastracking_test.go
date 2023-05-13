@@ -2,9 +2,10 @@ package e2e
 
 import (
 	"encoding/json"
-	archway "github.com/archway-network/archway/types"
 	"strconv"
 	"time"
+
+	archway "github.com/archway-network/archway/types"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
