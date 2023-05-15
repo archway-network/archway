@@ -66,6 +66,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#368](https://github.com/archway-network/archway/pull/368) - github actions should fetch tags as well for deploy workflow
 - [#369](https://github.com/archway-network/archway/pull/369) - CODEOWNERS: small set to expand, not large set that filters
 - [#370](https://github.com/archway-network/archway/pull/370) - login to ghcr
+- [#382](https://github.com/archway-network/archway/pull/382) - adjust default power reduction
 
 ### Changed
 
