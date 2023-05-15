@@ -6,6 +6,8 @@ import (
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	archway "github.com/archway-network/archway/types"
+
 	"github.com/archway-network/archway/app"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
@@ -33,9 +35,15 @@ func defaultChainConfig() chainConfig {
 	return chainConfig{
 		ValidatorsNum:    1,
 		GenAccountsNum:   5,
-		GenBalanceAmount: "1000000000",
-		BondAmount:       "1000000",
-		DefaultFeeAmt:    "100",
+		GenBalanceAmount: archway.DefaultPowerReduction.MulRaw(100).String(),
+		BondAmount:       archway.DefaultPowerReduction.MulRaw(1).String(),
+		DefaultFeeAmt:    archway.DefaultPowerReduction.QuoRaw(10).String(), // 0.1
+	}
+}
+
+func WithValidatorsNum(num int) TestChainConfigOption {
+	return func(cfg *chainConfig) {
+		cfg.ValidatorsNum = num
 	}
 }
 

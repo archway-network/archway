@@ -111,6 +111,7 @@ import (
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 
 	archwayappparams "github.com/archway-network/archway/app/params"
+	archway "github.com/archway-network/archway/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -227,6 +228,12 @@ var (
 	_ simapp.App              = (*ArchwayApp)(nil)
 	_ servertypes.Application = (*ArchwayApp)(nil)
 )
+
+func init() {
+	// sets the default power reduction in order to ensure that on high precision numbers, which is a default for archway
+	// the network does not get stalled due to an integer overflow in some edge cases.
+	sdk.DefaultPowerReduction = archway.DefaultPowerReduction
+}
 
 // ArchwayApp extended ABCI application
 type ArchwayApp struct {
