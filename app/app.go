@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/archway-network/archway/x/genmsg"
 	"io"
 	"net/http"
 	"os"
@@ -207,6 +208,7 @@ var (
 		wasm.AppModuleBasic{},
 		tracking.AppModuleBasic{},
 		rewards.AppModuleBasic{},
+		genmsg.AppModule{},
 	)
 
 	// module account permissions
