@@ -33,6 +33,8 @@ import (
 	"github.com/archway-network/archway/app"
 )
 
+var TestAccountAddr = sdk.AccAddress("test")
+
 // TestChain keeps a test chain state and provides helper functions to simulate various operations.
 // Heavily inspired by the TestChain from the ibc-go repo (https://github.com/cosmos/ibc-go/blob/main/testing/chain.go).
 // Reasons for creating a custom TestChain rather than using the ibc-go's one are: to simplify it,
@@ -125,6 +127,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		genAccs = append(genAccs, acc)
 		genAccPrivKeys = append(genAccPrivKeys, accPrivKey)
 	}
+	genAccs = append(genAccs, authTypes.NewBaseAccount(TestAccountAddr, nil, uint64(len(genAccs))-1, 0)) // deterministic account for testing purposes
 
 	genAmt, ok := sdk.NewIntFromString(chainCfg.GenBalanceAmount)
 	require.True(t, ok)
@@ -187,6 +190,12 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		})
 		totalSupply = totalSupply.Add(genCoins...)
 	}
+
+	balances = append(balances, bankTypes.Balance{
+		Address: TestAccountAddr.String(), // add some balances to our dummy
+		Coins:   genCoins,
+	})
+	totalSupply = totalSupply.Add(genCoins...)
 
 	balances = append(balances, bankTypes.Balance{
 		Address: authTypes.NewModuleAddress(stakingTypes.BondedPoolName).String(),

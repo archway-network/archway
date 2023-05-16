@@ -588,6 +588,7 @@ func NewArchwayApp(
 		transferModule,
 		tracking.NewAppModule(app.appCodec, app.TrackingKeeper),
 		rewards.NewAppModule(app.appCodec, app.RewardsKeeper),
+		genmsg.NewAppModule(app.MsgServiceRouter()),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -608,6 +609,7 @@ func NewArchwayApp(
 		govtypes.ModuleName,
 		crisistypes.ModuleName, // doesn't have BeginBlocker, so order is not important
 		genutiltypes.ModuleName,
+		genmsg.ModuleName,
 		authz.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
@@ -637,6 +639,7 @@ func NewArchwayApp(
 		slashingtypes.ModuleName,
 		minttypes.ModuleName,
 		genutiltypes.ModuleName,
+		genmsg.ModuleName,
 		evidencetypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
@@ -681,6 +684,7 @@ func NewArchwayApp(
 		wasm.ModuleName,
 		// wasm gas tracking
 		trackingTypes.ModuleName,
+		genmsg.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
 	)
