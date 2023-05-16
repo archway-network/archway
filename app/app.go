@@ -2,12 +2,13 @@ package app
 
 import (
 	"fmt"
-	"github.com/archway-network/archway/x/genmsg"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/archway-network/archway/x/genmsg"
 
 	wasmdKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"

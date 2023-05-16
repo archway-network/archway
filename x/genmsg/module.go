@@ -3,6 +3,7 @@ package genmsg
 import (
 	"encoding/json"
 	"fmt"
+
 	v1 "github.com/archway-network/archway/x/genmsg/v1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -20,9 +21,7 @@ const (
 	ModuleName = "genmsg"
 )
 
-var (
-	_ module.AppModule = (*AppModule)(nil)
-)
+var _ module.AppModule = (*AppModule)(nil)
 
 // MessageRouter ADR 031 request type routing
 type MessageRouter interface {

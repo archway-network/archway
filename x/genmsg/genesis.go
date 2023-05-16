@@ -2,11 +2,12 @@ package genmsg
 
 import (
 	"fmt"
+	"log"
+
 	v1 "github.com/archway-network/archway/x/genmsg/v1"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"log"
 )
 
 func anyToMsg(ir types.InterfaceRegistry, anyMsg *types.Any) (sdk.Msg, error) {

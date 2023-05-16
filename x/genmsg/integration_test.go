@@ -1,6 +1,8 @@
 package genmsg_test
 
 import (
+	"testing"
+
 	"github.com/archway-network/archway/app"
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/genmsg"
@@ -10,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestIntegration(t *testing.T) {
