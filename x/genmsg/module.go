@@ -29,8 +29,8 @@ type MessageRouter interface {
 	Handler(msg sdk.Msg) baseapp.MsgServiceHandler
 }
 
-func NewAppModule() AppModule {
-	return AppModule{}
+func NewAppModule(h MessageRouter) AppModule {
+	return AppModule{h}
 }
 
 type AppModule struct {
