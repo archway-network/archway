@@ -375,7 +375,6 @@ func (e *IBCEndpoint) sendConnectionOpenTry() {
 
 	srcChainSenderAcc := srcChain.GetAccount(0)
 	msg := connectionTypes.NewMsgConnectionOpenTry(
-		"",
 		srcChainClientID,
 		dstChainConnectionID,
 		dstChainClientID,
@@ -486,7 +485,6 @@ func (e *IBCEndpoint) sendChannelOpenTry() {
 	srcChainSenderAcc := srcChain.GetAccount(0)
 	msg := channelTypes.NewMsgChannelOpenTry(
 		srcChPort,
-		"",
 		chVersion,
 		chOrder,
 		[]string{srcConnectionID},
