@@ -5,10 +5,10 @@ go 1.19
 require (
 	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220822092235-974247a04ac7
 	github.com/CosmWasm/wasmd v0.29.2
-	github.com/CosmWasm/wasmvm v1.1.2
+	github.com/CosmWasm/wasmvm v1.2.3
 	github.com/archway-network/voter v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.45.14
-	github.com/cosmos/ibc-go/v4 v4.2.0
+	github.com/cosmos/ibc-go/v4 v4.3.0
 	github.com/dvsekhvalnov/jose2go v1.5.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
@@ -20,11 +20,11 @@ require (
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/tendermint v0.34.26
 	github.com/tendermint/tm-db v0.6.7
 	google.golang.org/genproto v0.0.0-20230125152338-dcaf20b6aeaa
-	google.golang.org/grpc v1.52.3
+	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -56,9 +56,9 @@ require (
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/gogoproto v1.4.3 // indirect
+	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
@@ -83,6 +83,7 @@ require (
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
@@ -139,7 +140,7 @@ require (
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
-	golang.org/x/exp v0.0.0-20221019170559-20944726eadf // indirect
+	golang.org/x/exp v0.0.0-20230131160201-f062dba9d201 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
@@ -154,7 +155,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.30.0-archway
+replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.31.0-archway
 
 replace github.com/archway-network/voter => ./contracts/go/voter
 
