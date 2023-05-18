@@ -27,6 +27,24 @@ Contains bug fixes.
 
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
+
+## [Unreleased]
+
+### Added
+
+### Changed
+
+- [#383](https://github.com/archway-network/archway/pull/383) - upgrade wasmd to the v0.30.0-archway fork
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Improvements
+
+
 ## [v0.5.2]
 
 ### Fixed
