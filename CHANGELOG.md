@@ -35,6 +35,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Changed
 
 - [#383](https://github.com/archway-network/archway/pull/383) - upgrade wasmd to the v0.30.0-archway fork
+- [#385](https://github.com/archway-network/archway/pull/385) - upgrade wasmd to the v0.31.0-archway fork
 
 ### Deprecated
 
