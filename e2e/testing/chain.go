@@ -127,7 +127,9 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		genAccs = append(genAccs, acc)
 		genAccPrivKeys = append(genAccPrivKeys, accPrivKey)
 	}
-	genAccs = append(genAccs, authTypes.NewBaseAccount(TestAccountAddr, nil, uint64(len(genAccs))-1, 0)) // deterministic account for testing purposes
+	if chainCfg.DummyTestAddr {
+		genAccs = append(genAccs, authTypes.NewBaseAccount(TestAccountAddr, nil, uint64(len(genAccs))-1, 0)) // deterministic account for testing purposes
+	}
 
 	genAmt, ok := sdk.NewIntFromString(chainCfg.GenBalanceAmount)
 	require.True(t, ok)
@@ -191,11 +193,13 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		totalSupply = totalSupply.Add(genCoins...)
 	}
 
-	balances = append(balances, bankTypes.Balance{
-		Address: TestAccountAddr.String(), // add some balances to our dummy
-		Coins:   genCoins,
-	})
-	totalSupply = totalSupply.Add(genCoins...)
+	if chainCfg.DummyTestAddr {
+		balances = append(balances, bankTypes.Balance{
+			Address: TestAccountAddr.String(), // add some balances to our dummy
+			Coins:   genCoins,
+		})
+		totalSupply = totalSupply.Add(genCoins...)
+	}
 
 	balances = append(balances, bankTypes.Balance{
 		Address: authTypes.NewModuleAddress(stakingTypes.BondedPoolName).String(),

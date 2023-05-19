@@ -16,7 +16,7 @@ import (
 
 func TestIntegration(t *testing.T) {
 	recvAddr := sdk.AccAddress("recv")
-	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithGenDefaultCoinBalance("100000000000000000000000000000000000"), e2eTesting.TestChainGenesisOption(func(cdc codec.Codec, genesis app.GenesisState) {
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithDummyTestAddress(), e2eTesting.WithGenDefaultCoinBalance("100000000000000000000000000000000000"), e2eTesting.TestChainGenesisOption(func(cdc codec.Codec, genesis app.GenesisState) {
 		testMsg := &banktypes.MsgSend{
 			FromAddress: e2eTesting.TestAccountAddr.String(),
 			ToAddress:   recvAddr.String(),
