@@ -3,7 +3,6 @@ package genmsg
 import (
 	"testing"
 
-	v1 "github.com/archway-network/archway/x/genmsg/v1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -11,6 +10,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
+
+	v1 "github.com/archway-network/archway/x/genmsg/v1"
 )
 
 type mockRouter struct {

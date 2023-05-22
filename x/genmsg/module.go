@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	v1 "github.com/archway-network/archway/x/genmsg/v1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,6 +14,8 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	v1 "github.com/archway-network/archway/x/genmsg/v1"
 )
 
 const (
