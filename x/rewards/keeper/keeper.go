@@ -36,7 +36,7 @@ type AuthKeeperExpected interface {
 type BankKeeperExpected interface {
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 }
 
 // Keeper provides module state operations.

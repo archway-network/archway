@@ -65,7 +65,7 @@ func (s *E2ETestSuite) TestTxFees() {
 		s.Require().True(ok)
 
 		totalSupplyReceived := chain.GetApp().BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
-		s.Require().True(totalSupplyReceived.Amount.LTE(totalSupplyMaxAmtExpected), "total supply", totalSupplyReceived.String())
+		s.Require().Truef(totalSupplyReceived.Amount.LTE(totalSupplyMaxAmtExpected), "total supply %s", totalSupplyReceived.String())
 	}
 
 	senderAcc := chain.GetAccount(0)

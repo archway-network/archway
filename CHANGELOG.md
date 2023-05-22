@@ -32,6 +32,8 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
+- [#387](https://github.com/archway-network/archway/pull/387)  - Add genmsgs module
+
 ### Changed
 
 - [#383](https://github.com/archway-network/archway/pull/383), [#385](https://github.com/archway-network/archway/pull/385), [#386](https://github.com/archway-network/archway/pull/386) - upgrade wasmd to the v0.32.0-archway fork

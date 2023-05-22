@@ -20,6 +20,7 @@ type chainConfig struct {
 	BondAmount       string
 	LoggerEnabled    bool
 	DefaultFeeAmt    string
+	DummyTestAddr    bool
 }
 
 type (
@@ -38,12 +39,19 @@ func defaultChainConfig() chainConfig {
 		GenBalanceAmount: archway.DefaultPowerReduction.MulRaw(100).String(),
 		BondAmount:       archway.DefaultPowerReduction.MulRaw(1).String(),
 		DefaultFeeAmt:    archway.DefaultPowerReduction.QuoRaw(10).String(), // 0.1
+		DummyTestAddr:    false,
 	}
 }
 
 func WithValidatorsNum(num int) TestChainConfigOption {
 	return func(cfg *chainConfig) {
 		cfg.ValidatorsNum = num
+	}
+}
+
+func WithDummyTestAddress() TestChainConfigOption {
+	return func(cfg *chainConfig) {
+		cfg.DummyTestAddr = true
 	}
 }
 
