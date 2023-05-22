@@ -32,12 +32,13 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
-- [#387](https://github.com/archway-network/archway/pull/387)  - Add genmsgs module
+- [#387](https://github.com/archway-network/archway/pull/387) - Add genmsgs module
+- [#388](https://github.com/archway-network/archway/pull/388) - Add the ibc-go fee middleware
+- [#389](https://github.com/archway-network/archway/pull/389) - Add v0.6 upgrade handler
 
 ### Changed
 
 - [#383](https://github.com/archway-network/archway/pull/383), [#385](https://github.com/archway-network/archway/pull/385), [#386](https://github.com/archway-network/archway/pull/386) - upgrade wasmd to the v0.32.0-archway fork
-- [#388](https://github.com/archway-network/archway/pull/388) - add the ibc-go fee middleware
 
 ### Deprecated
 
