@@ -17,7 +17,7 @@ type grpcClient struct {
 	app *app.ArchwayApp
 }
 
-func (c grpcClient) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+func (c grpcClient) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
 	req := args.(codec.ProtoMarshaler)
 	resp := c.app.Query(abci.RequestQuery{
 		Data:   c.app.AppCodec().MustMarshal(req),

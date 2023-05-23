@@ -4,6 +4,9 @@
 
 ## Table of Contents
 
+- [archway/genmsgs/v1/genmsgs.proto](#archway/genmsgs/v1/genmsgs.proto)
+    - [GenesisState](#archway.genmsg.v1.GenesisState)
+  
 - [archway/rewards/v1/rewards.proto](#archway/rewards/v1/rewards.proto)
     - [BlockRewards](#archway.rewards.v1.BlockRewards)
     - [ContractMetadata](#archway.rewards.v1.ContractMetadata)
@@ -73,6 +76,37 @@
     - [Query](#archway.tracking.v1.Query)
   
 - [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="archway/genmsgs/v1/genmsgs.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## archway/genmsgs/v1/genmsgs.proto
+
+
+
+<a name="archway.genmsg.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState represents the messages to be processed during genesis by the genmsg module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
 
 
 

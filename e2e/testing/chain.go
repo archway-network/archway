@@ -21,7 +21,7 @@ import (
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/ibc-go/v3/testing/mock"
+	"github.com/cosmos/ibc-go/v4/testing/mock"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -32,6 +32,8 @@ import (
 
 	"github.com/archway-network/archway/app"
 )
+
+var TestAccountAddr = sdk.AccAddress("test")
 
 // TestChain keeps a test chain state and provides helper functions to simulate various operations.
 // Heavily inspired by the TestChain from the ibc-go repo (https://github.com/cosmos/ibc-go/blob/main/testing/chain.go).
@@ -125,6 +127,9 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		genAccs = append(genAccs, acc)
 		genAccPrivKeys = append(genAccPrivKeys, accPrivKey)
 	}
+	if chainCfg.DummyTestAddr {
+		genAccs = append(genAccs, authTypes.NewBaseAccount(TestAccountAddr, nil, uint64(len(genAccs))-1, 0)) // deterministic account for testing purposes
+	}
 
 	genAmt, ok := sdk.NewIntFromString(chainCfg.GenBalanceAmount)
 	require.True(t, ok)
@@ -184,6 +189,14 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		balances = append(balances, bankTypes.Balance{
 			Address: genAccs[i].GetAddress().String(),
 			Coins:   accGenCoins,
+		})
+		totalSupply = totalSupply.Add(genCoins...)
+	}
+
+	if chainCfg.DummyTestAddr {
+		balances = append(balances, bankTypes.Balance{
+			Address: TestAccountAddr.String(), // add some balances to our dummy
+			Coins:   genCoins,
 		})
 		totalSupply = totalSupply.Add(genCoins...)
 	}

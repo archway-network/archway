@@ -27,7 +27,35 @@ Contains bug fixes.
 
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
+
 ## [Unreleased]
+
+### Added
+
+- [#387](https://github.com/archway-network/archway/pull/387) - Add genmsgs module
+- [#388](https://github.com/archway-network/archway/pull/388) - Add the ibc-go fee middleware
+- [#389](https://github.com/archway-network/archway/pull/389) - Add v0.6 upgrade handler
+
+### Changed
+
+- [#383](https://github.com/archway-network/archway/pull/383), [#385](https://github.com/archway-network/archway/pull/385), [#386](https://github.com/archway-network/archway/pull/386) - upgrade wasmd to the v0.32.0-archway fork
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Improvements
+
+
+## [v0.5.2]
+
+### Fixed
+
+- [#382](https://github.com/archway-network/archway/pull/382) - adjust default power reduction
+
+## [v0.5.0]
 
 ### Breaking Changes 
 
@@ -66,7 +94,6 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#368](https://github.com/archway-network/archway/pull/368) - github actions should fetch tags as well for deploy workflow
 - [#369](https://github.com/archway-network/archway/pull/369) - CODEOWNERS: small set to expand, not large set that filters
 - [#370](https://github.com/archway-network/archway/pull/370) - login to ghcr
-- [#382](https://github.com/archway-network/archway/pull/382) - adjust default power reduction
 
 ### Changed
 
@@ -77,8 +104,6 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#365](https://github.com/archway-network/archway/pull/356) - Disallow setting module accounts as reward address
 - [#355](https://github.com/archway-network/archway/pull/355) - chore: Update titus genesis defaults
 - [#373](https://github.com/archway-network/archway/pull/373) - Update codeowners
-
-### Deprecated
 
 ### Removed
 
