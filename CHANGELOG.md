@@ -39,6 +39,8 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Changed
 
 - [#383](https://github.com/archway-network/archway/pull/383), [#385](https://github.com/archway-network/archway/pull/385), [#386](https://github.com/archway-network/archway/pull/386) - upgrade wasmd to the v0.32.0-archway fork
+- [#388](https://github.com/archway-network/archway/pull/388) - add the ibc-go fee middleware
+- [#390](https://github.com/archway-network/archway/pull/390) - update cosmos-sdk version from v0.45.15 to v0.15.16
 
 ### Deprecated
 
