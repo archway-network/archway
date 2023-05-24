@@ -35,6 +35,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#387](https://github.com/archway-network/archway/pull/387) - Add genmsgs module
 - [#388](https://github.com/archway-network/archway/pull/388) - Add the ibc-go fee middleware
 - [#389](https://github.com/archway-network/archway/pull/389) - Add v0.6 upgrade handler
+- [#391](https://github.com/archway-network/archway/pull/391) - Added snapshot manager to enable state-synd for wasm
 
 ### Changed
 

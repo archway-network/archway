@@ -782,6 +782,16 @@ func NewArchwayApp(
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 
+	// Register snapshot extensions to enable state-sync for wasm - must be before Loading version
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(
+			wasmdKeeper.NewWasmSnapshotter(app.CommitMultiStore(), &app.WASMKeeper),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
+
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(fmt.Sprintf("failed to load latest version: %s", err))
