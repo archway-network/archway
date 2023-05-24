@@ -1,4 +1,10 @@
+# Repository
 * @archway-network/Protocol
 
-.github/*   @archway-network/Protocol @archway-network/NetX
-ci/*        @archway-network/NetX
+# Protocol & NetX
+releasing-archway.md    @archway-network/Protocol @archway-network/NetX
+
+# NetX Specific
+.github/workflows/*     @archway-network/NetX
+ci/*                    @archway-network/NetX
+Dockerfile*             @archway-network/NetX
