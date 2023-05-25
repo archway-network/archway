@@ -49,6 +49,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Removed
 
 ### Fixed
+- [#392](https://github.com/archway-network/archway/pull/392) - Updating to ibc-go v4.3.1 for huckleberry
 
 ### Improvements
 
