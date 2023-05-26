@@ -93,3 +93,9 @@ in order to correctly set fees it needs to:
 2. Send a query to the archway [EstimateTxFees](../../proto/archway/rewards/v1/query.proto?L32) 
 gRPC query method, and feed it the `gas_limit` returned in step `1.` and the contract being interacted with. 
 3. Set the fee in the wallet TX.
+
+### Note on FlatFee limits
+
+An upper-limit is not imposed on the FlatFee.
+
+This may raise the concern that an unscrupulous developer may set an excessive high fee once the contract achieves high adoption. __However,__ both users and calling contracts can easily deal with this by simply rejecting such transactions. The protocol defines efficient wasm bindings for querying flat fees and these can be used to impose upper limits to the flat fee set by external contracts.
