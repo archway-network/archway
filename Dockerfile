@@ -1,7 +1,6 @@
 FROM --platform=$BUILDPLATFORM golang:alpine as builder
 
 RUN apk add --no-cache make gcc musl-dev linux-headers git wget
-ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 ARG LINK_STATICALLY=true
 
