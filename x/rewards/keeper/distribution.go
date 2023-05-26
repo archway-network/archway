@@ -120,8 +120,7 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 
 	// Fetch tracked transactions rewards by the x/rewards module (some might not be found in case this reward is disabled)
 	txsRewards := make(map[uint64]sdk.Coins, len(blockDistrState.Txs))
-	for _, key := range dmap.SortedKeys(blockDistrState.Txs) {
-		txID := blockDistrState.Txs[key]
+	for _, txID := range dmap.SortedKeys(blockDistrState.Txs) {
 		txRewards, found := txRewardsState.GetTxRewards(txID)
 		if found && txRewards.HasRewards() {
 			txsRewards[txID] = txRewards.FeeRewards
