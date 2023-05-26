@@ -71,7 +71,7 @@ Entry is created by the [MintBankKeeper](../mintbankkeeper/keeper.go#L25).
 This keeper is a wrapper around the standart `x/bank` keeper that transfers tokens between modules and is used by the `x/mint` keeper as a dependency.
 Keeper's task is to split minted inflation tokens between the **FeeCollector** (`x/auth`) and the **Rewards** (`x/rewards`) modules using the *InflationRewardsRatio* parameter.
 
-Object is pruned (removed) at the **BeginBlocker**.
+Object is pruned (removed) at the **EndBlocker**.
 Pruning mechanism stores the last 10 entries (last 10 blocks) and a user can query that history.
 
 Storage keys:
