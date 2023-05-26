@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/archway-network/archway/dmap"
 	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/rewards/types"
 )
@@ -119,7 +120,8 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 
 	// Fetch tracked transactions rewards by the x/rewards module (some might not be found in case this reward is disabled)
 	txsRewards := make(map[uint64]sdk.Coins, len(blockDistrState.Txs))
-	for txID := range blockDistrState.Txs {
+	for _, key := range dmap.SortedKeys(blockDistrState.Txs) {
+		txID := blockDistrState.Txs[key]
 		txRewards, found := txRewardsState.GetTxRewards(txID)
 		if found && txRewards.HasRewards() {
 			txsRewards[txID] = txRewards.FeeRewards
@@ -130,7 +132,8 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 	}
 
 	// Estimate contract rewards
-	for _, contractDistrState := range blockDistrState.Contracts {
+	for _, key := range dmap.SortedKeys(blockDistrState.Contracts) {
+		contractDistrState := blockDistrState.Contracts[key]
 		// Estimate contract inflation rewards
 		if inlfationRewardsEligible {
 			gasUsed := pkg.NewDecFromUint64(contractDistrState.BlockGasUsed)
@@ -144,7 +147,8 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 		}
 
 		// Estimate contract tx fee rebate rewards (sum of all transactions involved)
-		for txID, gasUsed := range contractDistrState.TxGasUsed {
+		for _, txID := range dmap.SortedKeys(contractDistrState.TxGasUsed) {
+			gasUsed := contractDistrState.TxGasUsed[txID]
 			txFees, feeRewardsEligible := txsRewards[txID]
 			if !feeRewardsEligible {
 				continue
