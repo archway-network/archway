@@ -18,8 +18,6 @@ RUN make build
 
 FROM --platform=$TARGETPLATFORM alpine:latest
 
-RUN apk add --no-cache ca-certificates
-
 # copy archwayd binary
 COPY --from=builder /usr/src/archway/build/archwayd /usr/bin/archwayd
 
