@@ -4,7 +4,7 @@ RUN apk add --no-cache make gcc musl-dev linux-headers git wget
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
 ARG LINK_STATICALLY=true
-ARG COSNWAMS_VERSION=1.1.1
+ARG COSNWAMS_VERSION=1.2.3
 ENV LINK_STATICALLY=${LINK_STATICALLY}
 
 COPY . /usr/src/archway
