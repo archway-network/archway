@@ -4,13 +4,14 @@ RUN apk add --no-cache make gcc musl-dev linux-headers git wget
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
 ARG LINK_STATICALLY=true
+ARG COSNWAMS_VERSION=1.1.1
 ENV LINK_STATICALLY=${LINK_STATICALLY}
 
 COPY . /usr/src/archway
 
 # get cosmwasm
-RUN wget -q https://github.com/CosmWasm/wasmvm/releases/download/v1.2.3/libwasmvm_muslc.aarch64.a -O /usr/lib/libwasmvm.aarch64.a && \
-    wget -q https://github.com/CosmWasm/wasmvm/releases/download/v1.2.3/libwasmvm_muslc.x86_64.a -O /usr/lib/libwasmvm.x86_64.a
+RUN wget -q https://github.com/CosmWasm/wasmvm/releases/download/v${COSNWAMS_VERSION}/libwasmvm_muslc.aarch64.a -O /usr/lib/libwasmvm.aarch64.a && \
+    wget -q https://github.com/CosmWasm/wasmvm/releases/download/v${COSNWAMS_VERSION}/libwasmvm_muslc.x86_64.a -O /usr/lib/libwasmvm.x86_64.a
 
 WORKDIR /usr/src/archway
 
