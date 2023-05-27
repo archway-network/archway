@@ -2,13 +2,13 @@ FROM --platform=$BUILDPLATFORM golang:alpine as builder
 
 RUN apk add --no-cache make gcc musl-dev linux-headers git wget
 ARG BUILDPLATFORM
+ARG TARGETPLATFORM
 ARG LINK_STATICALLY=true
-
 ENV LINK_STATICALLY=${LINK_STATICALLY}
+
 COPY . /usr/src/archway
 
 # get cosmwasm
-
 RUN wget -q https://github.com/CosmWasm/wasmvm/releases/download/v1.2.3/libwasmvm_muslc.aarch64.a -O /usr/lib/libwasmvm.aarch64.a && \
     wget -q https://github.com/CosmWasm/wasmvm/releases/download/v1.2.3/libwasmvm_muslc.x86_64.a -O /usr/lib/libwasmvm.x86_64.a
 
@@ -16,9 +16,15 @@ WORKDIR /usr/src/archway
 
 RUN make build
 
-FROM scratch
+FROM --platform=$TARGETPLATFORM alpine:latest
 
+RUN apk add --no-cache ca-certificates
+
+# copy archwayd binary
 COPY --from=builder /usr/src/archway/build/archwayd /usr/bin/archwayd
+
+# copy tls cert
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 WORKDIR /root/.archway
 
