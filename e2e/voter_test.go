@@ -986,7 +986,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsRewardsRecordsQuery() {
 				Limit: 10000,
 			},
 			false)
-		s.Assert().Contains(err.Error(), "code: 4")
+		s.Assert().Contains(err.Error(), "code: 6")
 	})
 
 	// Create a new voting and add a vote to get some rewards
