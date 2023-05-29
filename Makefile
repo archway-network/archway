@@ -199,6 +199,7 @@ proto-format:
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger files"
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protoc-swagger-gen.sh
+	./scripts/ignite-swagger-gen.sh
 
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json
