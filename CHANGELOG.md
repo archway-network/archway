@@ -36,6 +36,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#388](https://github.com/archway-network/archway/pull/388) - Add the ibc-go fee middleware
 - [#389](https://github.com/archway-network/archway/pull/389) - Add v0.6 upgrade handler
 - [#391](https://github.com/archway-network/archway/pull/391) - Added snapshot manager to enable state-synd for wasm
+- [#395](https://github.com/archway-network/archway/pull/395) - Added openapi.yml + generate openapi.yml on proto-swagger-gen
 
 ### Changed
 
