@@ -4,6 +4,10 @@ The Archway project welcomes all contributors.
 
 This document serves as a guide for contributing to the Archway project. It provides an overview of the processes and policies established for quality collaboration and coordination. Please familiarize yourself with these guidelines and feel free to propose changes to this document for improvement.
 
+## License
+
+__Important:__ _All 3rd party contributions to this repository are made under the Apache License 2.0, unless otherwise agreed to in writing._
+
 ## 1. IDE
 
 ### 1.1 Software Dependencies
