@@ -35,44 +35,39 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#387](https://github.com/archway-network/archway/pull/387) - Add genmsgs module
 - [#388](https://github.com/archway-network/archway/pull/388) - Add the ibc-go fee middleware
 - [#389](https://github.com/archway-network/archway/pull/389) - Add v0.6 upgrade handler
-- [#391](https://github.com/archway-network/archway/pull/391) - Added snapshot manager to enable state-synd for wasm
-- [#395](https://github.com/archway-network/archway/pull/395) - Added openapi.yml + generate openapi.yml on proto-swagger-gen
+- [#391](https://github.com/archway-network/archway/pull/391) - Add snapshot manager to enable state-synd for wasm
+- [#395](https://github.com/archway-network/archway/pull/395) - Add openapi.yml + generate openapi.yml on proto-swagger-gen
+- [#396](https://github.com/archway-network/archway/pull/396) - Add repository licenses
 
 ### Changed
 
 - [#373](https://github.com/archway-network/archway/pull/373) - Update codeowners
 - [#383](https://github.com/archway-network/archway/pull/383), [#385](https://github.com/archway-network/archway/pull/385), [#386](https://github.com/archway-network/archway/pull/386) - upgrade wasmd to the v0.32.0-archway fork
-- [#388](https://github.com/archway-network/archway/pull/388) - add the ibc-go fee middleware
-- [#390](https://github.com/archway-network/archway/pull/390) - update cosmos-sdk version from v0.45.15 to v0.15.16
-
-### Deprecated
-
-### Removed
+- [#388](https://github.com/archway-network/archway/pull/388) - Add the ibc-go fee middleware
+- [#390](https://github.com/archway-network/archway/pull/390) - Update cosmos-sdk version from v0.45.15 to v0.15.16
 
 ### Fixed
-- [#392](https://github.com/archway-network/archway/pull/392) - Updating to ibc-go v4.3.1 for huckleberry
+
+- [#392](https://github.com/archway-network/archway/pull/392) - Update to ibc-go v4.3.1 for huckleberry
 - [#393](https://github.com/archway-network/archway/pull/393) - Add audit remediations
-
-### Improvements
-
 
 ## [v0.5.2]
 
 ### Fixed
 
-- [#382](https://github.com/archway-network/archway/pull/382) - adjust default power reduction
+- [#382](https://github.com/archway-network/archway/pull/382) - Adjust default power reduction
 
 ## [v0.5.0]
 
 ### Breaking Changes 
 
-- [#357](https://github.com/archway-network/archway/pull/357) - Bumping the proto versions for x/rewards and x/tracking from `v1beta1` to `v1`
+- [#357](https://github.com/archway-network/archway/pull/357) - Bump the proto versions for x/rewards and x/tracking from `v1beta1` to `v1`
 
 ### Added
 
 - [#330](https://github.com/archway-network/archway/pull/330) - Proper chain upgrade flow.
 - [#351](https://github.com/archway-network/archway/pull/351) - Add minimum price of gas.
-- [#339](https://github.com/archway-network/archway/pull/339) - Updates & Quality Control
+- [#339](https://github.com/archway-network/archway/pull/339) - Update & Quality Control
     - Community Contribution Guidelines
     - Security Policy
     - ADR Log Index
