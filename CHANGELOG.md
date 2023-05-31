@@ -50,6 +50,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#392](https://github.com/archway-network/archway/pull/392) - Update to ibc-go v4.3.1 for huckleberry
 - [#393](https://github.com/archway-network/archway/pull/393) - Add audit remediations
+- [#397](https://github.com/archway-network/archway/pull/397) - Fix map iteration
 
 ## [v0.5.2]
 
