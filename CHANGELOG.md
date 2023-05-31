@@ -28,7 +28,7 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
 
-## [Unreleased]
+## [v0.6.0]
 
 ### Added
 
