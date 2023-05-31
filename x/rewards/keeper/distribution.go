@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -181,7 +180,8 @@ func (k Keeper) createRewardsRecords(ctx sdk.Context, blockDistrState *blockRewa
 	// Filter out contracts without: rewards, metadata or rewardsAddress.
 	// Emit calculation events for each contract.
 	contractStates := make([]*contractRewardsDistributionState, 0, len(blockDistrState.Contracts))
-	for _, contractDistrState := range blockDistrState.Contracts {
+	for _, key := range dmap.SortedKeys(blockDistrState.Contracts) {
+		contractDistrState := blockDistrState.Contracts[key]
 		// Emit calculation event
 		types.EmitContractRewardCalculationEvent(
 			ctx,
@@ -208,9 +208,6 @@ func (k Keeper) createRewardsRecords(ctx sdk.Context, blockDistrState *blockRewa
 
 		contractStates = append(contractStates, contractDistrState)
 	}
-	sort.Slice(contractStates, func(i, j int) bool {
-		return contractStates[i].ContractAddress.String() < contractStates[j].ContractAddress.String()
-	})
 
 	// Distribute
 	for _, contractDistrState := range contractStates {
