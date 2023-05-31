@@ -28,6 +28,12 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
 
+## [v1.0.0-rc.1]
+
+### Removed
+
+- [#399](https://github.com/archway-network/archway/pull/399) - Removing the upgrade handler for v1 release
+
 ## [v0.6.0]
 
 ### Added
