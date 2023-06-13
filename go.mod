@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220822092235-974247a04ac7
 	github.com/CosmWasm/wasmd v0.32.0
-	github.com/CosmWasm/wasmvm v1.2.3
+	github.com/CosmWasm/wasmvm v1.2.4
 	github.com/archway-network/voter v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.45.16
 	github.com/cosmos/ibc-go/v4 v4.3.1
