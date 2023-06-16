@@ -32,6 +32,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#401](https://github.com/archway-network/archway/pull/401) - Update libwasmvm version to correct one in Dockerfile.deprecated
 - [#402](https://github.com/archway-network/archway/pull/402) - Bump wasmvm version to 1.2.4
+- [#403](https://github.com/archway-network/archway/pull/403) - Update libwasmvm version to correct one for wasmvm 1.2.4
 
 ## [v1.0.0-rc.1]
 
