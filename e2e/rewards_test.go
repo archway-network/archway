@@ -3,15 +3,14 @@ package e2e
 import (
 	"time"
 
+	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
+	voterTypes "github.com/archway-network/voter/src/types"
 	"github.com/stretchr/testify/require"
 
-	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-
-	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
-	voterTypes "github.com/archway-network/voter/src/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"

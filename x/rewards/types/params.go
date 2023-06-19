@@ -3,9 +3,10 @@ package types
 import (
 	"fmt"
 
+	"sigs.k8s.io/yaml"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"sigs.k8s.io/yaml"
 )
 
 var (

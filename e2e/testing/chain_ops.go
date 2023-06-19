@@ -1,9 +1,10 @@
 package e2eTesting
 
 import (
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/stretchr/testify/require"
 )
 
 // ExecuteGovProposal submits a new proposal and votes for it.

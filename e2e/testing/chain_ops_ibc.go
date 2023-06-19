@@ -4,15 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	clientTypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	channelTypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	commitmentTypes "github.com/cosmos/ibc-go/v4/modules/core/23-commitment/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	"github.com/cosmos/ibc-go/v4/modules/core/exported"
-	ibcTmTypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmHash "github.com/tendermint/tendermint/crypto/tmhash"
@@ -20,6 +11,17 @@ import (
 	tmProtoVersion "github.com/tendermint/tendermint/proto/tendermint/version"
 	tmTypes "github.com/tendermint/tendermint/types"
 	tmVersion "github.com/tendermint/tendermint/version"
+
+	clientTypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
+	channelTypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	commitmentTypes "github.com/cosmos/ibc-go/v4/modules/core/23-commitment/types"
+	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
+	"github.com/cosmos/ibc-go/v4/modules/core/exported"
+	ibcTmTypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GetMerklePrefix returns a Merkle tree prefix.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 

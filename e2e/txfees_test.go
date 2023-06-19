@@ -6,11 +6,11 @@ import (
 	"time"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	voterTypes "github.com/archway-network/voter/src/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	voterTypes "github.com/archway-network/voter/src/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"

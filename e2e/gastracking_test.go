@@ -5,16 +5,15 @@ import (
 	"strconv"
 	"time"
 
-	archway "github.com/archway-network/archway/types"
-
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	voterTypes "github.com/archway-network/voter/src/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	voterTypes "github.com/archway-network/voter/src/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg"
+	archway "github.com/archway-network/archway/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
 )

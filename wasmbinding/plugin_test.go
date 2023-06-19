@@ -6,10 +6,11 @@ import (
 	"time"
 
 	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"

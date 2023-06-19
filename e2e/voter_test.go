@@ -6,28 +6,26 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/query"
-
-	"github.com/archway-network/archway/pkg"
-	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
-
 	cwStd "github.com/CosmWasm/cosmwasm-go/std"
 	cwTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	channelTypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-
 	voterPkg "github.com/archway-network/voter/src/pkg"
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	voterState "github.com/archway-network/voter/src/state"
 	voterTypes "github.com/archway-network/voter/src/types"
+	"github.com/stretchr/testify/require"
+
+	channelTypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg"
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 const (

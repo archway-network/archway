@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	cwTypes "github.com/CosmWasm/cosmwasm-go/std/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )

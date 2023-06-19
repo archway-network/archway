@@ -5,14 +5,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 var emptyWasmOpts []wasm.Option = nil

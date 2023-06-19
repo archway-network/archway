@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	clientTypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 	connectionTypes "github.com/cosmos/ibc-go/v4/modules/core/03-connection/types"
@@ -14,7 +14,8 @@ import (
 	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	"github.com/cosmos/ibc-go/v4/modules/core/exported"
 	ibcTmTypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
-	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (

@@ -10,15 +10,23 @@ issues:
     - 'github.com\/stretchr\/testify\/suite\.Suite contains sync\.RWMutex'
 linters:
   enable:
+    - gofumpt
+    - gci
     - whitespace
     - misspell
     - goimports
 linters-settings:
+  gci:
+    sections:
+      - standard # Standard section: captures all standard packages.
+      - default # Default section: contains all imports that could not be matched to another section type.
+      - blank # blank imports
+      - dot # dot imports
+      - prefix(github.com/cometbft/cometbft) # comet
+      - prefix(github.com/cosmos) # cosmos org
+      - prefix(cosmossdk.io) # new modules
+      - prefix(github.com/cosmos/cosmos-sdk) # old sdk import
+      - prefix(github.com/archway-network/archway)
+    custom-order: true
   misspell:
     locale: US
-  goimports:
-    # Put imports beginning with prefix after 3rd-party packages.
-    # It's a comma-separated list of prefixes.
-    local-prefixes: github.com/archway-network/archway
-severity:
-  default-severity: error

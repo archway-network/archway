@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/dvsekhvalnov/jose2go/base64url"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/dvsekhvalnov/jose2go/base64url"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 // ReadPageRequest reads and builds the necessary page request flags for pagination.

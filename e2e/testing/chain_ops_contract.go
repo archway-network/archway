@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"io/ioutil" //nolint: staticcheck
 
-	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
-
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // UploadContract uploads a contract and returns the codeID.

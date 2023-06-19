@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/x/tracking/types"

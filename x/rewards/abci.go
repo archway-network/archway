@@ -3,9 +3,10 @@ package rewards
 import (
 	"time"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/types"

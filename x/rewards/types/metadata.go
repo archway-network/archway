@@ -3,9 +3,10 @@ package types
 import (
 	"fmt"
 
+	"sigs.k8s.io/yaml"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"sigs.k8s.io/yaml"
 )
 
 // HasOwnerAddress returns true if the rewards address is set.

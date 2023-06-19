@@ -3,12 +3,13 @@ package mintbankkeeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg"

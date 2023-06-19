@@ -7,9 +7,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client"
-
 	"github.com/CosmWasm/wasmd/x/wasm"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmProto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmTypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/ibc-go/v4/testing/mock"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptoCodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -21,14 +30,6 @@ import (
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/ibc-go/v4/testing/mock"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmProto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmTypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/archway-network/archway/app"
 )

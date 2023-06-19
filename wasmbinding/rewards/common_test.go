@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/CosmWasm/wasmvm/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	archPkg "github.com/archway-network/archway/pkg"

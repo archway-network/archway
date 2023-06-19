@@ -5,6 +5,7 @@ import (
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

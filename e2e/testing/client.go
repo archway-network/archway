@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/archway-network/archway/app"
 )

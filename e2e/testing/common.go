@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // GetStringEventAttribute returns TX response event attribute string value by type and attribute key.
