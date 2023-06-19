@@ -8,7 +8,7 @@ require (
 	github.com/CosmWasm/wasmvm v1.2.4
 	github.com/archway-network/voter v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.45.16
-	github.com/cosmos/ibc-go/v4 v4.3.1
+	github.com/cosmos/ibc-go/v4 v4.4.2
 	github.com/dvsekhvalnov/jose2go v1.5.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
@@ -21,7 +21,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.2
-	github.com/tendermint/tendermint v0.34.27
+	github.com/tendermint/tendermint v0.34.29
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc
@@ -37,7 +37,7 @@ require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
-	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
+	github.com/ChainSafe/go-schnorrkel v1.0.0 // indirect
 	github.com/CosmWasm/tinyjson v0.9.0 // indirect
 	github.com/DataDog/zstd v1.5.0 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
@@ -160,6 +160,6 @@ replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0
 
 replace github.com/archway-network/voter => ./contracts/go/voter
 
-replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
+replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
 
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
