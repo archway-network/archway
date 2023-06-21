@@ -6,11 +6,14 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/archway-network/archway/app/upgrades"
+	upgrade_0_6 "github.com/archway-network/archway/app/upgrades/06"
 )
 
 // UPGRADES
 
-var Upgrades = []upgrades.Upgrade{}
+var Upgrades = []upgrades.Upgrade{
+	upgrade_0_6.Upgrade, // v0.6.0
+}
 
 func (app *ArchwayApp) setupUpgrades() {
 	app.setUpgradeHandlers()

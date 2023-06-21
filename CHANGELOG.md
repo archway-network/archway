@@ -34,6 +34,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#402](https://github.com/archway-network/archway/pull/402) - Bump wasmvm version to 1.2.4
 - [#403](https://github.com/archway-network/archway/pull/403) - Update libwasmvm version to correct one for wasmvm 1.2.4
 - [#404](https://github.com/archway-network/archway/pull/403) - Fixing typo in rewards query cli
+- [#406](https://github.com/archway-network/archway/pull/406) - Add upgrade hanlder for v0.6.0 back to prevent downgrade check from panic / consensus failure;
 
 ## [v1.0.0-rc.1]
 
