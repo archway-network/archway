@@ -27,6 +27,7 @@ Contains bug fixes.
 
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
+## [v1.0.0-rc.2]
 
 ### Fixes
 
