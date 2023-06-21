@@ -147,7 +147,7 @@ func getQueryEstimateTxFeesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "estimate-fees [gas-limit] [contract-address]",
 		Args:  cobra.MinimumNArgs(1),
-		Short: "Query transaction fees estimation for a give gas limit, optionally takes in contract address to include the flat fees in the estimate",
+		Short: "Query transaction fees estimation for a given gas limit, optionally takes in contract address to include the flat fees in the estimate",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
