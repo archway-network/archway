@@ -27,6 +27,12 @@ Contains bug fixes.
 
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
+## [v1.0.0-rc.3]
+
+### Removed
+
+- [#408](https://github.com/archway-network/archway/pull/408) - Remove genesis msg logging as it impacts network start up performance.
+
 ## [v1.0.0-rc.2]
 
 ### Fixes
