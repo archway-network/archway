@@ -2,7 +2,6 @@ package genmsg
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -59,11 +58,12 @@ func initGenesis(context sdk.Context, cdc codec.JSONCodec, router MessageRouter,
 		if handler == nil {
 			return fmt.Errorf("at index %d: no handler for message %T %s", i, msg, msg)
 		}
-		resp, err := handler(context, msg)
+		// resp, err := handler(context, msg)
+		_, err = handler(context, msg)
 		if err != nil {
 			return fmt.Errorf("at index %d: message processing: %w", i, err)
 		}
-		log.Printf("message %d processed %s: %s", i, msg, resp.String())
+		// log.Printf("message %d processed %s: %s", i, msg, resp.String())
 	}
 	return nil
 }
