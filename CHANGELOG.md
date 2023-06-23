@@ -27,6 +27,15 @@ Contains bug fixes.
 
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
+
+
+## [v1.0.0-rc.4]
+
+### Added
+
+- [#409](https://github.com/archway-network/archway/pull/409) - adding cosmwasm_1_1,cosmwasm_1_2 Cosmwasm capabilities
+
+
 ## [v1.0.0-rc.3]
 
 ### Removed
