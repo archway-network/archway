@@ -28,6 +28,10 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
 
+## [v1.0.0]
+
+Archway Network - Capture the value you create!
+
 
 ## [v1.0.0-rc.4]
 
