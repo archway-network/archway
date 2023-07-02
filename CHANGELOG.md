@@ -28,6 +28,10 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
 
+## [unreleased]
+
+- [#411](https://github.com/archway-network/archway/pull/411) - Update repository readme with correct docker containers.
+
 ## [v1.0.0]
 
 Archway Network - Capture the value you create!
@@ -37,7 +41,7 @@ Archway Network - Capture the value you create!
 
 ### Added
 
-- [#409](https://github.com/archway-network/archway/pull/409) - adding cosmwasm_1_1,cosmwasm_1_2 Cosmwasm capabilities
+- [#409](https://github.com/archway-network/archway/pull/409) - Add cosmwasm_1_1,cosmwasm_1_2 Cosmwasm capabilities
 
 
 ## [v1.0.0-rc.3]
@@ -60,7 +64,7 @@ Archway Network - Capture the value you create!
 
 ### Removed
 
-- [#399](https://github.com/archway-network/archway/pull/399) - Removing the upgrade handler for v1 release
+- [#399](https://github.com/archway-network/archway/pull/399) - Remove the upgrade handler for v1 release
 
 ## [v0.6.0]
 
@@ -76,7 +80,7 @@ Archway Network - Capture the value you create!
 ### Changed
 
 - [#373](https://github.com/archway-network/archway/pull/373) - Update codeowners
-- [#383](https://github.com/archway-network/archway/pull/383), [#385](https://github.com/archway-network/archway/pull/385), [#386](https://github.com/archway-network/archway/pull/386) - upgrade wasmd to the v0.32.0-archway fork
+- [#383](https://github.com/archway-network/archway/pull/383), [#385](https://github.com/archway-network/archway/pull/385), [#386](https://github.com/archway-network/archway/pull/386) - Upgrade wasmd to the v0.32.0-archway fork
 - [#388](https://github.com/archway-network/archway/pull/388) - Add the ibc-go fee middleware
 - [#390](https://github.com/archway-network/archway/pull/390) - Update cosmos-sdk version from v0.45.15 to v0.15.16
 
