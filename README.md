@@ -41,15 +41,15 @@ make install
 
 This will install the `archwayd` binary to your `GOPATH`.
 
-## Dockerized Container
+## Dockerized Containers
 
-A docker image is also provided for test setups.
+A docker image for production purposes:
 
-```bash
-docker build -t archwaynetwork/archwayd:latest .
-```
+[Packages: archwayd](https://github.com/orgs/archway-network/packages/container/package/archwayd)
 
-_Tip: Make sure to include the __dot__ from the code above ^^^_
+A docker image is also provided for test setups:
+
+[Packages: archwayd-debug](https://github.com/orgs/archway-network/packages/container/package/archwayd-debug)
 
 ## Documentation
 
