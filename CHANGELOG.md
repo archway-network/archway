@@ -28,7 +28,7 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
 
-## [unreleased]
+## [v1.0.1]
 
 - [#411](https://github.com/archway-network/archway/pull/411) - Update repository readme with correct docker containers.
 - [#413](https://github.com/archway-network/archway/pull/413) - Fixing incorrect gas estimation when running with `--dry-run` flag
