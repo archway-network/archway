@@ -28,6 +28,12 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
 
+## [Unreleased]
+
+### Fixed
+
+- [#414](https://github.com/archway-network/archway/pull/414) - Preventing user from setting contract flat fee if rewards address is not set 
+
 ## [v1.0.1]
 
 - [#411](https://github.com/archway-network/archway/pull/411) - Update repository readme with correct docker containers.
