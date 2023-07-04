@@ -25,11 +25,6 @@ func NewMinFeeDecorator(codec codec.BinaryCodec, rk RewardsKeeperExpected) MinFe
 
 // AnteHandle implements the ante.AnteDecorator interface.
 func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	// Skip fee verification for simulation (--dry-run)
-	if simulate {
-		return next(ctx, tx, simulate)
-	}
-
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkErrors.Wrap(sdkErrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -57,7 +52,7 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 	}
 
 	txFees := feeTx.GetFee()
-	if expectedFees.IsZero() || txFees.IsAllGTE(expectedFees) {
+	if simulate || expectedFees.IsZero() || txFees.IsAllGTE(expectedFees) {
 		return next(ctx, tx, simulate)
 	}
 	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, expectedFees.String())
