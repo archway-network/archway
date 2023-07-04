@@ -31,6 +31,17 @@ func (s *KeeperTestSuite) TestSetFlatFee() {
 	metaCurrent.OwnerAddress = contractAdminAcc.Address.String()
 	_ = keeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
 
+	s.Run("Fail: rewards address not set", func() {
+		err := keeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
+			ContractAddress: contractAddr.String(),
+			FlatFee:         fee,
+		})
+		s.Assert().ErrorIs(err, rewardsTypes.ErrMetadataNotFound)
+	})
+
+	metaCurrent.RewardsAddress = contractAdminAcc.Address.String()
+	_ = keeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
+
 	s.Run("OK: set flat fee", func() {
 		err := keeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
 			ContractAddress: contractAddr.String(),
