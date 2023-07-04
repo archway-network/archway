@@ -22,7 +22,7 @@ func (k Keeper) SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, feeUpdate
 		k.state.FlatFee(ctx).RemoveFee(feeUpdate.MustGetContractAddress())
 	} else {
 		if contractInfo.RewardsAddress == "" {
-			return sdkErrors.Wrap(types.ErrMetadataNotFound, "flat_fee can only be when rewards address has been configured")
+			return sdkErrors.Wrap(types.ErrMetadataNotFound, "flat_fee can only be set when rewards address has been configured")
 		}
 		k.state.FlatFee(ctx).SetFee(feeUpdate.MustGetContractAddress(), feeUpdate.FlatFee)
 	}
