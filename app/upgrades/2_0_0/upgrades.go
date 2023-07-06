@@ -4,6 +4,11 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/archway-network/archway/app/upgrades"
@@ -26,19 +31,21 @@ var Upgrade = upgrades.Upgrade{
 			controllerParams := icacontrollertypes.Params{}
 			// create ICS27 Host submodule params
 			hostParams := icahosttypes.Params{
-				HostEnabled:   true,
+				HostEnabled: true,
 				AllowMessages: []string{
-					// sdk.MsgTypeURL(&banktypes.MsgSend{}),
-					// sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
-					// sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
-					// sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
-					// sdk.MsgTypeURL(&stakingtypes.MsgCreateValidator{}),
-					// sdk.MsgTypeURL(&stakingtypes.MsgEditValidator{}),
-					// sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}),
-					// sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
-					// sdk.MsgTypeURL(&distrtypes.MsgWithdrawValidatorCommission{}),
-					// sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
-					// sdk.MsgTypeURL(&govtypes.MsgVote{}),
+					sdk.MsgTypeURL(&banktypes.MsgSend{}),
+					sdk.MsgTypeURL(&banktypes.MsgMultiSend{}),
+					sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
+					sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
+					sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
+					sdk.MsgTypeURL(&stakingtypes.MsgCreateValidator{}),
+					sdk.MsgTypeURL(&stakingtypes.MsgEditValidator{}),
+					sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}),
+					sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
+					sdk.MsgTypeURL(&distrtypes.MsgWithdrawValidatorCommission{}),
+					sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
+					sdk.MsgTypeURL(&govtypes.MsgVote{}),
+					sdk.MsgTypeURL(&govtypes.MsgVoteWeighted{}),
 				},
 			}
 
