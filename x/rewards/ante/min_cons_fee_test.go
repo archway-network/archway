@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -359,4 +360,29 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAuthzDecodeAntehandler(t *testing.T) {
+	chain := e2eTesting.NewTestChain(t, 1)
+	minConsFee, _ := sdk.ParseDecCoin("0.1stake") // Set min consensus fee
+	chain.GetApp().RewardsKeeper.GetState().MinConsensusFee(chain.GetContext()).SetFee(minConsFee)
+	txFees, _ := sdk.ParseCoinsNormalized("100stake")
+
+	// Making a wrapped MsgDelegate
+	authzMsg := authz.NewMsgExec(sdk.AccAddress{}, []sdk.Msg{&stakingTypes.MsgDelegate{
+		DelegatorAddress: e2eTesting.TestAccountAddr.String(),
+		ValidatorAddress: sdk.ValAddress(e2eTesting.TestAccountAddr).String(),
+		Amount:           sdk.NewInt64Coin("stake", 10),
+	}})
+
+	tx := testutils.NewMockFeeTx(
+		testutils.WithMockFeeTxFees(txFees),
+		testutils.WithMockFeeTxGas(1000),
+		testutils.WithMockFeeTxMsgs([]sdk.Msg{&authzMsg}...),
+	)
+
+	anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), chain.GetApp().RewardsKeeper)
+	_, err := anteHandler.AnteHandle(chain.GetContext(), tx, false, testutils.NoopAnteHandler)
+
+	require.NoError(t, err)
 }

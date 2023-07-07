@@ -33,6 +33,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Fixed
 
 - [#414](https://github.com/archway-network/archway/pull/414) - Preventing user from setting contract flat fee if rewards address is not set 
+- [#418](https://github.com/archway-network/archway/pull/418) - Fixing authz msg decoding in x/rewards antehandlers
 
 ## [v1.0.1]
 

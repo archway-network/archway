@@ -44,14 +44,14 @@ func GetContractFlatFees(ctx sdk.Context, rk RewardsKeeperExpected, codec codec.
 			}
 			return nil, true, nil
 		}
-	case *authz.MsgExec: // if msg is authz msg, unwrap the msg and check if any are wasmTypes.MsgExecuteContract
+	case *authz.MsgExec: // if msg is authz msg, get the unwrapped msgs and check if any are wasmTypes.MsgExecuteContract
 		{
-			for _, v := range msg.Msgs {
-				var wrappedMsg sdk.Msg
-				err := codec.UnpackAny(v, &wrappedMsg)
-				if err != nil {
-					return nil, false, sdkErrors.Wrapf(sdkErrors.ErrUnauthorized, "error decoding authz messages")
-				}
+			authzMsgs, err := msg.GetMessages()
+			if err != nil {
+				return nil, false, sdkErrors.Wrapf(sdkErrors.ErrUnauthorized, "error decoding authz messages")
+			}
+
+			for _, wrappedMsg := range authzMsgs {
 				cff, hasWasmMsgs, err := GetContractFlatFees(ctx, rk, codec, wrappedMsg)
 				if err != nil {
 					return nil, hasWasmMsgs, err
