@@ -11,11 +11,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/archway-network/archway/app/upgrades"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 	icacontrollertypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+
+	"github.com/archway-network/archway/app/upgrades"
 )
 
 const Name = "v2.0.0"
