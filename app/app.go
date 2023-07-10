@@ -80,6 +80,11 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
+	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
 	ibcfee "github.com/cosmos/ibc-go/v4/modules/apps/29-fee"
 	ibcfeekeeper "github.com/cosmos/ibc-go/v4/modules/apps/29-fee/keeper"
 	ibcfeetypes "github.com/cosmos/ibc-go/v4/modules/apps/29-fee/types"
@@ -211,6 +216,7 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		wasm.AppModuleBasic{},
+		ica.AppModuleBasic{},
 		tracking.AppModuleBasic{},
 		rewards.AppModuleBasic{},
 		genmsg.AppModule{},
@@ -227,6 +233,7 @@ var (
 		govtypes.ModuleName:                  {authtypes.Burner},
 		ibctransfertypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
 		ibcfeetypes.ModuleName:               nil,
+		icatypes.ModuleName:                  nil,
 		wasm.ModuleName:                      {authtypes.Burner},
 		rewardsTypes.TreasuryCollector:       {authtypes.Burner},
 	}
@@ -271,6 +278,7 @@ type ArchwayApp struct {
 	ParamsKeeper     paramskeeper.Keeper
 	IBCKeeper        *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCFeeKeeper     ibcfeekeeper.Keeper
+	ICAHostKeeper    icahostkeeper.Keeper
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
@@ -280,6 +288,7 @@ type ArchwayApp struct {
 	RewardsKeeper    rewardsKeeper.Keeper
 
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ScopedIBCFeeKeeper   capabilitykeeper.ScopedKeeper
 	ScopedWASMKeeper     capabilitykeeper.ScopedKeeper
@@ -323,7 +332,7 @@ func NewArchwayApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		feegrant.StoreKey, authzkeeper.StoreKey, wasm.StoreKey,
-		trackingTypes.StoreKey, rewardsTypes.StoreKey, ibcfeetypes.StoreKey,
+		trackingTypes.StoreKey, rewardsTypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -356,6 +365,7 @@ func NewArchwayApp(
 		memKeys[capabilitytypes.MemStoreKey],
 	)
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
+	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	app.CapabilityKeeper.Seal()
@@ -468,6 +478,17 @@ func NewArchwayApp(
 
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 
+	app.ICAHostKeeper = icahostkeeper.NewKeeper(
+		appCodec,
+		keys[icahosttypes.StoreKey],
+		app.getSubspace(icahosttypes.SubModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		app.AccountKeeper,
+		scopedICAHostKeeper,
+		app.MsgServiceRouter(),
+	)
+
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec,
@@ -560,6 +581,13 @@ func NewArchwayApp(
 	transferStack = transfer.NewIBCModule(app.TransferKeeper)
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.IBCFeeKeeper)
 
+	// Create Interchain Accounts Stack
+	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
+	// channel.RecvPacket -> fee.OnRecvPacket -> icaHost.OnRecvPacket
+	var icaHostStack porttypes.IBCModule
+	icaHostStack = icahost.NewIBCModule(app.ICAHostKeeper)
+	icaHostStack = ibcfee.NewIBCMiddleware(icaHostStack, app.IBCFeeKeeper)
+
 	var wasmStack porttypes.IBCModule
 	wasmStack = wasm.NewIBCHandler(app.WASMKeeper, app.IBCKeeper.ChannelKeeper, app.IBCFeeKeeper)
 	wasmStack = ibcfee.NewIBCMiddleware(wasmStack, app.IBCFeeKeeper)
@@ -568,6 +596,7 @@ func NewArchwayApp(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 	ibcRouter.AddRoute(wasm.ModuleName, wasmStack)
+	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	app.GovKeeper = govkeeper.NewKeeper(
@@ -612,6 +641,7 @@ func NewArchwayApp(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		ibcfee.NewAppModule(app.IBCFeeKeeper),
+		ica.NewAppModule(nil, &app.ICAHostKeeper),
 		tracking.NewAppModule(app.appCodec, app.TrackingKeeper),
 		rewards.NewAppModule(app.appCodec, app.RewardsKeeper),
 		genmsg.NewAppModule(app.MsgServiceRouter()),
@@ -644,6 +674,7 @@ func NewArchwayApp(
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		ibcfeetypes.ModuleName,
+		icatypes.ModuleName,
 		// wasm
 		wasm.ModuleName,
 		// wasm gas tracking
@@ -658,6 +689,7 @@ func NewArchwayApp(
 		ibctransfertypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		ibchost.ModuleName,
+		icatypes.ModuleName,
 		feegrant.ModuleName,
 		authz.ModuleName,
 		capabilitytypes.ModuleName,
@@ -709,6 +741,7 @@ func NewArchwayApp(
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		ibcfeetypes.ModuleName,
+		icatypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		// wasm gas tracking
@@ -807,6 +840,7 @@ func NewArchwayApp(
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
 	app.ScopedWASMKeeper = scopedWasmKeeper
+	app.ScopedICAHostKeeper = scopedICAHostKeeper
 	return app
 }
 
@@ -941,6 +975,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(rewardsTypes.ModuleName)
 
