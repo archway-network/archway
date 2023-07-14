@@ -34,10 +34,10 @@ USER_MNEMONIC="any giant turtle pioneer frequent frown harvest ancient episode j
 GENESIS_COINS=1000000000000000000000000000000000000stake
 
 setup_chain () {
-  # Stop starsd if it is already running
+  # Stop archwayd if it is already running
   if pgrep -x "$BINARY" >/dev/null; then
       echo_error "Terminating $BINARY..."
-      killall starsd
+      killall archwayd
   fi
 
   # Remove previous data
@@ -45,7 +45,7 @@ setup_chain () {
   rm -rf $CHAIN_DIR/$CHAIN_ID
 
 
-  # Initialize starsd with "sg-localnet" chain id
+  # Initialize archwayd with "localnet-1" chain id
   echo_info "Initializing $CHAIN_ID..."
   if $BINARY --home $CHAIN_DIR/$CHAIN_ID init test --chain-id=$CHAIN_ID; then
     echo_success "Successfully initialized $CHAIN_ID"
