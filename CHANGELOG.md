@@ -28,6 +28,13 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
 
+## [Unreleased]
+
+### Added
+
+- [#419](https://github.com/archway-network/archway/pull/419) - Easily run localnet via make
+
+
 ## [v2.0.0]
 
 ### Added
