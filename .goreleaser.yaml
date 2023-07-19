@@ -149,79 +149,79 @@ archives:
       - none*
 checksum:
   name_template: '{{ .ProjectName }}d_v{{ .Version }}_checksums.txt'
-dockers:
-  - use: buildx
-    goos: linux
-    goarch: amd64
-    image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version=v{{.Version}}"
-      - "--label=org.opencontainers.image.url=https://archway.io"
-      - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
-      - "--label=org.opencontainers.image.licenses=Apache-2.0"
-  - use: buildx
-    goos: linux
-    goarch: arm64
-    image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version=v{{.Version}}"
-      - "--label=org.opencontainers.image.url=https://archway.io"
-      - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
-      - "--label=org.opencontainers.image.licenses=Apache-2.0"
-  - use: buildx
-    goos: linux
-    goarch: amd64
-    dockerfile: Dockerfile.debug
-    image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version=v{{.Version}}"
-      - "--label=org.opencontainers.image.url=https://archway.io"
-      - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
-      - "--label=org.opencontainers.image.licenses=Apache-2.0"
-  - use: buildx
-    goos: linux
-    goarch: arm64
-    dockerfile: Dockerfile.debug
-    image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}d"
-      - "--label=org.opencontainers.image.description={{.ProjectName}}d"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version=v{{.Version}}"
-      - "--label=org.opencontainers.image.url=https://archway.io"
-      - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
-      - "--label=org.opencontainers.image.licenses=Apache-2.0"
-docker_manifests:
-  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true" }}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
-    image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
-  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true" }}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
-    image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
+# dockers:
+#   - use: buildx
+#     goos: linux
+#     goarch: amd64
+#     image_templates:
+#       - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
+#     build_flag_templates:
+#       - "--pull"
+#       - "--platform=linux/amd64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+#       - "--label=org.opencontainers.image.description={{.ProjectName}}d"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version=v{{.Version}}"
+#       - "--label=org.opencontainers.image.url=https://archway.io"
+#       - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
+#       - "--label=org.opencontainers.image.licenses=Apache-2.0"
+#   - use: buildx
+#     goos: linux
+#     goarch: arm64
+#     image_templates:
+#       - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
+#     build_flag_templates:
+#       - "--pull"
+#       - "--platform=linux/arm64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+#       - "--label=org.opencontainers.image.description={{.ProjectName}}d"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version=v{{.Version}}"
+#       - "--label=org.opencontainers.image.url=https://archway.io"
+#       - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
+#       - "--label=org.opencontainers.image.licenses=Apache-2.0"
+#   - use: buildx
+#     goos: linux
+#     goarch: amd64
+#     dockerfile: Dockerfile.debug
+#     image_templates:
+#       - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
+#     build_flag_templates:
+#       - "--pull"
+#       - "--platform=linux/amd64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+#       - "--label=org.opencontainers.image.description={{.ProjectName}}d"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version=v{{.Version}}"
+#       - "--label=org.opencontainers.image.url=https://archway.io"
+#       - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
+#       - "--label=org.opencontainers.image.licenses=Apache-2.0"
+#   - use: buildx
+#     goos: linux
+#     goarch: arm64
+#     dockerfile: Dockerfile.debug
+#     image_templates:
+#       - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
+#     build_flag_templates:
+#       - "--pull"
+#       - "--platform=linux/arm64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.title={{.ProjectName}}d"
+#       - "--label=org.opencontainers.image.description={{.ProjectName}}d"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version=v{{.Version}}"
+#       - "--label=org.opencontainers.image.url=https://archway.io"
+#       - "--label=org.opencontainers.image.source=https://github.com/archway-network/archway"
+#       - "--label=org.opencontainers.image.licenses=Apache-2.0"
+# docker_manifests:
+#   - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true" }}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
+#     image_templates:
+#       - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
+#       - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
+#   - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true" }}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
+#     image_templates:
+#       - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
+#       - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
