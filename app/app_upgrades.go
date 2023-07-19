@@ -16,7 +16,7 @@ import (
 var Upgrades = []upgrades.Upgrade{
 	upgrade_0_6.Upgrade,       // v0.6.0
 	upgrade1_0_0_rc_4.Upgrade, // v1.0.0-rc.4
-	upgrade2_0_0.Upgrade,      //v2.0.0
+	upgrade2_0_0.Upgrade,      // v2.0.0
 }
 
 func (app *ArchwayApp) setupUpgrades() {
