@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- 
+<!--
 ### Added
 
 Contains the new features.
@@ -25,7 +25,7 @@ Contains bug fixes.
 
 ### Improvements
 
-Contains all the PRs that improved the code without changing the behaviours. 
+Contains all the PRs that improved the code without changing the behaviours.
 -->
 
 ## [Unreleased]
@@ -33,7 +33,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Added
 
 - [#419](https://github.com/archway-network/archway/pull/419) - Easily run localnet via make
-
+- [#421](https://github.com/archway-network/archway/pull/421) - Add archwayd darwin binaries
 
 ## [v2.0.0]
 
@@ -43,7 +43,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Fixed
 
-- [#414](https://github.com/archway-network/archway/pull/414) - Preventing user from setting contract flat fee if rewards address is not set 
+- [#414](https://github.com/archway-network/archway/pull/414) - Preventing user from setting contract flat fee if rewards address is not set
 - [#418](https://github.com/archway-network/archway/pull/418) - Fixing authz msg decoding in x/rewards antehandlers
 
 ## [v1.0.1]
