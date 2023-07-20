@@ -28,6 +28,12 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
 
+## [Unreleased]
+
+### Added
+
+- [#422](https://github.com/archway-network/archway/pull/422/) - Add fee burning of tx fees not distributed to contracts.
+
 ## [v2.0.0]
 
 ### Added
