@@ -22,8 +22,9 @@ import (
 type HandlerOptions struct {
 	ante.HandlerOptions
 
-	IBCKeeper  *ibckeeper.Keeper
-	WasmConfig *wasmTypes.WasmConfig
+	IBCKeeper             *ibckeeper.Keeper
+	WasmConfig            *wasmTypes.WasmConfig
+	RewardsAnteBankKeeper rewardsAnte.BankKeeper
 
 	TXCounterStoreKey sdk.StoreKey
 
@@ -33,7 +34,7 @@ type HandlerOptions struct {
 	Codec codec.BinaryCodec
 }
 
-func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
+func NewAnteHandler(options HandlerOptions, rewardsAnteBankKEeper rewardsAnte.BankKeeper) (sdk.AnteHandler, error) {
 	if options.AccountKeeper == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for AnteHandler")
 	}
@@ -59,6 +60,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		sigGasConsumer = ante.DefaultSigVerificationGasConsumer
 	}
 
+	options.RewardsAnteBankKeeper = rewardsAnteBankKEeper
+
 	anteDecorators := []sdk.AnteDecorator{
 		// Outermost AnteDecorator (SetUpContext must be called first)
 		ante.NewSetUpContextDecorator(),
@@ -76,7 +79,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// Custom Archway interceptor to track new transactions
 		trackingAnte.NewTxGasTrackingDecorator(options.TrackingKeeper),
 		// Custom Archway fee deduction, which splits fees between x/rewards and x/auth fee collector
-		rewardsAnte.NewDeductFeeDecorator(options.Codec, options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.RewardsKeeper),
+		rewardsAnte.NewDeductFeeDecorator(options.Codec, options.AccountKeeper, options.RewardsAnteBankKeeper, options.FeegrantKeeper, options.RewardsKeeper),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),

@@ -54,7 +54,7 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 				mockWasmExecuteMsg,
 			},
 			rewardRecordExpected:            true,
-			feeCollectorBalanceDiffExpected: "500stake",
+			feeCollectorBalanceDiffExpected: "0stake", // fees are burnt
 			rewardsBalanceDiffExpected:      "500stake",
 		},
 		{
@@ -66,7 +66,7 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 				mockWasmExecuteMsg,
 			},
 			rewardRecordExpected:            true,
-			feeCollectorBalanceDiffExpected: "900stake,450uarch",
+			feeCollectorBalanceDiffExpected: "0stake,0uarch", // fees are burnt
 			rewardsBalanceDiffExpected:      "100stake,50uarch",
 		},
 		{

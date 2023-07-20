@@ -225,7 +225,7 @@ var (
 	// module account permissions
 	maccPerms = map[string][]string{
 		rewardsTypes.ContractRewardCollector: nil,
-		authtypes.FeeCollectorName:           nil,
+		authtypes.FeeCollectorName:           {authtypes.Burner},
 		distrtypes.ModuleName:                nil,
 		minttypes.ModuleName:                 {authtypes.Minter},
 		stakingtypes.BondedPoolName:          {authtypes.Burner, authtypes.Staking},
@@ -805,6 +805,7 @@ func NewArchwayApp(
 			TrackingKeeper:    app.TrackingKeeper,
 			RewardsKeeper:     app.RewardsKeeper,
 		},
+		app.BankKeeper,
 	)
 	if err != nil {
 		panic(fmt.Errorf("failed to create AnteHandler: %s", err))
