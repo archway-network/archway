@@ -257,3 +257,17 @@ check-vuln-deps:
 	go-mod-cache draw-deps clean build format \
 	test test-all test-build test-cover test-unit test-race \
 	test-sim-import-export \
+
+###############################################################################
+###                               Run Localnet                              ###
+###############################################################################
+
+# Run a new localnet
+run:
+	./scripts/localnet.sh 
+
+# Continue the existing localnet
+run-continue:
+	./scripts/localnet.sh continue
+
+.PHONY: localnet run-continue
