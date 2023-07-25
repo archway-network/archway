@@ -799,13 +799,13 @@ func NewArchwayApp(
 				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			IBCKeeper:         app.IBCKeeper,
-			WasmConfig:        &wasmConfig,
-			TXCounterStoreKey: keys[wasm.StoreKey],
-			TrackingKeeper:    app.TrackingKeeper,
-			RewardsKeeper:     app.RewardsKeeper,
+			IBCKeeper:             app.IBCKeeper,
+			WasmConfig:            &wasmConfig,
+			RewardsAnteBankKeeper: app.BankKeeper,
+			TXCounterStoreKey:     keys[wasm.StoreKey],
+			TrackingKeeper:        app.TrackingKeeper,
+			RewardsKeeper:         app.RewardsKeeper,
 		},
-		app.BankKeeper,
 	)
 	if err != nil {
 		panic(fmt.Errorf("failed to create AnteHandler: %s", err))

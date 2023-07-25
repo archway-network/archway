@@ -34,7 +34,7 @@ type HandlerOptions struct {
 	Codec codec.BinaryCodec
 }
 
-func NewAnteHandler(options HandlerOptions, rewardsAnteBankKEeper rewardsAnte.BankKeeper) (sdk.AnteHandler, error) {
+func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	if options.AccountKeeper == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for AnteHandler")
 	}
@@ -59,8 +59,6 @@ func NewAnteHandler(options HandlerOptions, rewardsAnteBankKEeper rewardsAnte.Ba
 	if sigGasConsumer == nil {
 		sigGasConsumer = ante.DefaultSigVerificationGasConsumer
 	}
-
-	options.RewardsAnteBankKeeper = rewardsAnteBankKEeper
 
 	anteDecorators := []sdk.AnteDecorator{
 		// Outermost AnteDecorator (SetUpContext must be called first)
