@@ -4,7 +4,7 @@
 
 This document outlines the release process for Archway protocol software.
 
-The **Archway** protocol follows a **state versioning system**, it does not utilize traditional [semantic versioning](http://semver.org); SemVer is specifically about APIs, but API breaking changes is not the only way in which libraries can "break". In deterministic systems, such as a blockchain being deterministic state machine, *state breaking changes far outweigh API breaking changes*. As such, Archway follows a State Versioning specification.
+The **Archway** protocol follows a **state versioning system**, it does not utilize traditional [semantic versioning](http://semver.org); SemVer is specifically about APIs, but API breaking changes is not the only way in which libraries can "break". In deterministic systems, such as a blockchain being deterministic state machine, *state breaking changes far outweigh API breaking changes*. As such, Archway follows a State Versioning system.
 
 Given a version number Major.Minor.Patch, increment the:
 
