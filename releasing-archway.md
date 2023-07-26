@@ -31,8 +31,8 @@ The standard release process progresses through the following steps:
 
 1. Tag a new release once a major release, update or patch is deemed ready for deployment (release atrifacts are created via automation);
 2. Deploy the new release version to Constantine (testnet);
-3. Conduct final formal verification for the release on testnet, including for upgrade handlers;
-4. Repeat steps 1-3 until all formal verification passes, e.g. relevant tests, remediations, etc;
+3. Conduct final verification for the release on testnet, including verfification of upgrade handlers;
+4. Repeat steps 1-3 until all verification passes, e.g. relevant tests, remediations, etc;
 5. Deploy the release to mainnet via upgrade proposal;
 
 **Note:** Steps 1-3 may include a number of iterations with various release candidates;
