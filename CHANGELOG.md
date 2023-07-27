@@ -32,6 +32,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
+- [#422](https://github.com/archway-network/archway/pull/422/) - Add fee burning of tx fees not distributed to contracts.
 - [#419](https://github.com/archway-network/archway/pull/419) - Easily run localnet via make
 - [#421](https://github.com/archway-network/archway/pull/421) - Add archwayd darwin binaries
 
