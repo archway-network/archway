@@ -7,7 +7,7 @@ LEDGER_ENABLED ?= true
 # SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
-GORELEASER_VERSION = v1.19.5
+GORELEASER_VERSION = v1.20.6
 
 # for dockerized protobuf tools
 DOCKER := $(shell which docker)
@@ -242,7 +242,6 @@ release:
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-e RELEASE=$(RELEASE) \
 		-e GITHUB_TOKEN="$(GITHUB_TOKEN)" \
-		-v $(HOME)/.docker/config.json:/root/.docker/config.json \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/github.com/archway-network/archway \
 		-w /go/src/github.com/archway-network/archway \
@@ -257,3 +256,17 @@ check-vuln-deps:
 	go-mod-cache draw-deps clean build format \
 	test test-all test-build test-cover test-unit test-race \
 	test-sim-import-export \
+
+###############################################################################
+###                               Run Localnet                              ###
+###############################################################################
+
+# Run a new localnet
+run:
+	./scripts/localnet.sh 
+
+# Continue the existing localnet
+run-continue:
+	./scripts/localnet.sh continue
+
+.PHONY: localnet run-continue
