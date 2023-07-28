@@ -33,16 +33,15 @@ We then extend our `FeeDeduction` `AnteHandler` to fetch the `FlatFee` of a cont
 
 ### Limitations
 
-#### FlatFee is imposed only on interactions between EOA and contract, not between contract and contract.
+#### Application of Contract Premiums
 
-The `FlatFee` is imposed only on the first contract call, which means they're imposed when there are interactions between 
-externally owned accounts and contracts. They're not imposed in contract to contract interactions, this is not to hinder 
-fee predictability. In fact, considering contract interactions can be conditional and the condition can change on a block by 
-block basis, the final fee would change based on these conditions, making the fees unpredictable.
+The contract premium is only applied for the initial contract call, provided that the `FlatFee` is set. The protocol does not automatically apply contract premiums for any subsequent calls to other contracts. The reasons for this design are both technical and architectural, namely:
 
+1. Conditional Contract Calls (Technical Reason) - Contracts may be desinged to call other contracts based on complex conditional logic following intricate business process flows. This logic can only be followed to conclusion on transaction execution and it would thus not be possible for the protocol to predict transaction fees.
 
-Example when the call `ContractB` condition is `true`:
+Consider the following example: `ContractA` contains a conditional statement that calls `ContractB`, only if the condition evaluates to true.
 
+The condition evaluates to `true`:
 ```mermaid
 sequenceDiagram
     User->>ContractA: FlatFee Applied: 1ARCH
@@ -50,26 +49,29 @@ sequenceDiagram
     ContractB->>FinalFee: 3ARCH
 ```
 
-Example when the call `ContractB` condition is `false`:
+The condition evaluates to `false`:
 ```mermaid
 sequenceDiagram
     User->>ContractA: FlatFee Applied: 1ARCH
     ContractA->>FinalFee: 1ARCH
 ```
 
+2. Contract Composability (Architectural Reason) - Contracts are often developed together as part of contract complexes. Automatically enforcing contract premiums will limit contract composability and utility.
 
-This means that if a contract is called and has a flat fee set, then the contract **MUST** check itself if the sender is 
-an externally owned account or a contract and apply the flat fee accordingly.
+Consider the following example: A developer produces a contract complex with three disctinct contracts. `ContractA` serves as the entry point for this complex, which in turn will call `ContractB` and `ContractC`. The developer elects to only set a premium on `ContractA`. However, `ContractC` provides a valuable utility and other developers adopt it for their purposes. The original developer can now set the `FlatFee` and add logic to only enforce the premium when `ContractC` is called by anything other than `ContractA` or `ContractB`.
 
-The protocol defines efficient wasm bindings for querying the flat fees of a contract, such that this information can be used
-by contracts to force flat fees even when the caller is a contract.
+**Conclusion**
+
+At first glance it would seem that this limitation would be restrictive, however the protocol defines efficient wasm bindings for quering contract premiums that allows for great flexibility in both implementation and architecture of contracts.
+
+Developers can add logic to check if the contract caller is a regular account or another contract. In the case of another contract the contract premium can be internally applied. The fee state can be queried to ensure sufficient fees are available to cover the premium or execution can return with an _"insufficient premium fee"_ or similar error response.
+
+This form of composability would be severely limited from an architectural perspective if premiums were to be applied automatically. With our approach developers maintain the flexibility of deciding when and how to apply premiums.
 
 #### Reverts cause the FlatFee to be lost
 
 On contract call failures the TX is reverted and the flat fee would be lost too. This is a limitation of the `cosmos-sdk`
-that does not allow us to give the user the `FlatFee` back in case of TX failure as the SDK does not implement post tx execution 
-handlers.
-
+that does not allow us to give the user the `FlatFee` back in case of TX failure as the SDK does not implement post tx execution handlers.
 
 ### User Experience – A note on wallet and frontend integration
 
@@ -78,12 +80,10 @@ change other processes like staking, governance, transfers, and so on.
 
 Still, fees for contract interactions need to be changed, and we'll explain how to do that below.
 
-First, wallets don't need to be changed to work with Archway Network's special fees, since normal operations aren't affected 
-by this fee management system. So, only contract interactions need to be handled.
+First, wallets don't need to be changed to work with Archway Network's special fees, since normal operations aren't affected by this fee management system. So, only contract interactions need to be handled.
 
 A contract always has a user interface (UI). UIs usually work as a go-between for a wallet (like Keplr) and the contract.
-The front-end, or what users see and interact with, is the part that needs to be changed to handle contract premiums correctly. 
-This is fair because the contract developer, who sets the contract premium, is also the one who created the contract.
+The front-end, or what users see and interact with, is the part that needs to be changed to handle contract premiums correctly. This is fair because the contract developer, who sets the contract premium, is also the one who created the contract.
 
 #### Correct fee setting flow
 
