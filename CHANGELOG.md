@@ -28,6 +28,12 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours. 
 -->
 
+## [Unreleased]
+
+### Fixed
+
+- [#424](https://github.com/archway-network/archway/pull/424) - Update titus to v2.0.0
+
 ## [v2.0.0]
 
 ### Added
