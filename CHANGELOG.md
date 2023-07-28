@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- 
+<!--
 ### Added
 
 Contains the new features.
@@ -25,7 +25,7 @@ Contains bug fixes.
 
 ### Improvements
 
-Contains all the PRs that improved the code without changing the behaviours. 
+Contains all the PRs that improved the code without changing the behaviours.
 -->
 
 ## [Unreleased]
@@ -33,6 +33,13 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Fixed
 
 - [#424](https://github.com/archway-network/archway/pull/424) - Update titus to v2.0.0
+
+### Added
+
+- [#419](https://github.com/archway-network/archway/pull/419) - Run localnet via make
+- [#421](https://github.com/archway-network/archway/pull/421) - Add archwayd darwin binaries
+- [#422](https://github.com/archway-network/archway/pull/422) - Add fee burn feature, fees not distributed to contracts get burned
+- [#425](https://github.com/archway-network/archway/pull/425) - Update ADR 004 - Contract Premiums
 
 ## [v2.0.0]
 
@@ -42,13 +49,13 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Fixed
 
-- [#414](https://github.com/archway-network/archway/pull/414) - Preventing user from setting contract flat fee if rewards address is not set 
-- [#418](https://github.com/archway-network/archway/pull/418) - Fixing authz msg decoding in x/rewards antehandlers
+- [#414](https://github.com/archway-network/archway/pull/414) - Prevent user from setting contract flat fee if rewards address is not set
+- [#418](https://github.com/archway-network/archway/pull/418) - Fix authz msg decoding in x/rewards antehandlers
 
 ## [v1.0.1]
 
 - [#411](https://github.com/archway-network/archway/pull/411) - Update repository readme with correct docker containers.
-- [#413](https://github.com/archway-network/archway/pull/413) - Fixing incorrect gas estimation when running with `--dry-run` flag
+- [#413](https://github.com/archway-network/archway/pull/413) - Fix incorrect gas estimation when running with `--dry-run` flag
 
 ## [v1.0.0]
 
@@ -75,7 +82,7 @@ Archway Network - Capture the value you create!
 - [#401](https://github.com/archway-network/archway/pull/401) - Update libwasmvm version to correct one in Dockerfile.deprecated
 - [#402](https://github.com/archway-network/archway/pull/402) - Bump wasmvm version to 1.2.4
 - [#403](https://github.com/archway-network/archway/pull/403) - Update libwasmvm version to correct one for wasmvm 1.2.4
-- [#404](https://github.com/archway-network/archway/pull/403) - Fixing typo in rewards query cli
+- [#404](https://github.com/archway-network/archway/pull/403) - Fix typo in rewards query cli
 - [#406](https://github.com/archway-network/archway/pull/406) - Add upgrade hanlder for v0.6.0 back to prevent downgrade check from panic / consensus failure;
 
 ## [v1.0.0-rc.1]

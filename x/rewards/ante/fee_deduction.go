@@ -15,6 +15,11 @@ import (
 
 var _ sdk.AnteDecorator = DeductFeeDecorator{}
 
+type BankKeeper interface {
+	authTypes.BankKeeper
+	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+}
+
 // DeductFeeDecorator deducts fees from the first signer of the tx.
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error.
 // Call next AnteHandler if fees successfully deducted.
@@ -22,13 +27,13 @@ var _ sdk.AnteDecorator = DeductFeeDecorator{}
 type DeductFeeDecorator struct {
 	codec          codec.BinaryCodec
 	ak             ante.AccountKeeper
-	bankKeeper     authTypes.BankKeeper
+	bankKeeper     BankKeeper
 	feegrantKeeper ante.FeegrantKeeper
 	rewardsKeeper  RewardsKeeperExpected
 }
 
 // NewDeductFeeDecorator returns a new DeductFeeDecorator instance.
-func NewDeductFeeDecorator(codec codec.BinaryCodec, ak ante.AccountKeeper, bk authTypes.BankKeeper, fk ante.FeegrantKeeper, rk RewardsKeeperExpected) DeductFeeDecorator {
+func NewDeductFeeDecorator(codec codec.BinaryCodec, ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, rk RewardsKeeperExpected) DeductFeeDecorator {
 	return DeductFeeDecorator{
 		codec:          codec,
 		ak:             ak,
@@ -136,6 +141,10 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 
 	if !authFees.Empty() {
 		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authTypes.FeeCollectorName, authFees); err != nil {
+			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+		}
+		// burn the auth fees.
+		if err := dfd.bankKeeper.BurnCoins(ctx, authTypes.FeeCollectorName, authFees); err != nil {
 			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
 		}
 	}

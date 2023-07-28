@@ -22,8 +22,9 @@ import (
 type HandlerOptions struct {
 	ante.HandlerOptions
 
-	IBCKeeper  *ibckeeper.Keeper
-	WasmConfig *wasmTypes.WasmConfig
+	IBCKeeper             *ibckeeper.Keeper
+	WasmConfig            *wasmTypes.WasmConfig
+	RewardsAnteBankKeeper rewardsAnte.BankKeeper
 
 	TXCounterStoreKey sdk.StoreKey
 
@@ -76,7 +77,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// Custom Archway interceptor to track new transactions
 		trackingAnte.NewTxGasTrackingDecorator(options.TrackingKeeper),
 		// Custom Archway fee deduction, which splits fees between x/rewards and x/auth fee collector
-		rewardsAnte.NewDeductFeeDecorator(options.Codec, options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.RewardsKeeper),
+		rewardsAnte.NewDeductFeeDecorator(options.Codec, options.AccountKeeper, options.RewardsAnteBankKeeper, options.FeegrantKeeper, options.RewardsKeeper),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),

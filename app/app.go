@@ -225,7 +225,7 @@ var (
 	// module account permissions
 	maccPerms = map[string][]string{
 		rewardsTypes.ContractRewardCollector: nil,
-		authtypes.FeeCollectorName:           nil,
+		authtypes.FeeCollectorName:           {authtypes.Burner},
 		distrtypes.ModuleName:                nil,
 		minttypes.ModuleName:                 {authtypes.Minter},
 		stakingtypes.BondedPoolName:          {authtypes.Burner, authtypes.Staking},
@@ -799,11 +799,12 @@ func NewArchwayApp(
 				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
-			IBCKeeper:         app.IBCKeeper,
-			WasmConfig:        &wasmConfig,
-			TXCounterStoreKey: keys[wasm.StoreKey],
-			TrackingKeeper:    app.TrackingKeeper,
-			RewardsKeeper:     app.RewardsKeeper,
+			IBCKeeper:             app.IBCKeeper,
+			WasmConfig:            &wasmConfig,
+			RewardsAnteBankKeeper: app.BankKeeper,
+			TXCounterStoreKey:     keys[wasm.StoreKey],
+			TrackingKeeper:        app.TrackingKeeper,
+			RewardsKeeper:         app.RewardsKeeper,
 		},
 	)
 	if err != nil {
