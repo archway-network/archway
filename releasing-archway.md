@@ -9,7 +9,7 @@ The **Archway** protocol follows a **state versioning system**, it does not util
 Given a version number Major.Minor.Patch, increment the:
 
 1. **Major** version when any state breaking changes are introduced;
-2. **Minor** version when any API changes, both API-compatible or API-incompatible, are introduced;
+2. **Minor** version when any Query API changes, both API-compatible or API-incompatible, are introduced;
 3. **Patch** version when any state-compatible bug fixes are introduced;
 
 Additional labels for release-candidates, pre-release versions and other build metadata are available as extensions to the Major.Minor.Patch format.
