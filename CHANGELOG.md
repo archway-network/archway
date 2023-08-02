@@ -39,6 +39,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#419](https://github.com/archway-network/archway/pull/419) - Run localnet via make
 - [#421](https://github.com/archway-network/archway/pull/421) - Add archwayd darwin binaries
 - [#422](https://github.com/archway-network/archway/pull/422) - Add fee burn feature, fees not distributed to contracts get burned
+- [#423](https://github.com/archway-network/archway/pull/423) - Update release docs
 - [#425](https://github.com/archway-network/archway/pull/425) - Update ADR 004 - Contract Premiums
 
 ## [v2.0.0]

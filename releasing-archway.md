@@ -1,74 +1,41 @@
-# Archway Protocol Release Versioning
+# Archway Protocol Release Process
 
-This document captures the release and versioning strategy of archway protocol software.
+## Release Versioning
 
-This document DOES NOT deal with versioning or releases of Various networks using archway protocol.
+This document outlines the release process for Archway protocol software.
 
-This Document DOES NOT deal with API versioning or API conventions of archway protocol
+The **Archway** protocol follows a **state versioning system**, it does not utilize traditional [semantic versioning](http://semver.org); SemVer is specifically about APIs, but API breaking changes is not the only way in which libraries can "break". In deterministic systems, such as a blockchain, *state breaking changes far outweigh API breaking changes*. As such, Archway follows a State Versioning system.
 
-Reference: [Semantic Versioning](http://semver.org)
+Given a version number Major.Minor.Patch, increment the:
 
-Legend:
+1. **Major** version when any state breaking changes are introduced;
+2. **Minor** version when any Query API changes, both API-compatible or API-incompatible, are introduced;
+3. **Patch** version when any state-compatible bug fixes are introduced;
 
-- **X.Y.Z** refers to the version (git tag) of Archway Protocol that is released.
-- **Network Operator** refers to an entity running a node and/or a validator and/or a relayer.
-- **archway-1** refers to the chain id of archway protocl main network.
-- **constantine-1** refers to the chain-id of the archway protocol "staging" public test network,
-  with long term support, gurantee of state persistance during upgrades and reasonably mirrors mainnet.
-  Dapp developers may build
-  and test their dapps against this testnet before launching on mainnet.
-- **titus-1** refers to the the chain-id of the archway protocol "development" public test network.
-This network is not expected to mirror mainnet and may have experimental features. There is no guarantee of stability or state
-persistance during upgrades.
+Additional labels for release-candidates, pre-release versions and other build metadata are available as extensions to the Major.Minor.Patch format.
 
-Note: Please refer to https://github.com/archway-network/networks for a registry of all public networks running archway protocol
-and network specific information.
+**Note:** Any dependency updates that are not state breaking, e.g. updating the Go version, fall under minor.
 
-## Release versioning
+## State Compatability
 
-### Minor version scheme and timeline
-- X.Y.Z-rc.W (Branch: release-X.Y)
-  - When main is feature-complete for X.Y, we will cut the release-X.Y
-    branch and cherrypick only PRs essential to X.Y.
-  - If we're not satisfied with X.Y.0-rc.0, we'll release other rc releases,
-    (X.Y.0-rc.W | W > 0) as necessary.
-- X.Y.0 (Branch: release-X.Y)
-  - Final release, cut from the release-X.Y branch.
-  - X.Y.0-rc.0 will be tagged at the same commit on the same branch.
-- X.Y.Z, Z > 0 (Branch: release-X.Y) ([Patch releases](#patch-releases))
-  - [Patch releases](#patch-releases) are released as we cherrypick commits from main into
-    the release-X.Y branch, as needed.
-  - X.Y.Z is cut straight from the release-X.Y branch, and X.Y.Z+1-beta.0 is
-    tagged on the followup commit.
-- X.Y.Z, Z > 0 (Branch: release-X.Y.Z) (Branched [patch releases](#patch-releases) only for hotfix situations)
-  - These are rarely used and are special in that the X.Y.Z tag is branched to isolate
-    the emergency/critical fix from all other changes that have landed on the
-    release branch since the previous tag
-  - Cut release-X.Y.Z branch to hold the isolated patch release
-  - Tag release-X.Y.Z branch + fixes with X.Y.(Z+1)
-  - Branched [patch releases](#patch-releases) are rarely needed but used for
-    emergency/critical fixes to the latest release
+**Note:** State breaking changes include changes that impact the amount of gas needed to execute a transaction as well as any changes to error handling. This is because `AppHash` and `LastResultsHash` contains:
 
-### Major version timeline
+1. Tx `GasWanted`;
+2. Tx `GasUsed` - which is Merkelized, thus any logic affecting this will result in state changes;
+3. Tx response `Data` - protobuf encoding changes result in state changes;
+4. Tx response `Code` - any changes to error handling flow, or custom error codes will result in state changes;
 
-There is currently no mandated timeline for major versions beyond version 1.Y.Z, Y,Z >= 0. We haven't so far applied a rigorous interpretation of semantic
-versioning with respect to incompatible changes of any kind.
+## Release Process
 
-TODO: Major versioning criteria need to be put up for discussion once Archway protocol reaches 1.Y.Z release.
+The standard release process progresses through the following steps:
 
-## Patch releases
+1. Tag a new release once a major release, update or patch is deemed ready for deployment (release atrifacts are created via automation);
+2. Deploy the new release version to Constantine (testnet);
+3. Conduct final verification for the release on testnet, including verfification of upgrade handlers;
+4. Repeat steps 1-3 until all verification passes, e.g. relevant tests, remediations, etc;
+5. Deploy the release to mainnet via upgrade proposal;
 
-Patch releases are intended for critical bug fixes to the latest minor version,
-such as addressing security vulnerabilities, fixes to problems affecting a large
-number of users and severe problems with no workaround.
-
-They should not contain miscellaneous feature additions or improvements, and
-especially no incompatibilities should be introduced between patch versions of
-the same minor version (or even major version).
-
-Dependencies, such as cosmos-sdk or tendermint, should also not be changed unless
-absolutely necessary, and also just to fix critical bugs (so, at most patch
-version changes, not new major nor minor versions).
+**Note:** Steps 1-3 may include a number of iterations with various release candidates;
 
 ## Network Upgrades
 
@@ -84,13 +51,6 @@ version changes, not new major nor minor versions).
 - Each new release must be adopted and tested on constantine-1 before being adopted on archway-1.
 - titus-1 is an unstable development network, with no guarantees for stability or graceful upgrades. Network upgrades on titus-1 are
   expected to reset network state and start again from block 1 at any given time.
-
-### Open Questions in Network upgrades:
-
-- How to build artifacts for titus-1?
-  - Should there be a build on each new commit on main branch?
-  - use X.Y.0-{alpha,beta}.W, W > 0 (Branch: master)
-    Alpha and beta releases are created from tags on main branch branch and should be used to run titus-1
 
 ### Important upgrade scenarios with examples
 
