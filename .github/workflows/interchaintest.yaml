@@ -1,0 +1,31 @@
+name: Run InterchainTest
+
+on:
+    push:
+        branches:
+            - spoorthi/adding-chain-upgrade-test
+            
+    pull_request:
+        branches: 
+            - main
+    
+    workflow_dispatch:
+
+jobs:
+    build_previous_release:
+        name: Build previous release
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout archway-network/archway
+              uses: actions/checkout@v3
+
+            - name: Get last release tag
+              id: lastrelease
+              uses: revam/gh-action-get-tag-and-version@v1
+              with: 
+                tag: ${{ github.ref }}
+                prefix: v
+
+            - name: Output the last release tag
+              run: echo ${{ steps.lastrelease.outputs.tag }}
