@@ -1,10 +1,6 @@
 name: Run InterchainTest
 
 on:
-    push:
-        branches:
-            - spoorthi/adding-chain-upgrade-test
-
     pull_request:
         branches: 
             - main
