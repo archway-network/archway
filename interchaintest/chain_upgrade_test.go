@@ -47,7 +47,7 @@ func TestChainUpgrade(t *testing.T) {
 	err = archwayChain.StopAllNodes(ctx)
 	require.NoError(t, err, "could not stop node(s)")
 
-	// Upgrade version on all nodes - We are passing in the local image for the upgrade build using `make build-docker`
+	// Upgrade version on all nodes - We are passing in the local image for the upgrade build
 	archwayChain.UpgradeVersion(ctx, client, chainName, "local")
 
 	// Start all nodes back up.
