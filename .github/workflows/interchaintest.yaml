@@ -12,57 +12,76 @@ on:
     workflow_dispatch:
 
 jobs:
-    build_images:
-        name: Build heighliner images 🛠️
+    # build_images:
+    #     name: Build heighliner images 🛠️
+    #     runs-on: ubuntu-latest
+
+    #     steps:
+    #         - name: Checkout archway-network/archway
+    #           uses: actions/checkout@v3
+    #           with:
+    #             fetch-depth: 0
+
+    #         - name: Get last release tag
+    #           id: lastrelease
+    #           uses: revam/gh-action-get-tag-and-version@v1
+
+    #         - name: Checkout heighliner
+    #           uses: actions/checkout@v3
+    #           with:
+    #             repository: strangelove-ventures/heighliner
+    #             path: heighliner
+
+    #         - name: Setup up Golang
+    #           uses: actions/setup-go@v4
+    #           with:
+    #             go-version-file: 'heighliner/go.mod'
+            
+    #         - name: Install heighliner
+    #           run: cd heighliner && go install
+
+    #         - name: Setup Docker Buildx
+    #           uses: docker/setup-buildx-action@v2
+
+    #         - name: Build current image
+    #           run: |
+    #             heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ github.ref_name }} --tag local
+    #             docker image tag acrechain:local archway:local
+    #             docker rmi acrechain:local
+
+    #         - name: Upload current image
+    #           uses: ishworkh/container-image-artifact-upload@v1.0.0
+    #           with:
+    #             image: archway:local
+    #             retention_days: 3
+
+    #         - name: Build last release
+    #           run: |
+    #             heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --tag ${{ steps.lastrelease.outputs.tag }}
+    #             docker image tag acrechain:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
+    #             docker rmi acrechain:${{ steps.lastrelease.outputs.tag }}
+            
+    #         - name: Upload last release image
+    #           uses: ishworkh/container-image-artifact-upload@v1.0.0
+    #           with:
+    #             image: archway:${{ steps.lastrelease.outputs.tag }}
+    #             retention_days: 3
+
+    run_chain_upgrade_test:
+        name: Chain Upgrade Test 🏆
+        # needs: [build_images]
         runs-on: ubuntu-latest
 
         steps:
-            - name: Checkout archway-network/archway
+            - name: Checkout archway-network/archway/interchaintest
               uses: actions/checkout@v3
               with:
                 fetch-depth: 0
+                sparse-checkout: interchaintest
 
             - name: Get last release tag
               id: lastrelease
               uses: revam/gh-action-get-tag-and-version@v1
 
-            - name: Checkout heighliner
-              uses: actions/checkout@v3
-              with:
-                repository: strangelove-ventures/heighliner
-                path: heighliner
-
-            - name: Setup up Golang
-              uses: actions/setup-go@v4
-              with:
-                go-version-file: 'heighliner/go.mod'
-            
-            - name: Install heighliner
-              run: cd heighliner && go install
-
-            - name: Setup Docker Buildx
-              uses: docker/setup-buildx-action@v2
-
-            - name: Build current image
-              run: |
-                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ github.ref_name }} --tag local
-                docker image tag acrechain:local archway:local
-                docker rmi acrechain:local
-
-            - name: Upload current image
-              uses: ishworkh/container-image-artifact-upload@v1.0.0
-              with:
-                image: archway:local
-                retention_days: 3
-
-            - name: Build last release
-              run: |
-                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --tag ${{ steps.lastrelease.outputs.tag }}
-                docker image tag acrechain:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
-                docker rmi acrechain:${{ steps.lastrelease.outputs.tag }}
-            
-            - name: Upload last release image
-              uses: ishworkh/container-image-artifact-upload@v1.0.0
-              with:
-                image: archway:${{ steps.lastrelease.outputs.tag }}
-                retention_days: 3
+            - name: Check tags working
+              run: echo ${{ steps.lastrelease.outputs.tag }}
