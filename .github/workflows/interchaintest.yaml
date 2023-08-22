@@ -68,7 +68,7 @@ jobs:
                 retention_days: 3
 
     run_chain_upgrade_test:
-        name: Archway upgrade test 🏆
+        name: Chain upgrade test 🏆
         needs: [build_images]
         runs-on: ubuntu-latest
 

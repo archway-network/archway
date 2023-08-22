@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	initialVersion = "v2.0.0" // The last release of the chain. The one the mainnet is running on
+	initialVersion = "v3.0.0" // The last release of the chain. The one the mainnet is running on
 	upgradeName    = "v4.0.0" // The next upgrade name. Should match the upgrade handler.
 	chainName      = "archway"
 )
