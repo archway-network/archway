@@ -12,8 +12,8 @@ on:
     workflow_dispatch:
 
 jobs:
-    build_previous_release:
-        name: Build previous release
+    build_images:
+        name: Build heighliner images
         runs-on: ubuntu-latest
 
         steps:
@@ -26,5 +26,23 @@ jobs:
               id: lastrelease
               uses: revam/gh-action-get-tag-and-version@v1
 
-            - name: Output the last release tag
-              run: echo ${{ steps.lastrelease.outputs.tag }}
+            - name: Checkout heighliner
+              uses: actions/checkout@v3
+              with:
+                repository: strangelove-ventures/heighliner
+                path: heighliner
+            
+            - name: Install heighliner
+              run: cd heighliner && go install
+
+            - name: Setup Docker Buildx
+              uses: docker/setup-buildx-action@v2
+
+            - name: Build last release
+              run: heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --tag ${{ steps.lastrelease.outputs.tag }}
+
+            - name: Fix the image name
+              run: docker image tag acrechain:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
+            
+            - name: List the images
+              run: docker images
