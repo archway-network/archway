@@ -43,11 +43,18 @@ jobs:
             - name: Setup Docker Buildx
               uses: docker/setup-buildx-action@v2
 
-            - name: Build last release
-              run: heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --tag ${{ steps.lastrelease.outputs.tag }}
+            - name: Build current PR image
+              run: |
+                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ github.ref_name }} --tag local
+                docker image tag acrechain:local archway:local
+                docker rmi acrechain:local
 
-            - name: Fix the image name
-              run: docker image tag acrechain:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
+
+            - name: Build last release
+              run: |
+                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --tag ${{ steps.lastrelease.outputs.tag }}
+                docker image tag acrechain:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
+                docker rmi acrechain:${{ steps.lastrelease.outputs.tag }}
             
             - name: List the images
               run: docker images
