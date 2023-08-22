@@ -16,9 +16,9 @@ jobs:
               with:
                 fetch-depth: 0
 
-            # - name: Get last release tag
-            #   id: lastrelease
-            #   uses: revam/gh-action-get-tag-and-version@v1
+            - name: Get last release tag
+              id: lastrelease
+              uses: revam/gh-action-get-tag-and-version@v1
 
             - name: Checkout heighliner
               uses: actions/checkout@v3
@@ -49,17 +49,17 @@ jobs:
                 image: archway:local
                 retention_days: 3
 
-            # - name: Build last release
-            #   run: |
-            #     heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --tag ${{ steps.lastrelease.outputs.tag }}
-            #     docker image tag acrechain:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
-            #     docker rmi acrechain:${{ steps.lastrelease.outputs.tag }}
+            - name: Build last release
+              run: |
+                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --tag ${{ steps.lastrelease.outputs.tag }}
+                docker image tag acrechain:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
+                docker rmi acrechain:${{ steps.lastrelease.outputs.tag }}
             
-            # - name: Upload last release image
-            #   uses: ishworkh/container-image-artifact-upload@v1.0.0
-            #   with:
-            #     image: archway:${{ steps.lastrelease.outputs.tag }}
-            #     retention_days: 3
+            - name: Upload last release image
+              uses: ishworkh/container-image-artifact-upload@v1.0.0
+              with:
+                image: archway:${{ steps.lastrelease.outputs.tag }}
+                retention_days: 3
 
     run_chain_upgrade_test:
         name: Chain upgrade test 🏆
@@ -93,16 +93,13 @@ jobs:
               id: lastrelease
               uses: revam/gh-action-get-tag-and-version@v1
 
-            # - name: Download current image
-            #   uses: actions/download-artifact@v3
-            #   with:
-            #     name: action_image_artifact_archway_${{ steps.lastrelease.outputs.tag }}
+            - name: Download current image
+              uses: actions/download-artifact@v3
+              with:
+                name: action_image_artifact_archway_${{ steps.lastrelease.outputs.tag }}
 
-            # - name: Load current image
-            #   run: docker load --input archway_${{ steps.lastrelease.outputs.tag }}
-
-            - name: Download latest
-              run: docker pull ghcr.io/archway-network/archwayd:${{ steps.lastrelease.outputs.tag }}
+            - name: Load current image
+              run: docker load --input archway_${{ steps.lastrelease.outputs.tag }}
 
             - name: Run chain upgrade test
               run: |
