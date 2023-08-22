@@ -13,7 +13,7 @@ on:
 
 jobs:
     build_images:
-        name: Build heighliner images
+        name: Build heighliner images 🛠️
         runs-on: ubuntu-latest
 
         steps:
@@ -43,12 +43,17 @@ jobs:
             - name: Setup Docker Buildx
               uses: docker/setup-buildx-action@v2
 
-            - name: Build current PR image
+            - name: Build current image
               run: |
                 heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ github.ref_name }} --tag local
                 docker image tag acrechain:local archway:local
                 docker rmi acrechain:local
 
+            - name: Upload current image
+              uses: ishworkh/container-image-artifact-upload@v1.0.0
+              with:
+                image: archway:local
+                retention_days: 3
 
             - name: Build last release
               run: |
@@ -56,5 +61,8 @@ jobs:
                 docker image tag acrechain:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
                 docker rmi acrechain:${{ steps.lastrelease.outputs.tag }}
             
-            - name: List the images
-              run: docker images
+            - name: Upload last release image
+              uses: ishworkh/container-image-artifact-upload@v1.0.0
+              with:
+                image: archway:${{ steps.lastrelease.outputs.tag }}
+                retention_days: 3
