@@ -31,6 +31,11 @@ jobs:
               with:
                 repository: strangelove-ventures/heighliner
                 path: heighliner
+
+            - name: Setup up Golang
+              uses: actions/setup-go@v4
+              with:
+                go-version-file: 'heighliner/go.mod'
             
             - name: Install heighliner
               run: cd heighliner && go install
