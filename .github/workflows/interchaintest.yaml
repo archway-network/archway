@@ -4,8 +4,6 @@ on:
     pull_request:
         branches: 
             - main
-    
-    workflow_dispatch:
 
 jobs:
     build_images:
@@ -41,7 +39,7 @@ jobs:
 
             - name: Build current image
               run: |
-                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ github.ref_name }} --tag local
+                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ github.head_ref }} --tag local
                 docker image tag acrechain:local archway:local
                 docker rmi acrechain:local
 
