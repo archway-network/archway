@@ -4,7 +4,7 @@ on:
     push:
         branches:
             - spoorthi/adding-chain-upgrade-test
-            
+
     pull_request:
         branches: 
             - main
@@ -23,9 +23,6 @@ jobs:
             - name: Get last release tag
               id: lastrelease
               uses: revam/gh-action-get-tag-and-version@v1
-              with: 
-                tag: ${{ github.ref }}
-                prefix: v
 
             - name: Output the last release tag
               run: echo ${{ steps.lastrelease.outputs.tag }}
