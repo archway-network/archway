@@ -1,4 +1,4 @@
-package e2e
+package interchaintest
 
 import (
 	"context"
@@ -15,16 +15,8 @@ import (
 )
 
 const (
-	initialVersion = "v3.0.0" //
-	upgradeName    = "v4.0.0" //
-)
-
-const (
 	haltHeightDelta    = uint64(10) // The number of blocks after which to apply upgrade after creation of proposal.
 	blocksAfterUpgrade = uint64(10) // The number of blocks to wait for after the upgrade has been applied.
-	votingPeriod       = "10s"      // Reducing voting period for testing
-	maxDepositPeriod   = "10s"      // Reducing max deposit period for testing
-	depositDenom       = "aarch"    // The bond denom to be used to deposit for propsals
 )
 
 func TestChainUpgrade(t *testing.T) {
@@ -37,7 +29,7 @@ func TestChainUpgrade(t *testing.T) {
 	haltHeight := submitUpgradeProposalAndVote(t, ctx, archwayChain, chainUser)
 
 	height, err := archwayChain.Height(ctx)
-	require.NoError(t, err, "error fetching height before upgrade")
+	require.NoError(t, err, "cound not fetch height before upgrade")
 
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(ctx, time.Second*45)
 	defer timeoutCtxCancel()
@@ -46,23 +38,23 @@ func TestChainUpgrade(t *testing.T) {
 	_ = testutil.WaitForBlocks(timeoutCtx, int(haltHeight-height)+1, archwayChain)
 
 	height, err = archwayChain.Height(ctx)
-	require.NoError(t, err, "error fetching height after chain should have halted")
+	require.NoError(t, err, "could not fetch height after chain should have halted")
 
 	// Make sure that chain is halted
 	require.Equal(t, haltHeight, height, "height is not equal to halt height")
 
 	// Bring down nodes to prepare for upgrade
 	err = archwayChain.StopAllNodes(ctx)
-	require.NoError(t, err, "error stopping node(s)")
+	require.NoError(t, err, "could not stop node(s)")
 
 	// Upgrade version on all nodes - We are passing in the local image for the upgrade build using `make build-docker`
-	archwayChain.UpgradeVersion(ctx, client, "arcechain", "pr")
+	archwayChain.UpgradeVersion(ctx, client, chainName, "local")
 
 	// Start all nodes back up.
 	// Validators reach consensus on first block after upgrade height
 	// And chain block production resumes 🎉
 	err = archwayChain.StartAllNodes(ctx)
-	require.NoError(t, err, "error starting upgraded node(s)")
+	require.NoError(t, err, "could not start upgraded node(s)")
 
 	timeoutCtx, timeoutCtxCancel = context.WithTimeout(ctx, time.Second*45)
 	defer timeoutCtxCancel()
@@ -79,9 +71,9 @@ func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, archwayChai
 
 	proposal := cosmos.SoftwareUpgradeProposal{
 		Deposit:     "10000000000" + archwayChain.Config().Denom,
-		Title:       "Chain Upgrade 1",
+		Title:       "Test upgrade",
 		Name:        upgradeName,
-		Description: "First chain software upgrade",
+		Description: "Every PR we perform a upgrade check to ensure nothing breaks",
 		Height:      haltHeight,
 	}
 
@@ -103,15 +95,13 @@ func fundChainUser(t *testing.T, ctx context.Context, archwayChain *cosmos.Cosmo
 }
 
 func startChain(t *testing.T) (*cosmos.CosmosChain, *client.Client, context.Context) {
-	numOfVals := 5
+	numOfVals := 1
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
-			Name:      "archway",
-			ChainName: "archway-1",
-			Version:   initialVersion,
-			ChainConfig: ibc.ChainConfig{
-				ModifyGenesis: cosmos.ModifyGenesis(getTestGenesis()), // Modifying genesis to have test-friendly gov params
-			},
+			Name:          chainName,
+			ChainName:     "archway-1",
+			Version:       initialVersion,
+			ChainConfig:   archwayConfig,
 			NumValidators: &numOfVals,
 		},
 	})
@@ -132,21 +122,4 @@ func startChain(t *testing.T) (*cosmos.CosmosChain, *client.Client, context.Cont
 		_ = ic.Close()
 	})
 	return archwayChain, client, ctx
-}
-
-func getTestGenesis() []cosmos.GenesisKV {
-	return []cosmos.GenesisKV{
-		{
-			Key:   "app_state.gov.voting_params.voting_period",
-			Value: votingPeriod,
-		},
-		{
-			Key:   "app_state.gov.deposit_params.max_deposit_period",
-			Value: maxDepositPeriod,
-		},
-		{
-			Key:   "app_state.gov.deposit_params.min_deposit.0.denom",
-			Value: depositDenom,
-		},
-	}
 }
