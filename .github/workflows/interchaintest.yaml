@@ -105,7 +105,7 @@ jobs:
               run: |
                 docker pull ghcr.io/archway-network/archwayd-debug:${{ steps.lastrelease.outputs.tag }}
                 docker images
-                docker image tag archwayd-debug:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
+                docker image tag ghcr.io/archway-network/archwayd-debug:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
                 docker images
 
             - name: Run chain upgrade test
