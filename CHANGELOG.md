@@ -33,6 +33,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Added
 
 - [#429](https://github.com/archway-network/archway/pull/429) - Adding `cosmwasm_1_3` capabilities by bumping wasmd to v0.33.0
+- [#430](https://github.com/archway-network/archway/pull/430) - Added gh workflow to run chain upgarde test on PRs
 
 ### Changed
 
