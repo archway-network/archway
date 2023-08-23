@@ -34,6 +34,10 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#430](https://github.com/archway-network/archway/pull/430) - Added gh workflow to run chain upgarde test on PRs
 
+### Changed
+
+- [#428](https://github.com/archway-network/archway/pull/428) - Update go version to 1.20
+
 ## [v3.0.0]
 
 ### Fixed
