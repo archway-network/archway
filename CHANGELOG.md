@@ -28,7 +28,11 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours.
 -->
 
-## [Unreleased]
+## [v4.0.0]
+
+### Added
+
+- [#429](https://github.com/archway-network/archway/pull/429) - Adding `cosmwasm_1_3` capabilities by bumping wasmd to v0.33.0
 
 ### Changed
 
