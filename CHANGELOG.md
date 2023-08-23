@@ -28,6 +28,12 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours.
 -->
 
+## [v4.0.0]
+
+### Added
+
+- [#430](https://github.com/archway-network/archway/pull/430) - Added gh workflow to run chain upgarde test on PRs
+
 ## [v3.0.0]
 
 ### Fixed
