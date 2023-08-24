@@ -7,7 +7,7 @@ on:
 
 jobs:
     build_images:
-        name: Build archway images 🛠️
+        name: Build archway images 
         runs-on: ubuntu-latest
 
         steps:
@@ -62,7 +62,7 @@ jobs:
                 retention_days: 3
 
     run_chain_upgrade_test:
-        name: Chain upgrade test 🏆
+        name: Chain upgrade test 
         needs: [build_images]
         runs-on: ubuntu-latest
 
@@ -107,7 +107,7 @@ jobs:
                 go test -v -race -run TestChainUpgrade
 
     run_conformance_tests:
-        name: IBC conformance tests 🔗
+        name: ${{ matrix.testname }}
         needs: [build_images]
         runs-on: ubuntu-latest
         strategy:
