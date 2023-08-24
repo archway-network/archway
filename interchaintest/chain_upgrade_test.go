@@ -96,14 +96,9 @@ func fundChainUser(t *testing.T, ctx context.Context, archwayChain *cosmos.Cosmo
 
 func startChain(t *testing.T) (*cosmos.CosmosChain, *client.Client, context.Context) {
 	numOfVals := 1
+	archwayChainSpec := GetArchwaySpec(initialVersion, numOfVals)
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
-		{
-			Name:          chainName,
-			ChainName:     "archway-1",
-			Version:       initialVersion,
-			ChainConfig:   archwayConfig,
-			NumValidators: &numOfVals,
-		},
+		archwayChainSpec,
 	})
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)

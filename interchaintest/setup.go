@@ -3,6 +3,7 @@ package interchaintest
 import (
 	"fmt"
 
+	"github.com/strangelove-ventures/interchaintest/v4"
 	"github.com/strangelove-ventures/interchaintest/v4/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v4/ibc"
 )
@@ -14,32 +15,43 @@ const (
 )
 
 const (
-	votingPeriod     = "10s" // Reducing voting period for testing
-	maxDepositPeriod = "10s" // Reducing max deposit period for testing
+	coinType          = "118"
+	chainType         = "cosmos"
+	ibcTrustingPeriod = "112h"
+
+	denom        = "aarch"
+	bech32Prefix = "archway"
 )
 
-var (
-	coinType = "118"
-	denom    = "aarch"
-
-	dockerImage = ibc.DockerImage{
+func GetArchwaySpec(dockerImageVersion string, numOfVals int) *interchaintest.ChainSpec {
+	chainConfig := getDefaultChainConfig()
+	chainConfig.Images = []ibc.DockerImage{{
 		Repository: chainName,
-		Version:    initialVersion,
+		Version:    dockerImageVersion,
 		UidGid:     "1025:1025",
+	}}
+	archwayChainSpec := &interchaintest.ChainSpec{
+		Name:          chainName,
+		ChainName:     "archway-1",
+		Version:       dockerImageVersion,
+		ChainConfig:   chainConfig,
+		NumValidators: &numOfVals,
 	}
+	return archwayChainSpec
+}
 
-	archwayConfig = ibc.ChainConfig{
-		Type:                   "cosmos",
+func getDefaultChainConfig() ibc.ChainConfig {
+	return ibc.ChainConfig{
+		Type:                   chainType,
 		Name:                   chainName,
 		ChainID:                "archway-local",
-		Images:                 []ibc.DockerImage{dockerImage},
 		Bin:                    "archwayd",
-		Bech32Prefix:           "archway",
+		Bech32Prefix:           bech32Prefix,
 		Denom:                  denom,
 		CoinType:               coinType,
 		GasPrices:              fmt.Sprintf("0%s", denom),
 		GasAdjustment:          2.0,
-		TrustingPeriod:         "112h",
+		TrustingPeriod:         ibcTrustingPeriod,
 		NoHostMount:            false,
 		SkipGenTx:              false,
 		PreGenesis:             nil,
@@ -47,6 +59,11 @@ var (
 		ConfigFileOverrides:    nil,
 		UsingNewGenesisCommand: false,
 	}
+}
+
+const (
+	votingPeriod     = "10s" // Reducing voting period for testing
+	maxDepositPeriod = "10s" // Reducing max deposit period for testing
 )
 
 func getTestGenesis() []cosmos.GenesisKV {
