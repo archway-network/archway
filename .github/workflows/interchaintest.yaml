@@ -106,16 +106,16 @@ jobs:
                 cd interchaintest
                 go test -v -race -run TestChainUpgrade
 
-    run_conformance_tests:
-        name: ${{ matrix.testname }}
+    ibc_conformance_tests:
+        name: ${{ matrix.testname }} <> Archway
         needs: [build_images]
         runs-on: ubuntu-latest
         strategy:
           fail-fast: false
           matrix:
             testname:
-              - "TestGaiaConformance"
-              - "TestOsmosisConformance"
+              - "Gaia"
+              - "Osmosis"
         
         steps:
           - name: Checkout archway-network/archway/interchaintest
@@ -143,4 +143,4 @@ jobs:
           - name: Run chain conformance test
             run: |
               cd interchaintest
-              go test -v -race -run  ${{ matrix.testname }}
+              go test -v -race -run  Test${{ matrix.testname }}Conformance

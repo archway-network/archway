@@ -28,6 +28,12 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours.
 -->
 
+## [Unreleased]
+
+### Added 
+
+- [#431](https://github.com/archway-network/archway/pull/431) - Added gh workflow to run IBC conformance tests on PRs
+
 ## [v4.0.0]
 
 ### Added
