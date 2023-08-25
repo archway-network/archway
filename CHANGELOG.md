@@ -34,6 +34,16 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#431](https://github.com/archway-network/archway/pull/431) - Added gh workflow to run IBC conformance tests on PRs
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Improvements
+
 ## [v4.0.0]
 
 ### Added
