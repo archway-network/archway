@@ -28,6 +28,20 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours.
 -->
 
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Improvements
+
 ## [v4.0.0]
 
 ### Added
