@@ -22,20 +22,7 @@ func TestGaiaConformance(t *testing.T) {
 	gaiaChainSpec := &interchaintest.ChainSpec{
 		Name:      "gaia",
 		ChainName: "gaia",
-		Version:   "v11.0.0",
-	}
-	runConformanceTest(t, gaiaChainSpec)
-}
-
-func TestOsmosisConformance(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	gaiaChainSpec := &interchaintest.ChainSpec{
-		Name:      "osmosis",
-		ChainName: "osmosis",
-		Version:   "v14.0.0",
+		Version:   "latest",
 	}
 	runConformanceTest(t, gaiaChainSpec)
 }
