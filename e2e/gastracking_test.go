@@ -8,8 +8,8 @@ import (
 	archway "github.com/archway-network/archway/types"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	voterTypes "github.com/archway-network/voter/src/types"
 

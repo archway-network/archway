@@ -5,12 +5,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 	db "github.com/tendermint/tm-db"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 )

@@ -6,9 +6,9 @@ import (
 	"time"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	voterTypes "github.com/archway-network/voter/src/types"
 

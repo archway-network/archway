@@ -21,7 +21,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.2
-	github.com/tendermint/tendermint v0.34.27
+	github.com/cometbft/cometbft v0.37.2
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc
@@ -53,6 +53,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20220817183557-09c6e030a677 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
+	github.com/cometbft/cometbft v0.34.27 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
@@ -159,7 +160,5 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.33.0-archway
 
 replace github.com/archway-network/voter => ./contracts/go/voter
-
-replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
 
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
