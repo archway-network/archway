@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
+	db "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	db "github.com/tendermint/tm-db"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
