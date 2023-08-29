@@ -4,6 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmHash "github.com/cometbft/cometbft/crypto/tmhash"
+	tmProto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmProtoVersion "github.com/cometbft/cometbft/proto/tendermint/version"
+	tmTypes "github.com/cometbft/cometbft/types"
+	tmVersion "github.com/cometbft/cometbft/version"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -14,12 +20,6 @@ import (
 	"github.com/cosmos/ibc-go/v4/modules/core/exported"
 	ibcTmTypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmHash "github.com/tendermint/tendermint/crypto/tmhash"
-	tmProto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmProtoVersion "github.com/tendermint/tendermint/proto/tendermint/version"
-	tmTypes "github.com/tendermint/tendermint/types"
-	tmVersion "github.com/tendermint/tendermint/version"
 )
 
 // GetMerklePrefix returns a Merkle tree prefix.

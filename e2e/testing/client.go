@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 
 	"github.com/archway-network/archway/app"
