@@ -4,11 +4,11 @@ go 1.20
 
 require (
 	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220822092235-974247a04ac7
-	github.com/CosmWasm/wasmd v0.33.0
+	github.com/CosmWasm/wasmd v0.41.0
 	github.com/CosmWasm/wasmvm v1.3.0
 	github.com/archway-network/voter v0.0.0-00010101000000-000000000000
-	github.com/cosmos/cosmos-sdk v0.45.16
-	github.com/cosmos/ibc-go/v4 v4.3.1
+	github.com/cosmos/cosmos-sdk v0.47.4
+	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/dvsekhvalnov/jose2go v1.5.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
@@ -157,7 +157,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.33.0-archway
+replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.41.0-archway
 
 replace github.com/archway-network/voter => ./contracts/go/voter
 
