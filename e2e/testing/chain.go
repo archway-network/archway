@@ -26,7 +26,7 @@ import (
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/ibc-go/v4/testing/mock"
+	"github.com/cosmos/ibc-go/v7/testing/mock"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/stretchr/testify/require"
 
