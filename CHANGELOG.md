@@ -28,19 +28,11 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours.
 -->
 
-## [Unreleased]
-
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
+## [v4.0.1]
 
 ### Fixed
 
-### Improvements
+- [#437](https://github.com/archway-network/archway/pull/437) - adding upgrade handler with missing burn permissions for feecollector account
 
 ## [v4.0.0]
 
