@@ -52,7 +52,7 @@ func (app *ArchwayApp) setUpgradeHandlers() {
 	for _, u := range Upgrades {
 		app.UpgradeKeeper.SetUpgradeHandler(
 			u.UpgradeName,
-			u.CreateUpgradeHandler(app.mm, app.configurator),
+			u.CreateUpgradeHandler(app.mm, app.configurator, app.AccountKeeper),
 		)
 	}
 }
