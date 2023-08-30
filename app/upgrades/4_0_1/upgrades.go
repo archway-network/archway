@@ -13,9 +13,7 @@ import (
 	"github.com/archway-network/archway/app/upgrades"
 )
 
-// This upgrade handler is used for all the current changes to the protocol
-
-const Name = "latest"
+const Name = "v4.0.1"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
