@@ -41,7 +41,7 @@ message MsgWithdrawRewards {
   message RecordsLimit { uint64 limit = 1; }
 
   message RecordIDs {
-    repeated uint64 ids = 1 [ (gogoproto.nullable) = false ];
+    repeated uint64 ids = 1;
   }
 
   // rewards_address is the address to distribute rewards to (bech32 encoded).
