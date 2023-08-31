@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 type UpgradeTestSuite struct {
