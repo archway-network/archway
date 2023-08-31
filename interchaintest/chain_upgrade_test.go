@@ -24,9 +24,9 @@ func TestChainUpgrade(t *testing.T) {
 		t.Skip("skipping in short mode")
 	}
 
-	archwayChain, client, ctx := startChain(t)
+	archwayChain, client, ctx := startChain(t, initialVersion)
 	chainUser := fundChainUser(t, ctx, archwayChain)
-	haltHeight := submitUpgradeProposalAndVote(t, ctx, archwayChain, chainUser)
+	haltHeight := submitUpgradeProposalAndVote(t, ctx, upgradeName, archwayChain, chainUser)
 
 	height, err := archwayChain.Height(ctx)
 	require.NoError(t, err, "cound not fetch height before upgrade")
@@ -63,7 +63,7 @@ func TestChainUpgrade(t *testing.T) {
 	require.NoError(t, err, "chain did not produce blocks after upgrade")
 }
 
-func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, archwayChain *cosmos.CosmosChain, chainUser ibc.Wallet) uint64 {
+func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, nextUpgradeName string, archwayChain *cosmos.CosmosChain, chainUser ibc.Wallet) uint64 {
 	height, err := archwayChain.Height(ctx) // The current chain height
 	require.NoError(t, err, "error fetching height before submit upgrade proposal")
 
@@ -72,7 +72,7 @@ func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, archwayChai
 	proposal := cosmos.SoftwareUpgradeProposal{
 		Deposit:     "10000000000" + archwayChain.Config().Denom,
 		Title:       "Test upgrade",
-		Name:        upgradeName,
+		Name:        nextUpgradeName,
 		Description: "Every PR we perform a upgrade check to ensure nothing breaks",
 		Height:      haltHeight,
 	}
@@ -94,13 +94,13 @@ func fundChainUser(t *testing.T, ctx context.Context, archwayChain *cosmos.Cosmo
 	return users[0]
 }
 
-func startChain(t *testing.T) (*cosmos.CosmosChain, *client.Client, context.Context) {
+func startChain(t *testing.T, startingVersion string) (*cosmos.CosmosChain, *client.Client, context.Context) {
 	numOfVals := 1
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:          chainName,
 			ChainName:     "archway-1",
-			Version:       initialVersion,
+			Version:       startingVersion,
 			ChainConfig:   archwayConfig,
 			NumValidators: &numOfVals,
 		},
