@@ -1,4 +1,4 @@
-package upgradelatest
+package upgrade4_0_1
 
 import (
 	"fmt"
@@ -24,7 +24,13 @@ var Upgrade = upgrades.Upgrade{
 			if !ok {
 				return nil, fmt.Errorf("feeCollector account is not *authtypes.ModuleAccount")
 			}
-			account.Permissions = append(account.Permissions, authtypes.Burner)
+			if !account.HasPermission(authtypes.Burner) {
+				account.Permissions = append(account.Permissions, authtypes.Burner)
+			}
+			err := accountKeeper.ValidatePermissions(account)
+			if err != nil {
+				return nil, fmt.Errorf("Could not validate feeCollectors permissions")
+			}
 			accountKeeper.SetModuleAccount(ctx, account)
 
 			return mm.RunMigrations(ctx, cfg, fromVM)
