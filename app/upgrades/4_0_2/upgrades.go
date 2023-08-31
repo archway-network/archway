@@ -1,4 +1,4 @@
-package upgrade4_0_1
+package upgrade4_0_2
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"github.com/archway-network/archway/app/upgrades"
 )
 
-const Name = "v4.0.1"
+const Name = "v4.0.2"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
