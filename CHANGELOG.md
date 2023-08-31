@@ -38,16 +38,20 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Removed
 
+- [#439](https://github.com/archway-network/archway/pull/439) - renaming `debug` image to `dev`
+
 ### Fixed
 
 ### Improvements
+
+- [#439](https://github.com/archway-network/archway/pull/439) - adding containerized localnet
 
 ## [v4.0.0]
 
 ### Added
 
 - [#429](https://github.com/archway-network/archway/pull/429) - Adding `cosmwasm_1_3` capabilities by bumping wasmd to v0.33.0
-- [#430](https://github.com/archway-network/archway/pull/430) - Added gh workflow to run chain upgarde test on PRs
+- [#430](https://github.com/archway-network/archway/pull/430) - Added gh workflow to run chain upgrade test on PRs
 
 ### Changed
 
@@ -87,13 +91,11 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 Archway Network - Capture the value you create!
 
-
 ## [v1.0.0-rc.4]
 
 ### Added
 
 - [#409](https://github.com/archway-network/archway/pull/409) - Add cosmwasm_1_1,cosmwasm_1_2 Cosmwasm capabilities
-
 
 ## [v1.0.0-rc.3]
 
@@ -109,7 +111,7 @@ Archway Network - Capture the value you create!
 - [#402](https://github.com/archway-network/archway/pull/402) - Bump wasmvm version to 1.2.4
 - [#403](https://github.com/archway-network/archway/pull/403) - Update libwasmvm version to correct one for wasmvm 1.2.4
 - [#404](https://github.com/archway-network/archway/pull/403) - Fix typo in rewards query cli
-- [#406](https://github.com/archway-network/archway/pull/406) - Add upgrade hanlder for v0.6.0 back to prevent downgrade check from panic / consensus failure;
+- [#406](https://github.com/archway-network/archway/pull/406) - Add upgrade handler for v0.6.0 back to prevent downgrade check from panic / consensus failure;
 
 ## [v1.0.0-rc.1]
 
@@ -208,7 +210,7 @@ Archway Network - Capture the value you create!
 
 ### Fixed
 
-- [#338](https://github.com/archway-network/archway/pull/338) - fixed issue where contract premium was not completly being sent to the rewards address
+- [#338](https://github.com/archway-network/archway/pull/338) - fixed issue where contract premium was not completely being sent to the rewards address
 
 ## [v0.3.1]
 
@@ -259,7 +261,7 @@ Archway Network - Capture the value you create!
 
 ### Fixed
 
-- [#191](https://github.com/archway-network/archway/pull/191) - make localnet ovveride entrypoint
+- [#191](https://github.com/archway-network/archway/pull/191) - make localnet override entrypoint
 - [#205](https://github.com/archway-network/archway/pull/205) - fix go.mod
 - [#216](https://github.com/archway-network/archway/pull/216) - fix dry-run cmd and bump cosmos-sdk do v0.45.8
 - [#218](https://github.com/archway-network/archway/pull/218) - x/rewards unique ID genesis export/import
