@@ -28,6 +28,12 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours.
 -->
 
+## [main]
+
+### Fixed
+
+- [#441](https://github.com/archway-network/archway/pull/441) - go-releaser must order tags with create date, when there are multiple tags on the same commit
+
 ## [v4.0.1]
 
 ### Fixed
