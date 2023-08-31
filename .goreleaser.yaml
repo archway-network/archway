@@ -12,6 +12,7 @@ git:
   # tags if there are more than one tag in the same commit.
   #
   # Default: '-version:refname'
+  # Source: https://goreleaser.com/customization/git/
   tag_sort: -version:creatordate
 
 builds:
