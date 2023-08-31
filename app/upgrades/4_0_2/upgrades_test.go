@@ -1,4 +1,4 @@
-package upgrade4_0_1_test
+package upgrade4_0_2_test
 
 import (
 	"fmt"
@@ -78,7 +78,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 			tc.pre_upgrade()
 
 			ctx := suite.archway.GetContext().WithBlockHeight(dummyUpgradeHeight - 1)
-			plan := upgradetypes.Plan{Name: "v4.0.1", Height: dummyUpgradeHeight}
+			plan := upgradetypes.Plan{Name: "v4.0.2", Height: dummyUpgradeHeight}
 			upgradekeeper := suite.archway.GetApp().UpgradeKeeper
 			err := upgradekeeper.ScheduleUpgrade(ctx, plan)
 			suite.Require().NoError(err)

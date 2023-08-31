@@ -17,7 +17,7 @@ import (
 // To run this test, you will need the following heighliner images
 // heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref v2.0.0 --tag v2.0.0 -c archway
 // heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref v4.0.0 --tag v4.0.0 -c archway
-// heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref v4.0.1 --tag v4.0.1 -c archway
+// heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref v4.0.2 --tag v4.0.2 -c archway
 func TestFeeCollectorBurnChainUpgrade(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
@@ -37,7 +37,7 @@ func TestFeeCollectorBurnChainUpgrade(t *testing.T) {
 	queryRes2 := getModuleAccount(t, ctx, authtypes.FeeCollectorName, archwayChain)
 	require.Len(t, queryRes2.Account.Permissions, 0, "feecollector should not have burn permissions in v2.0.0")
 
-	// Upgrading to v4.0.0 => Not directly upgrading to v4.0.1 to simulate how things went on constantine.
+	// Upgrading to v4.0.0 => Not directly upgrading to v4.0.2 to simulate how things went on constantine.
 	haltHeight := submitUpgradeProposalAndVote(t, ctx, "v4.0.0", archwayChain, chainUser)
 	height, err := archwayChain.Height(ctx)
 	require.NoError(t, err, "cound not fetch height before upgrade")
@@ -59,8 +59,8 @@ func TestFeeCollectorBurnChainUpgrade(t *testing.T) {
 	queryRes4 := getModuleAccount(t, ctx, authtypes.FeeCollectorName, archwayChain)
 	require.Len(t, queryRes4.Account.Permissions, 0, "feecollector should not have burn permissions in v4.0.0")
 
-	// Upgrading to v4.0.1
-	haltHeight = submitUpgradeProposalAndVote(t, ctx, "v4.0.1", archwayChain, chainUser)
+	// Upgrading to v4.0.2
+	haltHeight = submitUpgradeProposalAndVote(t, ctx, "v4.0.2", archwayChain, chainUser)
 	height, err = archwayChain.Height(ctx)
 	require.NoError(t, err, "cound not fetch height before upgrade")
 	testutil.WaitForBlocks(timeoutCtx, int(haltHeight-height)+1, archwayChain)
@@ -69,7 +69,7 @@ func TestFeeCollectorBurnChainUpgrade(t *testing.T) {
 	require.Equal(t, int(haltHeight), int(height), "height is not equal to halt height")
 	err = archwayChain.StopAllNodes(ctx)
 	require.NoError(t, err, "could not stop node(s)")
-	archwayChain.UpgradeVersion(ctx, client, chainName, "v4.0.1")
+	archwayChain.UpgradeVersion(ctx, client, chainName, "v4.0.2")
 	err = archwayChain.StartAllNodes(ctx)
 	require.NoError(t, err, "could not start upgraded node(s)")
 	timeoutCtx, timeoutCtxCancel = context.WithTimeout(ctx, time.Second*45)
@@ -77,10 +77,10 @@ func TestFeeCollectorBurnChainUpgrade(t *testing.T) {
 	err = testutil.WaitForBlocks(timeoutCtx, int(blocksAfterUpgrade), archwayChain)
 	require.NoError(t, err, "chain did not produce blocks after upgrade")
 
-	// Ensuring feecollector HAS burn permissions in v4.0.1
+	// Ensuring feecollector HAS burn permissions in v4.0.2
 	queryRes401 := getModuleAccount(t, ctx, authtypes.FeeCollectorName, archwayChain)
-	require.Len(t, queryRes401.Account.Permissions, 1, "feecollector should have one permissions in v4.0.1")
-	require.Equal(t, authtypes.Burner, queryRes401.Account.Permissions[0], "feecollector should have burn permissions in v4.0.1")
+	require.Len(t, queryRes401.Account.Permissions, 1, "feecollector should have one permissions in v4.0.2")
+	require.Equal(t, authtypes.Burner, queryRes401.Account.Permissions[0], "feecollector should have burn permissions in v4.0.2")
 }
 
 func getModuleAccount(t *testing.T, ctx context.Context, moduleAccountName string, archwayChain *cosmos.CosmosChain) QueryModuleAccountResponse {
