@@ -269,7 +269,7 @@ localnet-continue:
 	TAG=$(LATEST_TAG) CONTINUE="continue" docker-compose up
 
 # Run a new localnet
-run:
+run: build
 	./scripts/localnet.sh
 
 # Continue the existing localnet
