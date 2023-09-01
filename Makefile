@@ -260,10 +260,11 @@ check-vuln-deps:
 ###                               Run Localnet                              ###
 ###############################################################################
 
-# Run localnet in a containerized environment
+# Run localnet in a containerized environment, starts new localnet
 localnet:
 	TAG=$(LATEST_TAG) docker-compose up
 
+# Continue the stopped containerized localnet, starts the stopped containers
 localnet-continue:
 	TAG=$(LATEST_TAG) CONTINUE="continue" docker-compose up
 
