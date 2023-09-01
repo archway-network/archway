@@ -8,9 +8,9 @@ import (
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
@@ -703,7 +703,7 @@ func (m *RewardsRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.CalculatedTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.CalculatedTime):])
+	n3, err3 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.CalculatedTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CalculatedTime):])
 	if err3 != nil {
 		return 0, err3
 	}
@@ -895,7 +895,7 @@ func (m *RewardsRecord) Size() (n int) {
 	if m.CalculatedHeight != 0 {
 		n += 1 + sovRewards(uint64(m.CalculatedHeight))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.CalculatedTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CalculatedTime)
 	n += 1 + l + sovRewards(uint64(l))
 	return n
 }
@@ -1642,7 +1642,7 @@ func (m *RewardsRecord) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.CalculatedTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.CalculatedTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
