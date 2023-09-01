@@ -14,12 +14,12 @@ import (
 
 const Name = "latest"
 
-const NameASCII = `                          
-            ###     ###     ### 
-    # #     #       # #     # #    
-    # #     ###     # #     # #   
-     #        #     # #     # # 
-            ###  #  ###  #  ### 
+const NameAsciiArt = `                          
+             ###     ###     ### 
+     # #     #       # #     # #    
+     # #     ###     # #     # #   
+      #        #     # #     # # 
+             ###  #  ###  #  ### 
 
 `
 
@@ -32,8 +32,7 @@ var Upgrade = upgrades.Upgrade{
 				return nil, err
 			}
 
-			ctx.Logger().Info(upgrades.ArchwayNew + NameASCII)
-
+			ctx.Logger().Info(upgrades.ArchwayLogo + NameAsciiArt)
 			return migrations, nil
 		}
 	},
