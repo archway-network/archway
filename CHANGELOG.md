@@ -33,6 +33,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Added
 
 - [#439](https://github.com/archway-network/archway/pull/439) - adding containerized localnet
+- [#445](https://github.com/archway-network/archway/pull/445) - Adding Archway logo and version number to upgrade logs
 
 ### Changed
 
