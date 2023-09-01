@@ -18,7 +18,14 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
 	CreateUpgradeHandler: func(mm *module.Manager, cfg module.Configurator, accountKeeper keeper.AccountKeeper) upgradetypes.UpgradeHandler {
 		return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			return mm.RunMigrations(ctx, cfg, fromVM)
+			migrations, err := mm.RunMigrations(ctx, cfg, fromVM)
+			if err != nil {
+				return nil, err
+			}
+
+			ctx.Logger().Info("🟠 SUCCESSFULLY PERFORMED CHAIN UPGRADE 🟠")
+
+			return migrations, nil
 		}
 	},
 	StoreUpgrades: storetypes.StoreUpgrades{},
