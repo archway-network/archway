@@ -28,19 +28,21 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours.
 -->
 
-## [Unreleased]
-
-### Added
+## [v4.0.2]
 
 ### Changed
 
-### Deprecated
-
-### Removed
+- [#440](https://github.com/archway-network/archway/pull/440) - Retagging with v4.0.2 to prevent dual tagging of same commit and same tag name
 
 ### Fixed
 
-### Improvements
+- [#441](https://github.com/archway-network/archway/pull/441) - go-releaser must order tags with create date, when there are multiple tags on the same commit
+
+## [v4.0.1]
+
+### Fixed
+
+- [#437](https://github.com/archway-network/archway/pull/437) - Adding upgrade handler with missing burn permissions for feecollector account
 
 ## [v4.0.0]
 

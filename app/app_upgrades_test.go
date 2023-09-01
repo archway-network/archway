@@ -7,6 +7,7 @@ import (
 	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/require"
 
@@ -44,7 +45,7 @@ func TestUpgrades(t *testing.T) {
 	proposalExecuted := false
 	fauxUpgrade := upgrades.Upgrade{
 		UpgradeName: "test-upgrade",
-		CreateUpgradeHandler: func(manager *module.Manager, configurator module.Configurator) upgradetypes.UpgradeHandler {
+		CreateUpgradeHandler: func(manager *module.Manager, configurator module.Configurator, _ keeper.AccountKeeper) upgradetypes.UpgradeHandler {
 			return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 				proposalExecuted = true
 				return manager.RunMigrations(ctx, configurator, fromVM)

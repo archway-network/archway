@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -23,7 +24,7 @@ const Name = "v2.0.0"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
-	CreateUpgradeHandler: func(mm *module.Manager, cfg module.Configurator) upgradetypes.UpgradeHandler {
+	CreateUpgradeHandler: func(mm *module.Manager, cfg module.Configurator, _ keeper.AccountKeeper) upgradetypes.UpgradeHandler {
 		return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 
 			// Set Initial Consensus Version
