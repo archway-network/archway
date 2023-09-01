@@ -15,6 +15,8 @@ BUF_IMAGE=bufbuild/buf@sha256:9dc5d6645f8f8a2d5aaafc8957fbbb5ea64eada98a84cb0965
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(BUF_IMAGE)
 HTTPS_GIT := https://github.com/archway-network/archway.git
 CURRENT_DIR := $(shell pwd)
+SHORT_SHA := $(shell git rev-parse --short HEAD)
+LATEST_TAG := $(shell git describe --tags --abbrev=0)
 
 # library versions
 LIBWASM_VERSION = $(shell go list -m -f '{{ .Version }}' github.com/CosmWasm/wasmvm)
@@ -207,9 +209,6 @@ proto-lint:
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against-input $(HTTPS_GIT)#branch=master
 
-localnet:
-	docker-compose up
-
 docker-build:
 	$(DOCKER) run \
 		--rm \
@@ -261,9 +260,17 @@ check-vuln-deps:
 ###                               Run Localnet                              ###
 ###############################################################################
 
+# Run localnet in a containerized environment, starts new localnet
+localnet:
+	TAG=$(LATEST_TAG) docker-compose up
+
+# Continue the stopped containerized localnet, starts the stopped containers
+localnet-continue:
+	TAG=$(LATEST_TAG) CONTINUE="continue" docker-compose up
+
 # Run a new localnet
-run:
-	./scripts/localnet.sh 
+run: build
+	./scripts/localnet.sh
 
 # Continue the existing localnet
 run-continue:
