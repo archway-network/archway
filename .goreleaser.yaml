@@ -6,6 +6,15 @@ before:
     - apt update && apt install musl-dev=1.2.2-1
 env:
   - CGO_ENABLED=1
+
+git:
+  # What should be used to sort tags when gathering the current and previous
+  # tags if there are more than one tag in the same commit.
+  #
+  # Default: '-version:refname'
+  # Source: https://goreleaser.com/customization/git/
+  tag_sort: -version:creatordate
+
 builds:
   - id: archwayd-linux-amd64
     main: ./cmd/archwayd
