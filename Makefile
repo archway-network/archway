@@ -262,8 +262,7 @@ check-vuln-deps:
 
 # Run localnet in a containerized environment
 localnet:
-	# TAG=$(LATEST_TAG) docker-compose up
-	docker-compose up
+	TAG=$(LATEST_TAG) docker-compose up
 
 localnet-continue:
 	TAG=$(LATEST_TAG) CONTINUE="continue" docker-compose up
