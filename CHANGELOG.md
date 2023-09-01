@@ -32,9 +32,13 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
+- [#439](https://github.com/archway-network/archway/pull/439) - adding containerized localnet
+
 ### Changed
 
 ### Deprecated
+
+- [#439](https://github.com/archway-network/archway/pull/439) - renaming `debug` image to `dev`
 
 ### Removed
 
@@ -42,14 +46,11 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Improvements
 
-
 ## [v4.0.2](https://github.com/archway-network/archway/releases/tag/v4.0.2)
 
 ### Changed
 
 - [#440](https://github.com/archway-network/archway/pull/440) - Retagging with v4.0.2 to prevent dual tagging of same commit and same tag name
-
-- [#439](https://github.com/archway-network/archway/pull/439) - renaming `debug` image to `dev`
 
 ### Fixed
 
@@ -61,9 +62,6 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#437](https://github.com/archway-network/archway/pull/437) - Adding upgrade handler with missing burn permissions for feecollector account
 
-- [#439](https://github.com/archway-network/archway/pull/439) - adding containerized localnet
-
-## [v4.0.0]
 ## [v4.0.0](https://github.com/archway-network/archway/releases/tag/v4.0.0)
 
 ### Added
@@ -109,13 +107,11 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 Archway Network - Capture the value you create!
 
-
 ## [v1.0.0-rc.4](https://github.com/archway-network/archway/releases/tag/v1.0.0-rc.4)
 
 ### Added
 
 - [#409](https://github.com/archway-network/archway/pull/409) - Add cosmwasm_1_1,cosmwasm_1_2 Cosmwasm capabilities
-
 
 ## [v1.0.0-rc.3](https://github.com/archway-network/archway/releases/tag/v1.0.0-rc.3)
 
