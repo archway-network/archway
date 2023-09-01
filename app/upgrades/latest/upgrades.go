@@ -14,6 +14,15 @@ import (
 
 const Name = "latest"
 
+const NameASCII = `                          
+            ###     ###     ### 
+    # #     #       # #     # #    
+    # #     ###     # #     # #   
+     #        #     # #     # # 
+            ###  #  ###  #  ### 
+
+`
+
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
 	CreateUpgradeHandler: func(mm *module.Manager, cfg module.Configurator, accountKeeper keeper.AccountKeeper) upgradetypes.UpgradeHandler {
@@ -23,7 +32,8 @@ var Upgrade = upgrades.Upgrade{
 				return nil, err
 			}
 
-			ctx.Logger().Info(upgrades.ArchwayLogo)
+			ctx.Logger().Info(upgrades.ArchwayNew)
+			ctx.Logger().Info(NameASCII)
 			ctx.Logger().Info("🟠 SUCCESSFULLY PERFORMED CHAIN UPGRADE 🟠")
 
 			return migrations, nil
