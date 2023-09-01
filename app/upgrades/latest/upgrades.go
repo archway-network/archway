@@ -23,6 +23,7 @@ var Upgrade = upgrades.Upgrade{
 				return nil, err
 			}
 
+			ctx.Logger().Info(upgrades.ArchwayLogo)
 			ctx.Logger().Info("🟠 SUCCESSFULLY PERFORMED CHAIN UPGRADE 🟠")
 
 			return migrations, nil
