@@ -32,6 +32,8 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
+- [#445](https://github.com/archway-network/archway/pull/445) - Adding Archway logo and version number to upgrade logs
+
 ### Changed
 
 ### Deprecated
