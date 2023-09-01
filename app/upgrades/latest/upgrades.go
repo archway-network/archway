@@ -32,9 +32,7 @@ var Upgrade = upgrades.Upgrade{
 				return nil, err
 			}
 
-			ctx.Logger().Info(upgrades.ArchwayNew)
-			ctx.Logger().Info(NameASCII)
-			ctx.Logger().Info("🟠 SUCCESSFULLY PERFORMED CHAIN UPGRADE 🟠")
+			ctx.Logger().Info(upgrades.ArchwayNew + NameASCII)
 
 			return migrations, nil
 		}
