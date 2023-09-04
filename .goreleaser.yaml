@@ -196,7 +196,7 @@ dockers:
     goarch: amd64
     dockerfile: Dockerfile.dev
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d-dev{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d-dev:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
@@ -213,7 +213,7 @@ dockers:
     goarch: arm64
     dockerfile: Dockerfile.dev
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d-dev{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d-dev:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/arm64"
