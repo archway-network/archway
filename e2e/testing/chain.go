@@ -3,6 +3,7 @@ package e2eTesting
 
 import (
 	"encoding/json"
+	"math/rand"
 	"strconv"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ import (
 	cryptoCodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptoTypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simapp "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -474,7 +475,9 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 	require.NotNil(t, senderAccI)
 
 	// Build and sign Tx
-	tx, err := helpers.GenTx(
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	tx, err := simapp.GenSignedMockTx(
+		r,
 		chain.txConfig,
 		msgs,
 		options.fees,
