@@ -13,7 +13,8 @@ import (
 	commitmentTypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
-	ibcTmTypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/types"
+
+	ibcTmTypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/stretchr/testify/require"
 )
 
