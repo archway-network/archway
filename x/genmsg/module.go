@@ -75,20 +75,6 @@ func (a AppModule) GetQueryCmd() *cobra.Command { return &cobra.Command{Use: Mod
 
 func (a AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-func (a AppModule) Route() sdk.Route {
-	return sdk.NewRoute(ModuleName, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		return nil, fmt.Errorf("do not use me")
-	})
-}
-
-func (a AppModule) QuerierRoute() string { return ModuleName }
-
-func (a AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("do not use me")
-	}
-}
-
 func (a AppModule) RegisterServices(_ module.Configurator) {}
 
 func (a AppModule) ConsensusVersion() uint64 { return 0 }
