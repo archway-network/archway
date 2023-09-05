@@ -81,4 +81,4 @@ func (a AppModule) ConsensusVersion() uint64 { return 0 }
 
 func (a AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
-func (a AppModule) RegisterInterfaces(_ types.InterfaceRegistry) {}
+func (a AppModule) RegisterInterfaces(_ codectypes.InterfaceRegistry) {}
