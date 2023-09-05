@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/x/tracking/types"
@@ -10,12 +11,12 @@ import (
 
 // State is a wrapper around the module storage state.
 type State struct {
-	key sdk.StoreKey
+	key storetypes.StoreKey
 	cdc codec.Codec
 }
 
 // NewState creates a new State instance.
-func NewState(cdc codec.Codec, key sdk.StoreKey) State {
+func NewState(cdc codec.Codec, key storetypes.StoreKey) State {
 	return State{
 		key: key,
 		cdc: cdc,
