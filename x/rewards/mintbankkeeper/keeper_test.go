@@ -154,9 +154,9 @@ func TestMintBankKeeper(t *testing.T) {
 			dstBalanceAfter := chain.GetModuleBalance(tc.dstModule)
 			rewardsBalanceAfter := chain.GetModuleBalance(rewardsTypes.ContractRewardCollector)
 
-			srcBalanceDiffReceived := srcBalanceBefore.Sub(srcBalanceAfter)             // negative
-			dstBalanceDiffReceived := dstBalanceAfter.Sub(dstBalanceBefore)             // positive
-			rewardsBalanceDiffReceived := rewardsBalanceAfter.Sub(rewardsBalanceBefore) // positive
+			srcBalanceDiffReceived := srcBalanceBefore.Sub(srcBalanceAfter...)             // negative
+			dstBalanceDiffReceived := dstBalanceAfter.Sub(dstBalanceBefore...)             // positive
+			rewardsBalanceDiffReceived := rewardsBalanceAfter.Sub(rewardsBalanceBefore...) // positive
 
 			dstBalanceDiffExpected, err := sdk.ParseCoinsNormalized(tc.dstBalanceDiffExpected)
 			require.NoError(t, err)
@@ -193,7 +193,7 @@ func TestMintBankKeeper(t *testing.T) {
 
 				minConsFeeExpected := sdk.DecCoin{
 					Denom: sdk.DefaultBondDenom,
-					Amount: rewardsDiffExpected[0].Amount.ToDec().Quo(
+					Amount: sdk.NewDecCoinFromCoin(rewardsDiffExpected[0]).Amount.Quo(
 						pkg.NewDecFromUint64(maxGasExpected).Mul(
 							chain.GetApp().RewardsKeeper.TxFeeRebateRatio(ctx).Sub(sdk.OneDec()),
 						),

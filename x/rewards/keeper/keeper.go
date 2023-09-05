@@ -4,6 +4,7 @@ import (
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -51,7 +52,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace) Keeper {
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}

@@ -14,7 +14,8 @@ func (k Keeper) UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin
 		k.Logger(ctx).Info("Minimum consensus fee update skipped: inflation rewards are zero")
 		return
 	}
-	inflationRewardsAmt := inflationRewards.Amount.ToDec()
+
+	inflationRewardsAmt := sdk.NewDecFromInt(inflationRewards.Amount)
 
 	blockGasLimit := pkg.NewDecFromUint64(ctx.BlockGasMeter().Limit())
 	if blockGasLimit.IsZero() {
