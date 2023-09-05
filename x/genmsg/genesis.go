@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	v1 "github.com/archway-network/archway/x/genmsg/v1"
+	"github.com/archway-network/archway/x/genmsg/types"
 )
 
-func anyToMsg(ir types.InterfaceRegistry, anyMsg *types.Any) (sdk.Msg, error) {
+func anyToMsg(ir codectypes.InterfaceRegistry, anyMsg *codectypes.Any) (sdk.Msg, error) {
 	var sdkMsg sdk.Msg
 	err := ir.UnpackAny(anyMsg, &sdkMsg)
 	if err != nil {
@@ -22,9 +22,9 @@ func anyToMsg(ir types.InterfaceRegistry, anyMsg *types.Any) (sdk.Msg, error) {
 	return sdkMsg, nil
 }
 
-func validateGenesis(cdc codec.JSONCodec, genesis *v1.GenesisState) error {
+func validateGenesis(cdc codec.JSONCodec, genesis *types.GenesisState) error {
 	interfaceRegistryProvider, ok := cdc.(interface {
-		InterfaceRegistry() types.InterfaceRegistry
+		InterfaceRegistry() codectypes.InterfaceRegistry
 	})
 	if !ok {
 		return fmt.Errorf("codec does not implement InterfaceRegistry")
@@ -39,9 +39,9 @@ func validateGenesis(cdc codec.JSONCodec, genesis *v1.GenesisState) error {
 	return nil
 }
 
-func initGenesis(context sdk.Context, cdc codec.JSONCodec, router MessageRouter, genesis *v1.GenesisState) error {
+func initGenesis(context sdk.Context, cdc codec.JSONCodec, router MessageRouter, genesis *types.GenesisState) error {
 	interfaceRegistryProvider, ok := cdc.(interface {
-		InterfaceRegistry() types.InterfaceRegistry
+		InterfaceRegistry() codectypes.InterfaceRegistry
 	})
 	if !ok {
 		return fmt.Errorf("codec does not implement InterfaceRegistry")

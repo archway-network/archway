@@ -8,14 +8,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	v1 "github.com/archway-network/archway/x/genmsg/v1"
+	"github.com/archway-network/archway/x/genmsg/types"
 )
 
 const (
@@ -40,11 +40,11 @@ type AppModule struct {
 func (a AppModule) Name() string { return ModuleName }
 
 func (AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(new(v1.GenesisState))
+	return cdc.MustMarshalJSON(new(types.GenesisState))
 }
 
 func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	state := new(v1.GenesisState)
+	state := new(types.GenesisState)
 	if err := cdc.UnmarshalJSON(bz, state); err != nil {
 		return fmt.Errorf("failed to unmarshal x/%s genesis state: %w", ModuleName, err)
 	}
@@ -52,7 +52,7 @@ func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingCo
 }
 
 func (a AppModule) InitGenesis(context sdk.Context, codec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
-	state := new(v1.GenesisState)
+	state := new(types.GenesisState)
 	codec.MustUnmarshalJSON(message, state)
 	err := initGenesis(context, codec, a.router, state)
 	if err != nil {
@@ -62,7 +62,7 @@ func (a AppModule) InitGenesis(context sdk.Context, codec codec.JSONCodec, messa
 }
 
 func (a AppModule) ExportGenesis(_ sdk.Context, codec codec.JSONCodec) json.RawMessage {
-	return codec.MustMarshalJSON(new(v1.GenesisState))
+	return codec.MustMarshalJSON(new(types.GenesisState))
 }
 
 func (a AppModule) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}

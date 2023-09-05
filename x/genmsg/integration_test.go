@@ -12,7 +12,7 @@ import (
 	"github.com/archway-network/archway/app"
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/genmsg"
-	v1 "github.com/archway-network/archway/x/genmsg/v1"
+	"github.com/archway-network/archway/x/genmsg/types"
 )
 
 func TestIntegration(t *testing.T) {
@@ -25,7 +25,7 @@ func TestIntegration(t *testing.T) {
 		}
 		anyMsg, err := codectypes.NewAnyWithValue(testMsg)
 		require.NoError(t, err)
-		genesis[genmsg.ModuleName] = cdc.MustMarshalJSON(&v1.GenesisState{Messages: []*codectypes.Any{anyMsg}})
+		genesis[genmsg.ModuleName] = cdc.MustMarshalJSON(&types.GenesisState{Messages: []*codectypes.Any{anyMsg}})
 	}))
 	bankQuery := banktypes.NewQueryClient(chain.Client())
 	resp, err := bankQuery.Balance(sdk.WrapSDKContext(chain.GetContext()), &banktypes.QueryBalanceRequest{
