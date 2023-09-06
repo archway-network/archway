@@ -22,12 +22,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -49,7 +49,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -100,7 +103,7 @@ import (
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	ibchost "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -257,9 +260,9 @@ type ArchwayApp struct {
 	invCheckPeriod uint
 
 	// keys to access the substores
-	keys    map[string]*sdk.KVStoreKey
-	tkeys   map[string]*sdk.TransientStoreKey
-	memKeys map[string]*sdk.MemoryStoreKey
+	keys    map[string]*storetypes.KVStoreKey
+	tkeys   map[string]*storetypes.TransientStoreKey
+	memKeys map[string]*storetypes.MemoryStoreKey
 
 	// keepers
 	AccountKeeper    authkeeper.AccountKeeper
@@ -323,10 +326,12 @@ func NewArchwayApp(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
+	govModuleAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
+		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		feegrant.StoreKey, authzkeeper.StoreKey, wasm.StoreKey,
 		trackingTypes.StoreKey, rewardsTypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey,
@@ -353,7 +358,8 @@ func NewArchwayApp(
 	)
 
 	// set the BaseApp's parameter store
-	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramskeeper.ConsensusParamsKeyTable()))
+	consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	bApp.SetParamStore(consensusParamsKeeper)
 
 	// add capability keeper and ScopeToModule for ibc module
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(
@@ -361,7 +367,7 @@ func NewArchwayApp(
 		keys[capabilitytypes.StoreKey],
 		memKeys[capabilitytypes.MemStoreKey],
 	)
-	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
+	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
@@ -371,21 +377,23 @@ func NewArchwayApp(
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
 		keys[authtypes.StoreKey],
-		app.getSubspace(authtypes.ModuleName),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
+		Bech32Prefix,
+		govModuleAddr,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
 		keys[banktypes.StoreKey],
 		app.AccountKeeper,
-		app.getSubspace(banktypes.ModuleName),
-		app.ModuleAccountAddrs(),
+		app.BlockedAddresses(),
+		govModuleAddr,
 	)
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		keys[authzkeeper.StoreKey],
 		appCodec,
 		app.BaseApp.MsgServiceRouter(),
+		app.AccountKeeper,
 	)
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(
 		appCodec,
@@ -397,48 +405,51 @@ func NewArchwayApp(
 		keys[stakingtypes.StoreKey],
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.getSubspace(stakingtypes.ModuleName),
+		govModuleAddr,
 	)
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
 		keys[distrtypes.StoreKey],
-		app.getSubspace(distrtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
-		&stakingKeeper,
+		stakingKeeper,
 		authtypes.FeeCollectorName,
-		app.ModuleAccountAddrs(),
+		govModuleAddr,
 	)
 	app.slashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
+		cdc,
 		keys[slashingtypes.StoreKey],
-		&stakingKeeper,
-		app.getSubspace(slashingtypes.ModuleName),
+		stakingKeeper,
+		govModuleAddr,
 	)
-	app.CrisisKeeper = crisiskeeper.NewKeeper(
-		app.getSubspace(crisistypes.ModuleName),
+	app.CrisisKeeper = *crisiskeeper.NewKeeper(
+		appCodec,
+		keys[crisistypes.StoreKey],
 		invCheckPeriod,
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
+		govModuleAddr,
 	)
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(
+	app.UpgradeKeeper = *upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
 		keys[upgradetypes.StoreKey],
 		appCodec,
 		homePath,
 		app.BaseApp,
+		govModuleAddr,
 	)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	app.StakingKeeper = *stakingKeeper.SetHooks(
+	stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.slashingKeeper.Hooks()),
 	)
 
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
-		keys[ibchost.StoreKey],
-		app.getSubspace(ibchost.ModuleName),
+		keys[ibcexported.StoreKey],
+		app.getSubspace(ibcexported.ModuleName),
 		app.StakingKeeper,
 		app.UpgradeKeeper,
 		scopedIBCKeeper,
@@ -524,10 +535,9 @@ func NewArchwayApp(
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
 	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.RewardsKeeper, &app.GovKeeper)...)
 
-	app.WASMKeeper = wasm.NewKeeper(
+	app.WASMKeeper = wasmkeeper.NewKeeper(
 		appCodec,
-		keys[wasm.StoreKey],
-		app.getSubspace(wasm.ModuleName),
+		keys[wasmtypes.StoreKey],
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
@@ -542,6 +552,7 @@ func NewArchwayApp(
 		wasmDir,
 		wasmConfig,
 		supportedFeatures,
+		govModuleAddr,
 		wasmOpts...,
 	)
 
@@ -563,10 +574,10 @@ func NewArchwayApp(
 		appCodec,
 		keys[minttypes.StoreKey],
 		app.getSubspace(minttypes.ModuleName),
-		&stakingKeeper,
 		app.AccountKeeper,
 		mintbankkeeper.NewKeeper(app.BankKeeper, app.RewardsKeeper),
 		authtypes.FeeCollectorName,
+		govModuleAddr,
 	)
 
 	// The gov proposal types can be individually enabled
@@ -596,14 +607,15 @@ func NewArchwayApp(
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
-	app.GovKeeper = govkeeper.NewKeeper(
+	app.GovKeeper = *govkeeper.NewKeeper(
 		appCodec,
 		keys[govtypes.StoreKey],
-		app.getSubspace(govtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
-		&stakingKeeper,
+		stakingKeeper,
 		govRouter,
+		govtypes.DefaultConfig(),
+		govModuleAddr,
 	)
 	/****  Module Options ****/
 
@@ -620,17 +632,17 @@ func NewArchwayApp(
 			app.BaseApp.DeliverTx,
 			encodingConfig.TxConfig,
 		),
-		auth.NewAppModule(appCodec, app.AccountKeeper, nil),
+		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.getSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.getSubspace(banktypes.ModuleName)),
+		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
+		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.getSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
-		slashing.NewAppModule(appCodec, app.slashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		upgrade.NewAppModule(app.UpgradeKeeper),
-		wasm.NewAppModule(appCodec, &app.WASMKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		slashing.NewAppModule(appCodec, app.slashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.getSubspace(slashingtypes.ModuleName)),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.getSubspace(distrtypes.ModuleName)),
+		staking.NewAppModule(appCodec, &app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.getSubspace(stakingtypes.ModuleName)),
+		upgrade.NewAppModule(&app.UpgradeKeeper),
+		wasm.NewAppModule(appCodec, &app.WASMKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.getSubspace(wasm.ModuleName)),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -642,7 +654,7 @@ func NewArchwayApp(
 		tracking.NewAppModule(app.appCodec, app.TrackingKeeper),
 		rewards.NewAppModule(app.appCodec, app.RewardsKeeper),
 		genmsg.NewAppModule(app.MsgServiceRouter()),
-		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants), // always be last to make sure that it checks for all invariants and not only part of them
+		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -668,7 +680,7 @@ func NewArchwayApp(
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		// additional non simd modules
-		ibchost.ModuleName,
+		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		icatypes.ModuleName,
@@ -685,7 +697,7 @@ func NewArchwayApp(
 		stakingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		ibcfeetypes.ModuleName,
-		ibchost.ModuleName,
+		ibcexported.ModuleName,
 		icatypes.ModuleName,
 		feegrant.ModuleName,
 		authz.ModuleName,
@@ -735,7 +747,7 @@ func NewArchwayApp(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		// additional non simd modules
-		ibchost.ModuleName,
+		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		icatypes.ModuleName,
@@ -955,7 +967,7 @@ func GetMaccPerms() map[string][]string {
 }
 
 // initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
+func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	paramsKeeper.Subspace(authtypes.ModuleName)
@@ -967,7 +979,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(rewardsTypes.ModuleName)
