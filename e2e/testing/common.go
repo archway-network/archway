@@ -70,7 +70,7 @@ func HumanizeCoins(decimals uint8, coins ...sdk.Coin) string {
 
 	strs := make([]string, 0, len(coins))
 	for _, coin := range coins {
-		amtDec := coin.Amount.ToDec().Mul(baseDec)
+		amtDec := sdk.NewDecFromInt(coin.Amount).Mul(baseDec)
 		amtFloat, _ := amtDec.Float64()
 
 		strs = append(strs, fmt.Sprintf("%.03f%s", amtFloat, coin.Denom))
