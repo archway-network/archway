@@ -11,6 +11,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -26,30 +27,31 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibchost "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	"github.com/stretchr/testify/require"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // Get flags every time the simulator is run
 func init() {
-	sims.GetSimulatorFlags()
+	simcli.GetSimulatorFlags()
 }
 
 type StoreKeysPrefixes struct {
-	A        sdk.StoreKey
-	B        sdk.StoreKey
+	A        storetypes.StoreKey
+	B        storetypes.StoreKey
 	Prefixes [][]byte
 }
 
 // SetupSimulation wraps simapp.SetupSimulation in order to create any export directory if they do not exist yet
 func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) {
-	config, db, dir, logger, skip, err := sims.SetupSimulation(dirPrefix, dbName)
+	config := simcli.NewConfigFromFlags()
+	db, dir, logger, skip, err := sims.SetupSimulation(config, dirPrefix, dbName, simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	if err != nil {
 		return simtypes.Config{}, nil, "", nil, false, err
 	}
@@ -110,7 +112,7 @@ func TestAppImportExport(t *testing.T) {
 	}()
 
 	encConf := MakeEncodingConfig()
-	app := NewArchwayApp(logger, db, nil, true, map[int64]bool{}, dir, sims.FlagPeriodValue, encConf, wasm.EnableAllProposals, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
+	app := NewArchwayApp(logger, db, nil, true, map[int64]bool{}, dir, simcli.FlagPeriodValue, encConf, wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
 	require.Equal(t, appName, app.Name())
 
 	// Run randomized simulation
@@ -118,7 +120,7 @@ func TestAppImportExport(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sims.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		sims.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts,
 		sims.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -137,7 +139,7 @@ func TestAppImportExport(t *testing.T) {
 
 	t.Log("exporting genesis...")
 
-	exported, err := app.ExportAppStateAndValidators(false, []string{})
+	exported, err := app.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err)
 
 	t.Log("importing genesis...")
@@ -149,7 +151,7 @@ func TestAppImportExport(t *testing.T) {
 		newDB.Close()
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
-	newApp := NewArchwayApp(logger, newDB, nil, true, map[int64]bool{}, newDir, sims.FlagPeriodValue, encConf, wasm.EnableAllProposals, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
+	newApp := NewArchwayApp(logger, newDB, nil, true, map[int64]bool{}, newDir, simcli.FlagPeriodValue, encConf, wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
 	require.Equal(t, appName, newApp.Name())
 
 	var genesisState GenesisState
@@ -180,15 +182,15 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[govtypes.StoreKey], newApp.keys[govtypes.StoreKey], [][]byte{}},
 		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
 		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
-		{app.keys[ibchost.StoreKey], newApp.keys[ibchost.StoreKey], [][]byte{}},
+		{app.keys[ibcexported.StoreKey], newApp.keys[ibcexported.StoreKey], [][]byte{}},
 		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
 		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{}},
 		{app.keys[feegrant.StoreKey], newApp.keys[feegrant.StoreKey], [][]byte{}},
-		{app.keys[wasm.StoreKey], newApp.keys[wasm.StoreKey], [][]byte{}},
+		{app.keys[wasmtypes.StoreKey], newApp.keys[wasmtypes.StoreKey], [][]byte{}},
 	}
 
 	// delete persistent tx counter value
-	ctxA.KVStore(app.keys[wasm.StoreKey]).Delete(wasmtypes.TXCounterPrefix)
+	ctxA.KVStore(app.keys[wasmtypes.StoreKey]).Delete(wasmtypes.TXCounterPrefix)
 
 	// diff both stores
 	for _, skp := range storeKeysPrefixes {
@@ -215,8 +217,8 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 	encConf := MakeEncodingConfig()
-	app := NewArchwayApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, sims.FlagPeriodValue,
-		encConf, wasm.EnableAllProposals, sims.EmptyAppOptions{}, nil, fauxMerkleModeOpt)
+	app := NewArchwayApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simcli.FlagPeriodValue,
+		encConf, wasmtypes.EnableAllProposals, sims.EmptyAppOptions{}, nil, fauxMerkleModeOpt)
 	require.Equal(t, "ArchwayApp", app.Name())
 
 	// run randomized simulation
@@ -224,7 +226,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sims.AppStateFn(app.appCodec, app.SimulationManager()),
+		sims.AppStateFn(app.appCodec, app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sims.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
