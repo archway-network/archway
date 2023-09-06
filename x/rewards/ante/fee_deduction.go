@@ -133,7 +133,7 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTyp
 		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), rewardsTypes.ContractRewardCollector, flatFees); err != nil {
 			return sdkErrors.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
 		}
-		fees = fees.Sub(flatFees) // reduce flatfees from the sent fees amount
+		fees = fees.Sub(flatFees...) // reduce flatfees from the sent fees amount
 	}
 
 	// Split the fees between the fee collector account and the rewards collector account

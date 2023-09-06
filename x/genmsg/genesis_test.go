@@ -5,13 +5,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
-	v1 "github.com/archway-network/archway/x/genmsg/v1"
+	"github.com/archway-network/archway/x/genmsg/types"
 )
 
 type mockRouter struct {
@@ -21,22 +21,22 @@ type mockRouter struct {
 func (m mockRouter) Handler(msg sdk.Msg) baseapp.MsgServiceHandler { return m.handler(msg) }
 
 func makeCodec(_ *testing.T) codec.JSONCodec {
-	ir := types.NewInterfaceRegistry()
+	ir := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(ir)
 	ir.RegisterInterface(sdk.MsgInterfaceProtoName, (*sdk.Msg)(nil), &banktypes.MsgSend{})
 	return cdc
 }
 
-func newGenesisFromMsgs(t *testing.T, cdc codec.JSONCodec, msgs ...proto.Message) *v1.GenesisState {
-	genesis := new(v1.GenesisState)
+func newGenesisFromMsgs(t *testing.T, cdc codec.JSONCodec, msgs ...proto.Message) *types.GenesisState {
+	genesis := new(types.GenesisState)
 	for _, msg := range msgs {
-		anyProto, err := types.NewAnyWithValue(msg)
+		anyProto, err := codectypes.NewAnyWithValue(msg)
 		require.NoError(t, err)
 		genesis.Messages = append(genesis.Messages, anyProto)
 	}
 	genesisJSON, err := cdc.MarshalJSON(genesis)
 	require.NoError(t, err)
-	genesis = new(v1.GenesisState)
+	genesis = new(types.GenesisState)
 	require.NoError(t, cdc.UnmarshalJSON(genesisJSON, genesis))
 	return genesis
 }
@@ -91,7 +91,7 @@ func Test_initGenesis(t *testing.T) {
 func Test_validateGenesis(t *testing.T) {
 	cdc := makeCodec(t)
 	t.Run("works - empty", func(t *testing.T) {
-		err := validateGenesis(cdc, &v1.GenesisState{})
+		err := validateGenesis(cdc, &types.GenesisState{})
 		require.NoError(t, err)
 	})
 	t.Run("works - with messages", func(t *testing.T) {

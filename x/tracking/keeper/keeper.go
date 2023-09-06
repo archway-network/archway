@@ -4,6 +4,7 @@ import (
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/x/tracking/types"
@@ -18,7 +19,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key sdk.StoreKey, gasRegister wasmKeeper.GasRegister) Keeper {
+func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, gasRegister wasmKeeper.GasRegister) Keeper {
 	return Keeper{
 		cdc:             cdc,
 		WasmGasRegister: gasRegister,

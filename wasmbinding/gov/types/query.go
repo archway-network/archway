@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type VoteRequest struct {
@@ -119,7 +119,7 @@ func NewVoteResponse(vote govTypes.Vote) VoteResponse {
 	}
 
 	for _, option := range vote.Options {
-		resp.Vote.Options = append(resp.Vote.Options, NewWeightedVoteOption(option))
+		resp.Vote.Options = append(resp.Vote.Options, NewWeightedVoteOption(*option))
 	}
 
 	return resp
@@ -141,6 +141,6 @@ func NewWeightedVoteOption(voteOption govTypes.WeightedVoteOption) WeightedVoteO
 
 	return WeightedVoteOption{
 		Option: option,
-		Weight: voteOption.Weight.String(),
+		Weight: voteOption.Weight,
 	}
 }
