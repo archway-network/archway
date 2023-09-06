@@ -11,7 +11,7 @@ import (
 	tmTypes "github.com/cometbft/cometbft/types"
 	tmVersion "github.com/cometbft/cometbft/version"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	stakingTestUtil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	clientTypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channelTypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
@@ -56,7 +56,7 @@ func (chain *TestChain) GetValSetAtHeight(height int64) tmTypes.ValidatorSet {
 	require.True(t, ok)
 
 	validators := stakingTypes.Validators(histInfo.Valset)
-	tmValidators, err := teststaking.ToTmValidators(validators, sdk.DefaultPowerReduction)
+	tmValidators, err := stakingTestUtil.ToTmValidators(validators, sdk.DefaultPowerReduction)
 	require.NoError(t, err)
 
 	valSet := tmTypes.NewValidatorSet(tmValidators)
@@ -70,7 +70,7 @@ func (chain *TestChain) GetProofAtHeight(key []byte, height uint64) ([]byte, cli
 	t := chain.t
 
 	res := chain.app.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
+		Path:   fmt.Sprintf("store/ibc/key"),
 		Height: int64(height) - 1,
 		Data:   key,
 		Prove:  true,
@@ -101,7 +101,11 @@ func (chain *TestChain) SendIBCPacket(packet exported.PacketI) {
 	cap, ok := chain.app.ScopedIBCKeeper.GetCapability(chain.GetContext(), capPath)
 	require.True(t, ok)
 
-	require.NoError(t, chain.app.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), cap, packet))
+	var timeout clientTypes.Height
+	timeout.RevisionHeight = packet.GetTimeoutHeight().GetRevisionHeight()
+	timeout.RevisionNumber = packet.GetTimeoutHeight().GetRevisionNumber()
+	_, err := chain.app.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), cap, packet.GetSourcePort(), packet.GetSourceChannel(), timeout, packet.GetTimeoutTimestamp(), packet.GetData())
+	require.NoError(t, err)
 
 	chain.NextBlock(0)
 }
