@@ -2,7 +2,7 @@ package e2eTesting
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,7 +39,7 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 	}
 
 	// Wait for voting to end
-	chain.NextBlock(votingDur)
+	chain.NextBlock(*votingDur)
 	chain.NextBlock(0) // for the Gov EndBlocker to work
 
 	// Check if proposal was passed
