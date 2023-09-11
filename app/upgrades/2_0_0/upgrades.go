@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
@@ -28,7 +28,10 @@ var Upgrade = upgrades.Upgrade{
 		return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 
 			// Set Initial Consensus Version
-			fromVM[icatypes.ModuleName] = mm.Modules[icatypes.ModuleName].ConsensusVersion()
+			icaModule := mm.Modules[icatypes.ModuleName]
+			if module, ok := icaModule.(module.HasConsensusVersion); ok {
+				fromVM[icatypes.ModuleName] = module.ConsensusVersion()
+			}
 			// create ICS27 Controller submodule params
 			controllerParams := icacontrollertypes.Params{}
 			// create ICS27 Host submodule params
