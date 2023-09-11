@@ -39,7 +39,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Deprecated
 
-- [#439](https://github.com/archway-network/archway/pull/439) - renaming `debug` image to `dev`
+- [#439](https://github.com/archway-network/archway/pull/439) - Renaming `debug` image to `dev`
 
 ### Removed
 
