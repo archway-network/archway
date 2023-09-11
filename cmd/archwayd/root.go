@@ -288,8 +288,8 @@ func (ac appCreator) appExport(
 	height int64,
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
-	modulesToExport []string,
 	appOpts servertypes.AppOptions,
+	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	var archwayApp *app.ArchwayApp
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
