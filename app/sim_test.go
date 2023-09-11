@@ -120,7 +120,7 @@ func TestAppImportExport(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sims.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		sims.AppStateFn(app.AppCodec(), app.SimulationManager(), NewDefaultGenesisState(app.AppCodec())),
 		simtypes.RandomAccounts,
 		sims.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -226,7 +226,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		sims.AppStateFn(app.appCodec, app.SimulationManager(), app.DefaultGenesis()),
+		sims.AppStateFn(app.appCodec, app.SimulationManager(), NewDefaultGenesisState(app.AppCodec())),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		sims.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),

@@ -58,7 +58,7 @@ func setup(withGenesis bool, invCheckPeriod uint, opts ...wasm.Option) (*Archway
 	db := dbm.NewMemDB()
 	app := NewArchwayApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, MakeEncodingConfig(), wasm.EnableAllProposals, EmptyBaseAppOptions{}, opts)
 	if withGenesis {
-		return app, NewDefaultGenesisState()
+		return app, NewDefaultGenesisState(app.AppCodec())
 	}
 	return app, GenesisState{}
 }
