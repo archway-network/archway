@@ -103,7 +103,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		app.EmptyBaseAppOptions{},
 		[]wasm.Option{},
 	)
-	genState := app.NewDefaultGenesisState()
+	genState := app.NewDefaultGenesisState(archApp.AppCodec())
 
 	// Generate validators
 	validators := make([]*tmTypes.Validator, 0, chainCfg.ValidatorsNum)
