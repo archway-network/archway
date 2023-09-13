@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
@@ -37,7 +37,7 @@ func (h QueryHandler) GetVote(ctx sdk.Context, req wasmTypes.VoteRequest) (wasmT
 
 	vote, found := h.govKeeper.GetVote(ctx, req.ProposalID, req.MustGetVoter())
 	if !found {
-		err := sdkErrors.Wrap(types.ErrInvalidVote, fmt.Errorf("vote not found for proposal %d and voter %s", req.ProposalID, req.Voter).Error())
+		err := errorsmod.Wrap(types.ErrInvalidVote, fmt.Errorf("vote not found for proposal %d and voter %s", req.ProposalID, req.Voter).Error())
 		return wasmTypes.VoteResponse{}, err
 	}
 

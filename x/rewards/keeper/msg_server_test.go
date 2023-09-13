@@ -6,8 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
@@ -88,7 +88,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 				}
 			},
 			expectError: true,
-			errorType:   sdkErrors.Wrap(rewardstypes.ErrUnauthorized, "metadata can only be created by the contract admin"),
+			errorType:   errorsmod.Wrap(rewardstypes.ErrUnauthorized, "metadata can only be created by the contract admin"),
 		},
 		{
 			testCase: "ok: all good'",
@@ -178,7 +178,7 @@ func (s *KeeperTestSuite) TestMsgServer_WithdrawRewards() {
 				}
 			},
 			expectError: true,
-			errorType:   status.Error(codes.InvalidArgument, sdkErrors.Wrapf(rewardstypes.ErrInvalidRequest, "max withdraw records (25000) exceeded").Error()),
+			errorType:   status.Error(codes.InvalidArgument, errorsmod.Wrapf(rewardstypes.ErrInvalidRequest, "max withdraw records (25000) exceeded").Error()),
 		},
 		{
 			testCase: "ok: withdraw rewards by records limit",
@@ -302,7 +302,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetFlatFee() {
 				}
 			},
 			expectError: true,
-			errorType:   sdkErrors.Wrap(rewardstypes.ErrUnauthorized, "flat_fee can only be set or changed by the contract owner"),
+			errorType:   errorsmod.Wrap(rewardstypes.ErrUnauthorized, "flat_fee can only be set or changed by the contract owner"),
 		},
 		{
 			testCase: "ok: all good'",
