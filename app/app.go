@@ -829,7 +829,7 @@ func NewArchwayApp(
 		posthandler.HandlerOptions{},
 	)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to create PostHandler: %s", err))
 	}
 
 	app.SetAnteHandler(anteHandler)
