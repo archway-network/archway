@@ -5,6 +5,7 @@ option go_package = "github.com/archway-network/archway/x/rewards/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 import "archway/rewards/v1/rewards.proto";
 
 // Msg defines the module messaging service.
@@ -26,6 +27,7 @@ service Msg {
 
 // MsgSetContractMetadata is the request for Msg.SetContractMetadata.
 message MsgSetContractMetadata {
+  option (cosmos.msg.v1.signer) = "sender_address";
   // sender_address is the msg sender address (bech32 encoded).
   string sender_address = 1;
   // metadata is the contract metadata to set / update.
@@ -38,6 +40,7 @@ message MsgSetContractMetadataResponse {}
 
 // MsgWithdrawRewards is the request for Msg.WithdrawRewards.
 message MsgWithdrawRewards {
+  option (cosmos.msg.v1.signer) = "rewards_address";
   message RecordsLimit { uint64 limit = 1; }
 
   message RecordIDs {
@@ -67,6 +70,7 @@ message MsgWithdrawRewardsResponse {
 
 // MsgSetFlatFee is the request for Msg.SetFlatFee.
 message MsgSetFlatFee {
+  option (cosmos.msg.v1.signer) = "sender_address";
   // sender_address is the msg sender address (bech32 encoded).
   string sender_address = 1;
   // contract_address is the contract address (bech32 encoded).
