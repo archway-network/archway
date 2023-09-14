@@ -30,7 +30,9 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ## [Unreleased]
 
-### Added
+### Added 
+
+- [#431](https://github.com/archway-network/archway/pull/431) - Added gh workflow to run IBC conformance tests on PRs
 
 - [#439](https://github.com/archway-network/archway/pull/439) - Adding containerized localnet
 - [#445](https://github.com/archway-network/archway/pull/445) - Adding Archway logo and version number to upgrade logs
