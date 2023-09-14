@@ -6,6 +6,15 @@ before:
     - apt update && apt install musl-dev=1.2.2-1
 env:
   - CGO_ENABLED=1
+
+git:
+  # What should be used to sort tags when gathering the current and previous
+  # tags if there are more than one tag in the same commit.
+  #
+  # Default: '-version:refname'
+  # Source: https://goreleaser.com/customization/git/
+  tag_sort: -version:creatordate
+
 builds:
   - id: archwayd-linux-amd64
     main: ./cmd/archwayd
@@ -185,9 +194,9 @@ dockers:
   - use: buildx
     goos: linux
     goarch: amd64
-    dockerfile: Dockerfile.debug
+    dockerfile: Dockerfile.dev
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d-dev:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
@@ -202,9 +211,9 @@ dockers:
   - use: buildx
     goos: linux
     goarch: arm64
-    dockerfile: Dockerfile.debug
+    dockerfile: Dockerfile.dev
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d-dev:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
     build_flag_templates:
       - "--pull"
       - "--platform=linux/arm64"
@@ -221,7 +230,7 @@ docker_manifests:
     image_templates:
       - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-amd64{{else}}{{ .ShortCommit }}-amd64{{end}}'
       - 'ghcr.io/archway-network/{{ .ProjectName }}d:{{if eq .Env.RELEASE "true"}}v{{ .Version }}-arm64v8{{else}}{{ .ShortCommit }}-arm64v8{{end}}'
-  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true" }}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
+  - name_template: 'ghcr.io/archway-network/{{ .ProjectName }}d-dev:{{if eq .Env.RELEASE "true" }}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}'
     image_templates:
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
-      - 'ghcr.io/archway-network/{{ .ProjectName }}d-debug:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d-dev:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-amd64'
+      - 'ghcr.io/archway-network/{{ .ProjectName }}d-dev:{{if eq .Env.RELEASE "true"}}v{{ .Version }}{{else}}{{ .ShortCommit }}{{end}}-arm64v8'

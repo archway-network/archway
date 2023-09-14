@@ -1,10 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-# Console log text colour
-red=`tput setaf 9`
-green=`tput setaf 10`
-blue=`tput setaf 12`
-reset=`tput sgr0`
+
 
 echo_info () {
   echo "${blue}"
@@ -25,7 +21,16 @@ echo_success () {
 }
 
 # Set localnet settings
-BINARY=./build/archwayd
+if [[ -f "build/archwayd" ]] ;then
+  BINARY=build/archwayd
+  # Console log text colour
+  red=`tput setaf 9`
+  green=`tput setaf 10`
+  blue=`tput setaf 12`
+  reset=`tput sgr0`
+else
+  BINARY=archwayd
+fi
 CHAIN_ID=localnet-1
 CHAIN_DIR=./data
 VALIDATOR_MNEMONIC="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
@@ -56,8 +61,10 @@ setup_chain () {
   # Modify config for development
   config="$CHAIN_DIR/$CHAIN_ID/config/config.toml"
   if [ "$(uname)" = "Linux" ]; then
-    sed -i "s/cors_allowed_origins = \[\]/cors_allowed_origins = [\"*\"]/g" $config
+   sed -i "s/127.0.0.1/0.0.0.0/g" $config
+   sed -i "s/cors_allowed_origins = \[\]/cors_allowed_origins = [\"*\"]/g" $config
   else
+    sed -i '' "s/127.0.0.1/0.0.0.0/g" $config
     sed -i '' "s/cors_allowed_origins = \[\]/cors_allowed_origins = [\"*\"]/g" $config
   fi
   # modify genesis params for localnet ease of use
@@ -69,7 +76,7 @@ setup_chain () {
   # reduce minimum deposit amount to 10stake
   contents="$(jq '.app_state.gov.deposit_params.min_deposit[0].amount = "10"' $genesis)" && echo "${contents}" >  $genesis
   echo_info "Set x/gov proposal min deposit amount to 10 stake"
-  # reduce deposit period to 20seconds 
+  # reduce deposit period to 20seconds
   contents="$(jq '.app_state.gov.deposit_params.max_deposit_period = "20s"' $genesis)" && echo "${contents}" >  $genesis
   echo_info "Set x/gov proposal max deposit period to 20 seconds"
 
@@ -109,9 +116,9 @@ setup_chain () {
     echo_error "Failed to validate genesis"
   fi
 }
- 
+
 if [ "$1" != "continue" ] ;then
-  setup_chain  
+  setup_chain
 fi
 
 # Starting chain

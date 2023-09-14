@@ -34,9 +34,14 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#431](https://github.com/archway-network/archway/pull/431) - Added gh workflow to run IBC conformance tests on PRs
 
+- [#439](https://github.com/archway-network/archway/pull/439) - Adding containerized localnet
+- [#445](https://github.com/archway-network/archway/pull/445) - Adding Archway logo and version number to upgrade logs
+
 ### Changed
 
 ### Deprecated
+
+- [#439](https://github.com/archway-network/archway/pull/439) - Renaming `debug` image to `dev`
 
 ### Removed
 
@@ -44,18 +49,34 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Improvements
 
-## [v4.0.0]
+## [v4.0.2](https://github.com/archway-network/archway/releases/tag/v4.0.2)
+
+### Changed
+
+- [#440](https://github.com/archway-network/archway/pull/440) - Retagging with v4.0.2 to prevent dual tagging of same commit and same tag name
+
+### Fixed
+
+- [#441](https://github.com/archway-network/archway/pull/441) - go-releaser must order tags with create date, when there are multiple tags on the same commit
+
+## [v4.0.1](https://github.com/archway-network/archway/releases/tag/v4.0.1)
+
+### Fixed
+
+- [#437](https://github.com/archway-network/archway/pull/437) - Adding upgrade handler with missing burn permissions for feecollector account
+
+## [v4.0.0](https://github.com/archway-network/archway/releases/tag/v4.0.0)
 
 ### Added
 
 - [#429](https://github.com/archway-network/archway/pull/429) - Adding `cosmwasm_1_3` capabilities by bumping wasmd to v0.33.0
-- [#430](https://github.com/archway-network/archway/pull/430) - Added gh workflow to run chain upgarde test on PRs
+- [#430](https://github.com/archway-network/archway/pull/430) - Added gh workflow to run chain upgrade test on PRs
 
 ### Changed
 
 - [#428](https://github.com/archway-network/archway/pull/428) - Update go version to 1.20
 
-## [v3.0.0]
+## [v3.0.0](https://github.com/archway-network/archway/releases/tag/v3.0.0)
 
 ### Fixed
 
@@ -69,7 +90,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#423](https://github.com/archway-network/archway/pull/423) - Update release docs
 - [#425](https://github.com/archway-network/archway/pull/425) - Update ADR 004 - Contract Premiums
 
-## [v2.0.0]
+## [v2.0.0](https://github.com/archway-network/archway/releases/tag/v2.0.0)
 
 ### Added
 
@@ -80,30 +101,28 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#414](https://github.com/archway-network/archway/pull/414) - Prevent user from setting contract flat fee if rewards address is not set
 - [#418](https://github.com/archway-network/archway/pull/418) - Fix authz msg decoding in x/rewards antehandlers
 
-## [v1.0.1]
+## [v1.0.1](https://github.com/archway-network/archway/releases/tag/v1.0.1)
 
 - [#411](https://github.com/archway-network/archway/pull/411) - Update repository readme with correct docker containers.
 - [#413](https://github.com/archway-network/archway/pull/413) - Fix incorrect gas estimation when running with `--dry-run` flag
 
-## [v1.0.0]
+## [v1.0.0](https://github.com/archway-network/archway/releases/tag/v1.0.0)
 
 Archway Network - Capture the value you create!
 
-
-## [v1.0.0-rc.4]
+## [v1.0.0-rc.4](https://github.com/archway-network/archway/releases/tag/v1.0.0-rc.4)
 
 ### Added
 
 - [#409](https://github.com/archway-network/archway/pull/409) - Add cosmwasm_1_1,cosmwasm_1_2 Cosmwasm capabilities
 
-
-## [v1.0.0-rc.3]
+## [v1.0.0-rc.3](https://github.com/archway-network/archway/releases/tag/v1.0.0-rc.3)
 
 ### Removed
 
 - [#408](https://github.com/archway-network/archway/pull/408) - Remove genesis msg logging as it impacts network start up performance.
 
-## [v1.0.0-rc.2]
+## [v1.0.0-rc.2](https://github.com/archway-network/archway/releases/tag/v1.0.0-rc.2)
 
 ### Fixes
 
@@ -111,15 +130,15 @@ Archway Network - Capture the value you create!
 - [#402](https://github.com/archway-network/archway/pull/402) - Bump wasmvm version to 1.2.4
 - [#403](https://github.com/archway-network/archway/pull/403) - Update libwasmvm version to correct one for wasmvm 1.2.4
 - [#404](https://github.com/archway-network/archway/pull/403) - Fix typo in rewards query cli
-- [#406](https://github.com/archway-network/archway/pull/406) - Add upgrade hanlder for v0.6.0 back to prevent downgrade check from panic / consensus failure;
+- [#406](https://github.com/archway-network/archway/pull/406) - Add upgrade handler for v0.6.0 back to prevent downgrade check from panic / consensus failure;
 
-## [v1.0.0-rc.1]
+## [v1.0.0-rc.1](https://github.com/archway-network/archway/releases/tag/v1.0.0-rc.1)
 
 ### Removed
 
 - [#399](https://github.com/archway-network/archway/pull/399) - Remove the upgrade handler for v1 release
 
-## [v0.6.0]
+## [v0.6.0](https://github.com/archway-network/archway/releases/tag/v0.6.0)
 
 ### Added
 
@@ -143,13 +162,13 @@ Archway Network - Capture the value you create!
 - [#393](https://github.com/archway-network/archway/pull/393) - Add audit remediations
 - [#397](https://github.com/archway-network/archway/pull/397) - Fix map iteration
 
-## [v0.5.2]
+## [v0.5.2](https://github.com/archway-network/archway/releases/tag/v0.5.2)
 
 ### Fixed
 
 - [#382](https://github.com/archway-network/archway/pull/382) - Adjust default power reduction
 
-## [v0.5.0]
+## [v0.5.0](https://github.com/archway-network/archway/releases/tag/v0.5.0)
 
 ### Breaking Changes
 
@@ -206,19 +225,19 @@ Archway Network - Capture the value you create!
 
 - [#342](https://github.com/archway-network/archway/pull/342) - updated the contract premium ADR docs to elaborate on difference between using Contract Premiums and using x/wasmd funds
 
-## [v0.4.0]
+## [v0.4.0](https://github.com/archway-network/archway/releases/tag/v0.4.0)
 
 ### Fixed
 
-- [#338](https://github.com/archway-network/archway/pull/338) - fixed issue where contract premium was not completly being sent to the rewards address
+- [#338](https://github.com/archway-network/archway/pull/338) - fixed issue where contract premium was not completely being sent to the rewards address
 
-## [v0.3.1]
+## [v0.3.1](https://github.com/archway-network/archway/releases/tag/v0.3.1)
 
 ### Fixed
 
 - [#335](https://github.com/archway-network/archway/pull/335) - fixed `EstimateTxFees` erroring when minConsFee and contract premium are same denom
 
-## [v0.3.0]
+## [v0.3.0](https://github.com/archway-network/archway/releases/tag/v0.3.0)
 
 ### Added
 
@@ -233,7 +252,7 @@ Archway Network - Capture the value you create!
 - [#271](https://github.com/archway-network/archway/pull/271) - update the x/rewards/min_cons_fee antehandler to check for contract flat fees
 - [#275](https://github.com/archway-network/archway/pull/275) - update the x/rewards/genesis to import/export for contract flat fees
 
-## [v0.1.0]
+## [v0.1.0](https://github.com/archway-network/archway/releases/tag/v0.1.0)
 
 ### Added
 
@@ -261,7 +280,7 @@ Archway Network - Capture the value you create!
 
 ### Fixed
 
-- [#191](https://github.com/archway-network/archway/pull/191) - make localnet ovveride entrypoint
+- [#191](https://github.com/archway-network/archway/pull/191) - make localnet override entrypoint
 - [#205](https://github.com/archway-network/archway/pull/205) - fix go.mod
 - [#216](https://github.com/archway-network/archway/pull/216) - fix dry-run cmd and bump cosmos-sdk do v0.45.8
 - [#218](https://github.com/archway-network/archway/pull/218) - x/rewards unique ID genesis export/import
@@ -289,7 +308,7 @@ Archway Network - Capture the value you create!
 - [#247](https://github.com/archway-network/archway/pull/247) - fix Dockerfile libwasm VM dependencies
 - [#249](https://github.com/archway-network/archway/pull/249) - add go releaser, fill changelog history
 
-## v0.0.5
+## [v0.0.5](https://github.com/archway-network/archway/releases/tag/v0.0.5)
 
 ### Breaking Changes
 
@@ -300,7 +319,7 @@ Archway Network - Capture the value you create!
 - Fix logs printing total contract rewards instead of gas rebate reward.
 - Replace info logs for debug logs.
 
-## v0.0.4
+## [v0.0.4](https://github.com/archway-network/archway/releases/tag/v0.0.4)
 
 ### Breaking Changes
 

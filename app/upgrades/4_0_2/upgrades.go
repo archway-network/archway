@@ -1,39 +1,39 @@
-package upgradelatest
+package upgrade4_0_2
 
 import (
+	"fmt"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/archway-network/archway/app/upgrades"
 )
 
-// This upgrade handler is used for all the current changes to the protocol
-
-const Name = "latest"
-
-const NameAsciiArt = `                          
-             ###     ###     ### 
-     # #     #       # #     # #    
-     # #     ###     # #     # #   
-      #        #     # #     # # 
-             ###  #  ###  #  ### 
-
-`
+const Name = "v4.0.2"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
 	CreateUpgradeHandler: func(mm *module.Manager, cfg module.Configurator, accountKeeper keeper.AccountKeeper) upgradetypes.UpgradeHandler {
 		return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			migrations, err := mm.RunMigrations(ctx, cfg, fromVM)
-			if err != nil {
-				return nil, err
+			fcAccount := accountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
+			account, ok := fcAccount.(*authtypes.ModuleAccount)
+			if !ok {
+				return nil, fmt.Errorf("feeCollector account is not *authtypes.ModuleAccount")
 			}
+			if !account.HasPermission(authtypes.Burner) {
+				account.Permissions = append(account.Permissions, authtypes.Burner)
+			}
+			err := accountKeeper.ValidatePermissions(account)
+			if err != nil {
+				return nil, fmt.Errorf("Could not validate feeCollectors permissions")
+			}
+			accountKeeper.SetModuleAccount(ctx, account)
 
-			ctx.Logger().Info(upgrades.ArchwayLogo + NameAsciiArt)
-			return migrations, nil
+			return mm.RunMigrations(ctx, cfg, fromVM)
 		}
 	},
 	StoreUpgrades: storetypes.StoreUpgrades{},
