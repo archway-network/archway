@@ -200,7 +200,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		contractToBlockGasRatio := sdk.NewDec(int64(txGasTracked)).Quo(sdk.NewDec(blockGasLimit))
 		contractInflationRewardsExpected = sdk.Coin{
 			Denom:  blockInflationRewardsExpected.Denom,
-			Amount: blockInflationRewardsExpected.Amount.ToDec().Mul(contractToBlockGasRatio).TruncateInt(),
+			Amount: sdk.NewDecFromInt(blockInflationRewardsExpected.Amount).Mul(contractToBlockGasRatio).TruncateInt(),
 		}
 
 		// Total

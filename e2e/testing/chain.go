@@ -103,7 +103,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		app.EmptyBaseAppOptions{},
 		[]wasm.Option{},
 	)
-	genState := app.NewDefaultGenesisState()
+	genState := app.NewDefaultGenesisState(archApp.AppCodec())
 
 	// Generate validators
 	validators := make([]*tmTypes.Validator, 0, chainCfg.ValidatorsNum)
@@ -183,7 +183,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		accGenCoins := genCoins
 		// Lower genesis balance for validator account
 		if i < chainCfg.ValidatorsNum {
-			accGenCoins = accGenCoins.Sub(bondCoins)
+			accGenCoins = accGenCoins.Sub(bondCoins...)
 			bondedPoolCoins = bondedPoolCoins.Add(bondCoins...)
 		}
 
@@ -207,7 +207,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		Coins:   bondedPoolCoins,
 	})
 
-	bankGenesis := bankTypes.NewGenesisState(bankTypes.DefaultGenesisState().Params, balances, totalSupply, []bankTypes.Metadata{})
+	bankGenesis := bankTypes.NewGenesisState(bankTypes.DefaultGenesisState().Params, balances, totalSupply, []bankTypes.Metadata{}, []bankTypes.SendEnabled{})
 	genState[bankTypes.ModuleName] = archApp.AppCodec().MustMarshalJSON(bankGenesis)
 
 	signInfo := make([]slashingTypes.SigningInfo, len(validatorSet.Validators))
@@ -381,7 +381,7 @@ func (chain *TestChain) BeginBlock() []abci.Event {
 	res := chain.app.BeginBlock(abci.RequestBeginBlock{
 		Hash:   nil,
 		Header: chain.curHeader,
-		LastCommitInfo: abci.LastCommitInfo{
+		LastCommitInfo: abci.CommitInfo{
 			Round: 0,
 			Votes: voteInfo,
 		},
@@ -498,7 +498,7 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 	}
 
 	// Send the Tx
-	return chain.app.Deliver(chain.txConfig.TxEncoder(), tx)
+	return chain.app.SimDeliver(chain.txConfig.TxEncoder(), tx)
 }
 
 // ParseSDKResultData converts TX result data into a slice of Msgs.
