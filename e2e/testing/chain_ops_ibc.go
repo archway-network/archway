@@ -1,7 +1,6 @@
 package e2eTesting
 
 import (
-	"fmt"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -70,7 +69,7 @@ func (chain *TestChain) GetProofAtHeight(key []byte, height uint64) ([]byte, cli
 	t := chain.t
 
 	res := chain.app.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/ibc/key"),
+		Path:   "store/ibc/key",
 		Height: int64(height) - 1,
 		Data:   key,
 		Prove:  true,
@@ -101,9 +100,10 @@ func (chain *TestChain) SendIBCPacket(packet exported.PacketI) {
 	cap, ok := chain.app.ScopedIBCKeeper.GetCapability(chain.GetContext(), capPath)
 	require.True(t, ok)
 
-	var timeout clientTypes.Height
-	timeout.RevisionHeight = packet.GetTimeoutHeight().GetRevisionHeight()
-	timeout.RevisionNumber = packet.GetTimeoutHeight().GetRevisionNumber()
+	timeout := clientTypes.Height{
+		RevisionNumber: packet.GetTimeoutHeight().GetRevisionNumber(),
+		RevisionHeight: packet.GetTimeoutHeight().GetRevisionHeight(),
+	}
 	_, err := chain.app.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), cap, packet.GetSourcePort(), packet.GetSourceChannel(), timeout, packet.GetTimeoutTimestamp(), packet.GetData())
 	require.NoError(t, err)
 

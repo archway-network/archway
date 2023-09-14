@@ -14,8 +14,9 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 
 	// Get params
 	k := chain.app.GovKeeper
-	depositCoin := k.GetParams(chain.GetContext()).MinDeposit
-	votingDur := k.GetParams(chain.GetContext()).VotingPeriod
+	govParams := k.GetParams(chain.GetContext())
+	depositCoin := govParams.MinDeposit
+	votingDur := govParams.VotingPeriod
 
 	// Submit proposal with min deposit to start the voting
 	msg, err := govTypes.NewMsgSubmitProposal(proposalContent, depositCoin, proposerAcc.Address)
