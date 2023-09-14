@@ -2,7 +2,7 @@ package e2eTesting
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,8 +14,9 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 
 	// Get params
 	k := chain.app.GovKeeper
-	depositCoin := k.GetDepositParams(chain.GetContext()).MinDeposit
-	votingDur := k.GetVotingParams(chain.GetContext()).VotingPeriod
+	govParams := k.GetParams(chain.GetContext())
+	depositCoin := govParams.MinDeposit
+	votingDur := govParams.VotingPeriod
 
 	// Submit proposal with min deposit to start the voting
 	msg, err := govTypes.NewMsgSubmitProposal(proposalContent, depositCoin, proposerAcc.Address)
@@ -39,7 +40,7 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 	}
 
 	// Wait for voting to end
-	chain.NextBlock(votingDur)
+	chain.NextBlock(*votingDur)
 	chain.NextBlock(0) // for the Gov EndBlocker to work
 
 	// Check if proposal was passed

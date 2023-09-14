@@ -292,8 +292,6 @@ func (e *IBCEndpoint) createIBCClient() {
 		dstChainLastTMHeader.GetHeight().(clientTypes.Height),
 		commitmentTypes.GetSDKSpecs(),
 		tmClientUpgradePath,
-		tmClientAllowUpdateAfterExpiry,
-		tmClientAllowUpdateAfterMisbehaviour,
 	)
 
 	srcChainSenderAcc := srcChain.GetAccount(0)
