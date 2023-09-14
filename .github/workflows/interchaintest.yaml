@@ -39,9 +39,7 @@ jobs:
 
             - name: Build current image
               run: |
-                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ github.head_ref }} --tag local
-                docker image tag acrechain:local archway:local
-                docker rmi acrechain:local
+                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ github.head_ref }} --chain archway --tag local
 
             - name: Upload current image
               uses: ishworkh/container-image-artifact-upload@v1.0.0
@@ -51,9 +49,7 @@ jobs:
 
             - name: Build ${{ steps.lastrelease.outputs.tag }} image
               run: |
-                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --tag ${{ steps.lastrelease.outputs.tag }}
-                docker image tag acrechain:${{ steps.lastrelease.outputs.tag }} archway:${{ steps.lastrelease.outputs.tag }}
-                docker rmi acrechain:${{ steps.lastrelease.outputs.tag }}
+                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --chain archway --tag ${{ steps.lastrelease.outputs.tag }}
             
             - name: Upload ${{ steps.lastrelease.outputs.tag }} image
               uses: ishworkh/container-image-artifact-upload@v1.0.0
