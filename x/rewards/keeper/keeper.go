@@ -1,12 +1,12 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -100,7 +100,7 @@ func (k Keeper) GetRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, p
 		}
 	}
 	if pageReq.Limit > types.MaxRecordsQueryLimit {
-		return nil, nil, sdkErrors.Wrapf(types.ErrInvalidRequest, "max records (%d) query limit exceeded", types.MaxRecordsQueryLimit)
+		return nil, nil, errorsmod.Wrapf(types.ErrInvalidRequest, "max records (%d) query limit exceeded", types.MaxRecordsQueryLimit)
 	}
 
 	return k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)

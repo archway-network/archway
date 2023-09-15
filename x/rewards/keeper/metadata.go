@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/archway-network/archway/x/rewards/types"
@@ -34,11 +34,11 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 	metaOld, metaExists := state.GetContractMetadata(contractAddr)
 	if metaExists {
 		if metaOld.OwnerAddress != senderAddr.String() {
-			return sdkErrors.Wrap(types.ErrUnauthorized, "metadata can only be changed by the contract owner")
+			return errorsmod.Wrap(types.ErrUnauthorized, "metadata can only be changed by the contract owner")
 		}
 	} else {
 		if contractInfo.Admin != senderAddr.String() {
-			return sdkErrors.Wrap(types.ErrUnauthorized, "metadata can only be created by the contract admin")
+			return errorsmod.Wrap(types.ErrUnauthorized, "metadata can only be created by the contract admin")
 		}
 	}
 

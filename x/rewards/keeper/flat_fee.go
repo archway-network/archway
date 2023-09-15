@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/archway-network/archway/x/rewards/types"
 )
@@ -15,14 +15,14 @@ func (k Keeper) SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, feeUpdate
 		return types.ErrMetadataNotFound
 	}
 	if contractInfo.OwnerAddress != senderAddr.String() {
-		return sdkErrors.Wrap(types.ErrUnauthorized, "flat_fee can only be set or changed by the contract owner")
+		return errorsmod.Wrap(types.ErrUnauthorized, "flat_fee can only be set or changed by the contract owner")
 	}
 
 	if feeUpdate.FlatFee.Amount.IsZero() {
 		k.state.FlatFee(ctx).RemoveFee(feeUpdate.MustGetContractAddress())
 	} else {
 		if contractInfo.RewardsAddress == "" {
-			return sdkErrors.Wrap(types.ErrMetadataNotFound, "flat_fee can only be set when rewards address has been configured")
+			return errorsmod.Wrap(types.ErrMetadataNotFound, "flat_fee can only be set when rewards address has been configured")
 		}
 		k.state.FlatFee(ctx).SetFee(feeUpdate.MustGetContractAddress(), feeUpdate.FlatFee)
 	}

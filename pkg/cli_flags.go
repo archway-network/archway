@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -25,7 +26,7 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 	reverse, _ := flagSet.GetBool(flags.FlagReverse)
 
 	if page > 1 && offset > 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "page and offset cannot be used together")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "page and offset cannot be used together")
 	}
 
 	if page > 1 {
