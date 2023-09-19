@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/archway-network/archway/app/upgrades"
@@ -36,5 +37,9 @@ var Upgrade = upgrades.Upgrade{
 			return migrations, nil
 		}
 	},
-	StoreUpgrades: storetypes.StoreUpgrades{},
+	StoreUpgrades: storetypes.StoreUpgrades{
+		Added: []string{
+			crisistypes.ModuleName,
+		},
+	},
 }
