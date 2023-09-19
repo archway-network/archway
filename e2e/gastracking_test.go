@@ -45,7 +45,8 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		// Set default Tx fee for non-manual transaction like Upload / Instantiate
 		e2eTesting.WithDefaultFeeAmount("500000000000000"),
 	)
-	trackingKeeper, rewardsKeeper := chain.GetApp().TrackingKeeper, chain.GetApp().RewardsKeeper
+	keepers := chain.GetApp().Keepers
+	trackingKeeper, rewardsKeeper := keepers.TrackingKeeper, keepers.RewardsKeeper
 
 	senderAcc := chain.GetAccount(0)
 	contractAddr := s.VoterUploadAndInstantiate(chain, senderAcc)
@@ -86,7 +87,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	rewardsAccInitialBalance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1).Mul(archway.DefaultPowerReduction)))
 	{
 		s.Require().NoError(
-			chain.GetApp().BankKeeper.SendCoins(
+			keepers.BankKeeper.SendCoins(
 				chain.GetContext(),
 				senderAcc.Address,
 				rewardsAcc.Address,
@@ -118,10 +119,10 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	{
 		ctx := chain.GetContext()
 
-		mintKeeper := chain.GetApp().MintKeeper
+		mintKeeper := keepers.MintKeeper
 		mintParams := mintKeeper.GetParams(ctx)
 
-		mintedCoin := chain.GetApp().MintKeeper.GetMinter(ctx).BlockProvision(mintParams)
+		mintedCoin := keepers.MintKeeper.GetMinter(ctx).BlockProvision(mintParams)
 		inflationRewards, _ := pkg.SplitCoins(sdk.NewCoins(mintedCoin), inflationRewardsRatio)
 		s.Require().Len(inflationRewards, 1)
 		blockInflationRewardsExpected = inflationRewards[0]

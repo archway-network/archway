@@ -27,7 +27,7 @@ func (s *KeeperTestSuite) TestStates() {
 	}
 
 	chain := s.chain
-	ctx, keeper := chain.GetContext(), chain.GetApp().RewardsKeeper
+	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.RewardsKeeper
 	metaState := keeper.GetState().ContractMetadataState(ctx)
 	blockState := keeper.GetState().BlockRewardsState(ctx)
 	txState := keeper.GetState().TxRewardsState(ctx)

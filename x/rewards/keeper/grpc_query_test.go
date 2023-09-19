@@ -14,7 +14,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestGRPC_Params() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 	querySrvr := keeper.NewQueryServer(k)
 	params := rewardsTypes.Params{
 		InflationRewardsRatio: sdk.MustNewDecFromStr("0.1"),
@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) TestGRPC_Params() {
 }
 
 func (s *KeeperTestSuite) TestGRPC_ContractMetadata() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 	querySrvr := keeper.NewQueryServer(k)
 	contractViewer := testutils.NewMockContractViewer()
 	k.SetContractInfoViewer(contractViewer)
@@ -80,7 +80,7 @@ func (s *KeeperTestSuite) TestGRPC_ContractMetadata() {
 }
 
 func (s *KeeperTestSuite) TestGRPC_BlockRewardsTracking() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 	querySrvr := keeper.NewQueryServer(k)
 
 	s.Run("err: empty request", func() {
@@ -98,7 +98,7 @@ func (s *KeeperTestSuite) TestGRPC_BlockRewardsTracking() {
 }
 
 func (s *KeeperTestSuite) TestGRPC_RewardsPool() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 	querySrvr := keeper.NewQueryServer(k)
 
 	s.Run("err: empty request", func() {
@@ -115,7 +115,7 @@ func (s *KeeperTestSuite) TestGRPC_RewardsPool() {
 }
 
 func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 
 	querySrvr := keeper.NewQueryServer(k)
 
@@ -136,7 +136,7 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 
 	minConsFee := sdk.NewInt64Coin("stake", 100)
 	s.Run("ok: gets estimated tx fees (custom minconsfee set)", func() {
-		s.chain.GetApp().RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(sdk.NewDecCoinFromCoin(minConsFee))
+		s.chain.GetApp().Keepers.RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(sdk.NewDecCoinFromCoin(minConsFee))
 		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)
@@ -199,7 +199,7 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 }
 
 func (s *KeeperTestSuite) TestGRPC_OutstandingRewards() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 
 	querySrvr := keeper.NewQueryServer(k)
 
@@ -227,7 +227,7 @@ func (s *KeeperTestSuite) TestGRPC_OutstandingRewards() {
 }
 
 func (s *KeeperTestSuite) TestGRPC_RewardsRecords() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 
 	querySrvr := keeper.NewQueryServer(k)
 
@@ -255,7 +255,7 @@ func (s *KeeperTestSuite) TestGRPC_RewardsRecords() {
 }
 
 func (s *KeeperTestSuite) TestGRPC_FlatFee() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 
 	querySrvr := keeper.NewQueryServer(k)
 

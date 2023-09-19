@@ -18,7 +18,7 @@ import (
 func TestGovWASMBindings(t *testing.T) {
 	// Setup
 	chain := e2eTesting.NewTestChain(t, 1)
-	ctx, keeper := chain.GetContext(), chain.GetApp().GovKeeper
+	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.GovKeeper
 
 	// Create custom plugins
 	queryPlugin := gov.NewQueryHandler(keeper)

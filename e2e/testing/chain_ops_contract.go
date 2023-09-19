@@ -81,7 +81,7 @@ func (chain *TestChain) SmartQueryContract(contractAddr sdk.AccAddress, expPass 
 	reqBz, err := msg.MarshalJSON()
 	require.NoError(t, err)
 
-	resp, err := chain.app.WASMKeeper.QuerySmart(chain.GetContext(), contractAddr, reqBz)
+	resp, err := chain.app.Keepers.WASMKeeper.QuerySmart(chain.GetContext(), contractAddr, reqBz)
 	if expPass {
 		require.NoError(t, err)
 		return resp, nil
@@ -95,7 +95,7 @@ func (chain *TestChain) SmartQueryContract(contractAddr sdk.AccAddress, expPass 
 func (chain *TestChain) GetContractInfo(contractAddr sdk.AccAddress) wasmdTypes.ContractInfo {
 	t := chain.t
 
-	info := chain.app.WASMKeeper.GetContractInfo(chain.GetContext(), contractAddr)
+	info := chain.app.Keepers.WASMKeeper.GetContractInfo(chain.GetContext(), contractAddr)
 	require.NotNil(t, info)
 
 	return *info
@@ -105,7 +105,7 @@ func (chain *TestChain) GetContractInfo(contractAddr sdk.AccAddress) wasmdTypes.
 func (chain *TestChain) GetContractMetadata(contractAddr sdk.AccAddress) rewardsTypes.ContractMetadata {
 	t := chain.t
 
-	state := chain.app.RewardsKeeper.GetState().ContractMetadataState(chain.GetContext())
+	state := chain.app.Keepers.RewardsKeeper.GetState().ContractMetadataState(chain.GetContext())
 
 	metadata, found := state.GetContractMetadata(contractAddr)
 	require.True(t, found)

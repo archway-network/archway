@@ -516,12 +516,13 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 				e2eTesting.WithBlockGasLimit(tc.blockGasLimit),
 			)
 			acc := chain.GetAccount(0)
+			keepers := chain.GetApp().Keepers
 
 			// Set mock ContractViewer (to pass contract admin check for metadata setup)
 			contractViewer := testutils.NewMockContractViewer()
-			chain.GetApp().RewardsKeeper.SetContractInfoViewer(contractViewer)
+			keepers.RewardsKeeper.SetContractInfoViewer(contractViewer)
 
-			tKeeper, rKeeper := chain.GetApp().TrackingKeeper, chain.GetApp().RewardsKeeper
+			tKeeper, rKeeper := keepers.TrackingKeeper, keepers.RewardsKeeper
 			ctx := chain.GetContext()
 
 			// Setup
@@ -569,8 +570,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 						// Emulate x/rewards AnteHandler call
 						rKeeper.TrackFeeRebatesRewards(ctx, feeRewards)
 						// Mint and transfer
-						require.NoError(t, chain.GetApp().BankKeeper.MintCoins(ctx, mintTypes.ModuleName, feeRewards))
-						require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, feeRewards))
+						require.NoError(t, keepers.BankKeeper.MintCoins(ctx, mintTypes.ModuleName, feeRewards))
+						require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, feeRewards))
 					}
 				}
 
@@ -580,8 +581,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					require.True(t, found)
 					rewardsToBurn := sdk.Coins{curBlockRewards.InflationRewards}
 
-					require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, rewardsToBurn))
-					require.NoError(t, chain.GetApp().BankKeeper.BurnCoins(ctx, rewardsTypes.TreasuryCollector, rewardsToBurn))
+					require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, rewardsToBurn))
+					require.NoError(t, keepers.BankKeeper.BurnCoins(ctx, rewardsTypes.TreasuryCollector, rewardsToBurn))
 				}
 
 				// Track inflation rewards
@@ -593,8 +594,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					// Emulate x/rewards MintKeeper call
 					rKeeper.TrackInflationRewards(ctx, inflationReward)
 					// Mint and transfer
-					require.NoError(t, chain.GetApp().BankKeeper.MintCoins(ctx, mintTypes.ModuleName, inflationRewards))
-					require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, inflationRewards))
+					require.NoError(t, keepers.BankKeeper.MintCoins(ctx, mintTypes.ModuleName, inflationRewards))
+					require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, inflationRewards))
 				} else {
 					// We have to remove it since it was created by the x/mint
 					rKeeper.GetState().BlockRewardsState(ctx).DeleteBlockRewards(ctx.BlockHeight())
@@ -607,7 +608,7 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 				// Burn all the treasury collected for previous blocks
 				{
 					treasuryBalanceInitial := chain.GetModuleBalance(rewardsTypes.TreasuryCollector)
-					require.NoError(t, chain.GetApp().BankKeeper.BurnCoins(chain.GetContext(), rewardsTypes.TreasuryCollector, treasuryBalanceInitial))
+					require.NoError(t, keepers.BankKeeper.BurnCoins(chain.GetContext(), rewardsTypes.TreasuryCollector, treasuryBalanceInitial))
 				}
 
 				chain.NextBlock(0)
@@ -619,7 +620,7 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 				require.NoError(t, err)
 
 				// Check the number of records created
-				recordsCreated := chain.GetApp().RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(outExpected.rewardsAddr)
+				recordsCreated := keepers.RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(outExpected.rewardsAddr)
 				require.Len(t, recordsCreated, outExpected.recordsNum)
 
 				// Basic check of records and merge total rewards
@@ -640,7 +641,7 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 			{
 				treasuryPoolExpected, err := sdk.ParseCoinsNormalized(tc.treasuryExpected)
 				require.NoError(t, err)
-				treasuryPoolReceived := chain.GetApp().RewardsKeeper.TreasuryPool(chain.GetContext())
+				treasuryPoolReceived := keepers.RewardsKeeper.TreasuryPool(chain.GetContext())
 				assert.Equal(t, treasuryPoolExpected.String(), treasuryPoolReceived.String(), "treasury pool")
 			}
 

@@ -26,8 +26,9 @@ func TestWASMBindingPlugins(t *testing.T) {
 	ctx := chain.GetContext()
 
 	// Create custom plugins
-	rewardsKeeper := chain.GetApp().RewardsKeeper
-	govKeeper := chain.GetApp().GovKeeper
+	keepers := chain.GetApp().Keepers
+	rewardsKeeper := keepers.RewardsKeeper
+	govKeeper := keepers.GovKeeper
 	msgPlugin := wasmbinding.BuildWasmMsgDecorator(rewardsKeeper)
 	queryPlugin := wasmbinding.BuildWasmQueryPlugin(rewardsKeeper, govKeeper)
 
