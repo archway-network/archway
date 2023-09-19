@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/archway-network/archway/app/upgrades"
@@ -42,6 +43,7 @@ var Upgrade = upgrades.Upgrade{
 		Added: []string{
 			crisistypes.ModuleName,
 			consensustypes.ModuleName,
+			group.ModuleName,
 		},
 	},
 }
