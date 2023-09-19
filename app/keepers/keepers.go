@@ -1,4 +1,4 @@
-package app
+package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -29,7 +29,7 @@ type ArchwayKeepers struct {
 	BankKeeper       bankkeeper.Keeper
 	CapabilityKeeper *capabilitykeeper.Keeper
 	StakingKeeper    stakingkeeper.Keeper
-	slashingKeeper   slashingkeeper.Keeper
+	SlashingKeeper   slashingkeeper.Keeper
 	MintKeeper       mintkeeper.Keeper
 	DistrKeeper      distrkeeper.Keeper
 	GovKeeper        govkeeper.Keeper

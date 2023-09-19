@@ -183,11 +183,11 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 	/* Handle slashing state. */
 
 	// reset start height on signing infos
-	app.Keepers.slashingKeeper.IterateValidatorSigningInfos(
+	app.Keepers.SlashingKeeper.IterateValidatorSigningInfos(
 		ctx,
 		func(addr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 			info.StartHeight = 0
-			app.Keepers.slashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
+			app.Keepers.SlashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
 			return false
 		},
 	)

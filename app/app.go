@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/x/genmsg"
 
 	wasmdKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -265,7 +266,7 @@ type ArchwayApp struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// Keepers
-	Keepers ArchwayKeepers
+	Keepers keepers.ArchwayKeepers
 
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
@@ -326,7 +327,7 @@ func NewArchwayApp(
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
-		Keepers:           ArchwayKeepers{},
+		Keepers:           keepers.ArchwayKeepers{},
 	}
 
 	app.Keepers.ParamsKeeper = initParamsKeeper(
@@ -393,7 +394,7 @@ func NewArchwayApp(
 		authtypes.FeeCollectorName,
 		app.ModuleAccountAddrs(),
 	)
-	app.Keepers.slashingKeeper = slashingkeeper.NewKeeper(
+	app.Keepers.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
 		keys[slashingtypes.StoreKey],
 		&stakingKeeper,
@@ -416,7 +417,7 @@ func NewArchwayApp(
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.Keepers.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.Keepers.DistrKeeper.Hooks(), app.Keepers.slashingKeeper.Hooks()),
+		stakingtypes.NewMultiStakingHooks(app.Keepers.DistrKeeper.Hooks(), app.Keepers.SlashingKeeper.Hooks()),
 	)
 
 	app.Keepers.IBCKeeper = ibckeeper.NewKeeper(
@@ -475,7 +476,7 @@ func NewArchwayApp(
 		appCodec,
 		keys[evidencetypes.StoreKey],
 		&app.Keepers.StakingKeeper,
-		app.Keepers.slashingKeeper,
+		app.Keepers.SlashingKeeper,
 	)
 	app.Keepers.EvidenceKeeper = *evidenceKeeper
 
@@ -610,7 +611,7 @@ func NewArchwayApp(
 		capability.NewAppModule(appCodec, *app.Keepers.CapabilityKeeper),
 		gov.NewAppModule(appCodec, app.Keepers.GovKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper),
 		mint.NewAppModule(appCodec, app.Keepers.MintKeeper, app.Keepers.AccountKeeper),
-		slashing.NewAppModule(appCodec, app.Keepers.slashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper),
+		slashing.NewAppModule(appCodec, app.Keepers.SlashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper),
 		distr.NewAppModule(appCodec, app.Keepers.DistrKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper),
 		staking.NewAppModule(appCodec, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper),
 		upgrade.NewAppModule(app.Keepers.UpgradeKeeper),
@@ -756,7 +757,7 @@ func NewArchwayApp(
 		mint.NewAppModule(appCodec, app.Keepers.MintKeeper, app.Keepers.AccountKeeper),
 		staking.NewAppModule(appCodec, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper),
 		distr.NewAppModule(appCodec, app.Keepers.DistrKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper),
-		slashing.NewAppModule(appCodec, app.Keepers.slashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper),
+		slashing.NewAppModule(appCodec, app.Keepers.SlashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper),
 		params.NewAppModule(app.Keepers.ParamsKeeper),
 		evidence.NewAppModule(app.Keepers.EvidenceKeeper),
 		wasm.NewAppModule(appCodec, &app.Keepers.WASMKeeper, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper),

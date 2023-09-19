@@ -7,6 +7,6 @@ import "github.com/archway-network/archway/app/upgrades"
 func (app *ArchwayApp) AddUpgradeHandler(upgrade upgrades.Upgrade) {
 	app.Keepers.UpgradeKeeper.SetUpgradeHandler(
 		upgrade.UpgradeName,
-		upgrade.CreateUpgradeHandler(app.mm, app.configurator, app.Keepers.AccountKeeper),
+		upgrade.CreateUpgradeHandler(app.mm, app.configurator, app.Keepers),
 	)
 }
