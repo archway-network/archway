@@ -31,7 +31,6 @@ const (
 )
 
 func (suite *UpgradeTestSuite) TestUpgrade() {
-	keepers := suite.archway.GetApp().Keepers
 	testCases := []struct {
 		name         string
 		pre_upgrade  func()
@@ -40,7 +39,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		{
 			"Feecollector does not have burn permissions, we ensure upgrade happens and account gets the burn permissions",
 			func() {
-				accountKeeper := keepers.AccountKeeper
+				accountKeeper := suite.archway.GetApp().Keepers.AccountKeeper
 				fcAccount := accountKeeper.GetModuleAccount(suite.archway.GetContext(), authtypes.FeeCollectorName)
 
 				account, ok := fcAccount.(*authtypes.ModuleAccount)
@@ -52,7 +51,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().False(fcAccount.HasPermission(authtypes.Burner))
 			},
 			func() {
-				accountKeeper := keepers.AccountKeeper
+				accountKeeper := suite.archway.GetApp().Keepers.AccountKeeper
 				fcAccount := accountKeeper.GetModuleAccount(suite.archway.GetContext(), authtypes.FeeCollectorName)
 				suite.Require().True(fcAccount.HasPermission(authtypes.Burner))
 			},
@@ -60,12 +59,12 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		{
 			"Feecollector already has burn permissions, we ensure upgrade happens smoothly",
 			func() {
-				accountKeeper := keepers.AccountKeeper
+				accountKeeper := suite.archway.GetApp().Keepers.AccountKeeper
 				fcAccount := accountKeeper.GetModuleAccount(suite.archway.GetContext(), authtypes.FeeCollectorName)
 				suite.Require().True(fcAccount.HasPermission(authtypes.Burner))
 			},
 			func() {
-				accountKeeper := keepers.AccountKeeper
+				accountKeeper := suite.archway.GetApp().Keepers.AccountKeeper
 				fcAccount := accountKeeper.GetModuleAccount(suite.archway.GetContext(), authtypes.FeeCollectorName)
 				suite.Require().True(fcAccount.HasPermission(authtypes.Burner))
 			},
@@ -80,7 +79,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 			ctx := suite.archway.GetContext().WithBlockHeight(dummyUpgradeHeight - 1)
 			plan := upgradetypes.Plan{Name: "v4.0.2", Height: dummyUpgradeHeight}
-			upgradekeeper := keepers.UpgradeKeeper
+			upgradekeeper := suite.archway.GetApp().Keepers.UpgradeKeeper
 			err := upgradekeeper.ScheduleUpgrade(ctx, plan)
 			suite.Require().NoError(err)
 			_, exists := upgradekeeper.GetUpgradePlan(ctx)
