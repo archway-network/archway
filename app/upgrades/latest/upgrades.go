@@ -8,6 +8,7 @@ import (
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/archway-network/archway/app/upgrades"
@@ -44,6 +45,7 @@ var Upgrade = upgrades.Upgrade{
 			crisistypes.ModuleName,
 			consensustypes.ModuleName,
 			group.ModuleName,
+			nft.ModuleName,
 		},
 	},
 }
