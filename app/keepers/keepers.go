@@ -2,8 +2,6 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
-	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -22,6 +20,9 @@ import (
 	ibcfeekeeper "github.com/cosmos/ibc-go/v4/modules/apps/29-fee/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v4/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+
+	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
+	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 )
 
 type ArchwayKeepers struct {
