@@ -76,7 +76,6 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govV1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govV1Beta1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
@@ -322,8 +321,10 @@ func NewArchwayApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		feegrant.StoreKey, authzkeeper.StoreKey, wasm.StoreKey,
-		trackingTypes.StoreKey, rewardsTypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey,
+		feegrant.StoreKey, authzkeeper.StoreKey, wasm.StoreKey, consensusparamtypes.StoreKey,
+		icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey,
+
+		trackingTypes.StoreKey, rewardsTypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -391,7 +392,7 @@ func NewArchwayApp(
 		keys[feegrant.StoreKey],
 		app.Keepers.AccountKeeper,
 	)
-	stakingKeeper := stakingkeeper.NewKeeper(
+	app.Keepers.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec,
 		keys[stakingtypes.StoreKey],
 		app.Keepers.AccountKeeper,
@@ -403,7 +404,7 @@ func NewArchwayApp(
 		keys[distrtypes.StoreKey],
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
-		stakingKeeper,
+		app.Keepers.StakingKeeper,
 		authtypes.FeeCollectorName,
 		govModuleAddr,
 	)
@@ -411,7 +412,7 @@ func NewArchwayApp(
 		appCodec,
 		legacyAmino,
 		keys[slashingtypes.StoreKey],
-		stakingKeeper,
+		app.Keepers.StakingKeeper,
 		govModuleAddr,
 	)
 	app.Keepers.CrisisKeeper = *crisiskeeper.NewKeeper(
@@ -443,7 +444,7 @@ func NewArchwayApp(
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	stakingKeeper.SetHooks(
+	app.Keepers.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.Keepers.DistrKeeper.Hooks(), app.Keepers.SlashingKeeper.Hooks()),
 	)
 
@@ -502,7 +503,7 @@ func NewArchwayApp(
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec,
 		keys[evidencetypes.StoreKey],
-		&app.Keepers.StakingKeeper,
+		app.Keepers.StakingKeeper,
 		app.Keepers.SlashingKeeper,
 	)
 	app.Keepers.EvidenceKeeper = *evidenceKeeper
@@ -613,7 +614,7 @@ func NewArchwayApp(
 		keys[govtypes.StoreKey],
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
-		stakingKeeper,
+		app.Keepers.StakingKeeper,
 		app.MsgServiceRouter(),
 		govtypes.DefaultConfig(),
 		govModuleAddr,
@@ -644,7 +645,7 @@ func NewArchwayApp(
 		mint.NewAppModule(appCodec, app.Keepers.MintKeeper, app.Keepers.AccountKeeper, nil, app.getSubspace(minttypes.ModuleName)),
 		slashing.NewAppModule(appCodec, app.Keepers.SlashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(slashingtypes.ModuleName)),
 		distr.NewAppModule(appCodec, app.Keepers.DistrKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(distrtypes.ModuleName)),
-		staking.NewAppModule(appCodec, &app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(stakingtypes.ModuleName)),
+		staking.NewAppModule(appCodec, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(&app.Keepers.UpgradeKeeper),
 		wasm.NewAppModule(appCodec, &app.Keepers.WASMKeeper, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.MsgServiceRouter(), app.getSubspace(wasm.ModuleName)),
 		evidence.NewAppModule(app.Keepers.EvidenceKeeper),
@@ -795,7 +796,7 @@ func NewArchwayApp(
 		authzmodule.NewAppModule(appCodec, app.Keepers.AuthzKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, &app.Keepers.GovKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, app.Keepers.MintKeeper, app.Keepers.AccountKeeper, nil, app.getSubspace(minttypes.ModuleName)),
-		staking.NewAppModule(appCodec, &app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(stakingtypes.ModuleName)),
+		staking.NewAppModule(appCodec, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(stakingtypes.ModuleName)),
 		distr.NewAppModule(appCodec, app.Keepers.DistrKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(distrtypes.ModuleName)),
 		slashing.NewAppModule(appCodec, app.Keepers.SlashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(slashingtypes.ModuleName)),
 		params.NewAppModule(app.Keepers.ParamsKeeper),
@@ -1036,7 +1037,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govV1types.ParamKeyTable())
+	paramsKeeper.Subspace(govtypes.ModuleName)
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibcexported.ModuleName)
