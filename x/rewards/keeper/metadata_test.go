@@ -10,7 +10,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestSetContractMetadata() {
-	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 	contractAdminAcc, otherAcc := s.chain.GetAccount(0), s.chain.GetAccount(1)
 	rewardAddr := sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 

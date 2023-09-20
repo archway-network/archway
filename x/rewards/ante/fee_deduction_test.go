@@ -115,11 +115,12 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 			)
 			acc := chain.GetAccount(0)
 			ctx := chain.GetContext()
+			keepers := chain.GetApp().Keepers
 
 			// Mint coins for account
 			if err := tc.feeCoins.Validate(); err == nil {
-				require.NoError(t, chain.GetApp().BankKeeper.MintCoins(ctx, mintTypes.ModuleName, tc.feeCoins))
-				require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToAccount(ctx, mintTypes.ModuleName, acc.Address, tc.feeCoins))
+				require.NoError(t, keepers.BankKeeper.MintCoins(ctx, mintTypes.ModuleName, tc.feeCoins))
+				require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, mintTypes.ModuleName, acc.Address, tc.feeCoins))
 			}
 
 			// Fetch initial balances
@@ -134,7 +135,7 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 			)
 
 			// Call the deduction Ante handler manually
-			anteHandler := ante.NewDeductFeeDecorator(chain.GetAppCodec(), chain.GetApp().AccountKeeper, chain.GetApp().BankKeeper, chain.GetApp().FeeGrantKeeper, chain.GetApp().RewardsKeeper)
+			anteHandler := ante.NewDeductFeeDecorator(chain.GetAppCodec(), keepers.AccountKeeper, keepers.BankKeeper, keepers.FeeGrantKeeper, keepers.RewardsKeeper)
 			_, err = anteHandler.AnteHandle(ctx, tx, false, testutils.NoopAnteHandler)
 			if tc.errExpected {
 				require.Error(t, err)
@@ -159,8 +160,8 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 
 			// Check rewards record
 			if tc.rewardRecordExpected {
-				txID := chain.GetApp().TrackingKeeper.GetCurrentTxID(ctx)
-				rewardsRecordsReceived, found := chain.GetApp().RewardsKeeper.GetState().TxRewardsState(ctx).GetTxRewards(txID)
+				txID := keepers.TrackingKeeper.GetCurrentTxID(ctx)
+				rewardsRecordsReceived, found := keepers.RewardsKeeper.GetState().TxRewardsState(ctx).GetTxRewards(txID)
 				require.True(t, found)
 
 				assert.Equal(t, txID, rewardsRecordsReceived.TxId)

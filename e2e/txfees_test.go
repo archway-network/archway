@@ -56,6 +56,7 @@ func (s *E2ETestSuite) TestTxFees() {
 			uint64(60*60*8766/1),      // 1 seconds block time (Archway mainnet param)
 		),
 	)
+	keepers := chain.GetApp().Keepers
 
 	// Check total supply
 	{
@@ -64,7 +65,7 @@ func (s *E2ETestSuite) TestTxFees() {
 		totalSupplyMaxAmtExpected, ok := sdk.NewIntFromString("1000000050000000") // small gap for minted coins for 2 blocks
 		s.Require().True(ok)
 
-		totalSupplyReceived := chain.GetApp().BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
+		totalSupplyReceived := keepers.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
 		s.Require().Truef(totalSupplyReceived.Amount.LTE(totalSupplyMaxAmtExpected), "total supply %s", totalSupplyReceived.String())
 	}
 
@@ -80,7 +81,7 @@ func (s *E2ETestSuite) TestTxFees() {
 	// Send some coins to the rewardsAcc to pay withdraw Tx fees
 	{
 		s.Require().NoError(
-			chain.GetApp().BankKeeper.SendCoins(
+			keepers.BankKeeper.SendCoins(
 				chain.GetContext(),
 				senderAcc.Address,
 				rewardsAcc.Address,
@@ -99,8 +100,8 @@ func (s *E2ETestSuite) TestTxFees() {
 	{
 		ctx := chain.GetContext()
 
-		mintParams := chain.GetApp().MintKeeper.GetParams(ctx)
-		mintedCoin := chain.GetApp().MintKeeper.GetMinter(ctx).BlockProvision(mintParams)
+		mintParams := keepers.MintKeeper.GetParams(ctx)
+		mintedCoin := keepers.MintKeeper.GetMinter(ctx).BlockProvision(mintParams)
 		s.T().Logf("x/mint minted amount per block: %s", coinsToStr(mintedCoin))
 	}
 
@@ -118,7 +119,7 @@ func (s *E2ETestSuite) TestTxFees() {
 		{
 			ctx := chain.GetContext()
 
-			if fee, found := chain.GetApp().RewardsKeeper.GetMinConsensusFee(ctx); found {
+			if fee, found := keepers.RewardsKeeper.GetMinConsensusFee(ctx); found {
 				minConsensusFee = fee
 
 				// Check the event from the previous BeginBlocker
@@ -184,7 +185,7 @@ func (s *E2ETestSuite) TestTxFees() {
 		var txGasTracked uint64
 		{
 			ctx := chain.GetContext()
-			txInfosState := chain.GetApp().TrackingKeeper.GetState().TxInfoState(ctx)
+			txInfosState := keepers.TrackingKeeper.GetState().TxInfoState(ctx)
 
 			txInfos := txInfosState.GetTxInfosByBlock(ctx.BlockHeight() - 1)
 			s.Require().GreaterOrEqual(len(txInfos), 1) // at least one Tx in the previous block (+1 for the withdrawal operation)
@@ -195,7 +196,7 @@ func (s *E2ETestSuite) TestTxFees() {
 		var blockRewards sdk.Coin
 		{
 			ctx := chain.GetContext()
-			blockRewardsState := chain.GetApp().RewardsKeeper.GetState().BlockRewardsState(ctx)
+			blockRewardsState := keepers.RewardsKeeper.GetState().BlockRewardsState(ctx)
 
 			blockRewardsInfo, found := blockRewardsState.GetBlockRewards(ctx.BlockHeight() - 1)
 			s.Require().True(found)
@@ -225,7 +226,7 @@ func (s *E2ETestSuite) TestTxFees() {
 		{
 			const withdrawGas = 100_000
 
-			minConsFee, found := chain.GetApp().RewardsKeeper.GetMinConsensusFee(chain.GetContext())
+			minConsFee, found := keepers.RewardsKeeper.GetMinConsensusFee(chain.GetContext())
 			s.Require().True(found)
 
 			withdrawTxFees.Amount = minConsFee.Amount.MulInt64(withdrawGas).RoundInt()

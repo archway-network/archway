@@ -995,7 +995,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsRewardsRecordsQuery() {
 		s.VoterNewVoting(chain, contractAddr, acc, "Test", []string{"a", "b"}, 1*time.Hour)
 		s.VoterVote(chain, contractAddr, acc, 0, "a", true)
 
-		recordsExpected = chain.GetApp().RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+		recordsExpected = chain.GetApp().Keepers.RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
 		s.Require().Len(recordsExpected, 2)
 	}
 
@@ -1099,7 +1099,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
 		s.VoterVote(chain, contractAddr, acc2, 0, "b", false)
 		s.VoterVote(chain, contractAddr, acc3, 0, "c", true)
 
-		recordsExpected = chain.GetApp().RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+		recordsExpected = chain.GetApp().Keepers.RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
 		s.Require().Len(recordsExpected, 4)
 
 		for _, record := range recordsExpected {

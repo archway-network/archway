@@ -281,15 +281,15 @@ func (chain *TestChain) GetAccount(idx int) Account {
 
 // GetBalance returns the balance of the given account.
 func (chain *TestChain) GetBalance(accAddr sdk.AccAddress) sdk.Coins {
-	return chain.app.BankKeeper.GetAllBalances(chain.GetContext(), accAddr)
+	return chain.app.Keepers.BankKeeper.GetAllBalances(chain.GetContext(), accAddr)
 }
 
 // GetModuleBalance returns the balance of the given module.
 func (chain *TestChain) GetModuleBalance(moduleName string) sdk.Coins {
 	ctx := chain.GetContext()
-	moduleAcc := chain.app.AccountKeeper.GetModuleAccount(ctx, moduleName)
+	moduleAcc := chain.app.Keepers.AccountKeeper.GetModuleAccount(ctx, moduleName)
 
-	return chain.app.BankKeeper.GetAllBalances(chain.GetContext(), moduleAcc.GetAddress())
+	return chain.app.Keepers.BankKeeper.GetAllBalances(chain.GetContext(), moduleAcc.GetAddress())
 }
 
 // GetContext returns a context for the current block.
@@ -327,7 +327,7 @@ func (chain *TestChain) GetBlockHeight() int64 {
 
 // GetUnbondingTime returns x/staking validator unbonding time.
 func (chain *TestChain) GetUnbondingTime() time.Duration {
-	return chain.app.StakingKeeper.UnbondingTime(chain.GetContext())
+	return chain.app.Keepers.StakingKeeper.UnbondingTime(chain.GetContext())
 }
 
 // GetApp returns the application.
@@ -471,7 +471,7 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 	options := chain.buildSendMsgOptions(opts...)
 
 	// Get the sender account
-	senderAccI := chain.app.AccountKeeper.GetAccount(chain.GetContext(), senderAcc.Address)
+	senderAccI := chain.app.Keepers.AccountKeeper.GetAccount(chain.GetContext(), senderAcc.Address)
 	require.NotNil(t, senderAccI)
 
 	// Build and sign Tx
