@@ -34,12 +34,12 @@ func (app *ArchwayApp) setupUpgrades() {
 }
 
 func (app *ArchwayApp) setUpgradeStoreLoaders() {
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	upgradeInfo, err := app.Keepers.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
 	}
 
-	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if app.Keepers.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		return
 	}
 
@@ -52,9 +52,9 @@ func (app *ArchwayApp) setUpgradeStoreLoaders() {
 
 func (app *ArchwayApp) setUpgradeHandlers() {
 	for _, u := range Upgrades {
-		app.UpgradeKeeper.SetUpgradeHandler(
+		app.Keepers.UpgradeKeeper.SetUpgradeHandler(
 			u.UpgradeName,
-			u.CreateUpgradeHandler(app.mm, app.configurator, app.AccountKeeper),
+			u.CreateUpgradeHandler(app.mm, app.configurator, app.Keepers),
 		)
 	}
 }

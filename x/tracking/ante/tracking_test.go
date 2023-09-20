@@ -13,7 +13,7 @@ import (
 
 func TestTrackingAnteHandler(t *testing.T) {
 	chain := e2eTesting.NewTestChain(t, 1)
-	ctx, keeper := chain.GetContext(), chain.GetApp().TrackingKeeper
+	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.TrackingKeeper
 
 	anteHandler := ante.NewTxGasTrackingDecorator(keeper)
 	for i := uint64(1); i < 10; i++ {

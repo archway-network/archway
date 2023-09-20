@@ -16,7 +16,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 	contractAdminAcc, otherAcc := s.chain.GetAccount(0), s.chain.GetAccount(1)
 	contractViewer := testutils.NewMockContractViewer()
 	k.SetContractInfoViewer(contractViewer)
@@ -125,7 +125,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 }
 
 func (s *KeeperTestSuite) TestMsgServer_WithdrawRewards() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 	acc := s.chain.GetAccount(0).Address
 
 	server := keeper.NewMsgServer(k)
@@ -229,7 +229,7 @@ func (s *KeeperTestSuite) TestMsgServer_WithdrawRewards() {
 }
 
 func (s *KeeperTestSuite) TestMsgServer_SetFlatFee() {
-	ctx, k := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 	contractAdminAcc, otherAcc := s.chain.GetAccount(0), s.chain.GetAccount(1)
 	contractViewer := testutils.NewMockContractViewer()
 	k.SetContractInfoViewer(contractViewer)

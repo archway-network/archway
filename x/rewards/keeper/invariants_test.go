@@ -140,15 +140,16 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 			// Create chain
 			chain := e2eTesting.NewTestChain(t, 1)
 			ctx := chain.GetContext()
+			keepers := chain.GetApp().Keepers
 
 			// Remove all pool coins (not empty due to inflation rewards for previous blocks)
-			poolInitial := chain.GetApp().RewardsKeeper.UndistributedRewardsPool(ctx)
-			require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, types.ContractRewardCollector, mintTypes.ModuleName, poolInitial))
+			poolInitial := keepers.RewardsKeeper.UndistributedRewardsPool(ctx)
+			require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ContractRewardCollector, mintTypes.ModuleName, poolInitial))
 
 			// Mint coins for module account
 			if tc.poolCoins != nil {
-				require.NoError(t, chain.GetApp().BankKeeper.MintCoins(ctx, mintTypes.ModuleName, tc.poolCoins))
-				require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, types.ContractRewardCollector, tc.poolCoins))
+				require.NoError(t, keepers.BankKeeper.MintCoins(ctx, mintTypes.ModuleName, tc.poolCoins))
+				require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, types.ContractRewardCollector, tc.poolCoins))
 			}
 
 			// Store rewards records
@@ -159,10 +160,10 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 				}
 			}
 
-			chain.GetApp().RewardsKeeper.GetState().RewardsRecord(ctx).Import(recordLastID, tc.rewardsRecords)
+			keepers.RewardsKeeper.GetState().RewardsRecord(ctx).Import(recordLastID, tc.rewardsRecords)
 
 			// Check invariant
-			_, brokenReceived := keeper.ModuleAccountBalanceInvariant(chain.GetApp().RewardsKeeper)(ctx)
+			_, brokenReceived := keeper.ModuleAccountBalanceInvariant(keepers.RewardsKeeper)(ctx)
 			assert.Equal(t, tc.brokenExpected, brokenReceived)
 		})
 	}

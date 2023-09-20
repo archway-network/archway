@@ -37,8 +37,9 @@ func TestRewardsWASMBindings(t *testing.T) {
 	contractViewer.AddContractAdmin(contractXAddr.String(), acc.Address.String())
 	contractViewer.AddContractAdmin(contractYAddr.String(), acc.Address.String())
 
-	chain.GetApp().RewardsKeeper.SetContractInfoViewer(contractViewer)
-	ctx, keeper := chain.GetContext(), chain.GetApp().RewardsKeeper
+	keepers := chain.GetApp().Keepers
+	ctx, keeper := chain.GetContext(), keepers.RewardsKeeper
+	keeper.SetContractInfoViewer(contractViewer)
 
 	// Create custom plugins
 	queryPlugin := rewards.NewQueryHandler(keeper)
@@ -329,8 +330,8 @@ func TestRewardsWASMBindings(t *testing.T) {
 	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record1RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
 	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record2RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
 	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record3RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
-	require.NoError(t, chain.GetApp().MintKeeper.MintCoins(ctx, recordsRewards))
-	require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, recordsRewards))
+	require.NoError(t, keepers.MintKeeper.MintCoins(ctx, recordsRewards))
+	require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, recordsRewards))
 
 	// Query available rewards
 	t.Run("Query new rewards", func(t *testing.T) {

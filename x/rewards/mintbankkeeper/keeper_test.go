@@ -124,6 +124,7 @@ func TestMintBankKeeper(t *testing.T) {
 				e2eTesting.WithBlockGasLimit(tc.blockMaxGas),
 			)
 			ctx := chain.GetContext()
+			keepers := chain.GetApp().Keepers
 
 			// Fetch initial balances
 			srcBalanceBefore := chain.GetModuleBalance(tc.srcModule)
@@ -134,14 +135,14 @@ func TestMintBankKeeper(t *testing.T) {
 			transferCoins, err := sdk.ParseCoinsNormalized(tc.transferCoins)
 			require.NoError(t, err)
 
-			require.NoError(t, chain.GetApp().MintKeeper.MintCoins(ctx, transferCoins))
-			require.NoError(t, chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, tc.srcModule, transferCoins))
+			require.NoError(t, keepers.MintKeeper.MintCoins(ctx, transferCoins))
+			require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, tc.srcModule, transferCoins))
 
 			// Remove rewards records which is created automagically
-			chain.GetApp().RewardsKeeper.GetState().DeleteBlockRewardsCascade(ctx, ctx.BlockHeight())
+			keepers.RewardsKeeper.GetState().DeleteBlockRewardsCascade(ctx, ctx.BlockHeight())
 
 			// Transfer via keeper
-			k := mintbankkeeper.NewKeeper(chain.GetApp().BankKeeper, chain.GetApp().RewardsKeeper)
+			k := mintbankkeeper.NewKeeper(keepers.BankKeeper, keepers.RewardsKeeper)
 			err = k.SendCoinsFromModuleToModule(ctx, tc.srcModule, tc.dstModule, transferCoins)
 			if tc.errExpected {
 				assert.Error(t, err)
@@ -168,7 +169,7 @@ func TestMintBankKeeper(t *testing.T) {
 			assert.Equal(t, rewardsDiffExpected.String(), rewardsBalanceDiffReceived.String())
 
 			// Check rewards record
-			rewardsRecordReceived, found := chain.GetApp().RewardsKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
+			rewardsRecordReceived, found := keepers.RewardsKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
 			if !tc.rewardRecordExpected {
 				require.False(t, found)
 				return
@@ -185,7 +186,7 @@ func TestMintBankKeeper(t *testing.T) {
 			assert.Equal(t, maxGasExpected, rewardsRecordReceived.MaxGas)
 
 			// Check minimum consensus fee record
-			minConsFeeReceived, minConfFeeFound := chain.GetApp().RewardsKeeper.GetState().MinConsensusFee(ctx).GetFee()
+			minConsFeeReceived, minConfFeeFound := keepers.RewardsKeeper.GetState().MinConsensusFee(ctx).GetFee()
 			if maxGasExpected == 0 || rewardsDiffExpected.IsZero() {
 				assert.False(t, minConfFeeFound)
 			} else {
@@ -195,7 +196,7 @@ func TestMintBankKeeper(t *testing.T) {
 					Denom: sdk.DefaultBondDenom,
 					Amount: sdk.NewDecCoinFromCoin(rewardsDiffExpected[0]).Amount.Quo(
 						pkg.NewDecFromUint64(maxGasExpected).Mul(
-							chain.GetApp().RewardsKeeper.TxFeeRebateRatio(ctx).Sub(sdk.OneDec()),
+							keepers.RewardsKeeper.TxFeeRebateRatio(ctx).Sub(sdk.OneDec()),
 						),
 					).Neg(),
 				}

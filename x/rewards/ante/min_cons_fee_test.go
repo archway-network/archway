@@ -90,17 +90,18 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 			// Create chain
 			chain := e2eTesting.NewTestChain(t, 1)
 			ctx := chain.GetContext()
+			keepers := chain.GetApp().Keepers
 
 			// Set min consensus fee
 			minConsFee, err := sdk.ParseDecCoin(tc.minConsFee)
 			require.NoError(t, err)
 
-			chain.GetApp().RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(minConsFee)
-			params := chain.GetApp().RewardsKeeper.GetParams(ctx)
+			keepers.RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(minConsFee)
+			params := keepers.RewardsKeeper.GetParams(ctx)
 			coin, err := sdk.ParseDecCoin(tc.minPoG)
 			require.NoError(t, err)
 			params.MinPriceOfGas = coin
-			chain.GetApp().RewardsKeeper.SetParams(ctx, params)
+			keepers.RewardsKeeper.SetParams(ctx, params)
 
 			// Build transaction
 			txFees, err := sdk.ParseCoinsNormalized(tc.txFees)
@@ -112,7 +113,7 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 			)
 
 			// Call the Ante handler manually
-			anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), chain.GetApp().RewardsKeeper)
+			anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), keepers.RewardsKeeper)
 			_, err = anteHandler.AnteHandle(ctx, tx, false, testutils.NoopAnteHandler)
 			if tc.errExpected != nil {
 				assert.ErrorIs(t, err, tc.errExpected)
@@ -127,15 +128,16 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 	// Create chain
 	chain := e2eTesting.NewTestChain(t, 1)
 	ctx := chain.GetContext()
+	keepers := chain.GetApp().Keepers
 
 	// Set min consensus fee
 	minConsFee, err := sdk.ParseDecCoin("0.1stake")
 	require.NoError(t, err)
-	chain.GetApp().RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(minConsFee)
+	keepers.RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(minConsFee)
 
 	contractAdminAcc := chain.GetAccount(0)
 	contractViewer := testutils.NewMockContractViewer()
-	chain.GetApp().RewardsKeeper.SetContractInfoViewer(contractViewer)
+	keepers.RewardsKeeper.SetContractInfoViewer(contractViewer)
 	contractAddrs := e2eTesting.GenContractAddresses(3)
 
 	// Test contract address which dosent have flatfee set
@@ -147,10 +149,10 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 	metaCurrentDiff.ContractAddress = contractFlatFeeDiffDenomSet.String()
 	metaCurrentDiff.RewardsAddress = contractAdminAcc.Address.String()
 	metaCurrentDiff.OwnerAddress = contractAdminAcc.Address.String()
-	err = chain.GetApp().RewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractFlatFeeDiffDenomSet, metaCurrentDiff)
+	err = keepers.RewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractFlatFeeDiffDenomSet, metaCurrentDiff)
 	require.NoError(t, err)
 	flatFeeDiff := sdk.NewInt64Coin("test", 10)
-	err = chain.GetApp().RewardsKeeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
+	err = keepers.RewardsKeeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
 		ContractAddress: contractFlatFeeDiffDenomSet.String(),
 		FlatFee:         flatFeeDiff,
 	})
@@ -163,10 +165,10 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 	metaCurrentSame.ContractAddress = contractFlatFeeSameDenomSet.String()
 	metaCurrentSame.RewardsAddress = contractAdminAcc.Address.String()
 	metaCurrentSame.OwnerAddress = contractAdminAcc.Address.String()
-	err = chain.GetApp().RewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractFlatFeeSameDenomSet, metaCurrentSame)
+	err = keepers.RewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractFlatFeeSameDenomSet, metaCurrentSame)
 	require.NoError(t, err)
 	flatFeeSame := sdk.NewInt64Coin("stake", 10)
-	err = chain.GetApp().RewardsKeeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
+	err = keepers.RewardsKeeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
 		ContractAddress: contractFlatFeeSameDenomSet.String(),
 		FlatFee:         flatFeeSame,
 	})
@@ -349,7 +351,7 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 				testutils.WithMockFeeTxGas(1000),
 				testutils.WithMockFeeTxMsgs(msgs...),
 			)
-			anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), chain.GetApp().RewardsKeeper)
+			anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), keepers.RewardsKeeper)
 
 			_, err = anteHandler.AnteHandle(ctx, tx, false, testutils.NoopAnteHandler)
 
@@ -364,8 +366,9 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 
 func TestAuthzDecodeAntehandler(t *testing.T) {
 	chain := e2eTesting.NewTestChain(t, 1)
+	keepers := chain.GetApp().Keepers
 	minConsFee, _ := sdk.ParseDecCoin("0.1stake") // Set min consensus fee
-	chain.GetApp().RewardsKeeper.GetState().MinConsensusFee(chain.GetContext()).SetFee(minConsFee)
+	keepers.RewardsKeeper.GetState().MinConsensusFee(chain.GetContext()).SetFee(minConsFee)
 	txFees, _ := sdk.ParseCoinsNormalized("100stake")
 
 	// Making a wrapped MsgDelegate
@@ -381,7 +384,7 @@ func TestAuthzDecodeAntehandler(t *testing.T) {
 		testutils.WithMockFeeTxMsgs([]sdk.Msg{&authzMsg}...),
 	)
 
-	anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), chain.GetApp().RewardsKeeper)
+	anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), keepers.RewardsKeeper)
 	_, err := anteHandler.AnteHandle(chain.GetContext(), tx, false, testutils.NoopAnteHandler)
 
 	require.NoError(t, err)

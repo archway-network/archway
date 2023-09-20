@@ -39,6 +39,8 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Changed
 
+- [#457](https://github.com/archway-network/archway/pull/457) - Modify the upgrade handlers to pass in all the app keepers instead of just the account keeper
+
 ### Deprecated
 
 - [#439](https://github.com/archway-network/archway/pull/439) - Renaming `debug` image to `dev`

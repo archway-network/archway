@@ -33,20 +33,21 @@ func (s *KeeperTestSuite) SetupWithdrawTest(testData []withdrawTestRecordData) {
 	// Create test records
 	for _, testRecord := range testData {
 		ctx := s.chain.GetContext()
+		keepers := s.chain.GetApp().Keepers
 
 		// Get rid of the current inflationary rewards for the current block (otherwise the invariant fails)
-		blockRewards, found := s.chain.GetApp().RewardsKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
+		blockRewards, found := keepers.RewardsKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
 		s.Require().True(found)
-		s.Require().NoError(s.chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, sdk.Coins{blockRewards.InflationRewards}))
-		s.chain.GetApp().RewardsKeeper.GetState().BlockRewardsState(ctx).CreateBlockRewards(ctx.BlockHeight(), sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()), 0)
+		s.Require().NoError(keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, sdk.Coins{blockRewards.InflationRewards}))
+		keepers.RewardsKeeper.GetState().BlockRewardsState(ctx).CreateBlockRewards(ctx.BlockHeight(), sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()), 0)
 
 		// Mint rewards for the current record
 		rewardsToMint := testRecord.Rewards
-		s.Require().NoError(s.chain.GetApp().MintKeeper.MintCoins(ctx, rewardsToMint))
-		s.Require().NoError(s.chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, rewardsToMint))
+		s.Require().NoError(keepers.MintKeeper.MintCoins(ctx, rewardsToMint))
+		s.Require().NoError(keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, rewardsToMint))
 
 		// Create the record
-		s.chain.GetApp().RewardsKeeper.GetState().RewardsRecord(ctx).
+		keepers.RewardsKeeper.GetState().RewardsRecord(ctx).
 			CreateRewardsRecord(
 				testRecord.RewardsAddr,
 				testRecord.Rewards,
@@ -79,7 +80,7 @@ func (s *KeeperTestSuite) CheckWithdrawResults(rewardsAddr sdk.AccAddress, recor
 	s.Assert().Equal(totalRewardsExpected.String(), accBalanceAfter.Sub(accBalanceBefore...).String())
 
 	// Check records pruning
-	recordsState := s.chain.GetApp().RewardsKeeper.GetState().RewardsRecord(s.chain.GetContext())
+	recordsState := s.chain.GetApp().Keepers.RewardsKeeper.GetState().RewardsRecord(s.chain.GetContext())
 	for _, testRecord := range recordsUsed {
 		_, found := recordsState.GetRewardsRecord(testRecord.RecordID)
 		s.Assert().False(found, "recordID (%d): found", testRecord.RecordID)

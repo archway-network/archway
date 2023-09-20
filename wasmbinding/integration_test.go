@@ -19,7 +19,7 @@ func TestGovQuerier(t *testing.T) {
 	// we create a vote which only contains the address of account 1
 	// and we check if the contract can see the vote and match the result
 	chain := e2eTesting.NewTestChain(t, 1)
-	chain.GetApp().GovKeeper.SetVote(chain.GetContext(), sdkGov.Vote{
+	chain.GetApp().Keepers.GovKeeper.SetVote(chain.GetContext(), sdkGov.Vote{
 		ProposalId: 1,
 		Voter:      chain.GetAccount(1).Address.String(),
 		Options:    nil,

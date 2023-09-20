@@ -21,11 +21,11 @@ type TestSupport struct {
 }
 
 func (s TestSupport) IBCKeeper() *ibckeeper.Keeper {
-	return s.app.IBCKeeper
+	return s.app.Keepers.IBCKeeper
 }
 
 func (s TestSupport) WasmKeeper() wasm.Keeper {
-	return s.app.WASMKeeper
+	return s.app.Keepers.WASMKeeper
 }
 
 func (s TestSupport) AppCodec() codec.Codec {
@@ -45,15 +45,15 @@ func (s TestSupport) ScopedTransferKeeper() capabilitykeeper.ScopedKeeper {
 }
 
 func (s TestSupport) StakingKeeper() stakingkeeper.Keeper {
-	return s.app.StakingKeeper
+	return s.app.Keepers.StakingKeeper
 }
 
 func (s TestSupport) BankKeeper() bankkeeper.Keeper {
-	return s.app.BankKeeper
+	return s.app.Keepers.BankKeeper
 }
 
 func (s TestSupport) TransferKeeper() ibctransferkeeper.Keeper {
-	return s.app.TransferKeeper
+	return s.app.Keepers.TransferKeeper
 }
 
 func (s TestSupport) GetBaseApp() *baseapp.BaseApp {

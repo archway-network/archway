@@ -13,7 +13,7 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 	require.NotNil(t, proposalContent)
 
 	// Get params
-	k := chain.app.GovKeeper
+	k := chain.app.Keepers.GovKeeper
 	govParams := k.GetParams(chain.GetContext())
 	depositCoin := govParams.MinDeposit
 	votingDur := govParams.VotingPeriod

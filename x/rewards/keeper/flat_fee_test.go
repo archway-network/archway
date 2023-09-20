@@ -9,7 +9,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestSetFlatFee() {
-	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 	contractAdminAcc := s.chain.GetAccount(0)
 	contractViewer := testutils.NewMockContractViewer()
 	keeper.SetContractInfoViewer(contractViewer)
