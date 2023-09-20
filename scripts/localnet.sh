@@ -85,23 +85,23 @@ setup_chain () {
   echo_info "Adding genesis accounts..."
   echo_info "1. validator"
   echo $VALIDATOR_MNEMONIC | $BINARY --home $CHAIN_DIR/$CHAIN_ID keys add validator --recover --keyring-backend test
-  $BINARY --home $CHAIN_DIR/$CHAIN_ID add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show validator --keyring-backend test -a) $GENESIS_COINS
+  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show validator --keyring-backend test -a) $GENESIS_COINS
   echo_info "2. developer"
   echo $DEVELOPER_MNEMONIC | $BINARY --home $CHAIN_DIR/$CHAIN_ID keys add developer --recover --keyring-backend test
-  $BINARY --home $CHAIN_DIR/$CHAIN_ID add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show developer --keyring-backend test -a) $GENESIS_COINS
+  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show developer --keyring-backend test -a) $GENESIS_COINS
   echo_info "3. user"
   echo $USER_MNEMONIC | $BINARY --home $CHAIN_DIR/$CHAIN_ID keys add user --recover --keyring-backend test
-  $BINARY --home $CHAIN_DIR/$CHAIN_ID add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show user --keyring-backend test -a) $GENESIS_COINS
+  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show user --keyring-backend test -a) $GENESIS_COINS
 
 
   # Creating gentx
   echo_info "Creating gentx for validator..."
-  $BINARY --home $CHAIN_DIR/$CHAIN_ID gentx validator 100000000000000000000000stake --chain-id $CHAIN_ID --fees 950000000000000000000stake --keyring-backend test
+  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis gentx validator 100000000000000000000000stake --chain-id $CHAIN_ID --fees 950000000000000000000stake --keyring-backend test
 
 
   # Collecting gentx
   echo_info "Collecting gentx..."
-  if $BINARY --home $CHAIN_DIR/$CHAIN_ID collect-gentxs; then
+  if $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis collect-gentxs; then
     echo_success "Successfully collected genesis txs into genesis.json"
   else
     echo_error "Failed to collect genesis txs"
@@ -110,7 +110,7 @@ setup_chain () {
 
   # Validating genesis
   echo_info "Validating genesis..."
-  if $BINARY --home $CHAIN_DIR/$CHAIN_ID validate-genesis; then
+  if $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis validate-genesis; then
     echo_success "Successfully validated genesis"
   else
     echo_error "Failed to validate genesis"
@@ -123,4 +123,4 @@ fi
 
 # Starting chain
 echo_info "Starting chain..."
-$BINARY --home $CHAIN_DIR/$CHAIN_ID start
+$BINARY --home $CHAIN_DIR/$CHAIN_ID start --minimum-gas-prices 0stake
