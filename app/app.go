@@ -357,7 +357,7 @@ func NewArchwayApp(
 		keys[capabilitytypes.StoreKey],
 		memKeys[capabilitytypes.MemStoreKey],
 	)
-  
+
 	scopedIBCKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedICAHostKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedTransferKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
@@ -384,7 +384,7 @@ func NewArchwayApp(
 		keys[authzkeeper.StoreKey],
 		appCodec,
 		app.BaseApp.MsgServiceRouter(),
-		app.AccountKeeper,
+		app.Keepers.AccountKeeper,
 	)
 	app.Keepers.FeeGrantKeeper = feegrantkeeper.NewKeeper(
 		appCodec,
@@ -432,19 +432,19 @@ func NewArchwayApp(
 	)
 
 	groupConfig := group.DefaultConfig()
-	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, groupConfig)
+	app.Keepers.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.Keepers.AccountKeeper, groupConfig)
 
-	app.NFTKeeper = nftkeeper.NewKeeper(
+	app.Keepers.NFTKeeper = nftkeeper.NewKeeper(
 		keys[nftkeeper.StoreKey],
 		appCodec,
-		app.AccountKeeper,
-		app.BankKeeper,
+		app.Keepers.AccountKeeper,
+		app.Keepers.BankKeeper,
 	)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.Keepers.SlashingKeeper.Hooks()),
+		stakingtypes.NewMultiStakingHooks(app.Keepers.DistrKeeper.Hooks(), app.Keepers.SlashingKeeper.Hooks()),
 	)
 
 	app.Keepers.IBCKeeper = ibckeeper.NewKeeper(
@@ -536,13 +536,13 @@ func NewArchwayApp(
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
 	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.Keepers.RewardsKeeper, &app.Keepers.GovKeeper)...)
 
-	app.WASMKeeper = wasmdKeeper.NewKeeper(
+	app.Keepers.WASMKeeper = wasmdKeeper.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
 		app.Keepers.StakingKeeper,
-		distrkeeper.NewQuerier(app.DistrKeeper),
+		distrkeeper.NewQuerier(app.Keepers.DistrKeeper),
 		app.Keepers.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		&app.Keepers.IBCKeeper.PortKeeper,
@@ -618,7 +618,7 @@ func NewArchwayApp(
 		govtypes.DefaultConfig(),
 		govModuleAddr,
 	)
-	app.GovKeeper.SetLegacyRouter(govRouter)
+	app.Keepers.GovKeeper.SetLegacyRouter(govRouter)
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
