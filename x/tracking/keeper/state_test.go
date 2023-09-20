@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestStates() {
 	}
 
 	chain := s.chain
-	ctx, keeper := chain.GetContext(), chain.GetApp().TrackingKeeper
+	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.TrackingKeeper
 
 	// Fixtures
 	startBlock := ctx.BlockHeight()

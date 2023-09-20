@@ -12,7 +12,7 @@ import (
 // TestGenesisImportExport check genesis import/export.
 // Test updates the initial state with new records and checks that they were merged.
 func (s *KeeperTestSuite) TestGenesisImportExport() {
-	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().RewardsKeeper
+	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 
 	contractAddrs := e2eTesting.GenContractAddresses(2)
 	accAddrs, _ := e2eTesting.GenAccounts(2)

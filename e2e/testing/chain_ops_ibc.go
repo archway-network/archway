@@ -26,7 +26,7 @@ import (
 // Used to send IBC ConnectionOpenInit msg.
 func (chain *TestChain) GetMerklePrefix() commitmentTypes.MerklePrefix {
 	return commitmentTypes.NewMerklePrefix(
-		chain.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes(),
+		chain.app.Keepers.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix().Bytes(),
 	)
 }
 
@@ -35,7 +35,7 @@ func (chain *TestChain) GetMerklePrefix() commitmentTypes.MerklePrefix {
 func (chain *TestChain) GetClientState(clientID string) exported.ClientState {
 	t := chain.t
 
-	clientState, found := chain.app.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
+	clientState, found := chain.app.Keepers.IBCKeeper.ClientKeeper.GetClientState(chain.GetContext(), clientID)
 	require.True(t, found)
 
 	return clientState
@@ -52,7 +52,7 @@ func (chain *TestChain) GetCurrentValSet() tmTypes.ValidatorSet {
 func (chain *TestChain) GetValSetAtHeight(height int64) tmTypes.ValidatorSet {
 	t := chain.t
 
-	histInfo, ok := chain.app.StakingKeeper.GetHistoricalInfo(chain.GetContext(), height)
+	histInfo, ok := chain.app.Keepers.StakingKeeper.GetHistoricalInfo(chain.GetContext(), height)
 	require.True(t, ok)
 
 	validators := stakingTypes.Validators(histInfo.Valset)
@@ -101,14 +101,14 @@ func (chain *TestChain) SendIBCPacket(packet exported.PacketI) {
 	cap, ok := chain.app.ScopedIBCKeeper.GetCapability(chain.GetContext(), capPath)
 	require.True(t, ok)
 
-	require.NoError(t, chain.app.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), cap, packet))
+	require.NoError(t, chain.app.Keepers.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), cap, packet))
 
 	chain.NextBlock(0)
 }
 
 // GetIBCPacketCommitment returns an IBC packet commitment hash (nil if not committed).
 func (chain *TestChain) GetIBCPacketCommitment(packet channelTypes.Packet) []byte {
-	return chain.app.IBCKeeper.ChannelKeeper.GetPacketCommitment(
+	return chain.app.Keepers.IBCKeeper.ChannelKeeper.GetPacketCommitment(
 		chain.GetContext(),
 		packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(),
 	)
@@ -118,7 +118,7 @@ func (chain *TestChain) GetIBCPacketCommitment(packet channelTypes.Packet) []byt
 func (chain *TestChain) GetNextIBCPacketSequence(portID, channelID string) uint64 {
 	t := chain.t
 
-	seq, ok := chain.app.IBCKeeper.ChannelKeeper.GetNextSequenceRecv(chain.GetContext(), portID, channelID)
+	seq, ok := chain.app.Keepers.IBCKeeper.ChannelKeeper.GetNextSequenceRecv(chain.GetContext(), portID, channelID)
 	require.True(t, ok)
 
 	return seq

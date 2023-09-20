@@ -49,7 +49,8 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 			uint64(60*60*8766/1),      // 1 seconds block time
 		),
 	)
-	trackingKeeper, rewardsKeeper := chain.GetApp().TrackingKeeper, chain.GetApp().RewardsKeeper
+	keepers := chain.GetApp().Keepers
+	trackingKeeper, rewardsKeeper := keepers.TrackingKeeper, keepers.RewardsKeeper
 	chain.NextBlock(0)
 
 	// Upload a new contract and set its address as the rewardsAddress
@@ -172,8 +173,8 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		}
 
 		// Mint rewards coins
-		s.Require().NoError(chain.GetApp().MintKeeper.MintCoins(ctx, coinsToMint))
-		s.Require().NoError(chain.GetApp().BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, coinsToMint))
+		s.Require().NoError(keepers.MintKeeper.MintCoins(ctx, coinsToMint))
+		s.Require().NoError(keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, coinsToMint))
 
 		// Invariants check (just in case)
 		chain.NextBlock(0)
@@ -242,7 +243,8 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		e2eTesting.WithMaxWithdrawRecords(rewardsTypes.MaxWithdrawRecordsParamLimit),
 	)
-	bankKeeper, mintKeeper, rewardsKeeper := chain.GetApp().BankKeeper, chain.GetApp().MintKeeper, chain.GetApp().RewardsKeeper
+	keepers := chain.GetApp().Keepers
+	bankKeeper, mintKeeper, rewardsKeeper := keepers.BankKeeper, keepers.MintKeeper, keepers.RewardsKeeper
 
 	// Upload a new contract and set its address as the rewardsAddress
 	senderAcc := chain.GetAccount(0)
@@ -313,7 +315,8 @@ func (s *E2ETestSuite) TestRewardsRecordsQueryLimit() {
 	rewardsTypes.MaxRecordsQueryLimit = uint64(7716) // an actual value is (thisValue - 1), refer to the query below
 
 	chain := e2eTesting.NewTestChain(s.T(), 1)
-	bankKeeper, mintKeeper, rewardsKeeper := chain.GetApp().BankKeeper, chain.GetApp().MintKeeper, chain.GetApp().RewardsKeeper
+	keepers := chain.GetApp().Keepers
+	bankKeeper, mintKeeper, rewardsKeeper := keepers.BankKeeper, keepers.MintKeeper, keepers.RewardsKeeper
 
 	// Upload a new contract and set its address as the rewardsAddress
 	senderAcc := chain.GetAccount(0)
@@ -398,7 +401,7 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 			uint64(60*60*8766/1),      // 1 seconds block time
 		),
 	)
-	rewardsKeeper := chain.GetApp().RewardsKeeper
+	rewardsKeeper := chain.GetApp().Keepers.RewardsKeeper
 
 	// Upload a new contract and set its address as the rewardsAddress
 	senderAcc := chain.GetAccount(0)
@@ -484,7 +487,7 @@ func (s *E2ETestSuite) TestRewardsFlatFees() {
 			uint64(60*60*8766/1),      // 1 seconds block time
 		),
 	)
-	rewardsKeeper := chain.GetApp().RewardsKeeper
+	rewardsKeeper := chain.GetApp().Keepers.RewardsKeeper
 
 	// Upload a new contract and set its address as the rewardsAddress
 	senderAcc := chain.GetAccount(0)
@@ -629,7 +632,7 @@ func (s *E2ETestSuite) TestSubMsgRevert() {
 			uint64(60*60*8766/1),      // 1 seconds block time
 		),
 	)
-	rewardsKeeper := chain.GetApp().RewardsKeeper
+	rewardsKeeper := chain.GetApp().Keepers.RewardsKeeper
 
 	// Upload a new contract and set its address as the rewardsAddress
 	senderAcc := chain.GetAccount(0)
@@ -677,7 +680,7 @@ func (s *E2ETestSuite) TestSubMsgRevert() {
 
 		return
 	}
-	rk := chain.GetApp().RewardsKeeper
+	rk := chain.GetApp().Keepers.RewardsKeeper
 
 	// send a message that passes the ante handler but not the wasm execution step
 	sendMsg(&wasmdTypes.MsgExecuteContract{
