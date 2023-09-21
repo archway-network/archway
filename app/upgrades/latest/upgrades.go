@@ -4,6 +4,10 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/archway-network/archway/app/keepers"
@@ -36,5 +40,12 @@ var Upgrade = upgrades.Upgrade{
 			return migrations, nil
 		}
 	},
-	StoreUpgrades: storetypes.StoreUpgrades{},
+	StoreUpgrades: storetypes.StoreUpgrades{
+		Added: []string{
+			crisistypes.ModuleName,
+			consensustypes.ModuleName,
+			group.ModuleName,
+			nft.ModuleName,
+		},
+	},
 }

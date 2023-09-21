@@ -35,7 +35,7 @@ func (app *ArchwayApp) ExportAppStateAndValidators(
 		return servertypes.ExportedApp{}, err
 	}
 
-	validators, err := staking.WriteValidators(ctx, &app.Keepers.StakingKeeper)
+	validators, err := staking.WriteValidators(ctx, app.Keepers.StakingKeeper)
 	return servertypes.ExportedApp{
 		AppState:        appState,
 		Validators:      validators,
