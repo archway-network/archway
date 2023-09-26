@@ -508,7 +508,7 @@ func NewArchwayApp(
 	)
 	app.Keepers.EvidenceKeeper = *evidenceKeeper
 
-	defaultGasRegister := wasmdKeeper.NewDefaultWasmGasRegister()
+	defaultGasRegister := wasmdTypes.NewDefaultWasmGasRegister()
 
 	app.Keepers.TrackingKeeper = trackingKeeper.NewKeeper(
 		appCodec,
