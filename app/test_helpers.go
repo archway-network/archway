@@ -19,8 +19,11 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	errorsmod "cosmossdk.io/errors"
+	math "cosmossdk.io/math"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -54,9 +57,9 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 	},
 }
 
-func setup(withGenesis bool, invCheckPeriod uint, opts ...wasm.Option) (*ArchwayApp, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint, opts ...wasmkeeper.Option) (*ArchwayApp, GenesisState) {
 	db := dbm.NewMemDB()
-	app := NewArchwayApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, MakeEncodingConfig(), wasm.EnableAllProposals, EmptyBaseAppOptions{}, opts)
+	app := NewArchwayApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, MakeEncodingConfig(), wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, opts)
 	if withGenesis {
 		return app, NewDefaultGenesisState(app.AppCodec())
 	}
@@ -90,7 +93,7 @@ func Setup(isCheckTx bool) *ArchwayApp {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit (10^6) in the default token of the ArchwayApp from first genesis
 // account. A Nop logger is set in ArchwayApp.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, opts []wasm.Option, balances ...banktypes.Balance) *ArchwayApp {
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, opts []wasmkeeper.Option, balances ...banktypes.Balance) *ArchwayApp {
 	app, genesisState := setup(true, 5, opts...)
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
@@ -243,7 +246,7 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 }
 
 // AddTestAddrsFromPubKeys adds the addresses into the ArchwayApp providing only the public keys.
-func AddTestAddrsFromPubKeys(app *ArchwayApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
+func AddTestAddrsFromPubKeys(app *ArchwayApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.Keepers.StakingKeeper.BondDenom(ctx), accAmt))
 
 	for _, pk := range pubKeys {
@@ -253,17 +256,17 @@ func AddTestAddrsFromPubKeys(app *ArchwayApp, ctx sdk.Context, pubKeys []cryptot
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(app *ArchwayApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrs(app *ArchwayApp, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrsIncremental(app *ArchwayApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrsIncremental(app *ArchwayApp, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createIncrementalAccounts)
 }
 
-func addTestAddrs(app *ArchwayApp, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrs(app *ArchwayApp, ctx sdk.Context, accNum int, accAmt math.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.Keepers.StakingKeeper.BondDenom(ctx), accAmt))
@@ -471,7 +474,7 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 		panic(err)
 	}
 	if len(pkBytes) != ed25519.PubKeySize {
-		panic(errors.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size"))
+		panic(errorsmod.Wrap(errors.ErrInvalidPubKey, "invalid pubkey size"))
 	}
 	return &ed25519.PubKey{Key: pkBytes}
 }

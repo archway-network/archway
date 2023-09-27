@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
@@ -101,7 +101,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		encCfg,
 		app.GetEnabledProposals(),
 		app.EmptyBaseAppOptions{},
-		[]wasm.Option{},
+		[]wasmkeeper.Option{},
 	)
 	genState := app.NewDefaultGenesisState(archApp.AppCodec())
 
