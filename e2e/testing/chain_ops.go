@@ -20,12 +20,13 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 	msg, err := govTypes.NewMsgSubmitProposal(proposals, depositCoin, proposerAcc.Address.String(), metadata, title, summary)
 	require.NoError(t, err)
 
-	_, res, _, _ := chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
+	_, res, _, err := chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
+	require.NoError(t, err)
 	txRes := chain.ParseSDKResultData(res)
-	require.Len(t, txRes.Data, 1)
+	require.Len(t, txRes.MsgResponses, 1)
 
 	var resp govTypes.MsgSubmitProposalResponse
-	require.NoError(t, resp.Unmarshal(txRes.Data[0].Data))
+	require.NoError(t, resp.Unmarshal(txRes.MsgResponses[0].Value))
 	proposalID := resp.ProposalId
 
 	// Vote with all validators (delegators)
