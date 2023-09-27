@@ -6,14 +6,14 @@ require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/errors v1.0.0
 	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220822092235-974247a04ac7
-	github.com/CosmWasm/wasmd v0.41.0
-	github.com/CosmWasm/wasmvm v1.3.0
+	github.com/CosmWasm/wasmd v0.42.0
+	github.com/CosmWasm/wasmvm v1.4.0
 	github.com/archway-network/voter v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/gogoproto v1.4.10
-	github.com/cosmos/ibc-go/v7 v7.2.0
+	github.com/cosmos/ibc-go/v7 v7.3.0
 	github.com/dvsekhvalnov/jose2go v1.5.0
 	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/mux v1.8.0
@@ -68,7 +68,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v0.20.0 // indirect
+	github.com/cosmos/iavl v0.20.1 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
@@ -184,7 +184,7 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 )
 
-replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.41.0-archway
+replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.42.0-archway
 
 replace github.com/archway-network/voter => ./contracts/go/voter
 

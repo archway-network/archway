@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -12,14 +12,14 @@ import (
 
 // Keeper provides module state operations.
 type Keeper struct {
-	WasmGasRegister wasmKeeper.GasRegister
+	WasmGasRegister wasmtypes.GasRegister
 
 	cdc   codec.Codec
 	state State
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, gasRegister wasmKeeper.GasRegister) Keeper {
+func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, gasRegister wasmtypes.GasRegister) Keeper {
 	return Keeper{
 		cdc:             cdc,
 		WasmGasRegister: gasRegister,
