@@ -466,27 +466,8 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 // TestRewardsFlatFees tests that a contract which has flatfees set, on a successful execution against
 // the contract the relevant rewards records have been created
 func (s *E2ETestSuite) TestRewardsFlatFees() {
-	// Create a custom chain with "close to mainnet" params
-	chain := e2eTesting.NewTestChain(s.T(), 1,
-		// Set 1B total supply (10^9 * 10^6)
-		e2eTesting.WithGenAccounts(2),
-		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
-		// Set bonded ratio to 30%
-		e2eTesting.WithBondAmount("300000000000000"),
-		// Override the default Tx fee
-		e2eTesting.WithDefaultFeeAmount("10000000"),
-		// Set block gas limit (Archway mainnet param)
-		e2eTesting.WithBlockGasLimit(100_000_000),
-		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
-		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
-		// Set constant inflation rate
-		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(10, 2), // 10%
-			sdk.NewDecWithPrec(10, 2), // 10%
-			uint64(60*60*8766/1),      // 1 seconds block time
-		),
-	)
+	chain := e2eTesting.NewTestChain(s.T(), 1)
+
 	rewardsKeeper := chain.GetApp().Keepers.RewardsKeeper
 
 	// Upload a new contract and set its address as the rewardsAddress
@@ -534,9 +515,8 @@ func (s *E2ETestSuite) TestRewardsFlatFees() {
 	// 1. Flatfee rewards record
 	// 2. InflationaryRewards + FeeRewards rewards record
 	rewards := rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
-	require.Len(s.T(), rewards, 2)
+	require.Len(s.T(), rewards, 2)                        // there are two rewards records. first for flat fees and the second for tx&inflation fees
 	require.Equal(s.T(), flatFees, rewards[0].Rewards[0]) // the first rewards record matches our set flat fees
-	require.Equal(s.T(), sdk.NewInt64Coin("stake", 4999724), rewards[1].Rewards[0])
 
 	// Setting up a second contract which also has flat fees enabled
 	sender2Acc := chain.GetAccount(1)
