@@ -32,11 +32,11 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 	chain := e2eTesting.NewTestChain(s.T(), 1,
 		// Set 1B total supply (10^9 * 10^6)
 		e2eTesting.WithGenAccounts(1),
-		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		e2eTesting.WithGenDefaultCoinBalance("10000000000000000000"),
 		// Set bonded ratio to 30%
-		e2eTesting.WithBondAmount("300000000000000"),
+		e2eTesting.WithBondAmount("3000000000000000000"),
 		// Override the default Tx fee
-		e2eTesting.WithDefaultFeeAmount("10000000"),
+		e2eTesting.WithDefaultFeeAmount("100000000000"),
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
@@ -384,11 +384,11 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 	chain := e2eTesting.NewTestChain(s.T(), 1,
 		// Set 1B total supply (10^9 * 10^6)
 		e2eTesting.WithGenAccounts(1),
-		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		e2eTesting.WithGenDefaultCoinBalance("10000000000000000000"),
 		// Set bonded ratio to 30%
-		e2eTesting.WithBondAmount("300000000000000"),
+		e2eTesting.WithBondAmount("3000000000000000000"),
 		// Override the default Tx fee
-		e2eTesting.WithDefaultFeeAmount("10000000"),
+		e2eTesting.WithDefaultFeeAmount("100000000000"),
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
@@ -595,11 +595,11 @@ func (s *E2ETestSuite) TestSubMsgRevert() {
 	chain := e2eTesting.NewTestChain(s.T(), 1,
 		// Set 1B total supply (10^9 * 10^6)
 		e2eTesting.WithGenAccounts(2),
-		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		e2eTesting.WithGenDefaultCoinBalance("10000000000000000000"),
 		// Set bonded ratio to 30%
-		e2eTesting.WithBondAmount("300000000000000"),
+		e2eTesting.WithBondAmount("3000000000000000000"),
 		// Override the default Tx fee
-		e2eTesting.WithDefaultFeeAmount("10000000"),
+		e2eTesting.WithDefaultFeeAmount("100000000000"),
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
