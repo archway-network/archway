@@ -38,32 +38,3 @@ jobs:
           env:
             GORELEASER_SKIP_VALIDATE: true
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  deploy-titus:
-    runs-on: ubuntu-latest
-
-    needs:
-      - release-dev
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Set short git commit SHA
-        id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
-      - name: Inject version and secrets to titus-1.yaml
-        run: |
-          sed -i -e "s|NODE_VERSION|${{ steps.vars.outputs.sha_short }}|g" ci/titus-1.yaml
-          sed -i -e "s|TITUS_1_ACCOUNT_MNEMONIC_B64|${{ secrets.TITUS_1_ACCOUNT_MNEMONIC_B64 }}|g" ci/titus-1.yaml
-          sed -i -e "s|TITUS_1_FAUCET_ACCOUNT_MNEMONIC_B64|${{ secrets.TITUS_1_FAUCET_ACCOUNT_MNEMONIC_B64 }}|g" ci/titus-1.yaml
-          sed -i -e "s|TITUS_1_PRIV_VALIDATOR_KEY_B64|${{ secrets.TITUS_1_PRIV_VALIDATOR_KEY_B64 }}|g" ci/titus-1.yaml
-
-      - name: Deploy Chain
-        uses: steebchen/kubectl@v2.0.0
-        with:
-          config: ${{ secrets.GKE_SHARED_NONPROD_GH_ACTIONS_BOT_KUBECONFIG }}
-          command: apply -n testnets -f ci/titus-1.yaml
