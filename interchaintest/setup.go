@@ -3,9 +3,10 @@ package interchaintest
 import (
 	"fmt"
 
-	"github.com/strangelove-ventures/interchaintest/v4"
-	"github.com/strangelove-ventures/interchaintest/v4/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v4/ibc"
+	"github.com/cosmos/cosmos-sdk/types"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 )
 
 const (
@@ -56,8 +57,18 @@ func getDefaultChainConfig() ibc.ChainConfig {
 		SkipGenTx:              false,
 		PreGenesis:             nil,
 		ModifyGenesis:          cosmos.ModifyGenesis(getTestGenesis()),
-		ConfigFileOverrides:    nil,
-		UsingNewGenesisCommand: false,
+		UsingNewGenesisCommand: true,
+		ModifyGenesisAmounts: func() (types.Coin, types.Coin) {
+			genesisAmount := types.Coin{
+				Amount: types.NewInt(9_000_000_000_000_000_000),
+				Denom:  denom,
+			}
+			genesisSelfDelegation := types.Coin{
+				Amount: types.NewInt(5_000_000_000_000_000_000),
+				Denom:  denom,
+			}
+			return genesisAmount, genesisSelfDelegation
+		},
 	}
 }
 

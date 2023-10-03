@@ -97,6 +97,7 @@ func fundChainUser(t *testing.T, ctx context.Context, archwayChain *cosmos.Cosmo
 func startChain(t *testing.T, startingVersion string) (*cosmos.CosmosChain, *client.Client, context.Context) {
 	numOfVals := 1
 	archwayChainSpec := GetArchwaySpec(initialVersion, numOfVals)
+	archwayChainSpec.UsingNewGenesisCommand = false
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		archwayChainSpec,
 	})
