@@ -349,8 +349,8 @@ func NewArchwayApp(
 	)
 
 	// set the BaseApp's parameter store
-	consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	app.SetParamStore(&consensusParamsKeeper)
+	app.Keepers.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.SetParamStore(&app.Keepers.ConsensusParamsKeeper)
 
 	// add capability keeper and ScopeToModule for ibc module
 	app.Keepers.CapabilityKeeper = capabilitykeeper.NewKeeper(
@@ -656,7 +656,7 @@ func NewArchwayApp(
 		transferModule,
 		ibcfee.NewAppModule(app.Keepers.IBCFeeKeeper),
 		ica.NewAppModule(nil, &app.Keepers.ICAHostKeeper),
-		consensus.NewAppModule(appCodec, consensusParamsKeeper),
+		consensus.NewAppModule(appCodec, app.Keepers.ConsensusParamsKeeper),
 		tracking.NewAppModule(app.appCodec, app.Keepers.TrackingKeeper),
 		rewards.NewAppModule(app.appCodec, app.Keepers.RewardsKeeper),
 		genmsg.NewAppModule(app.MsgServiceRouter()),
