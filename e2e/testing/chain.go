@@ -8,9 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
@@ -55,9 +56,7 @@ type TestChain struct {
 
 // NewTestChain creates a new TestChain with the default amount of genesis accounts and validators.
 func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
-	const (
-		chainIDPrefix = "test-"
-	)
+	chainid := "test-" + strconv.Itoa(chainIdx)
 
 	// Split options by groups (each group is applied in a different init step)
 	var chainCfgOpts []TestChainConfigOption
@@ -101,7 +100,8 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		encCfg,
 		app.GetEnabledProposals(),
 		app.EmptyBaseAppOptions{},
-		[]wasm.Option{},
+		[]wasmkeeper.Option{},
+		baseapp.SetChainID(chainid),
 	)
 	genState := app.NewDefaultGenesisState(archApp.AppCodec())
 
@@ -238,6 +238,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 
 	archApp.InitChain(
 		abci.RequestInitChain{
+			ChainId:         chainid,
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: consensusParams,
 			AppStateBytes:   genStateBytes,
@@ -250,7 +251,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		cfg: chainCfg,
 		app: archApp,
 		curHeader: tmProto.Header{
-			ChainID: chainIDPrefix + strconv.Itoa(chainIdx),
+			ChainID: chainid,
 			Time:    time.Unix(0, 0).UTC(),
 		},
 		txConfig:    encCfg.TxConfig,

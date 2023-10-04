@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	legacyGovTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -61,16 +60,12 @@ func TestWASMBindingPlugins(t *testing.T) {
 		})
 
 		t.Run("Query gov vote", func(t *testing.T) {
-			govAccount := govKeeper.GetGovernanceAccount(ctx)
 			proposalId := govTypes.DefaultStartingProposalID
 			accAddrs, _ := e2eTesting.GenAccounts(2)
 			depositor := accAddrs[0]
-			textProposal := legacyGovTypes.NewTextProposal("foo", "bar")
 
 			anyTime := time.Now().UTC()
-			proposalContentMsg, pErr := govTypes.NewLegacyContent(textProposal, govAccount.String())
-			require.NoError(t, pErr)
-			proposal, pErr := govTypes.NewProposal([]sdk.Msg{proposalContentMsg}, proposalId, anyTime, anyTime, "", "Text Proposal", "Description", depositor)
+			proposal, pErr := govTypes.NewProposal([]sdk.Msg{}, proposalId, anyTime, anyTime, "", "Text Proposal", "Description", depositor)
 			require.NoError(t, pErr)
 			govKeeper.SetProposal(ctx, proposal)
 

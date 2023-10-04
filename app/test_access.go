@@ -13,7 +13,7 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
 
 type TestSupport struct {
@@ -24,7 +24,7 @@ func (s TestSupport) IBCKeeper() *ibckeeper.Keeper {
 	return s.app.Keepers.IBCKeeper
 }
 
-func (s TestSupport) WasmKeeper() wasm.Keeper {
+func (s TestSupport) WasmKeeper() wasmkeeper.Keeper {
 	return s.app.Keepers.WASMKeeper
 }
 

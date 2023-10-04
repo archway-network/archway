@@ -120,14 +120,14 @@ func (s *E2ETestSuite) TestVoter_Sudo() {
 		sudoMsgBz, err := sudoMsg.MarshalJSON()
 		s.Require().NoError(err)
 
-		proposal := wasmdTypes.SudoContractProposal{
-			Title:       "Increase NewVotingCost",
-			Description: "Some desc",
-			Contract:    contractAddr.String(),
-			Msg:         sudoMsgBz,
+		govAddr := chain.GetApp().Keepers.AccountKeeper.GetModuleAddress("gov")
+		sudoProposal := wasmdTypes.MsgSudoContract{
+			Authority: govAddr.String(),
+			Contract:  contractAddr.String(),
+			Msg:       sudoMsgBz,
 		}
 
-		chain.ExecuteGovProposal(acc, true, &proposal)
+		chain.ExecuteGovProposal(acc, true, []sdk.Msg{&sudoProposal}, "Increase NewVotingCost", "Some desc", "")
 
 		paramsRcv := s.VoterGetParams(chain, contractAddr)
 		s.Assert().EqualValues(paramsExp, paramsRcv)

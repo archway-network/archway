@@ -28,10 +28,10 @@ func (chain *TestChain) UploadContract(sender Account, wasmPath string, instanti
 	require.NoError(t, err)
 
 	txRes := chain.ParseSDKResultData(res)
-	require.Len(t, txRes.Data, 1)
+	require.Len(t, txRes.MsgResponses, 1)
 
 	var resp wasmdTypes.MsgStoreCodeResponse
-	require.NoError(t, resp.Unmarshal(txRes.Data[0].Data))
+	require.NoError(t, resp.Unmarshal(txRes.MsgResponses[0].Value))
 	codeID = resp.CodeID
 
 	return
@@ -61,10 +61,10 @@ func (chain *TestChain) InstantiateContract(sender Account, codeID uint64, admin
 	require.NoError(t, err)
 
 	txRes := chain.ParseSDKResultData(res)
-	require.Len(t, txRes.Data, 1)
+	require.Len(t, txRes.MsgResponses, 1)
 
 	var resp wasmdTypes.MsgInstantiateContractResponse
-	require.NoError(t, resp.Unmarshal(txRes.Data[0].Data))
+	require.NoError(t, resp.Unmarshal(txRes.MsgResponses[0].Value))
 
 	contractAddr, err = sdk.AccAddressFromBech32(resp.Address)
 	require.NoError(t, err)

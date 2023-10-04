@@ -110,7 +110,10 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 		feePool.CommunityPool = feePool.CommunityPool.Add(scraps...)
 		app.Keepers.DistrKeeper.SetFeePool(ctx, feePool)
 
-		app.Keepers.DistrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+		err := app.Keepers.DistrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+		if err != nil {
+			panic(err)
+		}
 		return false
 	})
 
@@ -124,8 +127,14 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 		if err != nil {
 			panic(err)
 		}
-		app.Keepers.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr)
-		app.Keepers.DistrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr)
+		err = app.Keepers.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr)
+		if err != nil {
+			panic(err)
+		}
+		err = app.Keepers.DistrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// reset context height

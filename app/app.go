@@ -119,6 +119,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -159,15 +160,15 @@ var (
 
 // GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
 // produce a list of enabled proposals to pass into archwayd app.
-func GetEnabledProposals() []wasm.ProposalType {
+func GetEnabledProposals() []wasmdTypes.ProposalType {
 	if EnableSpecificProposals == "" {
 		if ProposalsEnabled == "true" {
-			return wasm.EnableAllProposals
+			return wasmdTypes.EnableAllProposals
 		}
-		return wasm.DisableAllProposals
+		return wasmdTypes.DisableAllProposals
 	}
 	chunks := strings.Split(EnableSpecificProposals, ",")
-	proposals, err := wasm.ConvertToProposals(chunks)
+	proposals, err := wasmdTypes.ConvertToProposals(chunks)
 	if err != nil {
 		panic(err)
 	}
@@ -216,6 +217,7 @@ var (
 		authzmodule.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 		ibc.AppModuleBasic{},
+		ibctm.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
@@ -242,7 +244,7 @@ var (
 		ibctransfertypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
 		ibcfeetypes.ModuleName:               nil,
 		icatypes.ModuleName:                  nil,
-		wasm.ModuleName:                      {authtypes.Burner},
+		wasmdTypes.ModuleName:                {authtypes.Burner},
 		rewardsTypes.TreasuryCollector:       {authtypes.Burner},
 	}
 )
@@ -301,9 +303,9 @@ func NewArchwayApp(
 	homePath string,
 	invCheckPeriod uint,
 	encodingConfig archwayappparams.EncodingConfig,
-	enabledProposals []wasm.ProposalType,
+	enabledProposals []wasmdTypes.ProposalType,
 	appOpts servertypes.AppOptions,
-	wasmOpts []wasm.Option,
+	wasmOpts []wasmdKeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *ArchwayApp {
 	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
@@ -321,7 +323,7 @@ func NewArchwayApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		feegrant.StoreKey, authzkeeper.StoreKey, wasm.StoreKey, consensusparamtypes.StoreKey,
+		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
 		icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey,
 
 		trackingTypes.StoreKey, rewardsTypes.StoreKey,
@@ -362,7 +364,7 @@ func NewArchwayApp(
 	scopedIBCKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedICAHostKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedTransferKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	scopedWasmKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
+	scopedWasmKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(wasmdTypes.ModuleName)
 	app.Keepers.CapabilityKeeper.Seal()
 
 	// add keepers
@@ -539,7 +541,7 @@ func NewArchwayApp(
 
 	app.Keepers.WASMKeeper = wasmdKeeper.NewKeeper(
 		appCodec,
-		keys[wasm.StoreKey],
+		keys[wasmdTypes.StoreKey],
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
 		app.Keepers.StakingKeeper,
@@ -582,11 +584,6 @@ func NewArchwayApp(
 		govModuleAddr,
 	)
 
-	// The gov proposal types can be individually enabled
-	if len(enabledProposals) != 0 {
-		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.Keepers.WASMKeeper, enabledProposals))
-	}
-
 	var transferStack porttypes.IBCModule
 	transferStack = transfer.NewIBCModule(app.Keepers.TransferKeeper)
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.Keepers.IBCFeeKeeper)
@@ -605,7 +602,7 @@ func NewArchwayApp(
 	// create static IBC router, add transfer route, add wasm route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
-	ibcRouter.AddRoute(wasm.ModuleName, wasmStack)
+	ibcRouter.AddRoute(wasmdTypes.ModuleName, wasmStack)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
 	app.Keepers.IBCKeeper.SetRouter(ibcRouter)
 
@@ -647,7 +644,7 @@ func NewArchwayApp(
 		distr.NewAppModule(appCodec, app.Keepers.DistrKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(distrtypes.ModuleName)),
 		staking.NewAppModule(appCodec, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(&app.Keepers.UpgradeKeeper),
-		wasm.NewAppModule(appCodec, &app.Keepers.WASMKeeper, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.MsgServiceRouter(), app.getSubspace(wasm.ModuleName)),
+		wasm.NewAppModule(appCodec, &app.Keepers.WASMKeeper, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.MsgServiceRouter(), app.getSubspace(wasmdTypes.ModuleName)),
 		evidence.NewAppModule(app.Keepers.EvidenceKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, app.Keepers.AuthzKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.interfaceRegistry),
@@ -694,7 +691,7 @@ func NewArchwayApp(
 		ibcfeetypes.ModuleName,
 		icatypes.ModuleName,
 		// wasm
-		wasm.ModuleName,
+		wasmdTypes.ModuleName,
 		// wasm gas tracking
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
@@ -726,7 +723,7 @@ func NewArchwayApp(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		// wasm
-		wasm.ModuleName,
+		wasmdTypes.ModuleName,
 		// wasm gas tracking
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
@@ -767,7 +764,7 @@ func NewArchwayApp(
 		ibcfeetypes.ModuleName,
 		icatypes.ModuleName,
 		// wasm after ibc transfer
-		wasm.ModuleName,
+		wasmdTypes.ModuleName,
 		// wasm gas tracking
 		trackingTypes.ModuleName,
 		genmsg.ModuleName,
@@ -801,7 +798,7 @@ func NewArchwayApp(
 		slashing.NewAppModule(appCodec, app.Keepers.SlashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(slashingtypes.ModuleName)),
 		params.NewAppModule(app.Keepers.ParamsKeeper),
 		evidence.NewAppModule(app.Keepers.EvidenceKeeper),
-		wasm.NewAppModule(appCodec, &app.Keepers.WASMKeeper, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.MsgServiceRouter(), app.getSubspace(wasm.ModuleName)),
+		wasm.NewAppModule(appCodec, &app.Keepers.WASMKeeper, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.MsgServiceRouter(), app.getSubspace(wasmdTypes.ModuleName)),
 		ibc.NewAppModule(app.Keepers.IBCKeeper),
 		transferModule,
 	)
@@ -825,7 +822,7 @@ func NewArchwayApp(
 			IBCKeeper:             app.Keepers.IBCKeeper,
 			WasmConfig:            &wasmConfig,
 			RewardsAnteBankKeeper: app.Keepers.BankKeeper,
-			TXCounterStoreKey:     keys[wasm.StoreKey],
+			TXCounterStoreKey:     keys[wasmdTypes.StoreKey],
 			TrackingKeeper:        app.Keepers.TrackingKeeper,
 			RewardsKeeper:         app.Keepers.RewardsKeeper,
 		},
@@ -1042,7 +1039,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
-	paramsKeeper.Subspace(wasm.ModuleName)
+	paramsKeeper.Subspace(wasmdTypes.ModuleName)
 	paramsKeeper.Subspace(rewardsTypes.ModuleName)
 
 	return paramsKeeper
