@@ -466,8 +466,27 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 // TestRewardsFlatFees tests that a contract which has flatfees set, on a successful execution against
 // the contract the relevant rewards records have been created
 func (s *E2ETestSuite) TestRewardsFlatFees() {
-	chain := e2eTesting.NewTestChain(s.T(), 1)
-
+	// Create a custom chain with "close to mainnet" params
+	chain := e2eTesting.NewTestChain(s.T(), 1,
+		// Set 1B total supply (10^9 * 10^6)
+		e2eTesting.WithGenAccounts(2),
+		e2eTesting.WithGenDefaultCoinBalance("10000000000000000000"),
+		// Set bonded ratio to 30%
+		e2eTesting.WithBondAmount("3000000000000000000"),
+		// Override the default Tx fee
+		e2eTesting.WithDefaultFeeAmount("100000000000"),
+		// Set block gas limit (Archway mainnet param)
+		e2eTesting.WithBlockGasLimit(100_000_000),
+		// x/rewards distribution params
+		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
+		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
+		// Set constant inflation rate
+		e2eTesting.WithMintParams(
+			sdk.NewDecWithPrec(10, 2), // 10%
+			sdk.NewDecWithPrec(10, 2), // 10%
+			uint64(60*60*8766/1),      // 1 seconds block time
+		),
+	)
 	rewardsKeeper := chain.GetApp().Keepers.RewardsKeeper
 
 	// Upload a new contract and set its address as the rewardsAddress
