@@ -1,6 +1,7 @@
 package mintbankkeeper_test
 
 import (
+	"math"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -176,7 +177,7 @@ func TestMintBankKeeper(t *testing.T) {
 			}
 			require.True(t, found)
 
-			maxGasExpected := uint64(0)
+			maxGasExpected := uint64(math.MaxUint64)
 			if tc.blockMaxGas > 0 {
 				maxGasExpected = uint64(tc.blockMaxGas)
 			}
@@ -187,7 +188,7 @@ func TestMintBankKeeper(t *testing.T) {
 
 			// Check minimum consensus fee record
 			minConsFeeReceived, minConfFeeFound := keepers.RewardsKeeper.GetState().MinConsensusFee(ctx).GetFee()
-			if maxGasExpected == 0 || rewardsDiffExpected.IsZero() {
+			if maxGasExpected == uint64(math.MaxUint64) || rewardsDiffExpected.IsZero() {
 				assert.False(t, minConfFeeFound)
 			} else {
 				require.True(t, minConfFeeFound)
