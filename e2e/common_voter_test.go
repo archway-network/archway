@@ -83,10 +83,10 @@ func (s *E2ETestSuite) VoterNewVoting(chain *e2eTesting.TestChain, contractAddr 
 	_, res, _, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 
 	txRes := chain.ParseSDKResultData(res)
-	s.Require().Len(txRes.Data, 1)
+	s.Require().Len(txRes.MsgResponses, 1)
 
 	var executeRes wasmdTypes.MsgExecuteContractResponse
-	s.Require().NoError(executeRes.Unmarshal(txRes.Data[0].Data))
+	s.Require().NoError(executeRes.Unmarshal(txRes.MsgResponses[0].Value))
 
 	var resp voterTypes.NewVotingResponse
 	s.Require().NoError(resp.UnmarshalJSON(executeRes.Data))
@@ -222,10 +222,10 @@ func (s *E2ETestSuite) VoterRelease(chain *e2eTesting.TestChain, contractAddr sd
 	_, res, _, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 
 	txRes := chain.ParseSDKResultData(res)
-	s.Require().Len(txRes.Data, 1)
+	s.Require().Len(txRes.MsgResponses, 1)
 
 	var executeRes wasmdTypes.MsgExecuteContractResponse
-	s.Require().NoError(executeRes.Unmarshal(txRes.Data[0].Data))
+	s.Require().NoError(executeRes.Unmarshal(txRes.MsgResponses[0].Value))
 
 	var resp voterTypes.ReleaseResponse
 	s.Require().NoError(resp.UnmarshalJSON(executeRes.Data))

@@ -8,7 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	legacyGovTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/wasmbinding/gov"
@@ -28,16 +27,13 @@ func TestGovWASMBindings(t *testing.T) {
 	depositor := accAddrs[0]
 	voter := accAddrs[1]
 
-	govAccount := keeper.GetGovernanceAccount(ctx)
+	//govAccount := keeper.GetGovernanceAccount(ctx)
 	params := keeper.GetParams(ctx)
 
 	// Store a proposal
 	proposalId := govTypes.DefaultStartingProposalID
-	textProposal := legacyGovTypes.NewTextProposal("foo", "bar")
-	proposalContentMsg, pErr := govTypes.NewLegacyContent(textProposal, govAccount.String())
-	require.NoError(t, pErr)
 
-	proposal, err := govTypes.NewProposal([]sdk.Msg{proposalContentMsg}, proposalId, ctx.BlockHeader().Time, ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod), "", "Text Proposal", "Description", depositor)
+	proposal, err := govTypes.NewProposal([]sdk.Msg{}, proposalId, ctx.BlockHeader().Time, ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod), "", "Text Proposal", "Description", depositor)
 	require.NoError(t, err)
 	keeper.SetProposal(ctx, proposal)
 

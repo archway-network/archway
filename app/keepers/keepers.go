@@ -1,7 +1,7 @@
 package keepers
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -43,7 +43,6 @@ type ArchwayKeepers struct {
 	CrisisKeeper          crisiskeeper.Keeper
 	UpgradeKeeper         upgradekeeper.Keeper
 	ParamsKeeper          paramskeeper.Keeper
-	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	IBCKeeper             *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCFeeKeeper          ibcfeekeeper.Keeper
 	ICAHostKeeper         icahostkeeper.Keeper
@@ -51,7 +50,7 @@ type ArchwayKeepers struct {
 	TransferKeeper        ibctransferkeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
-	WASMKeeper            wasm.Keeper
+	WASMKeeper            wasmkeeper.Keeper
 	TrackingKeeper        trackingKeeper.Keeper
 	RewardsKeeper         rewardsKeeper.Keeper
 }

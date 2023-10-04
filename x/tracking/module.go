@@ -138,11 +138,6 @@ func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Vali
 // GenerateGenesisState creates a randomized GenState of the module.
 func (a AppModule) GenerateGenesisState(input *module.SimulationState) {}
 
-// ProposalContents doesn't return any content functions for governance proposals.
-func (a AppModule) ProposalContents(_ module.SimulationState) []simTypes.WeightedProposalContent {
-	return []simTypes.WeightedProposalContent{}
-}
-
 // RegisterStoreDecoder registers a decoder for the module's types.
 func (a AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 }
