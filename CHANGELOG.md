@@ -30,7 +30,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ## [Unreleased]
 
-### Added 
+### Added
 
 - [#431](https://github.com/archway-network/archway/pull/431) - Added gh workflow to run IBC conformance tests on PRs
 
@@ -46,6 +46,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Deprecated
 
 - [#439](https://github.com/archway-network/archway/pull/439) - Renaming `debug` image to `dev`
+- [#461](https://github.com/archway-network/archway/pull/461) - Remove titus network deployment
 
 ### Removed
 
