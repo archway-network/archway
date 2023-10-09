@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"reflect"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/pkg"
@@ -14,11 +17,15 @@ func (k Keeper) UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin
 		k.Logger(ctx).Info("Minimum consensus fee update skipped: inflation rewards are zero")
 		return
 	}
-
 	inflationRewardsAmt := sdk.NewDecFromInt(inflationRewards.Amount)
 
-	blockGasLimit := pkg.NewDecFromUint64(ctx.BlockGasMeter().Limit())
-	if blockGasLimit.IsZero() {
+	blockGasLimit := ctx.BlockGasMeter().Limit()
+	if strings.Contains(reflect.TypeOf(ctx.BlockGasMeter()).String(), "infiniteGasMeter") { // Because thisss https://github.com/cosmos/cosmos-sdk/pull/9651
+		blockGasLimit = 0
+	}
+
+	blockGasLimitAsDec := pkg.NewDecFromUint64(blockGasLimit)
+	if blockGasLimitAsDec.IsZero() {
 		k.Logger(ctx).Info("Minimum consensus fee update skipped: block gas limit is not set")
 		return
 	}
@@ -26,7 +33,7 @@ func (k Keeper) UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin
 	txFeeRebateRatio := k.TxFeeRebateRatio(ctx)
 
 	// Calculate
-	feeAmt := calculateMinConsensusFeeAmt(inflationRewardsAmt, blockGasLimit, txFeeRebateRatio)
+	feeAmt := calculateMinConsensusFeeAmt(inflationRewardsAmt, blockGasLimitAsDec, txFeeRebateRatio)
 	if feeAmt.IsZero() || feeAmt.IsNegative() {
 		k.Logger(ctx).Info("Minimum consensus fee update skipped: calculated amount is zero or bellow zero")
 		return
