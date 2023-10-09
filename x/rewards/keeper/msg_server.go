@@ -112,3 +112,8 @@ func (s MsgServer) SetFlatFee(c context.Context, request *types.MsgSetFlatFee) (
 
 	return &types.MsgSetFlatFeeResponse{}, nil
 }
+
+// UpdateParams implements types.MsgServer.
+func (s MsgServer) UpdateParams(c context.Context, request *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	panic("unimplemented")
+}
