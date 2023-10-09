@@ -33,15 +33,14 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Added
 
 - [#431](https://github.com/archway-network/archway/pull/431) - Added gh workflow to run IBC conformance tests on PRs
-
 - [#439](https://github.com/archway-network/archway/pull/439) - Adding containerized localnet
 - [#445](https://github.com/archway-network/archway/pull/445) - Adding Archway logo and version number to upgrade logs
-
 - [#459](https://github.com/archway-network/archway/pull/459) - Add missing ADR references to docs index
 
 ### Changed
 
 - [#457](https://github.com/archway-network/archway/pull/457) - Modify the upgrade handlers to pass in all the app keepers instead of just the account keeper
+- [#465](https://github.com/archway-network/archway/pull/465) - Change the name of the gh workflow job from `build` to `run-tests` as it runs tests
 
 ### Deprecated
 
