@@ -571,6 +571,7 @@ func NewArchwayApp(
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
 		app.getSubspace(rewardsTypes.ModuleName),
+		govModuleAddr,
 	)
 
 	// Note we set up mint keeper after the x/rewards keeper
