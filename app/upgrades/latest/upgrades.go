@@ -27,6 +27,7 @@ import (
 
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
+	rewardstypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // This upgrade handler is used for all the current changes to the protocol
@@ -78,6 +79,11 @@ var Upgrade = upgrades.Upgrade{
 				// wasm
 			case wasmtypes.ModuleName:
 				keyTable = wasmtypes.ParamKeyTable() //nolint:staticcheck
+
+				// archway modules
+			case rewardstypes.ModuleName:
+				keyTable = rewardstypes.ParamKeyTable()
+
 			default:
 				continue
 			}
