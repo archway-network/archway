@@ -181,12 +181,6 @@ func NewMsgFlatFee(senderAddr, contractAddr sdk.AccAddress, flatFee sdk.Coin) *M
 	return msg
 }
 
-// Route implements the sdk.Msg interface.
-func (m MsgSetFlatFee) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (m MsgSetFlatFee) Type() string { return TypeMsgFlatFee }
-
 // GetSigners implements the sdk.Msg interface.
 func (m MsgSetFlatFee) GetSigners() []sdk.AccAddress {
 	senderAddr, err := sdk.AccAddressFromBech32(m.SenderAddress)
@@ -195,12 +189,6 @@ func (m MsgSetFlatFee) GetSigners() []sdk.AccAddress {
 	}
 
 	return []sdk.AccAddress{senderAddr}
-}
-
-// GetSignBytes implements the sdk.Msg interface.
-func (m MsgSetFlatFee) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&m)
-	return sdk.MustSortJSON(bz)
 }
 
 // ValidateBasic implements the sdk.Msg interface.
