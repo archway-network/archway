@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -111,4 +112,34 @@ func (s MsgServer) SetFlatFee(c context.Context, request *types.MsgSetFlatFee) (
 	}
 
 	return &types.MsgSetFlatFeeResponse{}, nil
+}
+
+// UpdateParams implements types.MsgServer.
+func (s MsgServer) UpdateParams(c context.Context, request *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	_, err := sdk.AccAddressFromBech32(request.Authority)
+	if err != nil {
+		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
+	}
+
+	if request.GetAuthority() != s.keeper.GetAuthority() {
+		return nil, errorsmod.Wrap(types.ErrUnauthorized, "sender address is not authorized address to update module params")
+	}
+
+	err = request.GetParams().Validate() // need to explicitly validate as x/gov invokes this msg and it does not validate
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.keeper.SetParams(ctx, request.GetParams())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }

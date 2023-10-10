@@ -97,3 +97,8 @@ var (
 	// Value: sdk.Coin
 	FlatFeePrefix = []byte{0x00}
 )
+
+// ParamsKey stores the module params
+var (
+	ParamsKey = []byte{0x06}
+)

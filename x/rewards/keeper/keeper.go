@@ -49,10 +49,11 @@ type Keeper struct {
 	trackingKeeper   TrackingKeeperExpected
 	authKeeper       AuthKeeperExpected
 	bankKeeper       BankKeeperExpected
+	authority        string // this should be the x/gov module account
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace, authority string) Keeper {
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
@@ -65,6 +66,7 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 		trackingKeeper:   trackingKeeper,
 		authKeeper:       ak,
 		bankKeeper:       bk,
+		authority:        authority,
 	}
 }
 
@@ -104,4 +106,9 @@ func (k Keeper) GetRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, p
 	}
 
 	return k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
+}
+
+// GetAuthority returns the x/rewards module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
