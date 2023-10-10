@@ -98,6 +98,7 @@ func startChain(t *testing.T, startingVersion string) (*cosmos.CosmosChain, *cli
 	numOfVals := 1
 	archwayChainSpec := GetArchwaySpec(initialVersion, numOfVals)
 	archwayChainSpec.UsingNewGenesisCommand = false
+	archwayChainSpec.ChainConfig.ModifyGenesis = cosmos.ModifyGenesis(getTestGenesis())
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		archwayChainSpec,
 	})

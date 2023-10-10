@@ -56,7 +56,6 @@ func getDefaultChainConfig() ibc.ChainConfig {
 		NoHostMount:            false,
 		SkipGenTx:              false,
 		PreGenesis:             nil,
-		ModifyGenesis:          cosmos.ModifyGenesis(getTestGenesis()),
 		UsingNewGenesisCommand: true,
 		ModifyGenesisAmounts: func() (types.Coin, types.Coin) {
 			genesisAmount := types.Coin{
