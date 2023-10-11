@@ -98,7 +98,6 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		app.DefaultNodeHome,
 		1,
 		encCfg,
-		app.GetEnabledProposals(),
 		app.EmptyBaseAppOptions{},
 		[]wasmkeeper.Option{},
 		baseapp.SetChainID(chainid),
