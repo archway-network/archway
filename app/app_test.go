@@ -20,13 +20,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 var emptyWasmOpts []wasmkeeper.Option = nil
@@ -36,7 +34,7 @@ func TestArchwaydExport(t *testing.T) {
 	logger := log.NewNopLogger()
 	encoding := MakeEncodingConfig()
 	gapp := NewArchwayApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encoding,
-		wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
+		EmptyBaseAppOptions{}, emptyWasmOpts)
 
 	privValidator := mock.NewPV()
 	pubKey, err := privValidator.GetPubKey()
@@ -77,7 +75,7 @@ func TestArchwaydExport(t *testing.T) {
 // ensure that blocked addresses are properly set in bank keeper
 func TestBlockedAddrs(t *testing.T) {
 	db := db.NewMemDB()
-	gapp := NewArchwayApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
+	gapp := NewArchwayApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), EmptyBaseAppOptions{}, emptyWasmOpts)
 
 	for acc := range BlockedAddresses() {
 		var addr sdk.AccAddress
@@ -98,37 +96,6 @@ func TestBlockedAddrs(t *testing.T) {
 func TestGetMaccPerms(t *testing.T) {
 	dup := GetMaccPerms()
 	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
-}
-
-func TestGetEnabledProposals(t *testing.T) {
-	cases := map[string]struct {
-		proposalsEnabled string
-		specificEnabled  string
-		expected         []wasmtypes.ProposalType
-	}{
-		"all disabled": {
-			proposalsEnabled: "false",
-			expected:         wasmtypes.DisableAllProposals,
-		},
-		"all enabled": {
-			proposalsEnabled: "true",
-			expected:         wasmtypes.EnableAllProposals,
-		},
-		"some enabled": {
-			proposalsEnabled: "okay",
-			specificEnabled:  "StoreCode,InstantiateContract",
-			expected:         []wasmtypes.ProposalType{wasmtypes.ProposalTypeStoreCode, wasmtypes.ProposalTypeInstantiateContract},
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			ProposalsEnabled = tc.proposalsEnabled
-			EnableSpecificProposals = tc.specificEnabled
-			proposals := GetEnabledProposals()
-			assert.Equal(t, tc.expected, proposals)
-		})
-	}
 }
 
 func genesisStateWithValSet(t *testing.T,

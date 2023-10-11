@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	errorsmod "cosmossdk.io/errors"
 	math "cosmossdk.io/math"
@@ -59,7 +58,7 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 
 func setup(withGenesis bool, invCheckPeriod uint, opts ...wasmkeeper.Option) (*ArchwayApp, GenesisState) {
 	db := dbm.NewMemDB()
-	app := NewArchwayApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, MakeEncodingConfig(), wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, opts)
+	app := NewArchwayApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, MakeEncodingConfig(), EmptyBaseAppOptions{}, opts)
 	if withGenesis {
 		return app, NewDefaultGenesisState(app.AppCodec())
 	}
