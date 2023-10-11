@@ -36,6 +36,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#439](https://github.com/archway-network/archway/pull/439) - Adding containerized localnet
 - [#445](https://github.com/archway-network/archway/pull/445) - Adding Archway logo and version number to upgrade logs
 - [#459](https://github.com/archway-network/archway/pull/459) - Add missing ADR references to docs index
+- [#442](https://github.com/archway-network/archway/pull/442) - Upgrade Cosmos-sdk from v0.45.16 to v0.47.5 and all the other things it depends on
 
 ### Changed
 
