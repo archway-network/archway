@@ -1,9 +1,9 @@
 FROM golang:1.19.5-alpine3.17 AS go-builder
 # arch can be either x86_64 for amd64 or aarch64 for arm
 ARG arch=x86_64
-ARG libwasmvm_version=v1.3.0
-ARG libwasmvm_aarch64_sha=2a72c7062e3c791792b3dab781c815c9a76083a7997ce6f9f2799aaf577f3c25
-ARG libwasmvm_amd64_sha=8ea2e3b5fae83e671da2bb51115adc88591045953f509955ec38dc02ea5a7b94
+ARG libwasmvm_version=v1.4.1
+ARG libwasmvm_aarch64_sha=a8259ba852f1b68f2a5f8eb666a9c7f1680196562022f71bb361be1472a83cfd
+ARG libwasmvm_amd64_sha=324c1073cb988478d644861783ed5a7de21cfd090976ccc6b1de0559098fbbad
 
 # this comes from standard alpine nightly file
 #  https://github.com/rust-lang/docker-rust-nightly/blob/master/alpine3.12/Dockerfile
