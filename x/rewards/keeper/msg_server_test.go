@@ -8,6 +8,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
@@ -337,6 +338,77 @@ func (s *KeeperTestSuite) TestMsgServer_SetFlatFee() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(&rewardstypes.MsgSetFlatFeeResponse{}, res)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMsgServer_UpdateParams() {
+	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
+	account := s.chain.GetAccount(0)
+
+	server := keeper.NewMsgServer(k)
+
+	govAddress := s.chain.GetApp().Keepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	testCases := []struct {
+		testCase    string
+		prepare     func() *rewardstypes.MsgUpdateParams
+		expectError bool
+	}{
+		{
+			testCase: "fail: invalid params",
+			prepare: func() *rewardstypes.MsgUpdateParams {
+				params := rewardstypes.DefaultParams()
+				params.InflationRewardsRatio = sdk.NewDecWithPrec(-2, 2)
+				return &rewardstypes.MsgUpdateParams{
+					Authority: govAddress.String(),
+					Params:    params,
+				}
+			},
+			expectError: true,
+		},
+		{
+			testCase: "fail: invalid authority address",
+			prepare: func() *rewardstypes.MsgUpdateParams {
+				return &rewardstypes.MsgUpdateParams{
+					Authority: "👻",
+					Params:    rewardstypes.DefaultParams(),
+				}
+			},
+			expectError: true,
+		},
+		{
+			testCase: "fail: authority address is not gov address",
+			prepare: func() *rewardstypes.MsgUpdateParams {
+				return &rewardstypes.MsgUpdateParams{
+					Authority: account.Address.String(),
+					Params:    rewardstypes.DefaultParams(),
+				}
+			},
+			expectError: true,
+		},
+		{
+			testCase: "ok: valid params with x/gov address",
+			prepare: func() *rewardstypes.MsgUpdateParams {
+				return &rewardstypes.MsgUpdateParams{
+					Authority: govAddress.String(),
+					Params:    rewardstypes.DefaultParams(),
+				}
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
+			req := tc.prepare()
+			res, err := server.UpdateParams(sdk.WrapSDKContext(ctx), req)
+			if tc.expectError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(&rewardstypes.MsgUpdateParamsResponse{}, res)
 			}
 		})
 	}

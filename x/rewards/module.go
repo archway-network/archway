@@ -30,6 +30,9 @@ var (
 	_ module.AppModule      = AppModule{}
 )
 
+// ConsensusVersion defines the current x/rewards module consensus version.
+const ConsensusVersion = 2
+
 // AppModuleBasic defines the basic application module for this module.
 type AppModuleBasic struct {
 	cdc codec.Codec
@@ -108,6 +111,11 @@ func (a AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(a.keeper))
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(a.keeper))
+
+	m := keeper.NewMigrator(a.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the module. It returns no validator updates.
@@ -128,7 +136,7 @@ func (a AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawM
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (a AppModule) ConsensusVersion() uint64 {
-	return 1
+	return ConsensusVersion
 }
 
 // BeginBlock returns the begin blocker for the module.

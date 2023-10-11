@@ -12,12 +12,14 @@ const (
 	TypeMsgSetContractMetadata = "set-contract-metadata"
 	TypeMsgWithdrawRewards     = "withdraw-rewards"
 	TypeMsgFlatFee             = "flat-fee"
+	TypeMsgUpdateParams        = "update-params"
 )
 
 var (
 	_ sdk.Msg = &MsgSetContractMetadata{}
 	_ sdk.Msg = &MsgWithdrawRewards{}
 	_ sdk.Msg = &MsgSetFlatFee{}
+	_ sdk.Msg = &MsgUpdateParams{}
 )
 
 // NewMsgSetContractMetadata creates a new MsgSetContractMetadata instance.
@@ -179,12 +181,6 @@ func NewMsgFlatFee(senderAddr, contractAddr sdk.AccAddress, flatFee sdk.Coin) *M
 	return msg
 }
 
-// Route implements the sdk.Msg interface.
-func (m MsgSetFlatFee) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (m MsgSetFlatFee) Type() string { return TypeMsgFlatFee }
-
 // GetSigners implements the sdk.Msg interface.
 func (m MsgSetFlatFee) GetSigners() []sdk.AccAddress {
 	senderAddr, err := sdk.AccAddressFromBech32(m.SenderAddress)
@@ -195,12 +191,6 @@ func (m MsgSetFlatFee) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{senderAddr}
 }
 
-// GetSignBytes implements the sdk.Msg interface.
-func (m MsgSetFlatFee) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&m)
-	return sdk.MustSortJSON(bz)
-}
-
 // ValidateBasic implements the sdk.Msg interface.
 func (m MsgSetFlatFee) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.SenderAddress); err != nil {
@@ -208,6 +198,47 @@ func (m MsgSetFlatFee) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
 		return errorsmod.Wrapf(sdkErrors.ErrInvalidAddress, "invalid contract address: %v", err)
+	}
+
+	return nil
+}
+
+// NewMsgUpdateParams creates a new MsgUpdateParams instance.
+func NewMsgUpdateParams(senderAddr sdk.AccAddress, params Params) *MsgUpdateParams {
+	msg := &MsgUpdateParams{
+		Authority: senderAddr.String(),
+		Params:    params,
+	}
+
+	return msg
+}
+
+// Route implements the sdk.Msg interface.
+func (m MsgUpdateParams) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (m MsgUpdateParams) Type() string { return TypeMsgFlatFee }
+
+// GetSigners implements the sdk.Msg interface.
+func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	senderAddr, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		panic(fmt.Errorf("parsing sender address (%s): %w", m.Authority, err))
+	}
+
+	return []sdk.AccAddress{senderAddr}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (m MsgUpdateParams) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&m)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (m MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return errorsmod.Wrapf(sdkErrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
 
 	return nil
