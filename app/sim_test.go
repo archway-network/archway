@@ -112,7 +112,7 @@ func TestAppImportExport(t *testing.T) {
 	}()
 
 	encConf := MakeEncodingConfig()
-	app := NewArchwayApp(logger, db, nil, true, map[int64]bool{}, dir, simcli.FlagPeriodValue, encConf, wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
+	app := NewArchwayApp(logger, db, nil, true, map[int64]bool{}, dir, simcli.FlagPeriodValue, encConf, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
 	require.Equal(t, appName, app.Name())
 
 	// Run randomized simulation
@@ -151,7 +151,7 @@ func TestAppImportExport(t *testing.T) {
 		newDB.Close()
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
-	newApp := NewArchwayApp(logger, newDB, nil, true, map[int64]bool{}, newDir, simcli.FlagPeriodValue, encConf, wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
+	newApp := NewArchwayApp(logger, newDB, nil, true, map[int64]bool{}, newDir, simcli.FlagPeriodValue, encConf, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
 	require.Equal(t, appName, newApp.Name())
 
 	var genesisState GenesisState
@@ -218,7 +218,7 @@ func TestFullAppSimulation(t *testing.T) {
 	}()
 	encConf := MakeEncodingConfig()
 	app := NewArchwayApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simcli.FlagPeriodValue,
-		encConf, wasmtypes.EnableAllProposals, sims.EmptyAppOptions{}, nil, fauxMerkleModeOpt)
+		encConf, sims.EmptyAppOptions{}, nil, fauxMerkleModeOpt)
 	require.Equal(t, "ArchwayApp", app.Name())
 
 	// run randomized simulation
