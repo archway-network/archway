@@ -1,10 +1,10 @@
 package e2eTesting
 
 import (
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	archway "github.com/archway-network/archway/types"
 
@@ -28,7 +28,7 @@ type (
 
 	TestChainGenesisOption func(cdc codec.Codec, genesis app.GenesisState)
 
-	TestChainConsensusParamsOption func(params *abci.ConsensusParams)
+	TestChainConsensusParamsOption func(params *tmproto.ConsensusParams)
 )
 
 // defaultChainConfig builds chain default config.
@@ -92,7 +92,7 @@ func WithLogger() TestChainConfigOption {
 
 // WithBlockGasLimit sets the block gas limit (not set by default).
 func WithBlockGasLimit(gasLimit int64) TestChainConsensusParamsOption {
-	return func(params *abci.ConsensusParams) {
+	return func(params *tmproto.ConsensusParams) {
 		params.Block.MaxGas = gasLimit
 	}
 }

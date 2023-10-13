@@ -1,6 +1,7 @@
 package ante
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,7 +28,7 @@ func NewMinFeeDecorator(codec codec.BinaryCodec, rk RewardsKeeperExpected) MinFe
 func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return ctx, sdkErrors.Wrap(sdkErrors.ErrTxDecode, "Tx must be a FeeTx")
+		return ctx, errorsmod.Wrap(sdkErrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	var expectedFees sdk.Coins // All the fees which need to be paid for the given tx. includes min consensus fee + every contract flat fee
@@ -55,5 +56,5 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 	if simulate || expectedFees.IsZero() || txFees.IsAllGTE(expectedFees) {
 		return next(ctx, tx, simulate)
 	}
-	return ctx, sdkErrors.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, expectedFees.String())
+	return ctx, errorsmod.Wrapf(sdkErrors.ErrInsufficientFee, "tx fee %s is less than min fee: %s", txFees, expectedFees.String())
 }

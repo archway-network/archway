@@ -1,0 +1,12 @@
+syntax = "proto3";
+package archway.genmsg.v1;
+
+import "google/protobuf/any.proto";
+
+
+option go_package = "github.com/archway-network/archway/x/genmsg/types";
+
+// GenesisState represents the messages to be processed during genesis by the genmsg module.
+message GenesisState {
+  repeated google.protobuf.Any messages = 1;
+}

@@ -1,14 +1,15 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/archway-network/archway/x/rewards/types"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
@@ -48,10 +49,11 @@ type Keeper struct {
 	trackingKeeper   TrackingKeeperExpected
 	authKeeper       AuthKeeperExpected
 	bankKeeper       BankKeeperExpected
+	authority        string // this should be the x/gov module account
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace, authority string) Keeper {
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
@@ -64,6 +66,7 @@ func NewKeeper(cdc codec.Codec, key sdk.StoreKey, contractInfoReader ContractInf
 		trackingKeeper:   trackingKeeper,
 		authKeeper:       ak,
 		bankKeeper:       bk,
+		authority:        authority,
 	}
 }
 
@@ -99,8 +102,13 @@ func (k Keeper) GetRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, p
 		}
 	}
 	if pageReq.Limit > types.MaxRecordsQueryLimit {
-		return nil, nil, sdkErrors.Wrapf(types.ErrInvalidRequest, "max records (%d) query limit exceeded", types.MaxRecordsQueryLimit)
+		return nil, nil, errorsmod.Wrapf(types.ErrInvalidRequest, "max records (%d) query limit exceeded", types.MaxRecordsQueryLimit)
 	}
 
 	return k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
+}
+
+// GetAuthority returns the x/rewards module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }

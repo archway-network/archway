@@ -14,7 +14,7 @@ import (
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	channelTypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	channelTypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	voterState "github.com/archway-network/voter/src/state"
@@ -83,10 +83,10 @@ func (s *E2ETestSuite) VoterNewVoting(chain *e2eTesting.TestChain, contractAddr 
 	_, res, _, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 
 	txRes := chain.ParseSDKResultData(res)
-	s.Require().Len(txRes.Data, 1)
+	s.Require().Len(txRes.MsgResponses, 1)
 
 	var executeRes wasmdTypes.MsgExecuteContractResponse
-	s.Require().NoError(executeRes.Unmarshal(txRes.Data[0].Data))
+	s.Require().NoError(executeRes.Unmarshal(txRes.MsgResponses[0].Value))
 
 	var resp voterTypes.NewVotingResponse
 	s.Require().NoError(resp.UnmarshalJSON(executeRes.Data))
@@ -222,10 +222,10 @@ func (s *E2ETestSuite) VoterRelease(chain *e2eTesting.TestChain, contractAddr sd
 	_, res, _, _ := chain.SendMsgs(acc, true, []sdk.Msg{&msg})
 
 	txRes := chain.ParseSDKResultData(res)
-	s.Require().Len(txRes.Data, 1)
+	s.Require().Len(txRes.MsgResponses, 1)
 
 	var executeRes wasmdTypes.MsgExecuteContractResponse
-	s.Require().NoError(executeRes.Unmarshal(txRes.Data[0].Data))
+	s.Require().NoError(executeRes.Unmarshal(txRes.MsgResponses[0].Value))
 
 	var resp voterTypes.ReleaseResponse
 	s.Require().NoError(resp.UnmarshalJSON(executeRes.Data))

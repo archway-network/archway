@@ -8,39 +8,42 @@ import (
 
 // InflationRewardsRatio return inflation rewards params ratio.
 func (k Keeper) InflationRewardsRatio(ctx sdk.Context) (res sdk.Dec) {
-	k.paramStore.Get(ctx, types.InflationRewardsRatioParamKey, &res)
-	return
+	return k.GetParams(ctx).InflationRewardsRatio
 }
 
 // TxFeeRebateRatio return tx fee rebate rewards params ratio.
 func (k Keeper) TxFeeRebateRatio(ctx sdk.Context) (res sdk.Dec) {
-	k.paramStore.Get(ctx, types.TxFeeRebateRatioParamKey, &res)
-	return
+	return k.GetParams(ctx).TxFeeRebateRatio
 }
 
 // MaxWithdrawRecords return the maximum number of types.RewardsRecord objects used for the withdrawal operation.
 func (k Keeper) MaxWithdrawRecords(ctx sdk.Context) (res uint64) {
-	k.paramStore.Get(ctx, types.MaxWithdrawRecordsParamKey, &res)
-	return
+	return k.GetParams(ctx).MaxWithdrawRecords
 }
 
 func (k Keeper) MinimumPriceOfGas(ctx sdk.Context) sdk.DecCoin {
-	var res sdk.DecCoin
-	k.paramStore.Get(ctx, types.MinPriceOfGasParamKey, &res)
-	return res
+	return k.GetParams(ctx).MinPriceOfGas
 }
 
 // GetParams return all module parameters.
-func (k Keeper) GetParams(ctx sdk.Context) types.Params {
-	return types.NewParams(
-		k.InflationRewardsRatio(ctx),
-		k.TxFeeRebateRatio(ctx),
-		k.MaxWithdrawRecords(ctx),
-		k.MinimumPriceOfGas(ctx),
-	)
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+	store := ctx.KVStore(k.state.key)
+	bz := store.Get(types.ParamsKey)
+	if bz == nil {
+		return params
+	}
+
+	k.cdc.MustUnmarshal(bz, &params)
+	return params
 }
 
 // SetParams sets all module parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramStore.SetParamSet(ctx, &params)
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+	store := ctx.KVStore(k.state.key)
+	bz, err := k.cdc.Marshal(&params)
+	if err != nil {
+		return err
+	}
+	store.Set(types.ParamsKey, bz)
+	return nil
 }

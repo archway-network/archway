@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -32,10 +33,10 @@ func (d QueryDispatcher) DispatchQuery(ctx sdk.Context, request json.RawMessage)
 	// Parse and validate the input
 	var req types.Query
 	if err := json.Unmarshal(request, &req); err != nil {
-		return nil, sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, fmt.Sprintf("custom query JSON unmarshal: %v", err))
+		return nil, errorsmod.Wrap(sdkErrors.ErrInvalidRequest, fmt.Sprintf("custom query JSON unmarshal: %v", err))
 	}
 	if err := req.Validate(); err != nil {
-		return nil, sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, fmt.Sprintf("custom query validation: %v", err))
+		return nil, errorsmod.Wrap(sdkErrors.ErrInvalidRequest, fmt.Sprintf("custom query validation: %v", err))
 	}
 
 	// Execute custom sub-query (one of)

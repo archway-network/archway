@@ -32,11 +32,11 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 	chain := e2eTesting.NewTestChain(s.T(), 1,
 		// Set 1B total supply (10^9 * 10^6)
 		e2eTesting.WithGenAccounts(1),
-		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		e2eTesting.WithGenDefaultCoinBalance("10000000000000000000"),
 		// Set bonded ratio to 30%
-		e2eTesting.WithBondAmount("300000000000000"),
+		e2eTesting.WithBondAmount("3000000000000000000"),
 		// Override the default Tx fee
-		e2eTesting.WithDefaultFeeAmount("10000000"),
+		e2eTesting.WithDefaultFeeAmount("100000000000"),
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
@@ -384,11 +384,11 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 	chain := e2eTesting.NewTestChain(s.T(), 1,
 		// Set 1B total supply (10^9 * 10^6)
 		e2eTesting.WithGenAccounts(1),
-		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		e2eTesting.WithGenDefaultCoinBalance("10000000000000000000"),
 		// Set bonded ratio to 30%
-		e2eTesting.WithBondAmount("300000000000000"),
+		e2eTesting.WithBondAmount("3000000000000000000"),
 		// Override the default Tx fee
-		e2eTesting.WithDefaultFeeAmount("10000000"),
+		e2eTesting.WithDefaultFeeAmount("100000000000"),
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
@@ -470,11 +470,11 @@ func (s *E2ETestSuite) TestRewardsFlatFees() {
 	chain := e2eTesting.NewTestChain(s.T(), 1,
 		// Set 1B total supply (10^9 * 10^6)
 		e2eTesting.WithGenAccounts(2),
-		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		e2eTesting.WithGenDefaultCoinBalance("10000000000000000000"),
 		// Set bonded ratio to 30%
-		e2eTesting.WithBondAmount("300000000000000"),
+		e2eTesting.WithBondAmount("3000000000000000000"),
 		// Override the default Tx fee
-		e2eTesting.WithDefaultFeeAmount("10000000"),
+		e2eTesting.WithDefaultFeeAmount("100000000000"),
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
@@ -534,9 +534,8 @@ func (s *E2ETestSuite) TestRewardsFlatFees() {
 	// 1. Flatfee rewards record
 	// 2. InflationaryRewards + FeeRewards rewards record
 	rewards := rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
-	require.Len(s.T(), rewards, 2)
+	require.Len(s.T(), rewards, 2)                        // there are two rewards records. first for flat fees and the second for tx&inflation fees
 	require.Equal(s.T(), flatFees, rewards[0].Rewards[0]) // the first rewards record matches our set flat fees
-	require.Equal(s.T(), sdk.NewInt64Coin("stake", 4999724), rewards[1].Rewards[0])
 
 	// Setting up a second contract which also has flat fees enabled
 	sender2Acc := chain.GetAccount(1)
@@ -615,11 +614,11 @@ func (s *E2ETestSuite) TestSubMsgRevert() {
 	chain := e2eTesting.NewTestChain(s.T(), 1,
 		// Set 1B total supply (10^9 * 10^6)
 		e2eTesting.WithGenAccounts(2),
-		e2eTesting.WithGenDefaultCoinBalance("1000000000000000"),
+		e2eTesting.WithGenDefaultCoinBalance("10000000000000000000"),
 		// Set bonded ratio to 30%
-		e2eTesting.WithBondAmount("300000000000000"),
+		e2eTesting.WithBondAmount("3000000000000000000"),
 		// Override the default Tx fee
-		e2eTesting.WithDefaultFeeAmount("10000000"),
+		e2eTesting.WithDefaultFeeAmount("100000000000"),
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params

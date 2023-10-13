@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -11,12 +12,14 @@ const (
 	TypeMsgSetContractMetadata = "set-contract-metadata"
 	TypeMsgWithdrawRewards     = "withdraw-rewards"
 	TypeMsgFlatFee             = "flat-fee"
+	TypeMsgUpdateParams        = "update-params"
 )
 
 var (
 	_ sdk.Msg = &MsgSetContractMetadata{}
 	_ sdk.Msg = &MsgWithdrawRewards{}
 	_ sdk.Msg = &MsgSetFlatFee{}
+	_ sdk.Msg = &MsgUpdateParams{}
 )
 
 // NewMsgSetContractMetadata creates a new MsgSetContractMetadata instance.
@@ -63,7 +66,7 @@ func (m MsgSetContractMetadata) GetSignBytes() []byte {
 // ValidateBasic implements the sdk.Msg interface.
 func (m MsgSetContractMetadata) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.SenderAddress); err != nil {
-		return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid sender address: %v", err)
+		return errorsmod.Wrapf(sdkErrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
 
 	if err := m.Metadata.Validate(false); err != nil {
@@ -122,46 +125,46 @@ func (m MsgWithdrawRewards) GetSignBytes() []byte {
 // ValidateBasic implements the sdk.Msg interface.
 func (m MsgWithdrawRewards) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.RewardsAddress); err != nil {
-		return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid rewards address: %v", err)
+		return errorsmod.Wrapf(sdkErrors.ErrInvalidAddress, "invalid rewards address: %v", err)
 	}
 
 	if m.Mode == nil {
-		return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid mode: nil")
+		return errorsmod.Wrap(sdkErrors.ErrInvalidRequest, "invalid mode: nil")
 	}
 
 	switch modeReq := m.Mode.(type) {
 	case *MsgWithdrawRewards_RecordsLimit_:
 		if modeReq == nil {
-			return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid records limit: nil mode object")
+			return errorsmod.Wrap(sdkErrors.ErrInvalidRequest, "invalid records limit: nil mode object")
 		}
 		if modeReq.RecordsLimit == nil {
-			return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid records limit: nil request")
+			return errorsmod.Wrap(sdkErrors.ErrInvalidRequest, "invalid records limit: nil request")
 		}
 	case *MsgWithdrawRewards_RecordIds:
 		if modeReq == nil {
-			return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid record IDs: nil mode object")
+			return errorsmod.Wrap(sdkErrors.ErrInvalidRequest, "invalid record IDs: nil mode object")
 		}
 		if modeReq.RecordIds == nil {
-			return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid record IDs: nil request")
+			return errorsmod.Wrap(sdkErrors.ErrInvalidRequest, "invalid record IDs: nil request")
 		}
 
 		if len(modeReq.RecordIds.Ids) == 0 {
-			return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid record IDs: empty")
+			return errorsmod.Wrap(sdkErrors.ErrInvalidRequest, "invalid record IDs: empty")
 		}
 
 		idsSet := make(map[uint64]struct{})
 		for _, id := range m.GetRecordIds().Ids {
 			if id == 0 {
-				return sdkErrors.Wrap(sdkErrors.ErrInvalidRequest, "invalid record IDs: must be GT 0")
+				return errorsmod.Wrap(sdkErrors.ErrInvalidRequest, "invalid record IDs: must be GT 0")
 			}
 
 			if _, ok := idsSet[id]; ok {
-				return sdkErrors.Wrapf(sdkErrors.ErrInvalidRequest, "invalid record IDs: duplicate ID (%d)", id)
+				return errorsmod.Wrapf(sdkErrors.ErrInvalidRequest, "invalid record IDs: duplicate ID (%d)", id)
 			}
 			idsSet[id] = struct{}{}
 		}
 	default:
-		return sdkErrors.Wrapf(sdkErrors.ErrUnknownRequest, "unknown withdraw rewards mode: %T", m.Mode)
+		return errorsmod.Wrapf(sdkErrors.ErrUnknownRequest, "unknown withdraw rewards mode: %T", m.Mode)
 	}
 
 	return nil
@@ -178,12 +181,6 @@ func NewMsgFlatFee(senderAddr, contractAddr sdk.AccAddress, flatFee sdk.Coin) *M
 	return msg
 }
 
-// Route implements the sdk.Msg interface.
-func (m MsgSetFlatFee) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (m MsgSetFlatFee) Type() string { return TypeMsgFlatFee }
-
 // GetSigners implements the sdk.Msg interface.
 func (m MsgSetFlatFee) GetSigners() []sdk.AccAddress {
 	senderAddr, err := sdk.AccAddressFromBech32(m.SenderAddress)
@@ -194,19 +191,54 @@ func (m MsgSetFlatFee) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{senderAddr}
 }
 
+// ValidateBasic implements the sdk.Msg interface.
+func (m MsgSetFlatFee) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.SenderAddress); err != nil {
+		return errorsmod.Wrapf(sdkErrors.ErrInvalidAddress, "invalid sender address: %v", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
+		return errorsmod.Wrapf(sdkErrors.ErrInvalidAddress, "invalid contract address: %v", err)
+	}
+
+	return nil
+}
+
+// NewMsgUpdateParams creates a new MsgUpdateParams instance.
+func NewMsgUpdateParams(senderAddr sdk.AccAddress, params Params) *MsgUpdateParams {
+	msg := &MsgUpdateParams{
+		Authority: senderAddr.String(),
+		Params:    params,
+	}
+
+	return msg
+}
+
+// Route implements the sdk.Msg interface.
+func (m MsgUpdateParams) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (m MsgUpdateParams) Type() string { return TypeMsgFlatFee }
+
+// GetSigners implements the sdk.Msg interface.
+func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	senderAddr, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		panic(fmt.Errorf("parsing sender address (%s): %w", m.Authority, err))
+	}
+
+	return []sdk.AccAddress{senderAddr}
+}
+
 // GetSignBytes implements the sdk.Msg interface.
-func (m MsgSetFlatFee) GetSignBytes() []byte {
+func (m MsgUpdateParams) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
 // ValidateBasic implements the sdk.Msg interface.
-func (m MsgSetFlatFee) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.SenderAddress); err != nil {
-		return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid sender address: %v", err)
-	}
-	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
-		return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid contract address: %v", err)
+func (m MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return errorsmod.Wrapf(sdkErrors.ErrInvalidAddress, "invalid sender address: %v", err)
 	}
 
 	return nil

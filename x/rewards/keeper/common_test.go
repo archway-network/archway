@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) CheckWithdrawResults(rewardsAddr sdk.AccAddress, recor
 
 	// Check the account balance diff
 	accBalanceAfter := s.chain.GetBalance(rewardsAddr)
-	s.Assert().Equal(totalRewardsExpected.String(), accBalanceAfter.Sub(accBalanceBefore).String())
+	s.Assert().Equal(totalRewardsExpected.String(), accBalanceAfter.Sub(accBalanceBefore...).String())
 
 	// Check records pruning
 	recordsState := s.chain.GetApp().Keepers.RewardsKeeper.GetState().RewardsRecord(s.chain.GetContext())

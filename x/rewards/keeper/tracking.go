@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,9 +20,14 @@ func (k Keeper) TrackFeeRebatesRewards(ctx sdk.Context, rewards sdk.Coins) {
 
 // TrackInflationRewards creates a new inflation reward record for the current block.
 func (k Keeper) TrackInflationRewards(ctx sdk.Context, rewards sdk.Coin) {
+	blockGasLimit := ctx.BlockGasMeter().Limit()
+	if ctx.BlockGasMeter().Limit() == math.MaxUint64 { // Because thisss https://github.com/cosmos/cosmos-sdk/pull/9651
+		blockGasLimit = 0
+	}
+
 	k.state.BlockRewardsState(ctx).CreateBlockRewards(
 		ctx.BlockHeight(),
 		rewards,
-		ctx.BlockGasMeter().Limit(),
+		blockGasLimit,
 	)
 }

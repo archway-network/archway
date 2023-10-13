@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channelTypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	channelTypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	voterPkg "github.com/archway-network/voter/src/pkg"
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
@@ -84,7 +84,7 @@ func (s *E2ETestSuite) TestVoter_ExecuteQueryAndReply() {
 		// s.Assert().EqualValues(contractCoinsExp, releasedCoinsRcv)
 
 		acc1BalanceAfter := chain.GetBalance(acc1.Address)
-		acc1BalanceExpected := acc1BalanceBefore.Add(contractCoinsExp...).Sub(chain.GetDefaultTxFee())
+		acc1BalanceExpected := acc1BalanceBefore.Add(contractCoinsExp...).Sub(chain.GetDefaultTxFee()...)
 		s.Assert().EqualValues(acc1BalanceExpected.String(), acc1BalanceAfter.String())
 
 		releaseStats := s.VoterGetReleaseStats(chain, contractAddr)
@@ -120,14 +120,14 @@ func (s *E2ETestSuite) TestVoter_Sudo() {
 		sudoMsgBz, err := sudoMsg.MarshalJSON()
 		s.Require().NoError(err)
 
-		proposal := wasmdTypes.SudoContractProposal{
-			Title:       "Increase NewVotingCost",
-			Description: "Some desc",
-			Contract:    contractAddr.String(),
-			Msg:         sudoMsgBz,
+		govAddr := chain.GetApp().Keepers.AccountKeeper.GetModuleAddress("gov")
+		sudoProposal := wasmdTypes.MsgSudoContract{
+			Authority: govAddr.String(),
+			Contract:  contractAddr.String(),
+			Msg:       sudoMsgBz,
 		}
 
-		chain.ExecuteGovProposal(acc, true, &proposal)
+		chain.ExecuteGovProposal(acc, true, []sdk.Msg{&sudoProposal}, "Increase NewVotingCost", "Some desc", "")
 
 		paramsRcv := s.VoterGetParams(chain, contractAddr)
 		s.Assert().EqualValues(paramsExp, paramsRcv)
@@ -1147,7 +1147,7 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
 	})
 
 	s.Run("Check rewardsAddr balance changed", func() {
-		rewardsAddrBalanceDiff := chain.GetBalance(contractAddr).Sub(rewardsAddrBalanceBefore)
+		rewardsAddrBalanceDiff := chain.GetBalance(contractAddr).Sub(rewardsAddrBalanceBefore...)
 		s.Assert().Equal(totalRewardsExpected.String(), rewardsAddrBalanceDiff.String())
 	})
 }

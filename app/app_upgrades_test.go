@@ -24,9 +24,9 @@ func TestUpgrades(t *testing.T) {
 	)
 
 	// create software upgrade proposal and make it pass
-	upgradeProposal := &upgradetypes.SoftwareUpgradeProposal{
-		Title:       "a test upgrade",
-		Description: "we're doing a test upgrade wohoo",
+	govAddr := chain.GetApp().Keepers.AccountKeeper.GetModuleAddress("gov")
+	upgradeProposal := upgradetypes.MsgSoftwareUpgrade{
+		Authority: govAddr.String(),
 		Plan: upgradetypes.Plan{
 			Name:   "test-upgrade",
 			Height: 500,
@@ -34,7 +34,7 @@ func TestUpgrades(t *testing.T) {
 		},
 	}
 
-	chain.ExecuteGovProposal(chain.GetAccount(0), true, upgradeProposal)
+	chain.ExecuteGovProposal(chain.GetAccount(0), true, []sdk.Msg{&upgradeProposal}, "a test upgrade", "we're doing a test upgrade wohoo", "")
 
 	chain.GoToHeight(upgradeProposal.Plan.Height-2, 1*time.Second)
 	// now if we go to next height we will have a panic because of the upgrade

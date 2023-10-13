@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/archway-network/archway/x/rewards/types"
@@ -21,14 +21,14 @@ func (k Keeper) WithdrawRewardsByRecordsLimit(ctx sdk.Context, rewardsAddr sdk.A
 
 	// Msg post-validateBasic check
 	if recordsLimit > recordsLimitMax {
-		return nil, 0, sdkErrors.Wrapf(types.ErrInvalidRequest, "max withdraw records (%d) exceeded", recordsLimitMax)
+		return nil, 0, errorsmod.Wrapf(types.ErrInvalidRequest, "max withdraw records (%d) exceeded", recordsLimitMax)
 	}
 
 	// Get all rewards records for the given address by limit
 	pageReq := &query.PageRequest{Limit: recordsLimit}
 	records, _, err := k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
 	if err != nil {
-		return nil, 0, sdkErrors.Wrap(types.ErrInternal, err.Error())
+		return nil, 0, errorsmod.Wrap(types.ErrInternal, err.Error())
 	}
 
 	return k.withdrawRewardsByRecords(ctx, rewardsAddr, records), len(records), nil
@@ -38,7 +38,7 @@ func (k Keeper) WithdrawRewardsByRecordsLimit(ctx sdk.Context, rewardsAddr sdk.A
 func (k Keeper) WithdrawRewardsByRecordIDs(ctx sdk.Context, rewardsAddr sdk.AccAddress, recordIDs []uint64) (sdk.Coins, int, error) {
 	// Msg post-validateBasic check
 	if maxRecords := k.MaxWithdrawRecords(ctx); uint64(len(recordIDs)) > maxRecords {
-		return nil, 0, sdkErrors.Wrapf(types.ErrInvalidRequest, "max withdraw records (%d) exceeded", maxRecords)
+		return nil, 0, errorsmod.Wrapf(types.ErrInvalidRequest, "max withdraw records (%d) exceeded", maxRecords)
 	}
 
 	rewardsState := k.state.RewardsRecord(ctx)
@@ -49,10 +49,10 @@ func (k Keeper) WithdrawRewardsByRecordIDs(ctx sdk.Context, rewardsAddr sdk.AccA
 	for _, id := range recordIDs {
 		record, found := rewardsState.GetRewardsRecord(id)
 		if !found {
-			return nil, 0, sdkErrors.Wrapf(types.ErrInvalidRequest, "rewards record (%d): not found", id)
+			return nil, 0, errorsmod.Wrapf(types.ErrInvalidRequest, "rewards record (%d): not found", id)
 		}
 		if record.RewardsAddress != rewardsAddrStr {
-			return nil, 0, sdkErrors.Wrapf(types.ErrInvalidRequest, "rewards record (%d): address mismatch", id)
+			return nil, 0, errorsmod.Wrapf(types.ErrInvalidRequest, "rewards record (%d): address mismatch", id)
 		}
 
 		records = append(records, record)

@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/archway-network/archway/wasmbinding/gov/types"
+	wasmTypes "github.com/archway-network/archway/wasmbinding/gov/types"
 )
 
 // KeeperReaderExpected defines the x/gov keeper expected read operations.
@@ -29,16 +30,16 @@ func NewQueryHandler(gk KeeperReaderExpected) QueryHandler {
 }
 
 // GetVote returns the vote weighted options for a given proposal and voter.
-func (h QueryHandler) GetVote(ctx sdk.Context, req types.VoteRequest) (types.VoteResponse, error) {
+func (h QueryHandler) GetVote(ctx sdk.Context, req wasmTypes.VoteRequest) (wasmTypes.VoteResponse, error) {
 	if err := req.Validate(); err != nil {
-		return types.VoteResponse{}, fmt.Errorf("vote: %w", err)
+		return wasmTypes.VoteResponse{}, fmt.Errorf("vote: %w", err)
 	}
 
 	vote, found := h.govKeeper.GetVote(ctx, req.ProposalID, req.MustGetVoter())
 	if !found {
-		err := sdkErrors.Wrap(govTypes.ErrInvalidVote, fmt.Errorf("vote not found for proposal %d and voter %s", req.ProposalID, req.Voter).Error())
-		return types.VoteResponse{}, err
+		err := errorsmod.Wrap(types.ErrInvalidVote, fmt.Errorf("vote not found for proposal %d and voter %s", req.ProposalID, req.Voter).Error())
+		return wasmTypes.VoteResponse{}, err
 	}
 
-	return types.NewVoteResponse(vote), nil
+	return wasmTypes.NewVoteResponse(vote), nil
 }

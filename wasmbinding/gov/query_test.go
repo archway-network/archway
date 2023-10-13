@@ -2,12 +2,12 @@ package gov_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/wasmbinding/gov"
@@ -27,11 +27,14 @@ func TestGovWASMBindings(t *testing.T) {
 	depositor := accAddrs[0]
 	voter := accAddrs[1]
 
+	//govAccount := keeper.GetGovernanceAccount(ctx)
+	params := keeper.GetParams(ctx)
+
 	// Store a proposal
 	proposalId := govTypes.DefaultStartingProposalID
-	textProposal := govTypes.NewTextProposal("foo", "bar")
-	proposal, pErr := govTypes.NewProposal(textProposal, proposalId, time.Now().UTC(), time.Now().UTC())
-	require.NoError(t, pErr)
+
+	proposal, err := govTypes.NewProposal([]sdk.Msg{}, proposalId, ctx.BlockHeader().Time, ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod), "", "Text Proposal", "Description", depositor)
+	require.NoError(t, err)
 	keeper.SetProposal(ctx, proposal)
 
 	// Make a deposit
@@ -40,7 +43,7 @@ func TestGovWASMBindings(t *testing.T) {
 
 	// Vote
 	keeper.ActivateVotingPeriod(ctx, proposal)
-	vote := govTypes.NewVote(proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes))
+	vote := govTypes.NewVote(proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes), "")
 	keeper.SetVote(ctx, vote)
 
 	t.Run("Query vote on proposal", func(t *testing.T) {

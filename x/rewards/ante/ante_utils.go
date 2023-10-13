@@ -1,6 +1,7 @@
 package ante
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,7 +49,7 @@ func GetContractFlatFees(ctx sdk.Context, rk RewardsKeeperExpected, codec codec.
 		{
 			authzMsgs, err := msg.GetMessages()
 			if err != nil {
-				return nil, false, sdkErrors.Wrapf(sdkErrors.ErrUnauthorized, "error decoding authz messages")
+				return nil, false, errorsmod.Wrapf(sdkErrors.ErrUnauthorized, "error decoding authz messages")
 			}
 
 			for _, wrappedMsg := range authzMsgs {

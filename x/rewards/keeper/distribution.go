@@ -139,7 +139,7 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 
 			inflationRewards := sdk.NewCoin(
 				blockRewards.InflationRewards.Denom,
-				blockRewards.InflationRewards.Amount.ToDec().Mul(rewardsShare).TruncateInt(),
+				sdk.NewDecFromInt(blockRewards.InflationRewards.Amount).Mul(rewardsShare).TruncateInt(),
 			)
 			contractDistrState.InflationaryRewards = inflationRewards
 		}
@@ -158,7 +158,7 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 			for _, feeCoin := range txFees {
 				feeRewards := sdk.NewCoin(
 					feeCoin.Denom,
-					feeCoin.Amount.ToDec().Mul(rewardsShare).TruncateInt(),
+					sdk.NewDecFromInt(feeCoin.Amount).Mul(rewardsShare).TruncateInt(),
 				)
 				contractDistrState.FeeRewards = contractDistrState.FeeRewards.Add(feeRewards)
 			}
@@ -240,7 +240,7 @@ func (k Keeper) cleanupTracking(ctx sdk.Context, height int64) {
 
 // cleanupRewardsPool transfers all undistributed block rewards to the treasury pool.
 func (k Keeper) cleanupRewardsPool(ctx sdk.Context, blockDistrState *blockRewardsDistributionState) {
-	rewardsLeftovers := blockDistrState.RewardsTotal.Sub(blockDistrState.RewardsDistributed)
+	rewardsLeftovers := blockDistrState.RewardsTotal.Sub(blockDistrState.RewardsDistributed...)
 	if rewardsLeftovers.Empty() {
 		return
 	}

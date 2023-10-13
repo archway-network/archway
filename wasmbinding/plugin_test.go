@@ -6,8 +6,9 @@ import (
 	"time"
 
 	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -60,21 +61,20 @@ func TestWASMBindingPlugins(t *testing.T) {
 
 		t.Run("Query gov vote", func(t *testing.T) {
 			proposalId := govTypes.DefaultStartingProposalID
-			textProposal := govTypes.NewTextProposal("foo", "bar")
+			accAddrs, _ := e2eTesting.GenAccounts(2)
+			depositor := accAddrs[0]
 
 			anyTime := time.Now().UTC()
-			proposal, pErr := govTypes.NewProposal(textProposal, proposalId, anyTime, anyTime)
+			proposal, pErr := govTypes.NewProposal([]sdk.Msg{}, proposalId, anyTime, anyTime, "", "Text Proposal", "Description", depositor)
 			require.NoError(t, pErr)
 			govKeeper.SetProposal(ctx, proposal)
 
-			accAddrs, _ := e2eTesting.GenAccounts(2)
-			depositor := accAddrs[0]
 			deposit := govTypes.NewDeposit(proposalId, depositor, nil)
 			govKeeper.SetDeposit(ctx, deposit)
 
 			voter := accAddrs[1]
 			govKeeper.ActivateVotingPeriod(ctx, proposal)
-			vote := govTypes.NewVote(proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes))
+			vote := govTypes.NewVote(proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes), "")
 			govKeeper.SetVote(ctx, vote)
 
 			_, err := queryPlugin.Custom(ctx, []byte(fmt.Sprintf("{\"gov_vote\": {\"proposal_id\": %d, \"voter\": \"%s\"}}", proposalId, voter)))
