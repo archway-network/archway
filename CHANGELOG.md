@@ -28,7 +28,7 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours.
 -->
 
-## [Unreleased]
+## [v5.0.0]
 
 ### Added
 
@@ -49,11 +49,6 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#439](https://github.com/archway-network/archway/pull/439) - Renaming `debug` image to `dev`
 - [#461](https://github.com/archway-network/archway/pull/461) - Remove titus network deployment
 
-### Removed
-
-### Fixed
-
-### Improvements
 
 ## [v4.0.2](https://github.com/archway-network/archway/releases/tag/v4.0.2)
 
