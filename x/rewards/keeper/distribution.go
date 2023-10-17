@@ -45,8 +45,6 @@ func (k Keeper) AllocateBlockRewards(ctx sdk.Context, height int64) {
 // estimateBlockGasUsage creates a new distribution state for the given block height.
 // Func iterates over all tracked transactions and estimates gas usage for each contract (on block and tx levels) merging operations.
 func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewardsDistributionState {
-	metadataState := k.state.ContractMetadataState(ctx)
-
 	// Get all tracked transactions by the x/tracking module
 	blockGasTrackingInfo := k.trackingKeeper.GetBlockTrackingInfo(ctx, height)
 
@@ -81,7 +79,7 @@ func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewar
 					TxGasUsed:           make(map[uint64]uint64, 0),
 					InflationaryRewards: sdk.Coin{Amount: sdk.ZeroInt()}, // necessary to avoid nil pointer panic on Coins.Add call
 				}
-				if metadata, found := metadataState.GetContractMetadata(contractDistrState.ContractAddress); found {
+				if metadata, err := k.ContractMetadata.Get(ctx, contractDistrState.ContractAddress); err == nil {
 					contractDistrState.Metadata = &metadata
 				}
 				blockDistrState.Contracts[contractOp.ContractAddress] = contractDistrState

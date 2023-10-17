@@ -12,9 +12,18 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	minConsFee, _ := k.state.MinConsensusFee(ctx).GetFee() // default sdk.Coin value is ok
 	rewardsRecordLastID, rewardsRecords := k.state.RewardsRecord(ctx).Export()
 
+	var contractMetadata []types.ContractMetadata
+	err := k.ContractMetadata.Walk(ctx, nil, func(key []byte, value types.ContractMetadata) (stop bool, err error) {
+		contractMetadata = append(contractMetadata, value)
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	return types.NewGenesisState(
 		k.GetParams(ctx),
-		k.state.ContractMetadataState(ctx).Export(),
+		contractMetadata,
 		k.state.BlockRewardsState(ctx).Export(),
 		k.state.TxRewardsState(ctx).Export(),
 		minConsFee,

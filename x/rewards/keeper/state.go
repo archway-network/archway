@@ -30,16 +30,6 @@ func (s State) DeleteBlockRewardsCascade(ctx sdk.Context, height int64) {
 	s.TxRewardsState(ctx).deleteTxRewardsByBlock(height)
 }
 
-// ContractMetadataState returns types.ContractMetadata repository.
-func (s State) ContractMetadataState(ctx sdk.Context) ContractMetadataState {
-	baseStore := ctx.KVStore(s.key)
-	return ContractMetadataState{
-		stateStore: prefix.NewStore(baseStore, types.ContractMetadataStatePrefix),
-		cdc:        s.cdc,
-		ctx:        ctx,
-	}
-}
-
 // BlockRewardsState returns types.BlockRewards repository.
 func (s State) BlockRewardsState(ctx sdk.Context) BlockRewardsState {
 	baseStore := ctx.KVStore(s.key)

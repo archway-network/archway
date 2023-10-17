@@ -29,7 +29,6 @@ func (s *KeeperTestSuite) TestStates() {
 
 	chain := s.chain
 	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.RewardsKeeper
-	metaState := keeper.GetState().ContractMetadataState(ctx)
 	blockState := keeper.GetState().BlockRewardsState(ctx)
 	txState := keeper.GetState().TxRewardsState(ctx)
 	rewardsRecordState := keeper.GetState().RewardsRecord(ctx)
@@ -135,11 +134,6 @@ func (s *KeeperTestSuite) TestStates() {
 		testDataExpected.RewardsRecords,
 	)
 
-	// Check non-existing records
-	s.Run("Check non-existing metadata record", func() {
-		_, metaFound := metaState.GetContractMetadata(contractAddrs[2])
-		s.Assert().False(metaFound)
-	})
 	s.Run("Check non-existing BlockRewards and TxRewards records", func() {
 		_, blockRewardsFound := blockState.GetBlockRewards(startBlock + 10)
 		s.Assert().False(blockRewardsFound)
@@ -155,8 +149,8 @@ func (s *KeeperTestSuite) TestStates() {
 	// Check that the states are as expected
 	s.Run("Check objects one by one", func() {
 		for _, metadataExpected := range testDataExpected.Metadata {
-			metaReceived, found := metaState.GetContractMetadata(metadataExpected.MustGetContractAddress())
-			s.Require().True(found)
+			metaReceived, err := keeper.ContractMetadata.Get(ctx, metadataExpected.MustGetContractAddress())
+			s.Require().NoError(err)
 			s.Assert().Equal(metadataExpected, metaReceived)
 		}
 
