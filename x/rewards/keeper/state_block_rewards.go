@@ -45,23 +45,6 @@ func (s BlockRewardsState) Import(objs []types.BlockRewards) {
 	}
 }
 
-// Export returns the module genesis data for the state.
-func (s BlockRewardsState) Export() (objs []types.BlockRewards) {
-	store := prefix.NewStore(s.stateStore, types.BlockRewardsPrefix)
-
-	iterator := store.Iterator(nil, nil)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var obj types.BlockRewards
-		s.cdc.MustUnmarshal(iterator.Value(), &obj)
-
-		objs = append(objs, obj)
-	}
-
-	return
-}
-
 // buildBlockRewardsKey returns the key used to store a types.BlockRewards object.
 func (s BlockRewardsState) buildBlockRewardsKey(height int64) []byte {
 	return sdk.Uint64ToBigEndian(uint64(height))
