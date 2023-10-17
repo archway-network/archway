@@ -186,11 +186,11 @@ func TestMintBankKeeper(t *testing.T) {
 			assert.Equal(t, maxGasExpected, rewardsRecordReceived.MaxGas)
 
 			// Check minimum consensus fee record
-			minConsFeeReceived, minConfFeeFound := keepers.RewardsKeeper.GetState().MinConsensusFee(ctx).GetFee()
+			minConsFeeReceived, err := keepers.RewardsKeeper.MinConsFee.Get(ctx)
 			if maxGasExpected == 0 || rewardsDiffExpected.IsZero() {
-				assert.False(t, minConfFeeFound)
+				assert.Error(t, err)
 			} else {
-				require.True(t, minConfFeeFound)
+				require.NoError(t, err)
 
 				minConsFeeExpected := sdk.DecCoin{
 					Denom: sdk.DefaultBondDenom,

@@ -50,16 +50,6 @@ func (s State) TxRewardsState(ctx sdk.Context) TxRewardsState {
 	}
 }
 
-// MinConsensusFee returns the Minimum Consensus Fee repository.
-func (s State) MinConsensusFee(ctx sdk.Context) MinConsFeeState {
-	baseStore := ctx.KVStore(s.key)
-	return MinConsFeeState{
-		stateStore: prefix.NewStore(baseStore, types.MinConsFeeStatePrefix),
-		cdc:        s.cdc,
-		ctx:        ctx,
-	}
-}
-
 // RewardsRecord returns types.RewardsRecord repository.
 func (s State) RewardsRecord(ctx sdk.Context) RewardsRecordState {
 	baseStore := ctx.KVStore(s.key)

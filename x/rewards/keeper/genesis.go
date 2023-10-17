@@ -9,7 +9,7 @@ import (
 
 // ExportGenesis exports the module genesis for the current block.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	minConsFee, _ := k.state.MinConsensusFee(ctx).GetFee() // default sdk.Coin value is ok
+	minConsFee, _ := k.MinConsFee.Get(ctx) // default sdk.Coin value is ok
 	rewardsRecordLastID, rewardsRecords := k.state.RewardsRecord(ctx).Export()
 
 	var contractMetadata []types.ContractMetadata
