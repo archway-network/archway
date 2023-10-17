@@ -40,7 +40,7 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, v2.MigrateStore(ctx, storeKey, legacySubspace, cdc))
 
 	var res types.Params
-	bz := store.Get(types.ParamsKey)
+	bz := store.Get(types.ParamsPrefix)
 	require.NoError(t, cdc.Unmarshal(bz, &res))
 	require.Equal(t, legacySubspace.ps, res)
 }

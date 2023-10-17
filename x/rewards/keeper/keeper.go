@@ -79,7 +79,7 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 		authority:        authority,
 		Params: collections.NewItem(
 			schemaBuilder,
-			types.ParamsKey,
+			types.ParamsPrefix,
 			"params",
 			collcompat.ProtoValue[types.Params](cdc),
 		),
@@ -92,7 +92,7 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 		),
 		FlatFees: collections.NewMap(
 			schemaBuilder,
-			types.FlatFeePrefix2,
+			types.FlatFeePrefix,
 			"flat_fees",
 			collections.BytesKey,
 			collcompat.ProtoValue[sdk.Coin](cdc),

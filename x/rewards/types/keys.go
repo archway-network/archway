@@ -23,7 +23,10 @@ const (
 var (
 	// ContractMetadataPrefix defines the prefix for storing contract metadata.
 	ContractMetadataPrefix = collections.NewPrefix([]byte{0x00, 0x00})
-	FlatFeePrefix2         = collections.NewPrefix([]byte{0x05, 0x00})
+	// ParamsPrefix defines the prefix for storing params.
+	ParamsPrefix = []byte{0x06}
+	// FlatFeePrefix defines the prefix for storing flat fees.
+	FlatFeePrefix = collections.NewPrefix([]byte{0x05, 0x00})
 )
 
 // BlockRewards prefixed store state keys.
@@ -83,20 +86,4 @@ var (
 	// Key: RewardsRecordStatePrefix | RewardsRecordAddressIndexPrefix | {RewardsAddress} | {ID}
 	// Value: None
 	RewardsRecordAddressIndexPrefix = []byte{0x02}
-)
-
-// FlatFee prefixed store state keys.
-var (
-	// FlatFeeStatePrefix defines the state global prefix.
-	FlatFeeStatePrefix = []byte{0x05}
-
-	// FlatFeePrefix defines the prefix for storing FlatFee objects.
-	// Key: FlatFeeStatePrefix | FlatFeePrefix | {ContractAddress}
-	// Value: sdk.Coin
-	FlatFeePrefix = []byte{0x00}
-)
-
-// ParamsKey stores the module params
-var (
-	ParamsKey = []byte{0x06}
 )
