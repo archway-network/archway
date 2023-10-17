@@ -16,15 +16,6 @@ type ContractMetadataState struct {
 	ctx        sdk.Context
 }
 
-// SetContractMetadata creates or modifies a types.ContractMetadata object.
-func (s ContractMetadataState) SetContractMetadata(contractAddr sdk.AccAddress, obj types.ContractMetadata) {
-	store := prefix.NewStore(s.stateStore, types.ContractMetadataPrefix)
-	store.Set(
-		s.buildContractMetadataKey(contractAddr),
-		s.cdc.MustMarshal(&obj),
-	)
-}
-
 // GetContractMetadata returns a types.ContractMetadata object by contract address.
 func (s ContractMetadataState) GetContractMetadata(contractAddr sdk.AccAddress) (types.ContractMetadata, bool) {
 	obj := s.getContractMetadata(contractAddr)
@@ -33,13 +24,6 @@ func (s ContractMetadataState) GetContractMetadata(contractAddr sdk.AccAddress) 
 	}
 
 	return *obj, true
-}
-
-// Import initializes state from the module genesis data.
-func (s ContractMetadataState) Import(objs []types.ContractMetadata) {
-	for _, obj := range objs {
-		s.SetContractMetadata(obj.MustGetContractAddress(), obj)
-	}
 }
 
 // Export returns the module genesis data for the state.

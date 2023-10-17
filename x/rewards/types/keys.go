@@ -17,6 +17,11 @@ const (
 	TreasuryCollector = "treasury"
 )
 
+// Full prefixes
+var (
+	ContractMetadataKey = append(ContractMetadataStatePrefix, ContractMetadataPrefix...)
+)
+
 // ContractMetadata prefixed store state keys.
 var (
 	// ContractMetadataStatePrefix defines the state global prefix.

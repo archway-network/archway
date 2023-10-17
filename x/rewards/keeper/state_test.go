@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/rewards/types"
@@ -118,7 +119,8 @@ func (s *KeeperTestSuite) TestStates() {
 
 	// Upload fixtures
 	for _, metadata := range testDataExpected.Metadata {
-		metaState.SetContractMetadata(metadata.MustGetContractAddress(), metadata)
+		err := keeper.ContractMetadata.Set(ctx, metadata.MustGetContractAddress(), metadata)
+		require.NoError(s.T(), err)
 	}
 	for _, blockData := range testDataExpected.Blocks {
 		blockRewards := blockData.BlockRewards

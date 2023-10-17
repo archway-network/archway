@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -50,6 +52,9 @@ type Keeper struct {
 	authKeeper       AuthKeeperExpected
 	bankKeeper       BankKeeperExpected
 	authority        string // this should be the x/gov module account
+
+	Schema           collections.Schema
+	ContractMetadata collections.Map[[]byte, types.ContractMetadata]
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -58,7 +63,9 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	schemaBuilder := collections.NewSchemaBuilder(collcompat.NewKVStoreService(key))
+
+	k := Keeper{
 		cdc:              cdc,
 		paramStore:       ps,
 		state:            NewState(cdc, key),
@@ -67,7 +74,22 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		authority:        authority,
+		ContractMetadata: collections.NewMap(
+			schemaBuilder,
+			types.ContractMetadataKey,
+			"contract_metadata",
+			collections.BytesKey,
+			collcompat.ProtoValue[types.ContractMetadata](cdc),
+		),
 	}
+
+	schema, err := schemaBuilder.Build()
+	if err != nil {
+		panic(err)
+	}
+
+	k.Schema = schema
+	return k
 }
 
 // SetContractInfoViewer sets the contract info view dependency.

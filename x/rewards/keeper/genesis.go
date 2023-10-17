@@ -29,7 +29,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 	if err := k.SetParams(ctx, state.Params); err != nil {
 		panic(err)
 	}
-	k.state.ContractMetadataState(ctx).Import(state.ContractsMetadata)
+	for _, contractMetadata := range state.ContractsMetadata {
+		err := k.ContractMetadata.Set(ctx, contractMetadata.MustGetContractAddress(), contractMetadata)
+		if err != nil {
+			panic(err)
+		}
+	}
 	k.state.BlockRewardsState(ctx).Import(state.BlockRewards)
 	k.state.TxRewardsState(ctx).Import(state.TxRewards)
 	k.state.RewardsRecord(ctx).Import(state.RewardsRecordLastId, state.RewardsRecords)

@@ -56,7 +56,10 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 	}
 
 	// Set
-	state.SetContractMetadata(contractAddr, metaNew)
+	err := k.ContractMetadata.Set(ctx, contractAddr, metaNew)
+	if err != nil {
+		return err
+	}
 
 	// Emit event
 	types.EmitContractMetadataSetEvent(
