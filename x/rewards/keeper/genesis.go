@@ -21,6 +21,18 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
+	var flatFees []types.FlatFee
+	err = k.FlatFees.Walk(ctx, nil, func(key []byte, value sdk.Coin) (stop bool, err error) {
+		flatFees = append(flatFees, types.FlatFee{
+			ContractAddress: sdk.AccAddress(key).String(),
+			FlatFee:         value,
+		})
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	return types.NewGenesisState(
 		k.GetParams(ctx),
 		contractMetadata,
@@ -29,7 +41,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		minConsFee,
 		rewardsRecordLastID,
 		rewardsRecords,
-		k.state.FlatFee(ctx).Export(),
+		flatFees,
 	)
 }
 
@@ -44,10 +56,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 			panic(err)
 		}
 	}
+
+	for _, flatFee := range state.FlatFees {
+		err := k.FlatFees.Set(ctx, flatFee.MustGetContractAddress(), flatFee.FlatFee)
+		if err != nil {
+			panic(err)
+		}
+	}
 	k.state.BlockRewardsState(ctx).Import(state.BlockRewards)
 	k.state.TxRewardsState(ctx).Import(state.TxRewards)
 	k.state.RewardsRecord(ctx).Import(state.RewardsRecordLastId, state.RewardsRecords)
-	k.state.FlatFee(ctx).Import(state.FlatFees)
 
 	if !pkg.DecCoinIsZero(state.MinConsensusFee) && !pkg.DecCoinIsNegative(state.MinConsensusFee) {
 		k.state.MinConsensusFee(ctx).SetFee(state.MinConsensusFee)
