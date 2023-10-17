@@ -11,7 +11,7 @@ import (
 
 const (
 	initialVersion = "v4.0.2" // The last release of the chain. The one the mainnet is running on
-	upgradeName    = "latest" // The next upgrade name. Should match the upgrade handler.
+	upgradeName    = "v5.0.0" // The next upgrade name. Should match the upgrade handler.
 	chainName      = "archway"
 )
 

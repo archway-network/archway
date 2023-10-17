@@ -1,4 +1,4 @@
-package upgradelatest
+package upgrade5_0_0
 
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -32,7 +32,7 @@ import (
 
 // This upgrade handler is used for all the current changes to the protocol
 
-const Name = "latest"
+const Name = "v5.0.0"
 
 const NameAsciiArt = `                          
              ###     ###     ### 
