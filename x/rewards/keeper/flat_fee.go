@@ -37,8 +37,8 @@ func (k Keeper) SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, feeUpdate
 
 // GetFlatFee retreives the flat fee stored for a given contract
 func (k Keeper) GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Coin, bool) {
-	fee, found := k.state.FlatFee(ctx).GetFee(contractAddr)
-	if !found {
+	fee, err := k.FlatFees.Get(ctx, contractAddr)
+	if err != nil {
 		return sdk.Coin{}, false
 	}
 

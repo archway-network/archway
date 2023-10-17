@@ -57,6 +57,7 @@ type Keeper struct {
 
 	Params           collections.Item[types.Params]
 	ContractMetadata collections.Map[[]byte, types.ContractMetadata]
+	FlatFees         collections.Map[[]byte, sdk.Coin]
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -88,6 +89,13 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 			"contract_metadata",
 			collections.BytesKey,
 			collcompat.ProtoValue[types.ContractMetadata](cdc),
+		),
+		FlatFees: collections.NewMap(
+			schemaBuilder,
+			types.FlatFeePrefix2,
+			"flat_fees",
+			collections.BytesKey,
+			collcompat.ProtoValue[sdk.Coin](cdc),
 		),
 	}
 

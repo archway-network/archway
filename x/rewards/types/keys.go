@@ -22,7 +22,8 @@ const (
 // Full prefixes
 var (
 	// ContractMetadataPrefix defines the prefix for storing contract metadata.
-	ContractMetadataPrefix = collections.NewPrefix([]byte{0x0, 0x0})
+	ContractMetadataPrefix = collections.NewPrefix([]byte{0x00, 0x00})
+	FlatFeePrefix2         = collections.NewPrefix([]byte{0x05, 0x00})
 )
 
 // BlockRewards prefixed store state keys.
