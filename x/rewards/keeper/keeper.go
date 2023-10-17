@@ -53,7 +53,9 @@ type Keeper struct {
 	bankKeeper       BankKeeperExpected
 	authority        string // this should be the x/gov module account
 
-	Schema           collections.Schema
+	Schema collections.Schema
+
+	Params           collections.Item[types.Params]
 	ContractMetadata collections.Map[[]byte, types.ContractMetadata]
 }
 
@@ -74,9 +76,15 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		authority:        authority,
+		Params: collections.NewItem(
+			schemaBuilder,
+			types.ParamsKey,
+			"params",
+			collcompat.ProtoValue[types.Params](cdc),
+		),
 		ContractMetadata: collections.NewMap(
 			schemaBuilder,
-			types.ContractMetadataKey,
+			types.ContractMetadataPrefix,
 			"contract_metadata",
 			collections.BytesKey,
 			collcompat.ProtoValue[types.ContractMetadata](cdc),

@@ -1,5 +1,7 @@
 package types
 
+import "cosmossdk.io/collections"
+
 const (
 	// ModuleName is the module name.
 	ModuleName = "rewards"
@@ -19,18 +21,8 @@ const (
 
 // Full prefixes
 var (
-	ContractMetadataKey = append(ContractMetadataStatePrefix, ContractMetadataPrefix...)
-)
-
-// ContractMetadata prefixed store state keys.
-var (
-	// ContractMetadataStatePrefix defines the state global prefix.
-	ContractMetadataStatePrefix = []byte{0x00}
-
-	// ContractMetadataPrefix defines the prefix for storing ContractMetadata objects.
-	// Key: ContractMetadataStatePrefix | ContractMetadataPrefix | {ContractAddress}
-	// Value: ContractMetadata
-	ContractMetadataPrefix = []byte{0x00}
+	// ContractMetadataPrefix defines the prefix for storing contract metadata.
+	ContractMetadataPrefix = collections.NewPrefix([]byte{0x0, 0x0})
 )
 
 // BlockRewards prefixed store state keys.

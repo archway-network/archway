@@ -27,14 +27,8 @@ func (k Keeper) MinimumPriceOfGas(ctx sdk.Context) sdk.DecCoin {
 
 // GetParams return all module parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.state.key)
-	bz := store.Get(types.ParamsKey)
-	if bz == nil {
-		return params
-	}
-
-	k.cdc.MustUnmarshal(bz, &params)
-	return params
+	params, _ = k.Params.Get(ctx)
+	return
 }
 
 // SetParams sets all module parameters.
