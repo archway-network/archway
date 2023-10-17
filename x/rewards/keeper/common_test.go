@@ -39,7 +39,13 @@ func (s *KeeperTestSuite) SetupWithdrawTest(testData []withdrawTestRecordData) {
 		blockRewards, found := keepers.RewardsKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
 		s.Require().True(found)
 		s.Require().NoError(keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, sdk.Coins{blockRewards.InflationRewards}))
-		keepers.RewardsKeeper.GetState().BlockRewardsState(ctx).CreateBlockRewards(ctx.BlockHeight(), sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()), 0)
+
+		err := keepers.RewardsKeeper.BlockRewards.Set(ctx, uint64(ctx.BlockHeight()), rewardsTypes.BlockRewards{
+			Height:           ctx.BlockHeight(),
+			InflationRewards: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+			MaxGas:           0,
+		})
+		s.Require().NoError(err)
 
 		// Mint rewards for the current record
 		rewardsToMint := testRecord.Rewards

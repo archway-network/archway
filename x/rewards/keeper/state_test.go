@@ -123,7 +123,8 @@ func (s *KeeperTestSuite) TestStates() {
 	}
 	for _, blockData := range testDataExpected.Blocks {
 		blockRewards := blockData.BlockRewards
-		blockState.CreateBlockRewards(blockRewards.Height, blockRewards.InflationRewards, blockRewards.MaxGas)
+		err := keeper.BlockRewards.Set(ctx, uint64(blockRewards.Height), blockRewards)
+		require.NoError(s.T(), err)
 
 		for _, txRewards := range blockData.TxRewards {
 			txState.CreateTxRewards(txRewards.TxId, txRewards.Height, txRewards.FeeRewards)

@@ -3,6 +3,7 @@ package keeper
 import (
 	"math"
 
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,9 +26,12 @@ func (k Keeper) TrackInflationRewards(ctx sdk.Context, rewards sdk.Coin) {
 		blockGasLimit = 0
 	}
 
-	k.state.BlockRewardsState(ctx).CreateBlockRewards(
-		ctx.BlockHeight(),
-		rewards,
-		blockGasLimit,
-	)
+	err := k.BlockRewards.Set(ctx, uint64(ctx.BlockHeight()), rewardsTypes.BlockRewards{
+		Height:           ctx.BlockHeight(),
+		InflationRewards: rewards,
+		MaxGas:           blockGasLimit,
+	})
+	if err != nil {
+		panic(err)
+	}
 }

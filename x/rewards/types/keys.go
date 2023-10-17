@@ -23,6 +23,8 @@ const (
 var (
 	// ContractMetadataPrefix defines the prefix for storing contract metadata.
 	ContractMetadataPrefix = collections.NewPrefix([]byte{0x00, 0x00})
+	// BlockRewardsPrefix defines the prefix for storing BlockRewards objects.
+	BlockRewardsPrefix2 = collections.NewPrefix([]byte{0x01, 0x00})
 	// MinConsFeePrefix defines the prefix for storing minimum consensus fee.
 	MinConsFeePrefix = collections.NewPrefix([]byte{0x03, 0x00})
 	// FlatFeePrefix defines the prefix for storing flat fees.

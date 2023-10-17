@@ -16,18 +16,6 @@ type BlockRewardsState struct {
 	ctx        sdk.Context
 }
 
-// CreateBlockRewards creates a types.BlockRewards object.
-func (s BlockRewardsState) CreateBlockRewards(height int64, rewards sdk.Coin, blockMaxGas uint64) types.BlockRewards {
-	obj := types.BlockRewards{
-		Height:           height,
-		InflationRewards: rewards,
-		MaxGas:           blockMaxGas,
-	}
-	s.setBlockRewards(&obj)
-
-	return obj
-}
-
 // GetBlockRewards returns a types.BlockRewards object by block height.
 func (s BlockRewardsState) GetBlockRewards(height int64) (types.BlockRewards, bool) {
 	store := prefix.NewStore(s.stateStore, types.BlockRewardsPrefix)
