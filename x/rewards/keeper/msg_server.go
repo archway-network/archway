@@ -136,7 +136,7 @@ func (s MsgServer) UpdateParams(c context.Context, request *types.MsgUpdateParam
 		return nil, err
 	}
 
-	err = s.keeper.SetParams(ctx, request.GetParams())
+	err = s.keeper.Params.Set(ctx, request.GetParams())
 	if err != nil {
 		return nil, err
 	}

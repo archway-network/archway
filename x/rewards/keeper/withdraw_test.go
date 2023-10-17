@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
@@ -104,7 +105,8 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByIDs() {
 		ctx := s.chain.GetContext()
 		params := keeper.GetParams(ctx)
 		params.MaxWithdrawRecords = 5
-		keeper.SetParams(ctx, params)
+		err := keeper.Params.Set(ctx, params)
+		require.NoError(s.T(), err)
 	}
 
 	// Invalid inputs

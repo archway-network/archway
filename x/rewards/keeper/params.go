@@ -30,14 +30,3 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	params, _ = k.Params.Get(ctx)
 	return
 }
-
-// SetParams sets all module parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
-	store := ctx.KVStore(k.state.key)
-	bz, err := k.cdc.Marshal(&params)
-	if err != nil {
-		return err
-	}
-	store.Set(types.ParamsKey, bz)
-	return nil
-}

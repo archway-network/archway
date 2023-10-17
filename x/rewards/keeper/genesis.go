@@ -35,7 +35,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 // InitGenesis initializes the module genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
-	if err := k.SetParams(ctx, state.Params); err != nil {
+	if err := k.Params.Set(ctx, state.Params); err != nil {
 		panic(err)
 	}
 	for _, contractMetadata := range state.ContractsMetadata {

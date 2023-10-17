@@ -101,7 +101,8 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 			coin, err := sdk.ParseDecCoin(tc.minPoG)
 			require.NoError(t, err)
 			params.MinPriceOfGas = coin
-			keepers.RewardsKeeper.SetParams(ctx, params)
+			err = keepers.RewardsKeeper.Params.Set(ctx, params)
+			require.NoError(t, err)
 
 			// Build transaction
 			txFees, err := sdk.ParseCoinsNormalized(tc.txFees)

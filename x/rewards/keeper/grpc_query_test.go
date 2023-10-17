@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -22,7 +23,8 @@ func (s *KeeperTestSuite) TestGRPC_Params() {
 		MaxWithdrawRecords:    uint64(2),
 		MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 	}
-	k.SetParams(ctx, params)
+	err := k.Params.Set(ctx, params)
+	require.NoError(s.T(), err)
 
 	s.Run("err: empty request", func() {
 		_, err := querySrvr.Params(sdk.WrapSDKContext(ctx), nil)
