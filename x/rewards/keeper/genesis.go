@@ -68,6 +68,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 	k.state.RewardsRecord(ctx).Import(state.RewardsRecordLastId, state.RewardsRecords)
 
 	if !pkg.DecCoinIsZero(state.MinConsensusFee) && !pkg.DecCoinIsNegative(state.MinConsensusFee) {
-		k.state.MinConsensusFee(ctx).SetFee(state.MinConsensusFee)
+		err := k.MinConsFee.Set(ctx, state.MinConsensusFee)
+		if err != nil {
+			panic(err)
+		}
 	}
 }

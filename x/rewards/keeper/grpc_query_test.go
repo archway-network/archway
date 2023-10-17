@@ -138,7 +138,8 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 
 	minConsFee := sdk.NewInt64Coin("stake", 100)
 	s.Run("ok: gets estimated tx fees (custom minconsfee set)", func() {
-		s.chain.GetApp().Keepers.RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(sdk.NewDecCoinFromCoin(minConsFee))
+		err := s.chain.GetApp().Keepers.RewardsKeeper.MinConsFee.Set(ctx, sdk.NewDecCoinFromCoin(minConsFee))
+		s.Require().NoError(err)
 		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)

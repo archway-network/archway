@@ -56,6 +56,7 @@ type Keeper struct {
 	Schema collections.Schema
 
 	Params           collections.Item[types.Params]
+	MinConsFee       collections.Item[sdk.DecCoin]
 	ContractMetadata collections.Map[[]byte, types.ContractMetadata]
 	FlatFees         collections.Map[[]byte, sdk.Coin]
 }
@@ -82,6 +83,12 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 			types.ParamsPrefix,
 			"params",
 			collcompat.ProtoValue[types.Params](cdc),
+		),
+		MinConsFee: collections.NewItem(
+			schemaBuilder,
+			types.MinConsFeePrefix,
+			"min_consensus_fee",
+			collcompat.ProtoValue[sdk.DecCoin](cdc),
 		),
 		ContractMetadata: collections.NewMap(
 			schemaBuilder,

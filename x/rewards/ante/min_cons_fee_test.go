@@ -96,7 +96,8 @@ func TestRewardsMinFeeAnteHandler(t *testing.T) {
 			minConsFee, err := sdk.ParseDecCoin(tc.minConsFee)
 			require.NoError(t, err)
 
-			keepers.RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(minConsFee)
+			err = keepers.RewardsKeeper.MinConsFee.Set(ctx, minConsFee)
+			require.NoError(t, err)
 			params := keepers.RewardsKeeper.GetParams(ctx)
 			coin, err := sdk.ParseDecCoin(tc.minPoG)
 			require.NoError(t, err)
@@ -134,7 +135,8 @@ func TestRewardsContractFlatFeeAnteHandler(t *testing.T) {
 	// Set min consensus fee
 	minConsFee, err := sdk.ParseDecCoin("0.1stake")
 	require.NoError(t, err)
-	keepers.RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(minConsFee)
+	err = keepers.RewardsKeeper.MinConsFee.Set(ctx, minConsFee)
+	require.NoError(t, err)
 
 	contractAdminAcc := chain.GetAccount(0)
 	contractViewer := testutils.NewMockContractViewer()
@@ -369,7 +371,8 @@ func TestAuthzDecodeAntehandler(t *testing.T) {
 	chain := e2eTesting.NewTestChain(t, 1)
 	keepers := chain.GetApp().Keepers
 	minConsFee, _ := sdk.ParseDecCoin("0.1stake") // Set min consensus fee
-	keepers.RewardsKeeper.GetState().MinConsensusFee(chain.GetContext()).SetFee(minConsFee)
+	err := keepers.RewardsKeeper.MinConsFee.Set(chain.GetContext(), minConsFee)
+	require.NoError(t, err)
 	txFees, _ := sdk.ParseCoinsNormalized("100stake")
 
 	// Making a wrapped MsgDelegate
@@ -386,7 +389,7 @@ func TestAuthzDecodeAntehandler(t *testing.T) {
 	)
 
 	anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), keepers.RewardsKeeper)
-	_, err := anteHandler.AnteHandle(chain.GetContext(), tx, false, testutils.NoopAnteHandler)
+	_, err = anteHandler.AnteHandle(chain.GetContext(), tx, false, testutils.NoopAnteHandler)
 
 	require.NoError(t, err)
 }

@@ -40,7 +40,10 @@ func (k Keeper) UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin
 	}
 
 	// Set and emit event
-	k.state.MinConsensusFee(ctx).SetFee(feeCoin)
+	err := k.MinConsFee.Set(ctx, feeCoin)
+	if err != nil {
+		panic(err)
+	}
 	k.Logger(ctx).Info("Minimum consensus fee update", "fee", feeCoin)
 
 	types.EmitMinConsensusFeeSetEvent(ctx, feeCoin)
