@@ -79,7 +79,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 			panic(err)
 		}
 	}
-	k.state.BlockRewardsState(ctx).Import(state.BlockRewards)
 	k.state.TxRewardsState(ctx).Import(state.TxRewards)
 	k.state.RewardsRecord(ctx).Import(state.RewardsRecordLastId, state.RewardsRecords)
 
