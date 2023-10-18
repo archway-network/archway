@@ -73,7 +73,10 @@ func (s *QueryServer) BlockRewardsTracking(c context.Context, request *types.Que
 	if err == nil {
 		blockRewards.Height = ctx.BlockHeight()
 	}
-	txRewards := s.keeper.state.TxRewardsState(ctx).GetTxRewardsByBlock(height)
+	txRewards, err := s.keeper.GetTxRewardsByBlock(ctx, uint64(height))
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "block rewards tracking for the block %d: not found", height)
+	}
 
 	return &types.QueryBlockRewardsTrackingResponse{
 		Block: types.BlockTracking{

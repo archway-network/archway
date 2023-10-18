@@ -28,26 +28,6 @@ func (s TxRewardsState) GetTxRewards(txID uint64) (types.TxRewards, bool) {
 	return *obj, true
 }
 
-// GetTxRewardsByBlock returns a list of types.TxRewards objects by block height.
-func (s TxRewardsState) GetTxRewardsByBlock(height int64) (objs []types.TxRewards) {
-	store := prefix.NewStore(s.stateStore, types.TxRewardsBlockIndexPrefix)
-
-	iterator := sdk.KVStorePrefixIterator(store, s.buildBlockIndexPrefix(height))
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		_, txID := s.parseBlockIndexKey(iterator.Key())
-
-		obj, found := s.GetTxRewards(txID)
-		if !found {
-			panic(fmt.Errorf("invalid TxRewards Block index state: txId (%d): not found", txID))
-		}
-		objs = append(objs, obj)
-	}
-
-	return
-}
-
 // Import initializes state from the module genesis data.
 func (s TxRewardsState) Import(objs []types.TxRewards) {
 	for _, obj := range objs {

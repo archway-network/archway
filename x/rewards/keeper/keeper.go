@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	errorsmod "cosmossdk.io/errors"
@@ -186,6 +188,14 @@ func (k Keeper) GetRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, p
 	}
 
 	return k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
+}
+
+func (k Keeper) GetTxRewardsByBlock(ctx context.Context, height uint64) ([]types.TxRewards, error) {
+	iter, err := k.TxRewards.Indexes.Block.MatchExact(ctx, height)
+	if err != nil {
+		return nil, err
+	}
+	return indexes.CollectValues(ctx, k.TxRewards, iter)
 }
 
 // GetAuthority returns the x/rewards module's authority.

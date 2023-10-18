@@ -211,9 +211,9 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	// Check x/rewards Tx record
 	s.Run("Check tx fee rebate rewards records", func() {
 		ctx := chain.GetContext()
-		txRewardsState := rewardsKeeper.GetState().TxRewardsState(ctx)
 
-		txRewards := txRewardsState.GetTxRewardsByBlock(ctx.BlockHeight() - 1)
+		txRewards, err := keepers.RewardsKeeper.GetTxRewardsByBlock(ctx, uint64(ctx.BlockHeight()-1))
+		s.Require().NoError(err)
 		s.Require().Len(txRewards, 1)
 		s.Assert().Equal(txID, txRewards[0].TxId)
 		s.Assert().Equal(ctx.BlockHeight()-1, txRewards[0].Height)

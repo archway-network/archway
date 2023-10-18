@@ -186,7 +186,8 @@ func (s *KeeperTestSuite) TestStates() {
 			height := testDataExpected.Blocks[0].BlockRewards.Height
 			txRewardsExpected := testDataExpected.Blocks[0].TxRewards
 
-			txRewardsReceived := txState.GetTxRewardsByBlock(height)
+			txRewardsReceived, err := keeper.GetTxRewardsByBlock(ctx, uint64(height))
+			s.Require().NoError(err)
 			s.Assert().ElementsMatch(txRewardsExpected, txRewardsReceived, "TxRewardsByBlock (%d): wrong value", height)
 		}
 
@@ -195,15 +196,17 @@ func (s *KeeperTestSuite) TestStates() {
 			height := testDataExpected.Blocks[1].BlockRewards.Height
 			txRewardsExpected := testDataExpected.Blocks[1].TxRewards
 
-			txRewardsReceived := txState.GetTxRewardsByBlock(height)
+			txRewardsReceived, err := keeper.GetTxRewardsByBlock(ctx, uint64(height))
+			s.Require().NoError(err)
 			s.Assert().ElementsMatch(txRewardsExpected, txRewardsReceived, "TxRewardsByBlock (%d): wrong value", height)
 		}
 
 		// 3rd block (non-existing)
 		{
 			height := testDataExpected.Blocks[1].BlockRewards.Height + 1
-
-			s.Assert().Empty(txState.GetTxRewardsByBlock(height))
+			rewards, err := keeper.GetTxRewardsByBlock(ctx, uint64(height))
+			s.Require().NoError(err)
+			s.Assert().Empty(rewards, "TxRewardsByBlock (%d): want empty", height)
 		}
 	})
 
@@ -305,10 +308,12 @@ func (s *KeeperTestSuite) TestStates() {
 
 		keeper.DeleteBlockRewardsCascade(ctx, height1)
 
-		block1Txs := txState.GetTxRewardsByBlock(height1)
+		block1Txs, err := keeper.GetTxRewardsByBlock(ctx, uint64(height1))
+		s.Require().NoError(err)
 		s.Assert().Empty(block1Txs)
 
-		block2Txs := txState.GetTxRewardsByBlock(height2)
+		block2Txs, err := keeper.GetTxRewardsByBlock(ctx, uint64(height2))
+		s.Require().NoError(err)
 		s.Assert().Len(block2Txs, len(txs2))
 
 		_, block1FoundErr := keeper.BlockRewards.Get(ctx, uint64(height1))
@@ -323,7 +328,8 @@ func (s *KeeperTestSuite) TestStates() {
 
 		keeper.DeleteBlockRewardsCascade(ctx, height2)
 
-		block2Txs := txState.GetTxRewardsByBlock(height2)
+		block2Txs, err := keeper.GetTxRewardsByBlock(ctx, uint64(height2))
+		s.Require().NoError(err)
 		s.Assert().Empty(block2Txs)
 
 		_, block2FoundErr := keeper.BlockRewards.Get(ctx, uint64(height2))
