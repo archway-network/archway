@@ -23,23 +23,12 @@ func NewState(cdc codec.Codec, key storetypes.StoreKey) State {
 	}
 }
 
-// BlockRewardsState returns types.BlockRewards repository.
-func (s State) BlockRewardsState(ctx sdk.Context) BlockRewardsState {
-	baseStore := ctx.KVStore(s.key)
-	return BlockRewardsState{
-		stateStore: prefix.NewStore(baseStore, types.BlockRewardsStatePrefix),
-		cdc:        s.cdc,
-		ctx:        ctx,
-	}
-}
-
 // TxRewardsState returns types.TxRewards repository.
 func (s State) TxRewardsState(ctx sdk.Context) TxRewardsState {
 	baseStore := ctx.KVStore(s.key)
 	return TxRewardsState{
 		stateStore: prefix.NewStore(baseStore, types.TxRewardsStatePrefix),
 		cdc:        s.cdc,
-		ctx:        ctx,
 	}
 }
 
@@ -49,7 +38,6 @@ func (s State) RewardsRecord(ctx sdk.Context) RewardsRecordState {
 	return RewardsRecordState{
 		stateStore: prefix.NewStore(baseStore, types.RewardsRecordStatePrefix),
 		cdc:        s.cdc,
-		ctx:        ctx,
 	}
 }
 

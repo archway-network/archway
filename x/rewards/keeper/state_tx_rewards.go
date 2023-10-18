@@ -16,21 +16,6 @@ import (
 type TxRewardsState struct {
 	stateStore storeTypes.KVStore
 	cdc        codec.Codec
-	ctx        sdk.Context
-}
-
-// CreateTxRewards creates a new types.TxRewards object.
-func (s TxRewardsState) CreateTxRewards(txID uint64, height int64, rewards sdk.Coins) types.TxRewards {
-	obj := types.TxRewards{
-		TxId:       txID,
-		Height:     height,
-		FeeRewards: rewards,
-	}
-
-	s.setTxRewards(&obj)
-	s.setBlockIndex(obj.Height, obj.TxId)
-
-	return obj
 }
 
 // GetTxRewards returns a types.TxRewards object by txID.
@@ -69,22 +54,6 @@ func (s TxRewardsState) Import(objs []types.TxRewards) {
 		s.setTxRewards(&obj)
 		s.setBlockIndex(obj.Height, obj.TxId)
 	}
-}
-
-// Export returns the module genesis data for the state.
-func (s TxRewardsState) Export() (objs []types.TxRewards) {
-	store := prefix.NewStore(s.stateStore, types.TxRewardsPrefix)
-
-	iterator := store.Iterator(nil, nil)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var obj types.TxRewards
-		s.cdc.MustUnmarshal(iterator.Value(), &obj)
-		objs = append(objs, obj)
-	}
-
-	return
 }
 
 // deleteTxRewardsByBlock deletes types.TxRewards objects by block height cleaning up the block index.

@@ -126,7 +126,7 @@ func (s *KeeperTestSuite) TestStates() {
 		require.NoError(s.T(), err)
 
 		for _, txRewards := range blockData.TxRewards {
-			txState.CreateTxRewards(txRewards.TxId, txRewards.Height, txRewards.FeeRewards)
+			s.NoError(keeper.TxRewards.Set(ctx, txRewards.TxId, txRewards))
 		}
 	}
 	rewardsRecordState.Import(

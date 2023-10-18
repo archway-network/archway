@@ -18,7 +18,6 @@ import (
 type RewardsRecordState struct {
 	stateStore storeTypes.KVStore
 	cdc        codec.Codec
-	ctx        sdk.Context
 }
 
 // CreateRewardsRecord creates a new types.RewardsRecord object with unique ID.

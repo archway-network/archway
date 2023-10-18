@@ -598,7 +598,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, inflationRewards))
 				} else {
 					// We have to remove it since it was created by the x/mint
-					rKeeper.GetState().BlockRewardsState(ctx).DeleteBlockRewards(ctx.BlockHeight())
+					err := rKeeper.BlockRewards.Remove(ctx, uint64(ctx.BlockHeight()))
+					require.NoError(t, err)
 				}
 			}
 

@@ -12,11 +12,14 @@ import (
 // CONTRACT: tracking Ante handler must be called before this module's Ante handler (tracking provides the primary key).
 func (k Keeper) TrackFeeRebatesRewards(ctx sdk.Context, rewards sdk.Coins) {
 	txID := k.trackingKeeper.GetCurrentTxID(ctx)
-	k.state.TxRewardsState(ctx).CreateTxRewards(
-		txID,
-		ctx.BlockHeight(),
-		rewards,
-	)
+	err := k.TxRewards.Set(ctx, txID, rewardsTypes.TxRewards{
+		TxId:       txID,
+		Height:     ctx.BlockHeight(),
+		FeeRewards: rewards,
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // TrackInflationRewards creates a new inflation reward record for the current block.

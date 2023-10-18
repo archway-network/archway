@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
 	errorsmod "cosmossdk.io/errors"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/archway-network/archway/internal/collcompat"
@@ -42,6 +43,23 @@ type BankKeeperExpected interface {
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 }
 
+func NewTxRewardsIndex(sb *collections.SchemaBuilder) TxRewardsIndex {
+	return TxRewardsIndex{
+		Block: indexes.NewMulti(sb, types.TxRewardsHeightIndexPrefix, "tx_rewards_by_block", collections.Uint64Key, collections.Uint64Key, func(_ uint64, value types.TxRewards) (uint64, error) {
+			return uint64(value.Height), nil
+		}),
+	}
+}
+
+type TxRewardsIndex struct {
+	// Block is the index that maps block height to the TxRewards for that block.
+	Block *indexes.Multi[uint64, uint64, types.TxRewards]
+}
+
+func (t TxRewardsIndex) IndexesList() []collections.Index[uint64, types.TxRewards] {
+	return []collections.Index[uint64, types.TxRewards]{t.Block}
+}
+
 // Keeper provides module state operations.
 type Keeper struct {
 	cdc              codec.Codec
@@ -60,6 +78,7 @@ type Keeper struct {
 	ContractMetadata collections.Map[[]byte, types.ContractMetadata]
 	BlockRewards     collections.Map[uint64, types.BlockRewards]
 	FlatFees         collections.Map[[]byte, sdk.Coin]
+	TxRewards        *collections.IndexedMap[uint64, types.TxRewards, TxRewardsIndex]
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -93,7 +112,7 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 		),
 		BlockRewards: collections.NewMap(
 			schemaBuilder,
-			types.BlockRewardsPrefix2,
+			types.BlockRewardsPrefix,
 			"block_rewards",
 			collections.Uint64Key,
 			collcompat.ProtoValue[types.BlockRewards](cdc),
@@ -111,6 +130,14 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 			"flat_fees",
 			collections.BytesKey,
 			collcompat.ProtoValue[sdk.Coin](cdc),
+		),
+		TxRewards: collections.NewIndexedMap(
+			schemaBuilder,
+			types.TxRewardsPrefix2,
+			"tx_rewards",
+			collections.Uint64Key,
+			collcompat.ProtoValue[types.TxRewards](cdc),
+			NewTxRewardsIndex(schemaBuilder),
 		),
 	}
 

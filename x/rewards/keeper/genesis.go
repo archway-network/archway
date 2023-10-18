@@ -42,11 +42,17 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(err)
 	}
 
+	var txRewards []types.TxRewards
+	err = k.TxRewards.Walk(ctx, nil, func(_ uint64, value types.TxRewards) (stop bool, err error) {
+		txRewards = append(txRewards, value)
+		return false, nil
+	})
+
 	return types.NewGenesisState(
 		k.GetParams(ctx),
 		contractMetadata,
 		blockRewards,
-		k.state.TxRewardsState(ctx).Export(),
+		txRewards,
 		minConsFee,
 		rewardsRecordLastID,
 		rewardsRecords,

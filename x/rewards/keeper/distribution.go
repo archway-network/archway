@@ -251,7 +251,10 @@ func (k Keeper) cleanupRewardsPool(ctx sdk.Context, blockDistrState *blockReward
 // DeleteBlockRewardsCascade deletes all block rewards for a given height.
 // Function removes BlockRewards and TxRewards objects cleaning up their indexes.
 func (k Keeper) DeleteBlockRewardsCascade(ctx sdk.Context, height int64) {
+	err := k.BlockRewards.Remove(ctx, uint64(height))
+	if err != nil {
+		panic(fmt.Errorf("failed to delete block rewards for height %d: %w", height, err))
+	}
 	s := k.GetState()
-	s.BlockRewardsState(ctx).DeleteBlockRewards(height)
 	s.TxRewardsState(ctx).deleteTxRewardsByBlock(height)
 }
