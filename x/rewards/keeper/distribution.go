@@ -233,7 +233,7 @@ func (k Keeper) cleanupTracking(ctx sdk.Context, height int64) {
 	}
 
 	k.trackingKeeper.RemoveBlockTrackingInfo(ctx, heightToPrune)
-	k.state.DeleteBlockRewardsCascade(ctx, heightToPrune)
+	k.DeleteBlockRewardsCascade(ctx, heightToPrune)
 }
 
 // cleanupRewardsPool transfers all undistributed block rewards to the treasury pool.
@@ -246,4 +246,12 @@ func (k Keeper) cleanupRewardsPool(ctx sdk.Context, blockDistrState *blockReward
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ContractRewardCollector, types.TreasuryCollector, rewardsLeftovers); err != nil {
 		panic(fmt.Errorf("failed to transfer undistributed rewards (%s) to %s: %w", rewardsLeftovers, types.TreasuryCollector, err))
 	}
+}
+
+// DeleteBlockRewardsCascade deletes all block rewards for a given height.
+// Function removes BlockRewards and TxRewards objects cleaning up their indexes.
+func (k Keeper) DeleteBlockRewardsCascade(ctx sdk.Context, height int64) {
+	s := k.GetState()
+	s.BlockRewardsState(ctx).DeleteBlockRewards(height)
+	s.TxRewardsState(ctx).deleteTxRewardsByBlock(height)
 }

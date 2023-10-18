@@ -303,7 +303,7 @@ func (s *KeeperTestSuite) TestStates() {
 		height1, height2 := testDataExpected.Blocks[0].BlockRewards.Height, testDataExpected.Blocks[1].BlockRewards.Height
 		txs2 := testDataExpected.Blocks[1].TxRewards
 
-		keeper.GetState().DeleteBlockRewardsCascade(ctx, height1)
+		keeper.DeleteBlockRewardsCascade(ctx, height1)
 
 		block1Txs := txState.GetTxRewardsByBlock(height1)
 		s.Assert().Empty(block1Txs)
@@ -321,7 +321,7 @@ func (s *KeeperTestSuite) TestStates() {
 	s.Run("Check rewards removal for the 2nd block", func() {
 		height2 := testDataExpected.Blocks[1].BlockRewards.Height
 
-		keeper.GetState().DeleteBlockRewardsCascade(ctx, height2)
+		keeper.DeleteBlockRewardsCascade(ctx, height2)
 
 		block2Txs := txState.GetTxRewardsByBlock(height2)
 		s.Assert().Empty(block2Txs)

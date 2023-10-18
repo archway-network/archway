@@ -139,7 +139,7 @@ func TestMintBankKeeper(t *testing.T) {
 			require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, tc.srcModule, transferCoins))
 
 			// Remove rewards records which is created automagically
-			keepers.RewardsKeeper.GetState().DeleteBlockRewardsCascade(ctx, ctx.BlockHeight())
+			keepers.RewardsKeeper.DeleteBlockRewardsCascade(ctx, ctx.BlockHeight())
 
 			// Transfer via keeper
 			k := mintbankkeeper.NewKeeper(keepers.BankKeeper, keepers.RewardsKeeper)
