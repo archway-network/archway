@@ -135,7 +135,7 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 		),
 		TxRewards: collections.NewIndexedMap(
 			schemaBuilder,
-			types.TxRewardsPrefix2,
+			types.TxRewardsPrefix,
 			"tx_rewards",
 			collections.Uint64Key,
 			collcompat.ProtoValue[types.TxRewards](cdc),

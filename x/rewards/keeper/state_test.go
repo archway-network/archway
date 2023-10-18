@@ -29,7 +29,6 @@ func (s *KeeperTestSuite) TestStates() {
 
 	chain := s.chain
 	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.RewardsKeeper
-	txState := keeper.GetState().TxRewardsState(ctx)
 	rewardsRecordState := keeper.GetState().RewardsRecord(ctx)
 
 	// Fixtures
@@ -138,8 +137,8 @@ func (s *KeeperTestSuite) TestStates() {
 		_, blockRewardsFoundErr := keeper.BlockRewards.Get(ctx, uint64(startBlock+10))
 		s.Error(blockRewardsFoundErr)
 
-		_, txRewardsFound := txState.GetTxRewards(10)
-		s.Assert().False(txRewardsFound)
+		_, txRewardsFoundErr := keeper.TxRewards.Get(ctx, 10)
+		s.Error(txRewardsFoundErr)
 	})
 	s.Run("Check non-existing RewardsRecord", func() {
 		_, recordFound := rewardsRecordState.GetRewardsRecord(10)
@@ -166,8 +165,8 @@ func (s *KeeperTestSuite) TestStates() {
 			s.Assert().Equal(blockRewardsExpected, blockRewardsReceived, "BlockRewards [%d]: wrong value", i)
 
 			for j, txRewardsExpected := range blockData.TxRewards {
-				txRewardsReceived, found := txState.GetTxRewards(txRewardsExpected.TxId)
-				s.Require().True(found, "TxRewards [%d][%d]: not found", i, j)
+				txRewardsReceived, err := keeper.TxRewards.Get(ctx, txRewardsExpected.TxId)
+				s.NoError(err, "TxRewards [%d][%d]: not found", i, j)
 				s.Assert().Equal(txRewardsExpected, txRewardsReceived, "TxRewards [%d][%d]: wrong value", i, j)
 			}
 		}

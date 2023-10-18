@@ -26,7 +26,7 @@ var (
 	// BlockRewardsPrefix defines the prefix for storing BlockRewards objects.
 	BlockRewardsPrefix = collections.NewPrefix([]byte{0x01, 0x00})
 	// TxRewardsPrefix defines the prefix for storing TxRewards objects.
-	TxRewardsPrefix2 = collections.NewPrefix([]byte{0x02, 0x00})
+	TxRewardsPrefix = collections.NewPrefix([]byte{0x02, 0x00})
 	// TxRewardsHeightIndexPrefix defines the prefix for storing TxRewards's height index.
 	TxRewardsHeightIndexPrefix = collections.NewPrefix([]byte{0x02, 0x01})
 	// MinConsFeePrefix defines the prefix for storing minimum consensus fee.
@@ -35,22 +35,6 @@ var (
 	FlatFeePrefix = collections.NewPrefix([]byte{0x05, 0x00})
 	// ParamsPrefix defines the prefix for storing params.
 	ParamsPrefix = collections.NewPrefix([]byte{0x06})
-)
-
-// TxRewards prefixed store state keys.
-var (
-	// TxRewardsStatePrefix defines the state global prefix.
-	TxRewardsStatePrefix = []byte{0x02}
-
-	// TxRewardsPrefix defines the prefix for storing TxRewards objects.
-	// Key: TxRewardsStatePrefix | TxRewardsPrefix | {TxID}
-	// Value: TxRewards
-	TxRewardsPrefix = []byte{0x00}
-
-	// TxRewardsBlockIndexPrefix defines the prefix for storing TxRewards's block index.
-	// Key: TxRewardsStatePrefix | TxRewardsBlockIndexPrefix | {Height} | {TxID}
-	// Value: None
-	TxRewardsBlockIndexPrefix = []byte{0x01}
 )
 
 // RewardsRecord prefixed store state keys.

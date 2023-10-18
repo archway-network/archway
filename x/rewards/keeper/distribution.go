@@ -101,8 +101,6 @@ func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewar
 // Func iterates over all tracked transactions and estimates inflation (on block level) and fee rebate (merging
 // tokens for each transaction contract has operation at) rewards for each contract.
 func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewardsDistributionState) *blockRewardsDistributionState {
-	txRewardsState := k.state.TxRewardsState(ctx)
-
 	// Fetch tracked block rewards by the x/rewards module (might not be found in case this reward is disabled)
 	inlfationRewardsEligible := false
 	blockRewards, err := k.BlockRewards.Get(ctx, uint64(blockDistrState.Height))
@@ -118,8 +116,8 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 	// Fetch tracked transactions rewards by the x/rewards module (some might not be found in case this reward is disabled)
 	txsRewards := make(map[uint64]sdk.Coins, len(blockDistrState.Txs))
 	for _, txID := range dmap.SortedKeys(blockDistrState.Txs) {
-		txRewards, found := txRewardsState.GetTxRewards(txID)
-		if found && txRewards.HasRewards() {
+		txRewards, err := k.TxRewards.Get(ctx, txID)
+		if err == nil && txRewards.HasRewards() {
 			txsRewards[txID] = txRewards.FeeRewards
 			blockDistrState.RewardsTotal = blockDistrState.RewardsTotal.Add(txRewards.FeeRewards...)
 		} else {
@@ -251,10 +249,27 @@ func (k Keeper) cleanupRewardsPool(ctx sdk.Context, blockDistrState *blockReward
 // DeleteBlockRewardsCascade deletes all block rewards for a given height.
 // Function removes BlockRewards and TxRewards objects cleaning up their indexes.
 func (k Keeper) DeleteBlockRewardsCascade(ctx sdk.Context, height int64) {
+	// remove block rewards references
 	err := k.BlockRewards.Remove(ctx, uint64(height))
 	if err != nil {
 		panic(fmt.Errorf("failed to delete block rewards for height %d: %w", height, err))
 	}
-	s := k.GetState()
-	s.TxRewardsState(ctx).deleteTxRewardsByBlock(height)
+	// remove tx rewards references
+
+	// get all the tx ids for the given height
+	iter, err := k.TxRewards.Indexes.Block.MatchExact(ctx, uint64(height))
+	if err != nil {
+		panic(fmt.Errorf("failed to delete tx rewards for height %d: %w", height, err))
+	}
+	keys, err := iter.PrimaryKeys()
+	if err != nil {
+		panic(fmt.Errorf("failed to delete tx rewards for height %d: %w", height, err))
+	}
+	// remove them from state
+	for _, key := range keys {
+		err := k.TxRewards.Remove(ctx, key)
+		if err != nil {
+			panic(fmt.Errorf("failed to delete tx rewards for height %d: %w", height, err))
+		}
+	}
 }
