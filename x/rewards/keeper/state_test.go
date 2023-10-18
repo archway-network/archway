@@ -29,7 +29,6 @@ func (s *KeeperTestSuite) TestStates() {
 
 	chain := s.chain
 	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.RewardsKeeper
-	blockState := keeper.GetState().BlockRewardsState(ctx)
 	txState := keeper.GetState().TxRewardsState(ctx)
 	rewardsRecordState := keeper.GetState().RewardsRecord(ctx)
 
@@ -136,8 +135,8 @@ func (s *KeeperTestSuite) TestStates() {
 	)
 
 	s.Run("Check non-existing BlockRewards and TxRewards records", func() {
-		_, blockRewardsFound := blockState.GetBlockRewards(startBlock + 10)
-		s.Assert().False(blockRewardsFound)
+		_, blockRewardsFoundErr := keeper.BlockRewards.Get(ctx, uint64(startBlock+10))
+		s.Error(blockRewardsFoundErr)
 
 		_, txRewardsFound := txState.GetTxRewards(10)
 		s.Assert().False(txRewardsFound)
@@ -157,8 +156,8 @@ func (s *KeeperTestSuite) TestStates() {
 
 		for i, blockData := range testDataExpected.Blocks {
 			blockRewardsExpected := blockData.BlockRewards
-			blockRewardsReceived, found := blockState.GetBlockRewards(blockRewardsExpected.Height)
-			s.Require().True(found, "BlockRewards [%d]: not found", i)
+			blockRewardsReceived, err := keeper.BlockRewards.Get(ctx, uint64(blockRewardsExpected.Height))
+			s.Require().NoErrorf(err, "BlockRewards [%d]: not found", i)
 
 			// Modify the expected coin because proto.Unmarshal creates a coin with zero amount (not nil)
 			if blockRewardsExpected.InflationRewards.Amount.IsNil() {
@@ -312,11 +311,11 @@ func (s *KeeperTestSuite) TestStates() {
 		block2Txs := txState.GetTxRewardsByBlock(height2)
 		s.Assert().Len(block2Txs, len(txs2))
 
-		_, block1Found := blockState.GetBlockRewards(height1)
-		s.Assert().False(block1Found)
+		_, block1FoundErr := keeper.BlockRewards.Get(ctx, uint64(height1))
+		s.Error(block1FoundErr)
 
-		_, block2Found := blockState.GetBlockRewards(height2)
-		s.Assert().True(block2Found)
+		_, block2FoundErr := keeper.BlockRewards.Get(ctx, uint64(height2))
+		s.NoError(block2FoundErr)
 	})
 
 	s.Run("Check rewards removal for the 2nd block", func() {
@@ -327,8 +326,8 @@ func (s *KeeperTestSuite) TestStates() {
 		block2Txs := txState.GetTxRewardsByBlock(height2)
 		s.Assert().Empty(block2Txs)
 
-		_, block2Found := blockState.GetBlockRewards(height2)
-		s.Assert().False(block2Found)
+		_, block2FoundErr := keeper.BlockRewards.Get(ctx, uint64(height2))
+		s.Error(block2FoundErr)
 	})
 
 	// Check records removal

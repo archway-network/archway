@@ -169,12 +169,12 @@ func TestMintBankKeeper(t *testing.T) {
 			assert.Equal(t, rewardsDiffExpected.String(), rewardsBalanceDiffReceived.String())
 
 			// Check rewards record
-			rewardsRecordReceived, found := keepers.RewardsKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
+			rewardsRecordReceived, err := keepers.RewardsKeeper.BlockRewards.Get(ctx, uint64(ctx.BlockHeight()))
 			if !tc.rewardRecordExpected {
-				require.False(t, found)
+				require.Error(t, err)
 				return
 			}
-			require.True(t, found)
+			require.NoError(t, err)
 
 			maxGasExpected := uint64(0)
 			if tc.blockMaxGas > 0 {

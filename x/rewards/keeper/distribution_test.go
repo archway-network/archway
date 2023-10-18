@@ -577,8 +577,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 
 				// Burn inflation rewards for the current block caused by the x/mint (we override this value below)
 				{
-					curBlockRewards, found := rKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
-					require.True(t, found)
+					curBlockRewards, err := rKeeper.BlockRewards.Get(ctx, uint64(ctx.BlockHeight()))
+					require.NoError(t, err)
 					rewardsToBurn := sdk.Coins{curBlockRewards.InflationRewards}
 
 					require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, rewardsToBurn))

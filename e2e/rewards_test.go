@@ -140,8 +140,8 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		trackingOp := trackingTx.ContractOperations[0]
 		s.Require().Equal(trackingOp.ContractAddress, contractAddr.String())
 
-		rewardsBlock, found := rewardsKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(record.CalculatedHeight)
-		s.Require().True(found)
+		rewardsBlock, err := rewardsKeeper.BlockRewards.Get(ctx, uint64(record.CalculatedHeight))
+		s.Require().NoError(err)
 
 		rewardsTxs := rewardsKeeper.GetState().TxRewardsState(ctx).GetTxRewardsByBlock(record.CalculatedHeight)
 		s.Require().Len(rewardsTxs, 1)

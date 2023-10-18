@@ -69,8 +69,8 @@ func (s *QueryServer) BlockRewardsTracking(c context.Context, request *types.Que
 	ctx := sdk.UnwrapSDKContext(c)
 	height := ctx.BlockHeight()
 
-	blockRewards, found := s.keeper.state.BlockRewardsState(ctx).GetBlockRewards(height)
-	if !found {
+	blockRewards, err := s.keeper.BlockRewards.Get(ctx, uint64(height))
+	if err == nil {
 		blockRewards.Height = ctx.BlockHeight()
 	}
 	txRewards := s.keeper.state.TxRewardsState(ctx).GetTxRewardsByBlock(height)

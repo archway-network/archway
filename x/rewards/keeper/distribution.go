@@ -105,8 +105,8 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 
 	// Fetch tracked block rewards by the x/rewards module (might not be found in case this reward is disabled)
 	inlfationRewardsEligible := false
-	blockRewards, found := k.state.BlockRewardsState(ctx).GetBlockRewards(blockDistrState.Height)
-	if found && blockRewards.HasRewards() {
+	blockRewards, err := k.BlockRewards.Get(ctx, uint64(blockDistrState.Height))
+	if err == nil && blockRewards.HasRewards() {
 		blockDistrState.RewardsTotal = blockDistrState.RewardsTotal.Add(blockRewards.InflationRewards)
 		if blockRewards.HasGasLimit() {
 			inlfationRewardsEligible = true

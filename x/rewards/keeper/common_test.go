@@ -36,11 +36,11 @@ func (s *KeeperTestSuite) SetupWithdrawTest(testData []withdrawTestRecordData) {
 		keepers := s.chain.GetApp().Keepers
 
 		// Get rid of the current inflationary rewards for the current block (otherwise the invariant fails)
-		blockRewards, found := keepers.RewardsKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
-		s.Require().True(found)
+		blockRewards, err := keepers.RewardsKeeper.BlockRewards.Get(ctx, uint64(ctx.BlockHeight()))
+		s.Require().NoError(err)
 		s.Require().NoError(keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, sdk.Coins{blockRewards.InflationRewards}))
 
-		err := keepers.RewardsKeeper.BlockRewards.Set(ctx, uint64(ctx.BlockHeight()), rewardsTypes.BlockRewards{
+		err = keepers.RewardsKeeper.BlockRewards.Set(ctx, uint64(ctx.BlockHeight()), rewardsTypes.BlockRewards{
 			Height:           ctx.BlockHeight(),
 			InflationRewards: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
 			MaxGas:           0,
