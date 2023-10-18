@@ -28,7 +28,21 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours.
 -->
 
-## [v5.0.0]
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Improvements
+
+## [v5.0.0](https://github.com/archway-network/archway/releases/tag/v5.0.0)
 
 ### Added
 
