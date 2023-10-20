@@ -10,7 +10,6 @@ import (
 // ExportGenesis exports the module genesis for the current block.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	minConsFee, _ := k.MinConsFee.Get(ctx) // default sdk.Coin value is ok
-	rewardsRecordLastID, rewardsRecords := k.state.RewardsRecord(ctx).Export()
 
 	var contractMetadata []types.ContractMetadata
 	err := k.ContractMetadata.Walk(ctx, nil, func(key []byte, value types.ContractMetadata) (stop bool, err error) {
@@ -47,6 +46,23 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		txRewards = append(txRewards, value)
 		return false, nil
 	})
+	if err != nil {
+		panic(err)
+	}
+
+	var rewardsRecords []types.RewardsRecord
+	err = k.RewardsRecords.Walk(ctx, nil, func(key uint64, value types.RewardsRecord) (stop bool, err error) {
+		rewardsRecords = append(rewardsRecords, value)
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	rewardsRecordLastID, err := k.RewardsRecordID.Peek(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	return types.NewGenesisState(
 		k.GetParams(ctx),
@@ -92,7 +108,17 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state *types.GenesisState) {
 			panic(err)
 		}
 	}
-	k.state.RewardsRecord(ctx).Import(state.RewardsRecordLastId, state.RewardsRecords)
+
+	for _, rewardsRecord := range state.RewardsRecords {
+		err := k.RewardsRecords.Set(ctx, rewardsRecord.Id, rewardsRecord)
+		if err != nil {
+			panic(err)
+		}
+	}
+	err := k.RewardsRecordID.Set(ctx, state.RewardsRecordLastId)
+	if err != nil {
+		panic(err)
+	}
 
 	if !pkg.DecCoinIsZero(state.MinConsensusFee) && !pkg.DecCoinIsNegative(state.MinConsensusFee) {
 		err := k.MinConsFee.Set(ctx, state.MinConsensusFee)

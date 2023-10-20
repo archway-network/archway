@@ -60,74 +60,9 @@ func (s RewardsRecordState) GetRewardsRecordByRewardsAddressPaginated(rewardsAdd
 	return objs, pageRes, nil
 }
 
-// DeleteRewardsRecords deletes a list of types.RewardsRecord objects updating indexes.
-func (s RewardsRecordState) DeleteRewardsRecords(objs ...types.RewardsRecord) {
-	for _, obj := range objs {
-		s.deleteRewardsRecord(obj.Id)
-		s.deleteAddressIndexEntry(obj.Id, obj.MustGetRewardsAddress())
-	}
-}
-
-// Import initializes state from the module genesis data.
-func (s RewardsRecordState) Import(lastID uint64, objs []types.RewardsRecord) {
-	for _, obj := range objs {
-		s.setRewardsRecord(&obj)
-		s.setAddressIndex(obj.Id, obj.MustGetRewardsAddress())
-	}
-	s.setLastID(lastID)
-}
-
-// Export returns the module genesis data for the state.
-func (s RewardsRecordState) Export() (lastID uint64, objs []types.RewardsRecord) {
-	store := prefix.NewStore(s.stateStore, types.RewardsRecordPrefix)
-
-	iterator := store.Iterator(nil, nil)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var obj types.RewardsRecord
-		s.cdc.MustUnmarshal(iterator.Value(), &obj)
-		objs = append(objs, obj)
-	}
-	lastID = s.getNextID() - 1
-
-	return
-}
-
-// setLastID sets the last types.RewardsRecord unique ID.
-func (s RewardsRecordState) setLastID(id uint64) {
-	s.stateStore.Set(
-		types.RewardsRecordIDKey,
-		sdk.Uint64ToBigEndian(id),
-	)
-}
-
-// getNextID returns the next types.RewardsRecord unique ID.
-func (s RewardsRecordState) getNextID() uint64 {
-	lastIDBz := s.stateStore.Get(types.RewardsRecordIDKey)
-	lastID := sdk.BigEndianToUint64(lastIDBz) // returns 0 if nil
-
-	return lastID + 1
-}
-
 // buildRewardsRecordKey returns the key used to store a types.RewardsRecord object.
 func (s RewardsRecordState) buildRewardsRecordKey(id uint64) []byte {
 	return sdk.Uint64ToBigEndian(id)
-}
-
-// setRewardsRecord sets a types.RewardsRecord object.
-func (s RewardsRecordState) setRewardsRecord(obj *types.RewardsRecord) {
-	store := prefix.NewStore(s.stateStore, types.RewardsRecordPrefix)
-	store.Set(
-		s.buildRewardsRecordKey(obj.Id),
-		s.cdc.MustMarshal(obj),
-	)
-}
-
-// deleteRewardsRecord deletes a types.RewardsRecord object.
-func (s RewardsRecordState) deleteRewardsRecord(id uint64) {
-	store := prefix.NewStore(s.stateStore, types.RewardsRecordPrefix)
-	store.Delete(s.buildRewardsRecordKey(id))
 }
 
 // buildAddressIndexPrefix returns the key prefix used to maintain types.RewardsRecord's RewardsAddress index.
@@ -177,15 +112,6 @@ func (s RewardsRecordState) parseIdKey(key []byte) uint64 {
 	id := sdk.BigEndianToUint64(key)
 
 	return id
-}
-
-// setAddressIndex adds the types.RewardsRecord's RewardsAddress index entry.
-func (s RewardsRecordState) setAddressIndex(id uint64, rewardsAddr sdk.AccAddress) {
-	store := prefix.NewStore(s.stateStore, types.RewardsRecordAddressIndexPrefix)
-	store.Set(
-		s.buildAddressIndexKey(id, rewardsAddr),
-		[]byte{},
-	)
 }
 
 // deleteAddressIndexEntry deletes the types.RewardsRecord's RewardsAddress index entry.

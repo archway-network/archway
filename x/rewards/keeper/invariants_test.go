@@ -160,7 +160,10 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 				}
 			}
 
-			keepers.RewardsKeeper.GetState().RewardsRecord(ctx).Import(recordLastID, tc.rewardsRecords)
+			require.NoError(t, keepers.RewardsKeeper.RewardsRecordID.Set(ctx, recordLastID))
+			for _, record := range tc.rewardsRecords {
+				require.NoError(t, keepers.RewardsKeeper.RewardsRecords.Set(ctx, record.Id, record))
+			}
 
 			// Check invariant
 			_, brokenReceived := keeper.ModuleAccountBalanceInvariant(keepers.RewardsKeeper)(ctx)

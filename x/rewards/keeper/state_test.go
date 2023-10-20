@@ -128,10 +128,10 @@ func (s *KeeperTestSuite) TestStates() {
 			s.NoError(keeper.TxRewards.Set(ctx, txRewards.TxId, txRewards))
 		}
 	}
-	rewardsRecordState.Import(
-		testDataExpected.RewardsRecords[len(testDataExpected.RewardsRecords)-1].Id,
-		testDataExpected.RewardsRecords,
-	)
+	s.NoError(keeper.RewardsRecordID.Set(ctx, testDataExpected.RewardsRecords[len(testDataExpected.RewardsRecords)-1].Id))
+	for _, rewardsRecord := range testDataExpected.RewardsRecords {
+		s.NoError(keeper.RewardsRecords.Set(ctx, rewardsRecord.Id, rewardsRecord))
+	}
 
 	// Check that the states are as expected
 	s.Run("Check objects one by one", func() {
@@ -293,15 +293,5 @@ func (s *KeeperTestSuite) TestStates() {
 
 		_, block2FoundErr := keeper.BlockRewards.Get(ctx, uint64(height2))
 		s.Error(block2FoundErr)
-	})
-
-	// Check records removal
-	s.Run("Check rewards records removal", func() {
-		rewardsRecordState.DeleteRewardsRecords(testDataExpected.RewardsRecords...)
-
-		for i, recordExpected := range testDataExpected.RewardsRecords {
-			_, found := rewardsRecordState.GetRewardsRecord(recordExpected.Id)
-			s.Assert().False(found, "RewardsRecord [%d]: found", i)
-		}
 	})
 }

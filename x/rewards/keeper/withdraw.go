@@ -79,7 +79,12 @@ func (k Keeper) withdrawRewardsByRecords(ctx sdk.Context, rewardsAddr sdk.AccAdd
 	}
 
 	// Clean up (safe if there were no rewards)
-	k.state.RewardsRecord(ctx).DeleteRewardsRecords(records...)
+	for _, record := range records {
+		err := k.RewardsRecords.Remove(ctx, record.Id)
+		if err != nil {
+			panic(fmt.Errorf("removing rewards record (%d): %w", record.Id, err))
+		}
+	}
 
 	return totalRewards
 }
