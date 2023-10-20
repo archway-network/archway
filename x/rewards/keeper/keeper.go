@@ -62,6 +62,23 @@ func (t TxRewardsIndex) IndexesList() []collections.Index[uint64, types.TxReward
 	return []collections.Index[uint64, types.TxRewards]{t.Block}
 }
 
+type RewardsRecordsIndex struct {
+	// Address maps the rewards record to the address of the recipient.
+	Address *indexes.Multi[[]byte, uint64, types.RewardsRecord]
+}
+
+func (t RewardsRecordsIndex) IndexesList() []collections.Index[uint64, types.RewardsRecord] {
+	return []collections.Index[uint64, types.RewardsRecord]{t.Address}
+}
+
+func NewRewardsRecordsIndex(sb *collections.SchemaBuilder) RewardsRecordsIndex {
+	return RewardsRecordsIndex{
+		Address: indexes.NewMulti(sb, types.RewardsRecordAddressIndexPrefix2, "rewards_records_by_address", collections.BytesKey, collections.Uint64Key, func(_ uint64, value types.RewardsRecord) ([]byte, error) {
+			return sdk.AccAddressFromBech32(value.RewardsAddress)
+		}),
+	}
+}
+
 // Keeper provides module state operations.
 type Keeper struct {
 	cdc              codec.Codec
@@ -81,6 +98,7 @@ type Keeper struct {
 	BlockRewards     collections.Map[uint64, types.BlockRewards]
 	FlatFees         collections.Map[[]byte, sdk.Coin]
 	TxRewards        *collections.IndexedMap[uint64, types.TxRewards, TxRewardsIndex]
+	RewardsRecords   *collections.IndexedMap[uint64, types.RewardsRecord, RewardsRecordsIndex]
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -141,6 +159,14 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 			collcompat.ProtoValue[types.TxRewards](cdc),
 			NewTxRewardsIndex(schemaBuilder),
 		),
+		RewardsRecords: collections.NewIndexedMap(
+			schemaBuilder,
+			types.RewardsRecordStatePrefix2,
+			"rewards_records",
+			collections.Uint64Key,
+			collcompat.ProtoValue[types.RewardsRecord](cdc),
+			NewRewardsRecordsIndex(schemaBuilder),
+		),
 	}
 
 	schema, err := schemaBuilder.Build()
@@ -196,6 +222,15 @@ func (k Keeper) GetTxRewardsByBlock(ctx context.Context, height uint64) ([]types
 		return nil, err
 	}
 	return indexes.CollectValues(ctx, k.TxRewards, iter)
+}
+
+// GetRewardsRecordsByWithdrawAddress returns all the rewards records for a given withdraw address.
+func (k Keeper) GetRewardsRecordsByWithdrawAddress(ctx context.Context, address sdk.AccAddress) ([]types.RewardsRecord, error) {
+	iter, err := k.RewardsRecords.Indexes.Address.MatchExact(ctx, address)
+	if err != nil {
+		return nil, err
+	}
+	return indexes.CollectValues(ctx, k.RewardsRecords, iter)
 }
 
 // GetAuthority returns the x/rewards module's authority.

@@ -31,6 +31,12 @@ var (
 	TxRewardsHeightIndexPrefix = collections.NewPrefix([]byte{0x02, 0x01})
 	// MinConsFeePrefix defines the prefix for storing minimum consensus fee.
 	MinConsFeePrefix = collections.NewPrefix([]byte{0x03, 0x00})
+	// RewardsRecordsIDPrefix defines the prefix for storing RewardsRecord last ID.
+	RewardsRecordsIDPrefix = collections.NewPrefix([]byte{0x04, 0x00})
+	// RewwardsRecordStatePrefix defines the prefix for storing RewardsRecord state.
+	RewardsRecordStatePrefix2 = collections.NewPrefix([]byte{0x04, 0x01})
+	// RewardsRecordAddressIndexPrefix defines the prefix for storing RewardsRecord's rewards address index.
+	RewardsRecordAddressIndexPrefix2 = collections.NewPrefix([]byte{0x04, 0x02})
 	// FlatFeePrefix defines the prefix for storing flat fees.
 	FlatFeePrefix = collections.NewPrefix([]byte{0x05, 0x00})
 	// ParamsPrefix defines the prefix for storing params.

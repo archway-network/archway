@@ -41,14 +41,13 @@ func (k Keeper) WithdrawRewardsByRecordIDs(ctx sdk.Context, rewardsAddr sdk.AccA
 		return nil, 0, errorsmod.Wrapf(types.ErrInvalidRequest, "max withdraw records (%d) exceeded", maxRecords)
 	}
 
-	rewardsState := k.state.RewardsRecord(ctx)
 	rewardsAddrStr := rewardsAddr.String()
 
 	// Check that provided IDs do exist and belong to the given address
 	records := make([]types.RewardsRecord, 0, len(recordIDs))
 	for _, id := range recordIDs {
-		record, found := rewardsState.GetRewardsRecord(id)
-		if !found {
+		record, err := k.RewardsRecords.Get(ctx, id)
+		if err != nil {
 			return nil, 0, errorsmod.Wrapf(types.ErrInvalidRequest, "rewards record (%d): not found", id)
 		}
 		if record.RewardsAddress != rewardsAddrStr {

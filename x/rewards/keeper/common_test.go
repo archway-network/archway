@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
@@ -86,10 +87,9 @@ func (s *KeeperTestSuite) CheckWithdrawResults(rewardsAddr sdk.AccAddress, recor
 	s.Assert().Equal(totalRewardsExpected.String(), accBalanceAfter.Sub(accBalanceBefore...).String())
 
 	// Check records pruning
-	recordsState := s.chain.GetApp().Keepers.RewardsKeeper.GetState().RewardsRecord(s.chain.GetContext())
 	for _, testRecord := range recordsUsed {
-		_, found := recordsState.GetRewardsRecord(testRecord.RecordID)
-		s.Assert().False(found, "recordID (%d): found", testRecord.RecordID)
+		_, err := s.chain.GetApp().Keepers.RewardsKeeper.RewardsRecords.Get(s.chain.GetContext(), testRecord.RecordID)
+		s.ErrorIs(err, collections.ErrNotFound)
 	}
 }
 

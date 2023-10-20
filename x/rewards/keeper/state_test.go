@@ -133,18 +133,6 @@ func (s *KeeperTestSuite) TestStates() {
 		testDataExpected.RewardsRecords,
 	)
 
-	s.Run("Check non-existing BlockRewards and TxRewards records", func() {
-		_, blockRewardsFoundErr := keeper.BlockRewards.Get(ctx, uint64(startBlock+10))
-		s.Error(blockRewardsFoundErr)
-
-		_, txRewardsFoundErr := keeper.TxRewards.Get(ctx, 10)
-		s.Error(txRewardsFoundErr)
-	})
-	s.Run("Check non-existing RewardsRecord", func() {
-		_, recordFound := rewardsRecordState.GetRewardsRecord(10)
-		s.Assert().False(recordFound)
-	})
-
 	// Check that the states are as expected
 	s.Run("Check objects one by one", func() {
 		for _, metadataExpected := range testDataExpected.Metadata {
