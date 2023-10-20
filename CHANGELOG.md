@@ -40,6 +40,8 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Fixed
 
+- [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
+
 ### Improvements
 
 ## [v5.0.0](https://github.com/archway-network/archway/releases/tag/v5.0.0)
@@ -62,7 +64,6 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#439](https://github.com/archway-network/archway/pull/439) - Renaming `debug` image to `dev`
 - [#461](https://github.com/archway-network/archway/pull/461) - Remove titus network deployment
-
 
 ## [v4.0.2](https://github.com/archway-network/archway/releases/tag/v4.0.2)
 
