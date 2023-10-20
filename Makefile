@@ -7,7 +7,8 @@ LEDGER_ENABLED ?= true
 # SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
-GORELEASER_VERSION = v1.20.6
+GORELEASER_CROSS_VERSION = v1.20.6
+GORELEASER_VERSION = v1.20.0
 
 # for dockerized protobuf tools
 DOCKER := $(shell which docker)
@@ -102,7 +103,7 @@ ifeq ($(OS),Windows_NT)
 	echo unable to build on windows systems
 	exit 1
 else
-	docker run --rm -v "$(CURDIR)":/code -w /code -e LIBWASM_VERSION=$(LIBWASM_VERSION) goreleaser/goreleaser-cross:$(GORELEASER_VERSION) build --clean --skip-validate
+	docker run --rm -v "$(CURDIR)":/code -w /code -e LIBWASM_VERSION=$(LIBWASM_VERSION) ghcr.io/goreleaser/goreleaser:$(GORELEASER_VERSION) build --clean --skip-validate
 endif
 
 build-contract-tests-hooks:
@@ -218,7 +219,7 @@ docker-build:
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/github.com/archway-network/archway \
 		-w /go/src/github.com/archway-network/archway \
-		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
+		ghcr.io/goreleaser/goreleaser:$(GORELEASER_VERSION) \
 		--clean
 		--snapshot
 
@@ -227,10 +228,11 @@ release-dryrun:
 		--rm \
 		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
 		-e RELEASE=$(RELEASE) \
+		-e GITHUB_TOKEN="$(GITHUB_TOKEN)" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/github.com/archway-network/archway \
 		-w /go/src/github.com/archway-network/archway \
-		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
+		ghcr.io/goreleaser/goreleaser:$(GORELEASER_VERSION) \
 		--skip-publish \
 		--clean \
 		--skip-validate
@@ -244,7 +246,21 @@ release:
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/github.com/archway-network/archway \
 		-w /go/src/github.com/archway-network/archway \
-		goreleaser/goreleaser-cross:$(GORELEASER_VERSION) \
+		ghcr.io/goreleaser/goreleaser:$(GORELEASER_VERSION) \
+		--clean \
+		--skip-validate=$(GORELEASER_SKIP_VALIDATE)
+
+release-cross:
+	$(DOCKER) run \
+		--rm \
+		-e LIBWASM_VERSION=$(LIBWASM_VERSION) \
+		-e RELEASE=$(RELEASE) \
+		-e GITHUB_TOKEN="$(GITHUB_TOKEN)" \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/github.com/archway-network/archway \
+		-w /go/src/github.com/archway-network/archway \
+		ghcr.io/goreleaser/goreleaser-cross:$(GORELEASER_CROSS_VERSION) \
+		-f .goreleaser-cross.yaml \
 		--clean \
 		--skip-validate=$(GORELEASER_SKIP_VALIDATE)
 
