@@ -54,12 +54,13 @@ func (s *KeeperTestSuite) SetupWithdrawTest(testData []withdrawTestRecordData) {
 		s.Require().NoError(keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, rewardsToMint))
 
 		// Create the record
-		keepers.RewardsKeeper.GetState().RewardsRecord(ctx).
-			CreateRewardsRecord(
-				testRecord.RewardsAddr,
-				testRecord.Rewards,
-				ctx.BlockHeight(), ctx.BlockTime(),
-			)
+		_, err = keepers.RewardsKeeper.CreateRewardsRecord(
+			ctx,
+			testRecord.RewardsAddr,
+			testRecord.Rewards,
+			ctx.BlockHeight(), ctx.BlockTime(),
+		)
+		s.Require().NoError(err)
 
 		// Switch to the next block
 		s.chain.NextBlock(0)

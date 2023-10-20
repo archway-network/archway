@@ -163,12 +163,11 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 	// Create a bunch of mock reward records
 	{
 		ctx := chain.GetContext()
-		recordsState := rewardsKeeper.GetState().RewardsRecord(ctx)
-
 		// Create records
 		coinsToMint := sdk.NewCoins()
 		for i := 1; i < recordsLen; i++ {
-			record := recordsState.CreateRewardsRecord(senderAcc.Address, recordRewards, ctx.BlockHeight(), ctx.BlockTime())
+			record, err := rewardsKeeper.CreateRewardsRecord(ctx, senderAcc.Address, recordRewards, ctx.BlockHeight(), ctx.BlockTime())
+			s.Require().NoError(err)
 			s.Require().EqualValues(i+1, record.Id)
 			coinsToMint = coinsToMint.Add(recordRewards...)
 		}
@@ -261,16 +260,16 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 	recordIDs := make([]uint64, 0, rewardsTypes.MaxWithdrawRecordsParamLimit)
 	{
 		ctx := chain.GetContext()
-		recordsState := rewardsKeeper.GetState().RewardsRecord(ctx)
-
 		recordRewards := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
 		for i := uint64(0); i < rewardsTypes.MaxWithdrawRecordsParamLimit; i++ {
-			record := recordsState.CreateRewardsRecord(
+			record, err := rewardsKeeper.CreateRewardsRecord(
+				ctx,
 				contractAddr,
 				sdk.Coins{recordRewards},
 				ctx.BlockHeight(),
 				ctx.BlockTime(),
 			)
+			s.Require().NoError(err)
 
 			recordIDs = append(recordIDs, record.Id)
 		}
@@ -333,17 +332,17 @@ func (s *E2ETestSuite) TestRewardsRecordsQueryLimit() {
 	var recordsExpected []rewardsTypes.RewardsRecord
 	{
 		ctx := chain.GetContext()
-		recordsState := rewardsKeeper.GetState().RewardsRecord(ctx)
-
 		records := make([]rewardsTypes.RewardsRecord, 0, rewardsTypes.MaxRecordsQueryLimit)
 		recordRewards := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
 		for i := uint64(0); i < rewardsTypes.MaxRecordsQueryLimit; i++ {
-			record := recordsState.CreateRewardsRecord(
+			record, err := rewardsKeeper.CreateRewardsRecord(
+				ctx,
 				contractAddr,
 				sdk.Coins{recordRewards},
 				ctx.BlockHeight(),
 				ctx.BlockTime(),
 			)
+			s.Require().NoError(err)
 
 			records = append(records, record)
 		}

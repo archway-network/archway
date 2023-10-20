@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -18,23 +17,6 @@ import (
 type RewardsRecordState struct {
 	stateStore storeTypes.KVStore
 	cdc        codec.Codec
-}
-
-// CreateRewardsRecord creates a new types.RewardsRecord object with unique ID.
-func (s RewardsRecordState) CreateRewardsRecord(rewardsAddr sdk.AccAddress, rewards sdk.Coins, calculatedHeight int64, calculatedTime time.Time) types.RewardsRecord {
-	obj := types.RewardsRecord{
-		Id:               s.getNextID(),
-		RewardsAddress:   rewardsAddr.String(),
-		Rewards:          rewards,
-		CalculatedHeight: calculatedHeight,
-		CalculatedTime:   calculatedTime,
-	}
-
-	s.setRewardsRecord(&obj)
-	s.setAddressIndex(obj.Id, rewardsAddr)
-	s.setLastID(obj.Id)
-
-	return obj
 }
 
 // GetRewardsRecord returns a types.RewardsRecord object by ID.

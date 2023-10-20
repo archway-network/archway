@@ -169,7 +169,6 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 // Leftovers caused by Int truncation or by a tx-less block (inflation rewards are tracked even if there were no transactions)
 // stay in the pool.
 func (k Keeper) createRewardsRecords(ctx sdk.Context, blockDistrState *blockRewardsDistributionState) {
-	rewardsRecordState := k.state.RewardsRecord(ctx)
 	calculationHeight, calculationTime := ctx.BlockHeight(), ctx.BlockTime()
 
 	// Convert contract distribution states to a sorted slice preventing the consensus failure due to x/bank operations order.
@@ -214,7 +213,10 @@ func (k Keeper) createRewardsRecords(ctx sdk.Context, blockDistrState *blockRewa
 			Add(contractDistrState.FeeRewards...)
 
 		// Create a new record
-		rewardsRecordState.CreateRewardsRecord(rewardsAddr, rewards, calculationHeight, calculationTime)
+		_, err := k.CreateRewardsRecord(ctx, rewardsAddr, rewards, calculationHeight, calculationTime)
+		if err != nil {
+			panic(err)
+		}
 
 		// Update the total rewards distributed counter
 		blockDistrState.RewardsDistributed = blockDistrState.RewardsDistributed.Add(rewards...)

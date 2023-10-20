@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
@@ -98,6 +99,7 @@ type Keeper struct {
 	BlockRewards     collections.Map[uint64, types.BlockRewards]
 	FlatFees         collections.Map[[]byte, sdk.Coin]
 	TxRewards        *collections.IndexedMap[uint64, types.TxRewards, TxRewardsIndex]
+	RewardsRecordID  collections.Sequence
 	RewardsRecords   *collections.IndexedMap[uint64, types.RewardsRecord, RewardsRecordsIndex]
 }
 
@@ -159,6 +161,7 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 			collcompat.ProtoValue[types.TxRewards](cdc),
 			NewTxRewardsIndex(schemaBuilder),
 		),
+		RewardsRecordID: collections.NewSequence(schemaBuilder, types.RewardsRecordsIDPrefix, "rewards_record_id"),
 		RewardsRecords: collections.NewIndexedMap(
 			schemaBuilder,
 			types.RewardsRecordStatePrefix2,
@@ -222,6 +225,28 @@ func (k Keeper) GetTxRewardsByBlock(ctx context.Context, height uint64) ([]types
 		return nil, err
 	}
 	return indexes.CollectValues(ctx, k.TxRewards, iter)
+}
+
+// CreateRewardsRecord creates a new rewards record.
+func (k Keeper) CreateRewardsRecord(
+	ctx context.Context,
+	withdrawAddr sdk.AccAddress,
+	rewards sdk.Coins,
+	calculatedHeight int64,
+	calculatedTime time.Time,
+) (types.RewardsRecord, error) {
+	nextRewardsID, err := k.RewardsRecordID.Next(ctx)
+	if err != nil {
+		return types.RewardsRecord{}, err
+	}
+	obj := types.RewardsRecord{
+		Id:               nextRewardsID + 1, // rewards record id starts from 1, collections.Sequence starts from 0
+		RewardsAddress:   withdrawAddr.String(),
+		Rewards:          rewards,
+		CalculatedHeight: calculatedHeight,
+		CalculatedTime:   calculatedTime,
+	}
+	return obj, k.RewardsRecords.Set(ctx, obj.Id, obj)
 }
 
 // GetRewardsRecordsByWithdrawAddress returns all the rewards records for a given withdraw address.
