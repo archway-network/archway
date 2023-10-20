@@ -143,7 +143,10 @@ func (s *QueryServer) OutstandingRewards(c context.Context, request *types.Query
 	ctx := sdk.UnwrapSDKContext(c)
 
 	totalRewards := sdk.NewCoins()
-	records := s.keeper.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddress(rewardsAddr)
+	records, err := s.keeper.GetRewardsRecordsByWithdrawAddress(ctx, rewardsAddr)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "outstanding rewards for the address %s: not found", rewardsAddr)
+	}
 	for _, record := range records {
 		totalRewards = totalRewards.Add(record.Rewards...)
 	}

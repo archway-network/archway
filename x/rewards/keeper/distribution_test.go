@@ -621,7 +621,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 				require.NoError(t, err)
 
 				// Check the number of records created
-				recordsCreated := keepers.RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(outExpected.rewardsAddr)
+				recordsCreated, err := keepers.RewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), outExpected.rewardsAddr)
+				require.NoError(t, err)
 				require.Len(t, recordsCreated, outExpected.recordsNum)
 
 				// Basic check of records and merge total rewards

@@ -197,34 +197,6 @@ func (s *KeeperTestSuite) TestStates() {
 		}
 	})
 
-	// Check RewardsRecord search via RewardsAddress index
-	s.Run("Check RewardsRecord RewardsAddress index", func() {
-		// 1st address
-		{
-			addr := accAddrs[0]
-			recordExpected := testDataExpected.RewardsRecords[:1]
-
-			recordReceived := rewardsRecordState.GetRewardsRecordByRewardsAddress(addr)
-			s.Assert().ElementsMatch(recordExpected, recordReceived, "RewardsRecordsByAddress (%s): wrong value", addr)
-		}
-
-		// 2nd address
-		{
-			addr := accAddrs[1]
-			recordExpected := testDataExpected.RewardsRecords[1:3]
-
-			recordReceived := rewardsRecordState.GetRewardsRecordByRewardsAddress(addr)
-			s.Assert().ElementsMatch(recordExpected, recordReceived, "RewardsRecordsByAddress (%s): wrong value", addr)
-		}
-
-		// 3rd address (non-existing)
-		{
-			addr := accAddrs[2]
-
-			s.Assert().Empty(rewardsRecordState.GetRewardsRecordByRewardsAddress(addr))
-		}
-	})
-
 	// Check RewardsRecord search via RewardsAddress index with pagination
 	// We don't cover all the pagination cases here because the pagination is tested already
 	s.Run("Check RewardsRecord RewardsAddress index with pagination", func() {

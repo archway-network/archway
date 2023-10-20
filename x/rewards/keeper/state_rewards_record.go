@@ -52,26 +52,6 @@ func (s RewardsRecordState) GetRewardsRecord(id uint64) (types.RewardsRecord, bo
 	return obj, true
 }
 
-// GetRewardsRecordByRewardsAddress returns a list of types.RewardsRecord objects by rewardsAddress.
-func (s RewardsRecordState) GetRewardsRecordByRewardsAddress(rewardsAddr sdk.AccAddress) (objs []types.RewardsRecord) {
-	store := prefix.NewStore(s.stateStore, types.RewardsRecordAddressIndexPrefix)
-
-	iterator := sdk.KVStorePrefixIterator(store, s.buildAddressIndexPrefix(rewardsAddr))
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		_, id := s.parseAddressIndexKey(iterator.Key())
-
-		obj, found := s.GetRewardsRecord(id)
-		if !found {
-			panic(fmt.Errorf("invalid RewardsRecord RewardsAddress index state: id (%d): not found", id))
-		}
-		objs = append(objs, obj)
-	}
-
-	return
-}
-
 // GetRewardsRecordByRewardsAddressPaginated returns a list of types.RewardsRecord objects by rewardsAddress paginated.
 func (s RewardsRecordState) GetRewardsRecordByRewardsAddressPaginated(rewardsAddr sdk.AccAddress, pageReq *query.PageRequest) ([]types.RewardsRecord, *query.PageResponse, error) {
 	store := prefix.NewStore(
