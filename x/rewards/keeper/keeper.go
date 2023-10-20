@@ -11,8 +11,10 @@ import (
 	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -216,7 +218,7 @@ func (k Keeper) GetRewardsRecords(ctx sdk.Context, rewardsAddr sdk.AccAddress, p
 		return nil, nil, errorsmod.Wrapf(types.ErrInvalidRequest, "max records (%d) query limit exceeded", types.MaxRecordsQueryLimit)
 	}
 
-	return k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
+	return k.GetRewardsRecordsByWithdrawAddressPaginated(ctx, rewardsAddr, pageReq)
 }
 
 func (k Keeper) GetTxRewardsByBlock(ctx context.Context, height uint64) ([]types.TxRewards, error) {
@@ -256,6 +258,29 @@ func (k Keeper) GetRewardsRecordsByWithdrawAddress(ctx context.Context, address 
 		return nil, err
 	}
 	return indexes.CollectValues(ctx, k.RewardsRecords, iter)
+}
+
+// GetRewardsRecordsByWithdrawAddressPaginated returns all the rewards records for a given withdraw address paginated.
+// TODO: on v050 replace this with collections paginated.
+func (k Keeper) GetRewardsRecordsByWithdrawAddressPaginated(ctx sdk.Context, addr sdk.AccAddress, pageReq *query.PageRequest) ([]types.RewardsRecord, *query.PageResponse, error) {
+	store := prefix.NewStore(
+		ctx.KVStore(k.state.key),
+		append(types.RewardsRecordAddressIndexPrefix2, address.MustLengthPrefix(addr)...),
+	)
+	var objs []types.RewardsRecord
+	pageRes, err := query.Paginate(store, pageReq, func(key, _ []byte) error {
+		obj, err := k.RewardsRecords.Get(ctx, sdk.BigEndianToUint64(key))
+		if err != nil {
+			return err
+		}
+		objs = append(objs, obj)
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return objs, pageRes, nil
 }
 
 // GetAuthority returns the x/rewards module's authority.

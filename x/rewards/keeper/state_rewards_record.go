@@ -113,9 +113,3 @@ func (s RewardsRecordState) parseIdKey(key []byte) uint64 {
 
 	return id
 }
-
-// deleteAddressIndexEntry deletes the types.RewardsRecord's RewardsAddress index entry.
-func (s RewardsRecordState) deleteAddressIndexEntry(id uint64, rewardsAddr sdk.AccAddress) {
-	store := prefix.NewStore(s.stateStore, types.RewardsRecordAddressIndexPrefix)
-	store.Delete(s.buildAddressIndexKey(id, rewardsAddr))
-}

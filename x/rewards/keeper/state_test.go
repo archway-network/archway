@@ -211,7 +211,7 @@ func (s *KeeperTestSuite) TestStates() {
 			}
 			recordExpected := testDataExpected.RewardsRecords[1:2]
 
-			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			recordReceived, pageResp, err := keeper.GetRewardsRecordsByWithdrawAddressPaginated(ctx, addr, page)
 			s.Require().NoError(err)
 			s.Assert().ElementsMatch(recordExpected, recordReceived)
 
@@ -229,7 +229,7 @@ func (s *KeeperTestSuite) TestStates() {
 			}
 			recordExpected := testDataExpected.RewardsRecords[2:3]
 
-			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			recordReceived, pageResp, err := keeper.GetRewardsRecordsByWithdrawAddressPaginated(ctx, addr, page)
 			s.Require().NoError(err)
 			s.Assert().ElementsMatch(recordExpected, recordReceived)
 
@@ -245,13 +245,13 @@ func (s *KeeperTestSuite) TestStates() {
 			}
 			recordExpected := testDataExpected.RewardsRecords[2:3]
 
-			_, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			_, pageResp, err := keeper.GetRewardsRecordsByWithdrawAddressPaginated(ctx, addr, page)
 			s.Require().NoError(err)
 			s.Require().NotNil(pageResp)
 			s.Assert().NotNil(pageResp.NextKey)
 
 			page.Key = pageResp.NextKey
-			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			recordReceived, pageResp, err := keeper.GetRewardsRecordsByWithdrawAddressPaginated(ctx, addr, page)
 			s.Require().NoError(err)
 			s.Require().NotNil(pageResp)
 			s.Assert().Nil(pageResp.NextKey)
