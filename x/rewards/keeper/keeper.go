@@ -85,8 +85,8 @@ func NewRewardsRecordsIndex(sb *collections.SchemaBuilder) RewardsRecordsIndex {
 // Keeper provides module state operations.
 type Keeper struct {
 	cdc              codec.Codec
+	storeKey         storetypes.StoreKey
 	paramStore       paramTypes.Subspace
-	state            State
 	contractInfoView ContractInfoReaderExpected
 	trackingKeeper   TrackingKeeperExpected
 	authKeeper       AuthKeeperExpected
@@ -114,9 +114,9 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 	schemaBuilder := collections.NewSchemaBuilder(collcompat.NewKVStoreService(key))
 
 	k := Keeper{
+		storeKey:         key,
 		cdc:              cdc,
 		paramStore:       ps,
-		state:            NewState(cdc, key),
 		contractInfoView: contractInfoReader,
 		trackingKeeper:   trackingKeeper,
 		authKeeper:       ak,
@@ -264,7 +264,7 @@ func (k Keeper) GetRewardsRecordsByWithdrawAddress(ctx context.Context, address 
 // TODO: on v050 replace this with collections paginated.
 func (k Keeper) GetRewardsRecordsByWithdrawAddressPaginated(ctx sdk.Context, addr sdk.AccAddress, pageReq *query.PageRequest) ([]types.RewardsRecord, *query.PageResponse, error) {
 	store := prefix.NewStore(
-		ctx.KVStore(k.state.key),
+		ctx.KVStore(k.storeKey),
 		append(types.RewardsRecordAddressIndexPrefix2, address.MustLengthPrefix(addr)...),
 	)
 	var objs []types.RewardsRecord

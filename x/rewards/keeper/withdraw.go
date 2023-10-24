@@ -26,7 +26,7 @@ func (k Keeper) WithdrawRewardsByRecordsLimit(ctx sdk.Context, rewardsAddr sdk.A
 
 	// Get all rewards records for the given address by limit
 	pageReq := &query.PageRequest{Limit: recordsLimit}
-	records, _, err := k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
+	records, _, err := k.GetRewardsRecordsByWithdrawAddressPaginated(ctx, rewardsAddr, pageReq)
 	if err != nil {
 		return nil, 0, errorsmod.Wrap(types.ErrInternal, err.Error())
 	}

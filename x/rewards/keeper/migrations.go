@@ -23,5 +23,5 @@ func NewMigrator(keeper Keeper) Migrator {
 // and managed by the x/params module and stores them directly into the x/rewards
 // module state.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return v2.MigrateStore(ctx, m.keeper.state.key, m.keeper.paramStore, m.keeper.cdc)
+	return v2.MigrateStore(ctx, m.keeper.storeKey, m.keeper.paramStore, m.keeper.cdc)
 }

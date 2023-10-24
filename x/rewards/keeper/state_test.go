@@ -29,7 +29,6 @@ func (s *KeeperTestSuite) TestStates() {
 
 	chain := s.chain
 	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.RewardsKeeper
-	rewardsRecordState := keeper.GetState().RewardsRecord(ctx)
 
 	// Fixtures
 	startBlock, startTime := ctx.BlockHeight(), ctx.BlockTime()
@@ -160,8 +159,8 @@ func (s *KeeperTestSuite) TestStates() {
 		}
 
 		for i, recordExpected := range testDataExpected.RewardsRecords {
-			recordReceived, found := rewardsRecordState.GetRewardsRecord(recordExpected.Id)
-			s.Require().True(found, "RewardsRecord [%d]: not found", i)
+			recordReceived, err := keeper.RewardsRecords.Get(ctx, recordExpected.Id)
+			s.Require().NoError(err, "RewardsRecord [%d]: not found", i)
 			s.Assert().Equal(recordExpected, recordReceived, "RewardsRecord [%d]: wrong value", i)
 		}
 	})
