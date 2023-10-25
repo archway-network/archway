@@ -112,7 +112,7 @@ archives:
       - archwayd-darwin-amd64
       - archwayd-darwin-arm64
       - archwayd-darwin-all
-    name_template: '{{ .ProjectName }}d_v{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    name_template: "{{ .ProjectName }}d_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     wrap_in_directory: false
     format: zip
     files:
@@ -123,7 +123,7 @@ archives:
       - archwayd-darwin-amd64
       - archwayd-darwin-arm64
       - archwayd-darwin-all
-    name_template: '{{ .ProjectName }}d_{{ .Os }}_{{ .Arch }}'
+    name_template: "{{ .ProjectName }}d_{{ .Os }}_{{ .Arch }}"
     wrap_in_directory: false
     format: zip
     files:
@@ -134,13 +134,13 @@ archives:
       - archwayd-darwin-amd64
       - archwayd-darwin-arm64
       - archwayd-darwin-all
-    name_template: '{{ .ProjectName }}d_{{ .Os }}_{{ .Arch }}'
+    name_template: "{{ .ProjectName }}d_{{ .Os }}_{{ .Arch }}"
     wrap_in_directory: false
     format: binary
     files:
       - none*
 checksum:
-  name_template: 'cross_{{ .ProjectName }}d_v{{ .Version }}_checksums.txt'
+  name_template: "{{ .ProjectName }}d_v{{ .Version }}_cross_checksums.txt"
 dockers:
   - use: buildx
     goos: linux
