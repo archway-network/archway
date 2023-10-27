@@ -39,5 +39,5 @@ jobs:
       - name: ${{ matrix.release }}
         run: make ${{ matrix.release }}
         env:
-          RELEASE: true
+          GORELEASER_SKIP_VALIDATE: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
