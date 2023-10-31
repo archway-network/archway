@@ -32,6 +32,8 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
+- [#481](https://github.com/archway-network/archway/pull/481) - Add Release Checklist issue type 
+
 ### Changed
 
 ### Deprecated
