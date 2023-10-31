@@ -2,9 +2,11 @@ package interchaintest
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
+	cosmosproto "github.com/cosmos/gogoproto/proto"
 	"github.com/docker/docker/client"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
@@ -12,6 +14,8 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
+
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -69,15 +73,44 @@ func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, nextUpgrade
 
 	haltHeight := height + haltHeightDelta // The height at which upgrade should be applied
 
-	proposal := cosmos.SoftwareUpgradeProposal{
-		Deposit:     "10000000000" + archwayChain.Config().Denom,
-		Title:       "Test upgrade",
-		Name:        nextUpgradeName,
-		Description: "Every PR we perform a upgrade check to ensure nothing breaks",
-		Height:      haltHeight,
+	govAuthorityAddr := ""
+	cmd := []string{
+		"archwayd", "q", "auth", "module-account", "gov",
+		"--node", archwayChain.GetRPCAddress(),
+		"--home", archwayChain.HomeDir(),
+		"--chain-id", archwayChain.Config().ChainID,
+		"--output", "json",
+	}
+	stdout, _, err := archwayChain.Exec(ctx, cmd, nil)
+	require.NoError(t, err, "could not query the gov module account")
+
+	queryRes := ModuleAccountQueryResponse{}
+	err = json.Unmarshal(stdout, &queryRes)
+	require.NoError(t, err, "could not parse the response")
+
+	if queryRes.Account.Name == "gov" {
+		govAuthorityAddr = queryRes.Account.BaseAccount.Address
+	} else {
+		t.Fatal("could not find the gov module account")
 	}
 
-	upgradeTx, err := archwayChain.UpgradeProposal(ctx, chainUser.KeyName(), proposal) // Submitting the software upgrade proposal
+	proposalMsg := upgradetypes.MsgSoftwareUpgrade{
+		Authority: govAuthorityAddr,
+		Plan: upgradetypes.Plan{
+			Name:   nextUpgradeName,
+			Height: int64(haltHeight),
+		},
+	}
+
+	proposal, err := archwayChain.BuildProposal([]cosmosproto.Message{&proposalMsg},
+		"Test Upgrade",
+		"Every PR we preform an upgrade check to ensure nothing breaks",
+		"metadata",
+		"10000000000"+archwayChain.Config().Denom,
+	)
+	require.NoError(t, err, "error building proposal tx")
+
+	upgradeTx, err := archwayChain.SubmitProposal(ctx, chainUser.KeyName(), proposal) // Submitting the software upgrade proposal
 	require.NoError(t, err, "error submitting software upgrade proposal tx")
 
 	err = archwayChain.VoteOnProposalAllValidators(ctx, upgradeTx.ProposalID, cosmos.ProposalVoteYes)
@@ -97,7 +130,6 @@ func fundChainUser(t *testing.T, ctx context.Context, archwayChain *cosmos.Cosmo
 func startChain(t *testing.T, startingVersion string) (*cosmos.CosmosChain, *client.Client, context.Context) {
 	numOfVals := 1
 	archwayChainSpec := GetArchwaySpec(initialVersion, numOfVals)
-	archwayChainSpec.UsingNewGenesisCommand = false
 	archwayChainSpec.ChainConfig.ModifyGenesis = cosmos.ModifyGenesis(getTestGenesis())
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		archwayChainSpec,
@@ -119,4 +151,20 @@ func startChain(t *testing.T, startingVersion string) (*cosmos.CosmosChain, *cli
 		_ = ic.Close()
 	})
 	return archwayChain, client, ctx
+}
+
+type ModuleAccountQueryResponse struct {
+	Account ModuleAccountData `json:"account"`
+}
+
+type ModuleAccountData struct {
+	BaseAccount BaseAccountData `json:"base_account"`
+	Name        string          `json:"name"`
+}
+
+type BaseAccountData struct {
+	AccountNumber string `json:"account_number"`
+	Address       string `json:"address"`
+	PubKey        string `json:"pub_key"`
+	Sequence      string `json:"sequence"`
 }

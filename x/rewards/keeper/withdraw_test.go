@@ -104,7 +104,8 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByIDs() {
 		ctx := s.chain.GetContext()
 		params := keeper.GetParams(ctx)
 		params.MaxWithdrawRecords = 5
-		keeper.SetParams(ctx, params)
+		err := keeper.SetParams(ctx, params)
+		s.Assert().NoError(err)
 	}
 
 	// Invalid inputs
