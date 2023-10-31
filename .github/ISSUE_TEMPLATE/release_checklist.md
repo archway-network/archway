@@ -2,7 +2,7 @@
 name: Release Checklist
 about: Create a checklist for the upcoming release
 title: 'vX.X.X: Release Checklist'
-labels: ''
+labels: release
 assignees: ''
 
 ---
