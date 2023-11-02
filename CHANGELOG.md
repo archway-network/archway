@@ -32,6 +32,24 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
+- [#481](https://github.com/archway-network/archway/pull/481) - Add Release Checklist issue type 
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+- [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
+
+### Improvements
+
+## [v5.0.0](https://github.com/archway-network/archway/releases/tag/v5.0.0)
+
+### Added
+
 - [#431](https://github.com/archway-network/archway/pull/431) - Added gh workflow to run IBC conformance tests on PRs
 - [#439](https://github.com/archway-network/archway/pull/439) - Adding containerized localnet
 - [#445](https://github.com/archway-network/archway/pull/445) - Adding Archway logo and version number to upgrade logs
@@ -48,12 +66,6 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#439](https://github.com/archway-network/archway/pull/439) - Renaming `debug` image to `dev`
 - [#461](https://github.com/archway-network/archway/pull/461) - Remove titus network deployment
-
-### Removed
-
-### Fixed
-
-### Improvements
 
 ## [v4.0.2](https://github.com/archway-network/archway/releases/tag/v4.0.2)
 

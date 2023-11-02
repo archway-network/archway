@@ -390,6 +390,5 @@ func TestAuthzDecodeAntehandler(t *testing.T) {
 
 	anteHandler := ante.NewMinFeeDecorator(chain.GetAppCodec(), keepers.RewardsKeeper)
 	_, err = anteHandler.AnteHandle(chain.GetContext(), tx, false, testutils.NoopAnteHandler)
-
 	require.NoError(t, err)
 }
