@@ -5,10 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/api/tendermint/abci"
-	"github.com/archway-network/archway/x/callback/client/cli"
-	"github.com/archway-network/archway/x/callback/keeper"
-	"github.com/archway-network/archway/x/callback/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,6 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
+	"github.com/archway-network/archway/x/callback/client/cli"
+	"github.com/archway-network/archway/x/callback/keeper"
+	"github.com/archway-network/archway/x/callback/types"
 )
 
 var (
@@ -79,7 +80,6 @@ func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	cdc    codec.Codec
 	keeper keeper.Keeper
 }
 
