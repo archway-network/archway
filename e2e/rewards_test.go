@@ -240,7 +240,7 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 	rewardsTypes.MaxWithdrawRecordsParamLimit = uint64(29500) // an actual value is (thisValue - 1), refer to the query below
 
 	chain := e2eTesting.NewTestChain(s.T(), 1,
-		e2eTesting.WithBlockGasLimit(1_120_000_000),
+		e2eTesting.WithBlockGasLimit(100_000_001),
 		e2eTesting.WithMaxWithdrawRecords(rewardsTypes.MaxWithdrawRecordsParamLimit),
 	)
 	keepers := chain.GetApp().Keepers
@@ -295,7 +295,7 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 			Msg:      reqBz,
 		}
 
-		gasUsed, _, _, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{&msg}, e2eTesting.WithTxGasLimit(1_000_000_000))
+		gasUsed, _, _, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{&msg}, e2eTesting.WithTxGasLimit(100_000_000))
 
 		msgBz, err := msg.Marshal()
 		s.Require().NoError(err)

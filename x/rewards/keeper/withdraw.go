@@ -3,7 +3,9 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -79,12 +81,38 @@ func (k Keeper) withdrawRewardsByRecords(ctx sdk.Context, rewardsAddr sdk.AccAdd
 	}
 
 	// Clean up (safe if there were no rewards)
+	err := fastRemoveRecords(ctx, k.storeKey, k.RewardsRecords, records...)
+	if err != nil {
+		panic(fmt.Errorf("removing rewards records: %w", err))
+	}
+	return totalRewards
+}
+
+// fastRemoveRecords is used to remove rewards records without going through the indexed map
+// which fetches the records from the store. This is used in the case where we know the records.
+func fastRemoveRecords(ctx sdk.Context, storeKey storetypes.StoreKey, im *collections.IndexedMap[uint64, types.RewardsRecord, RewardsRecordsIndex], records ...types.RewardsRecord) error {
+	store := ctx.KVStore(storeKey)
+	primaryKeyCodec := im.KeyCodec()
+	secondaryKeyCodec := im.Indexes.Address.KeyCodec()
+
 	for _, record := range records {
-		err := k.RewardsRecords.Remove(ctx, record.Id)
+		primaryKeyBytes, err := collections.EncodeKeyWithPrefix(types.RewardsRecordStatePrefix2, primaryKeyCodec, record.Id)
 		if err != nil {
-			panic(fmt.Errorf("removing rewards record (%d): %w", record.Id, err))
+			return err
 		}
+		rewardAddr, err := sdk.AccAddressFromBech32(record.RewardsAddress)
+		if err != nil {
+			return err
+		}
+		secondaryKey := collections.Join([]byte(rewardAddr), record.Id)
+		secondaryKeyBytes, err := collections.EncodeKeyWithPrefix(types.RewardsRecordStatePrefix2, secondaryKeyCodec, secondaryKey)
+		if err != nil {
+			return err
+		}
+
+		store.Delete(primaryKeyBytes)
+		store.Delete(secondaryKeyBytes)
 	}
 
-	return totalRewards
+	return nil
 }
