@@ -76,7 +76,7 @@ func (t RewardsRecordsIndex) IndexesList() []collections.Index[uint64, types.Rew
 
 func NewRewardsRecordsIndex(sb *collections.SchemaBuilder) RewardsRecordsIndex {
 	return RewardsRecordsIndex{
-		Address: indexes.NewMulti(sb, types.RewardsRecordAddressIndexPrefix2, "rewards_records_by_address", collections.BytesKey, collections.Uint64Key, func(_ uint64, value types.RewardsRecord) ([]byte, error) {
+		Address: indexes.NewMulti(sb, types.RewardsRecordAddressIndexPrefix, "rewards_records_by_address", collections.BytesKey, collections.Uint64Key, func(_ uint64, value types.RewardsRecord) ([]byte, error) {
 			return sdk.AccAddressFromBech32(value.RewardsAddress)
 		}),
 	}
@@ -166,7 +166,7 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 		RewardsRecordID: collections.NewSequence(schemaBuilder, types.RewardsRecordsIDPrefix, "rewards_record_id"),
 		RewardsRecords: collections.NewIndexedMap(
 			schemaBuilder,
-			types.RewardsRecordStatePrefix2,
+			types.RewardsRecordStatePrefix,
 			"rewards_records",
 			collections.Uint64Key,
 			collcompat.ProtoValue[types.RewardsRecord](cdc),
@@ -265,7 +265,7 @@ func (k Keeper) GetRewardsRecordsByWithdrawAddress(ctx context.Context, address 
 func (k Keeper) GetRewardsRecordsByWithdrawAddressPaginated(ctx sdk.Context, addr sdk.AccAddress, pageReq *query.PageRequest) ([]types.RewardsRecord, *query.PageResponse, error) {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		append(types.RewardsRecordAddressIndexPrefix2, address.MustLengthPrefix(addr)...),
+		append(types.RewardsRecordAddressIndexPrefix, address.MustLengthPrefix(addr)...),
 	)
 	var objs []types.RewardsRecord
 	pageRes, err := query.Paginate(store, pageReq, func(key, _ []byte) error {

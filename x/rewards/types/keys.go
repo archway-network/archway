@@ -34,32 +34,11 @@ var (
 	// RewardsRecordsIDPrefix defines the prefix for storing RewardsRecord last ID.
 	RewardsRecordsIDPrefix = collections.NewPrefix([]byte{0x04, 0x00})
 	// RewwardsRecordStatePrefix defines the prefix for storing RewardsRecord state.
-	RewardsRecordStatePrefix2 = collections.NewPrefix([]byte{0x04, 0x01})
+	RewardsRecordStatePrefix = collections.NewPrefix([]byte{0x04, 0x01})
 	// RewardsRecordAddressIndexPrefix defines the prefix for storing RewardsRecord's rewards address index.
-	RewardsRecordAddressIndexPrefix2 = collections.NewPrefix([]byte{0x04, 0x02})
+	RewardsRecordAddressIndexPrefix = collections.NewPrefix([]byte{0x04, 0x02})
 	// FlatFeePrefix defines the prefix for storing flat fees.
 	FlatFeePrefix = collections.NewPrefix([]byte{0x05, 0x00})
 	// ParamsPrefix defines the prefix for storing params.
 	ParamsPrefix = collections.NewPrefix([]byte{0x06})
-)
-
-// RewardsRecord prefixed store state keys.
-var (
-	// RewardsRecordStatePrefix defines the state global prefix.
-	RewardsRecordStatePrefix = []byte{0x04}
-
-	// RewardsRecordIDKey defines the key for storing last unique RewardsRecord's ID.
-	// Key: RewardsRecordStatePrefix | RewardsRecordIDKey
-	// Value: uint64
-	RewardsRecordIDKey = []byte{0x00}
-
-	// RewardsRecordPrefix defines the prefix for storing RewardsRecord objects.
-	// Key: RewardsRecordStatePrefix | RewardsRecordPrefix | {ID}
-	// Value: RewardsRecord
-	RewardsRecordPrefix = []byte{0x01}
-
-	// RewardsRecordAddressIndexPrefix defines the prefix for storing RewardsRecord's RewardsAddress index.
-	// Key: RewardsRecordStatePrefix | RewardsRecordAddressIndexPrefix | {RewardsAddress} | {ID}
-	// Value: None
-	RewardsRecordAddressIndexPrefix = []byte{0x02}
 )

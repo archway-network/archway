@@ -96,7 +96,7 @@ func fastRemoveRecords(ctx sdk.Context, storeKey storetypes.StoreKey, im *collec
 	secondaryKeyCodec := im.Indexes.Address.KeyCodec()
 
 	for _, record := range records {
-		primaryKeyBytes, err := collections.EncodeKeyWithPrefix(types.RewardsRecordStatePrefix2, primaryKeyCodec, record.Id)
+		primaryKeyBytes, err := collections.EncodeKeyWithPrefix(types.RewardsRecordStatePrefix, primaryKeyCodec, record.Id)
 		if err != nil {
 			return err
 		}
@@ -105,7 +105,7 @@ func fastRemoveRecords(ctx sdk.Context, storeKey storetypes.StoreKey, im *collec
 			return err
 		}
 		secondaryKey := collections.Join([]byte(rewardAddr), record.Id)
-		secondaryKeyBytes, err := collections.EncodeKeyWithPrefix(types.RewardsRecordStatePrefix2, secondaryKeyCodec, secondaryKey)
+		secondaryKeyBytes, err := collections.EncodeKeyWithPrefix(types.RewardsRecordAddressIndexPrefix, secondaryKeyCodec, secondaryKey)
 		if err != nil {
 			return err
 		}
