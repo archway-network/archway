@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/collections/indexes"
 	errorsmod "cosmossdk.io/errors"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -18,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/archway-network/archway/internal/collcompat"
 
 	"github.com/archway-network/archway/x/rewards/types"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"

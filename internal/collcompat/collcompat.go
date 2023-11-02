@@ -24,22 +24,6 @@ func (k kvStoreService) OpenKVStore(ctx context.Context) store.KVStore {
 	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(k.key))
 }
 
-type memStoreService struct {
-	key *storetypes.MemoryStoreKey
-}
-
-func (m memStoreService) OpenMemoryStore(ctx context.Context) store.KVStore {
-	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(m.key))
-}
-
-type transientStoreService struct {
-	key *storetypes.TransientStoreKey
-}
-
-func (t transientStoreService) OpenTransientStore(ctx context.Context) store.KVStore {
-	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(t.key))
-}
-
 // CoreKVStore is a wrapper of Core/Store kvstore interface
 // Remove after https://github.com/cosmos/cosmos-sdk/issues/14714 is closed
 type coreKVStore struct {

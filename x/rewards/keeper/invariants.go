@@ -26,7 +26,7 @@ func ModuleAccountBalanceInvariant(k Keeper) sdk.Invariant {
 		})
 		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "module account and total rewards records coins",
-					fmt.Sprintf("unable to compute rewards"),
+					"unable to compute rewards",
 				),
 				true // we do not know if the invariant is broken, but we cannot compute the rewards
 		}

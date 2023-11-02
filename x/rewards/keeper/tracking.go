@@ -3,8 +3,9 @@ package keeper
 import (
 	"math"
 
-	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // TrackFeeRebatesRewards creates a new transaction fee rebate reward record for the current transaction.
