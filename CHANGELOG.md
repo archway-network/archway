@@ -28,6 +28,12 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviours.
 -->
 
+## [v5.0.1]
+
+### Fixed 
+
+- [#497](https://github.com/archway-network/archway/pull/497) - Fix rest endpoints in App. Cherrypicked [#496](https://github.com/archway-network/archway/pull/496) - Fix rest endpoints in App
+
 ## [v5.0.0]
 
 ### Added
