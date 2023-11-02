@@ -6,9 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/server"
+
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/x/genmsg"
-	"github.com/cosmos/cosmos-sdk/server"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
