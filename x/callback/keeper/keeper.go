@@ -3,23 +3,23 @@ package keeper
 import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/archway-network/archway/x/callback/types"
 )
 
 // Keeper provides module state operations.
 type Keeper struct {
-	cdc        codec.Codec
-	paramStore paramTypes.Subspace
+	cdc      codec.Codec
+	storeKey storetypes.StoreKey
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, ps paramTypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) Keeper {
 	return Keeper{
-		cdc:        cdc,
-		paramStore: ps,
+		cdc:      cdc,
+		storeKey: storeKey,
 	}
 }
 
