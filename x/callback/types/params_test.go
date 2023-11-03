@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/archway-network/archway/x/callback/types"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/archway-network/archway/x/callback/types"
 )
 
 func TestParamsValidate(t *testing.T) {

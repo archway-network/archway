@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/archway-network/archway/x/callback/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/callback/types"
 )
 
 // GetParams return all module parameters.
