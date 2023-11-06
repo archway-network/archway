@@ -71,6 +71,8 @@ func (s *QueryServer) BlockRewardsTracking(c context.Context, request *types.Que
 
 	blockRewards, err := s.keeper.BlockRewards.Get(ctx, uint64(height))
 	if err == nil {
+		// it makes sense to report a height only if it does exist
+		// if err != nil, it means that the block rewards tracking for the current block does not exist
 		blockRewards.Height = ctx.BlockHeight()
 	}
 	txRewards, err := s.keeper.GetTxRewardsByBlock(ctx, uint64(height))
