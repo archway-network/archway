@@ -17,10 +17,6 @@ jobs:
               with:
                 fetch-depth: 0
 
-            - name: Get last release tag
-              id: lastrelease
-              uses: revam/gh-action-get-tag-and-version@v1
-
             - name: Checkout heighliner
               uses: actions/checkout@v3
               with:
@@ -48,14 +44,14 @@ jobs:
                 image: archway:local
                 retention_days: 3
 
-            - name: Build ${{ steps.lastrelease.outputs.tag }} image
+            - name: Build v4.0.2 image
               run: |
-                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --chain archway --tag ${{ steps.lastrelease.outputs.tag }}
+                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref v4.0.2 --chain archway --tag v4.0.2
             
-            - name: Upload ${{ steps.lastrelease.outputs.tag }} image
+            - name: Upload v4.0.2 image
               uses: ishworkh/container-image-artifact-upload@v1.0.0
               with:
-                image: archway:${{ steps.lastrelease.outputs.tag }}
+                image: archway:v4.0.2
                 retention_days: 3
 
     run_chain_upgrade_test:
