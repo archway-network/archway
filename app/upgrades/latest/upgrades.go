@@ -13,15 +13,7 @@ import (
 // This upgrade handler is used for all the current changes to the protocol
 
 const Name = "latest"
-
-const NameAsciiArt = `                          
-             ###     ###     ### 
-     # #     #       # #     # #    
-     # #     ###     # #     # #   
-      #        #     # #     # # 
-             ###  #  ###  #  ### 
-
-`
+const NameAsciiArt = ""
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,

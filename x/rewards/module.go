@@ -8,8 +8,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,7 +19,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/archway-network/archway/x/rewards/client/cli"
 	"github.com/archway-network/archway/x/rewards/keeper"
@@ -30,6 +29,9 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 	_ module.AppModule      = AppModule{}
 )
+
+// ConsensusVersion defines the current x/rewards module consensus version.
+const ConsensusVersion = 2
 
 // AppModuleBasic defines the basic application module for this module.
 type AppModuleBasic struct {
@@ -105,24 +107,15 @@ func (a AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, a.keeper)
 }
 
-// Route returns the message routing key for the module.
-// Deprecated.
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
-
-// QuerierRoute returns the module's querier route name.
-func (a AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns the staking module sdk.Querier.
-func (a AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
-
 // RegisterServices registers the module services.
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(a.keeper))
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(a.keeper))
+
+	m := keeper.NewMigrator(a.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the module. It returns no validator updates.
@@ -143,7 +136,7 @@ func (a AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawM
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (a AppModule) ConsensusVersion() uint64 {
-	return 1
+	return ConsensusVersion
 }
 
 // BeginBlock returns the begin blocker for the module.
@@ -158,16 +151,6 @@ func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Vali
 
 // GenerateGenesisState creates a randomized GenState of the module.
 func (a AppModule) GenerateGenesisState(input *module.SimulationState) {}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (a AppModule) ProposalContents(_ module.SimulationState) []simTypes.WeightedProposalContent {
-	return []simTypes.WeightedProposalContent{}
-}
-
-// RandomizedParams creates randomized param changes for the simulator.
-func (a AppModule) RandomizedParams(r *rand.Rand) []simTypes.ParamChange {
-	return []simTypes.ParamChange{}
-}
 
 // RegisterStoreDecoder registers a decoder for the module's types.
 func (a AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {

@@ -22,7 +22,8 @@ func (s *KeeperTestSuite) TestGRPC_Params() {
 		MaxWithdrawRecords:    uint64(2),
 		MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 	}
-	k.SetParams(ctx, params)
+	err := k.SetParams(ctx, params)
+	s.Assert().NoError(err)
 
 	s.Run("err: empty request", func() {
 		_, err := querySrvr.Params(sdk.WrapSDKContext(ctx), nil)

@@ -8,8 +8,8 @@ import (
 	archway "github.com/archway-network/archway/types"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	voterTypes "github.com/archway-network/voter/src/types"
 
@@ -201,7 +201,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		contractToBlockGasRatio := sdk.NewDec(int64(txGasTracked)).Quo(sdk.NewDec(blockGasLimit))
 		contractInflationRewardsExpected = sdk.Coin{
 			Denom:  blockInflationRewardsExpected.Denom,
-			Amount: blockInflationRewardsExpected.Amount.ToDec().Mul(contractToBlockGasRatio).TruncateInt(),
+			Amount: sdk.NewDecFromInt(blockInflationRewardsExpected.Amount).Mul(contractToBlockGasRatio).TruncateInt(),
 		}
 
 		// Total

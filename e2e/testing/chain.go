@@ -3,32 +3,34 @@ package e2eTesting
 
 import (
 	"encoding/json"
+	"math/rand"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmProto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmTypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptoCodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptoTypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simapp "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/ibc-go/v4/testing/mock"
+	"github.com/cosmos/ibc-go/v7/testing/mock"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmProto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmTypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/archway-network/archway/app"
 )
@@ -54,9 +56,7 @@ type TestChain struct {
 
 // NewTestChain creates a new TestChain with the default amount of genesis accounts and validators.
 func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
-	const (
-		chainIDPrefix = "test-"
-	)
+	chainid := "test-" + strconv.Itoa(chainIdx)
 
 	// Split options by groups (each group is applied in a different init step)
 	var chainCfgOpts []TestChainConfigOption
@@ -98,11 +98,11 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		app.DefaultNodeHome,
 		1,
 		encCfg,
-		app.GetEnabledProposals(),
 		app.EmptyBaseAppOptions{},
-		[]wasm.Option{},
+		[]wasmkeeper.Option{},
+		baseapp.SetChainID(chainid),
 	)
-	genState := app.NewDefaultGenesisState()
+	genState := app.NewDefaultGenesisState(archApp.AppCodec())
 
 	// Generate validators
 	validators := make([]*tmTypes.Validator, 0, chainCfg.ValidatorsNum)
@@ -182,7 +182,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		accGenCoins := genCoins
 		// Lower genesis balance for validator account
 		if i < chainCfg.ValidatorsNum {
-			accGenCoins = accGenCoins.Sub(bondCoins)
+			accGenCoins = accGenCoins.Sub(bondCoins...)
 			bondedPoolCoins = bondedPoolCoins.Add(bondCoins...)
 		}
 
@@ -206,7 +206,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		Coins:   bondedPoolCoins,
 	})
 
-	bankGenesis := bankTypes.NewGenesisState(bankTypes.DefaultGenesisState().Params, balances, totalSupply, []bankTypes.Metadata{})
+	bankGenesis := bankTypes.NewGenesisState(bankTypes.DefaultGenesisState().Params, balances, totalSupply, []bankTypes.Metadata{}, []bankTypes.SendEnabled{})
 	genState[bankTypes.ModuleName] = archApp.AppCodec().MustMarshalJSON(bankGenesis)
 
 	signInfo := make([]slashingTypes.SigningInfo, len(validatorSet.Validators))
@@ -237,6 +237,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 
 	archApp.InitChain(
 		abci.RequestInitChain{
+			ChainId:         chainid,
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: consensusParams,
 			AppStateBytes:   genStateBytes,
@@ -249,7 +250,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		cfg: chainCfg,
 		app: archApp,
 		curHeader: tmProto.Header{
-			ChainID: chainIDPrefix + strconv.Itoa(chainIdx),
+			ChainID: chainid,
 			Time:    time.Unix(0, 0).UTC(),
 		},
 		txConfig:    encCfg.TxConfig,
@@ -380,7 +381,7 @@ func (chain *TestChain) BeginBlock() []abci.Event {
 	res := chain.app.BeginBlock(abci.RequestBeginBlock{
 		Hash:   nil,
 		Header: chain.curHeader,
-		LastCommitInfo: abci.LastCommitInfo{
+		LastCommitInfo: abci.CommitInfo{
 			Round: 0,
 			Votes: voteInfo,
 		},
@@ -474,7 +475,9 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 	require.NotNil(t, senderAccI)
 
 	// Build and sign Tx
-	tx, err := helpers.GenTx(
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	tx, err := simapp.GenSignedMockTx(
+		r,
 		chain.txConfig,
 		msgs,
 		options.fees,
@@ -495,7 +498,7 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 	}
 
 	// Send the Tx
-	return chain.app.Deliver(chain.txConfig.TxEncoder(), tx)
+	return chain.app.SimDeliver(chain.txConfig.TxEncoder(), tx)
 }
 
 // ParseSDKResultData converts TX result data into a slice of Msgs.

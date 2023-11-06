@@ -2,44 +2,44 @@ package e2eTesting
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govTypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/require"
 )
 
 // ExecuteGovProposal submits a new proposal and votes for it.
-func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, proposalContent govTypes.Content) {
+func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, proposals []sdk.Msg, title string, summary string, metadata string) {
 	t := chain.t
-
-	require.NotNil(t, proposalContent)
 
 	// Get params
 	k := chain.app.Keepers.GovKeeper
-	depositCoin := k.GetDepositParams(chain.GetContext()).MinDeposit
-	votingDur := k.GetVotingParams(chain.GetContext()).VotingPeriod
+	govParams := k.GetParams(chain.GetContext())
+	depositCoin := govParams.MinDeposit
+	votingDur := govParams.VotingPeriod
 
 	// Submit proposal with min deposit to start the voting
-	msg, err := govTypes.NewMsgSubmitProposal(proposalContent, depositCoin, proposerAcc.Address)
+	msg, err := govTypes.NewMsgSubmitProposal(proposals, depositCoin, proposerAcc.Address.String(), metadata, title, summary)
 	require.NoError(t, err)
 
-	_, res, _, _ := chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
+	_, res, _, err := chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
+	require.NoError(t, err)
 	txRes := chain.ParseSDKResultData(res)
-	require.Len(t, txRes.Data, 1)
+	require.Len(t, txRes.MsgResponses, 1)
 
 	var resp govTypes.MsgSubmitProposalResponse
-	require.NoError(t, resp.Unmarshal(txRes.Data[0].Data))
+	require.NoError(t, resp.Unmarshal(txRes.MsgResponses[0].Value))
 	proposalID := resp.ProposalId
 
 	// Vote with all validators (delegators)
 	for i := 0; i < len(chain.valSet.Validators); i++ {
 		delegatorAcc := chain.GetAccount(i)
 
-		msg := govTypes.NewMsgVote(delegatorAcc.Address, proposalID, govTypes.OptionYes)
+		msg := govTypes.NewMsgVote(delegatorAcc.Address, proposalID, govTypes.OptionYes, "metadata")
 		_, _, _, err = chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
 		require.NoError(t, err)
 	}
 
 	// Wait for voting to end
-	chain.NextBlock(votingDur)
+	chain.NextBlock(*votingDur)
 	chain.NextBlock(0) // for the Gov EndBlocker to work
 
 	// Check if proposal was passed

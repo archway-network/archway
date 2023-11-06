@@ -147,8 +147,8 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 			feeCollectorBalanceAfter := chain.GetModuleBalance(authTypes.FeeCollectorName)
 			rewardsBalanceAfter := chain.GetModuleBalance(rewardsTypes.ContractRewardCollector)
 
-			feeCollectorBalanceDiffReceived := feeCollectorBalanceAfter.Sub(feeCollectorBalanceBefore) // positive
-			rewardsBalanceDiffReceived := rewardsBalanceAfter.Sub(rewardsBalanceBefore)                // positive
+			feeCollectorBalanceDiffReceived := feeCollectorBalanceAfter.Sub(feeCollectorBalanceBefore...) // positive
+			rewardsBalanceDiffReceived := rewardsBalanceAfter.Sub(rewardsBalanceBefore...)                // positive
 
 			feeCollectorBalanceDiffExpected, err := sdk.ParseCoinsNormalized(tc.feeCollectorBalanceDiffExpected)
 			require.NoError(t, err)

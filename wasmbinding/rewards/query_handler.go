@@ -3,8 +3,8 @@ package rewards
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/archway-network/archway/wasmbinding/rewards/types"
@@ -71,7 +71,7 @@ func (h QueryHandler) GetRewardsRecords(ctx sdk.Context, req types.RewardsRecord
 
 	records, pageResp, err := h.rewardsKeeper.GetRewardsRecords(ctx, req.MustGetRewardsAddress(), pageReq)
 	if err != nil {
-		return types.RewardsRecordsResponse{}, sdkErrors.Wrap(rewardsTypes.ErrInvalidRequest, err.Error())
+		return types.RewardsRecordsResponse{}, errorsmod.Wrap(rewardsTypes.ErrInvalidRequest, err.Error())
 	}
 
 	return types.NewRewardsRecordsResponse(records, *pageResp), nil

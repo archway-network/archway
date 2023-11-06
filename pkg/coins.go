@@ -13,7 +13,7 @@ func SplitCoins(coins sdk.Coins, ratio sdk.Dec) (stack1, stack2 sdk.Coins) {
 	for _, coin := range coins {
 		stack1Coin := sdk.Coin{
 			Denom:  coin.Denom,
-			Amount: coin.Amount.ToDec().Mul(ratio).TruncateInt(),
+			Amount: sdk.NewDecFromInt(coin.Amount).Mul(ratio).TruncateInt(),
 		}
 		stack2Coin := coin.Sub(stack1Coin)
 

@@ -9,7 +9,7 @@ import (
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	voterTypes "github.com/archway-network/voter/src/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkGov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	sdkGov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
@@ -22,8 +22,8 @@ func TestGovQuerier(t *testing.T) {
 	chain.GetApp().Keepers.GovKeeper.SetVote(chain.GetContext(), sdkGov.Vote{
 		ProposalId: 1,
 		Voter:      chain.GetAccount(1).Address.String(),
-		Option:     0,
 		Options:    nil,
+		Metadata:   "",
 	})
 	acc := chain.GetAccount(0)
 	codeID := chain.UploadContract(acc, "../contracts/go/voter/code.wasm", wasmdTypes.DefaultUploadAccess)

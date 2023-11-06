@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"sigs.k8s.io/yaml"
@@ -133,11 +134,11 @@ func (m FlatFee) String() string {
 // Validate performs object fields validation.
 func (m FlatFee) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
-		return sdkErrors.Wrapf(sdkErrors.ErrInvalidAddress, "invalid contract address: %v", err)
+		return errorsmod.Wrapf(sdkErrors.ErrInvalidAddress, "invalid contract address: %v", err)
 	}
 
 	if err := pkg.ValidateCoin(m.FlatFee); err != nil {
-		return sdkErrors.Wrapf(sdkErrors.ErrInvalidCoins, "invalid flat fee coin: %v", err)
+		return errorsmod.Wrapf(sdkErrors.ErrInvalidCoins, "invalid flat fee coin: %v", err)
 	}
 
 	return nil

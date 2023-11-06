@@ -1,25 +1,24 @@
 package e2eTesting
 
 import (
-	"fmt"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmHash "github.com/cometbft/cometbft/crypto/tmhash"
+	tmProto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmProtoVersion "github.com/cometbft/cometbft/proto/tendermint/version"
+	tmTypes "github.com/cometbft/cometbft/types"
+	tmVersion "github.com/cometbft/cometbft/version"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	stakingTestUtil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	clientTypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
-	channelTypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	commitmentTypes "github.com/cosmos/ibc-go/v4/modules/core/23-commitment/types"
-	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	"github.com/cosmos/ibc-go/v4/modules/core/exported"
-	ibcTmTypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
+	clientTypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channelTypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	commitmentTypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
+	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	ibcTmTypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmHash "github.com/tendermint/tendermint/crypto/tmhash"
-	tmProto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmProtoVersion "github.com/tendermint/tendermint/proto/tendermint/version"
-	tmTypes "github.com/tendermint/tendermint/types"
-	tmVersion "github.com/tendermint/tendermint/version"
 )
 
 // GetMerklePrefix returns a Merkle tree prefix.
@@ -56,7 +55,7 @@ func (chain *TestChain) GetValSetAtHeight(height int64) tmTypes.ValidatorSet {
 	require.True(t, ok)
 
 	validators := stakingTypes.Validators(histInfo.Valset)
-	tmValidators, err := teststaking.ToTmValidators(validators, sdk.DefaultPowerReduction)
+	tmValidators, err := stakingTestUtil.ToTmValidators(validators, sdk.DefaultPowerReduction)
 	require.NoError(t, err)
 
 	valSet := tmTypes.NewValidatorSet(tmValidators)
@@ -70,7 +69,7 @@ func (chain *TestChain) GetProofAtHeight(key []byte, height uint64) ([]byte, cli
 	t := chain.t
 
 	res := chain.app.Query(abci.RequestQuery{
-		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
+		Path:   "store/ibc/key",
 		Height: int64(height) - 1,
 		Data:   key,
 		Prove:  true,
@@ -101,7 +100,12 @@ func (chain *TestChain) SendIBCPacket(packet exported.PacketI) {
 	cap, ok := chain.app.ScopedIBCKeeper.GetCapability(chain.GetContext(), capPath)
 	require.True(t, ok)
 
-	require.NoError(t, chain.app.Keepers.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), cap, packet))
+	timeout := clientTypes.Height{
+		RevisionNumber: packet.GetTimeoutHeight().GetRevisionNumber(),
+		RevisionHeight: packet.GetTimeoutHeight().GetRevisionHeight(),
+	}
+	_, err := chain.app.Keepers.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), cap, packet.GetSourcePort(), packet.GetSourceChannel(), timeout, packet.GetTimeoutTimestamp(), packet.GetData())
+	require.NoError(t, err)
 
 	chain.NextBlock(0)
 }

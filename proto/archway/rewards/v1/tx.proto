@@ -5,6 +5,7 @@ option go_package = "github.com/archway-network/archway/x/rewards/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 import "archway/rewards/v1/rewards.proto";
 
 // Msg defines the module messaging service.
@@ -22,10 +23,17 @@ service Msg {
   // SetFlatFee sets or updates or removes the flat fee to interact with the
   // contract Method is authorized to the contract owner.
   rpc SetFlatFee(MsgSetFlatFee) returns (MsgSetFlatFeeResponse);
+
+  // UpdateParams defines a governance operation for updating the x/rewards
+  // module parameters. The authority is defined in the keeper.
+  //
+  // Since: archway v5 && cosmos-sdk 0.47
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgSetContractMetadata is the request for Msg.SetContractMetadata.
 message MsgSetContractMetadata {
+  option (cosmos.msg.v1.signer) = "sender_address";
   // sender_address is the msg sender address (bech32 encoded).
   string sender_address = 1;
   // metadata is the contract metadata to set / update.
@@ -38,10 +46,11 @@ message MsgSetContractMetadataResponse {}
 
 // MsgWithdrawRewards is the request for Msg.WithdrawRewards.
 message MsgWithdrawRewards {
+  option (cosmos.msg.v1.signer) = "rewards_address";
   message RecordsLimit { uint64 limit = 1; }
 
   message RecordIDs {
-    repeated uint64 ids = 1 [ (gogoproto.nullable) = false ];
+    repeated uint64 ids = 1;
   }
 
   // rewards_address is the address to distribute rewards to (bech32 encoded).
@@ -67,6 +76,7 @@ message MsgWithdrawRewardsResponse {
 
 // MsgSetFlatFee is the request for Msg.SetFlatFee.
 message MsgSetFlatFee {
+  option (cosmos.msg.v1.signer) = "sender_address";
   // sender_address is the msg sender address (bech32 encoded).
   string sender_address = 1;
   // contract_address is the contract address (bech32 encoded).
@@ -77,3 +87,25 @@ message MsgSetFlatFee {
 
 // MsgSetFlatFeeResponse is the response for Msg.SetFlatFee.
 message MsgSetFlatFeeResponse {}
+
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+//
+// Since: archway v5 && cosmos-sdk 0.47
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1;
+
+  // params defines the x/rewards parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "params,omitempty"];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+//
+// Since: archway v5 && cosmos-sdk 0.47
+message MsgUpdateParamsResponse {}

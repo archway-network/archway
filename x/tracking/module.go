@@ -7,8 +7,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,7 +18,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/archway-network/archway/x/tracking/client/cli"
 	"github.com/archway-network/archway/x/tracking/keeper"
@@ -100,20 +99,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 // RegisterInvariants registers the module invariants.
 func (a AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the module.
-// Deprecated.
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
-
-// QuerierRoute returns the module's querier route name.
-func (a AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns the staking module sdk.Querier.
-func (a AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
-
 // RegisterServices registers the module services.
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(a.keeper))
@@ -152,16 +137,6 @@ func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Vali
 
 // GenerateGenesisState creates a randomized GenState of the module.
 func (a AppModule) GenerateGenesisState(input *module.SimulationState) {}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (a AppModule) ProposalContents(_ module.SimulationState) []simTypes.WeightedProposalContent {
-	return []simTypes.WeightedProposalContent{}
-}
-
-// RandomizedParams creates randomized param changes for the simulator.
-func (a AppModule) RandomizedParams(r *rand.Rand) []simTypes.ParamChange {
-	return []simTypes.ParamChange{}
-}
 
 // RegisterStoreDecoder registers a decoder for the module's types.
 func (a AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
