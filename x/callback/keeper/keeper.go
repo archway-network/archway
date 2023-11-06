@@ -11,15 +11,19 @@ import (
 
 // Keeper provides module state operations.
 type Keeper struct {
-	cdc      codec.Codec
-	storeKey storetypes.StoreKey
+	cdc            codec.Codec
+	storeKey       storetypes.StoreKey
+	rewardsKeepers types.RewardsKeeperExpected
+	wasmKeeper     types.WasmKeeperExpected
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, rk types.RewardsKeeperExpected, wk types.WasmKeeperExpected) Keeper {
 	return Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
+		cdc:            cdc,
+		storeKey:       storeKey,
+		rewardsKeepers: rk,
+		wasmKeeper:     wk,
 	}
 }
 
