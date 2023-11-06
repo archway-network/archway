@@ -82,17 +82,13 @@ jobs:
             - name: Load current image
               run: docker load --input archway_local
 
-            - name: Get last release tag
-              id: lastrelease
-              uses: revam/gh-action-get-tag-and-version@v1
-
-            - name: Download ${{ steps.lastrelease.outputs.tag }} image
+            - name: Download v4.0.2 image
               uses: actions/download-artifact@v3
               with:
-                name: action_image_artifact_archway_${{ steps.lastrelease.outputs.tag }}
+                name: action_image_artifact_archway_v4.0.2
 
-            - name: Load ${{ steps.lastrelease.outputs.tag }} image
-              run: docker load --input archway_${{ steps.lastrelease.outputs.tag }}
+            - name: Load v4.0.2 image
+              run: docker load --input archway_v4.0.2
 
             - name: Run chain upgrade test
               run: |
