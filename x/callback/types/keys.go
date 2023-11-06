@@ -8,3 +8,7 @@ const (
 	// QuerierRoute is the querier route for the module.
 	QuerierRoute = ModuleName
 )
+
+var (
+	ParamsKey = []byte{0x01}
+)
