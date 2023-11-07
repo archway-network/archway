@@ -34,6 +34,10 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#481](https://github.com/archway-network/archway/pull/481) - Add Release Checklist issue type 
 
+### Improvements
+
+- [#478](https://github.com/archway-network/archway/pull/475) – moves x/rewards state to use collections for state management.
+
 ### Changed
 
 ### Deprecated

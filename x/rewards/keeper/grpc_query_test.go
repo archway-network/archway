@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -22,8 +23,8 @@ func (s *KeeperTestSuite) TestGRPC_Params() {
 		MaxWithdrawRecords:    uint64(2),
 		MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 	}
-	err := k.SetParams(ctx, params)
-	s.Assert().NoError(err)
+	err := k.Params.Set(ctx, params)
+	require.NoError(s.T(), err)
 
 	s.Run("err: empty request", func() {
 		_, err := querySrvr.Params(sdk.WrapSDKContext(ctx), nil)
@@ -137,7 +138,8 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 
 	minConsFee := sdk.NewInt64Coin("stake", 100)
 	s.Run("ok: gets estimated tx fees (custom minconsfee set)", func() {
-		s.chain.GetApp().Keepers.RewardsKeeper.GetState().MinConsensusFee(ctx).SetFee(sdk.NewDecCoinFromCoin(minConsFee))
+		err := s.chain.GetApp().Keepers.RewardsKeeper.MinConsFee.Set(ctx, sdk.NewDecCoinFromCoin(minConsFee))
+		s.Require().NoError(err)
 		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)
