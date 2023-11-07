@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v6.0.0](https://github.com/archway-network/archway/releases/tag/v6.0.0)
+## [v6.0.0-rc.4](https://github.com/archway-network/archway/releases/tag/v6.0.0)
 
 ### Added
 
@@ -34,6 +34,10 @@ All notable changes to this project will be documented in this file.
 -   [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
 -   [#514](https://github.com/archway-network/archway/pull/514) - Fix snapshot db being hardcoded from goleveldb to based on config 
 -   [#522](https://github.com/archway-network/archway/pull/522) - Fix Archway module endpoints not showing up in swagger
+
+### Improvements
+
+-   [#478](https://github.com/archway-network/archway/pull/475) – moves x/rewards state to use collections for state management.
 
 ## ~~[RETRACTED - v5.0.2](https://github.com/archway-network/archway/releases/tag/v5.0.2)~~
 

@@ -4,6 +4,8 @@ import (
 	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // TrackFeeRebatesRewards creates a new transaction fee rebate reward record for the current transaction.
@@ -11,11 +13,14 @@ import (
 // CONTRACT: tracking Ante handler must be called before this module's Ante handler (tracking provides the primary key).
 func (k Keeper) TrackFeeRebatesRewards(ctx sdk.Context, rewards sdk.Coins) {
 	txID := k.trackingKeeper.GetCurrentTxID(ctx)
-	k.state.TxRewardsState(ctx).CreateTxRewards(
-		txID,
-		ctx.BlockHeight(),
-		rewards,
-	)
+	err := k.TxRewards.Set(ctx, txID, rewardsTypes.TxRewards{
+		TxId:       txID,
+		Height:     ctx.BlockHeight(),
+		FeeRewards: rewards,
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // TrackInflationRewards creates a new inflation reward record for the current block.
@@ -25,9 +30,12 @@ func (k Keeper) TrackInflationRewards(ctx sdk.Context, rewards sdk.Coin) {
 		blockGasLimit = 0
 	}
 
-	k.state.BlockRewardsState(ctx).CreateBlockRewards(
-		ctx.BlockHeight(),
-		rewards,
-		blockGasLimit,
-	)
+	err := k.BlockRewards.Set(ctx, uint64(ctx.BlockHeight()), rewardsTypes.BlockRewards{
+		Height:           ctx.BlockHeight(),
+		InflationRewards: rewards,
+		MaxGas:           blockGasLimit,
+	})
+	if err != nil {
+		panic(err)
+	}
 }

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/rewards/types"
@@ -28,10 +29,6 @@ func (s *KeeperTestSuite) TestStates() {
 
 	chain := s.chain
 	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.RewardsKeeper
-	metaState := keeper.GetState().ContractMetadataState(ctx)
-	blockState := keeper.GetState().BlockRewardsState(ctx)
-	txState := keeper.GetState().TxRewardsState(ctx)
-	rewardsRecordState := keeper.GetState().RewardsRecord(ctx)
 
 	// Fixtures
 	startBlock, startTime := ctx.BlockHeight(), ctx.BlockTime()
@@ -118,50 +115,35 @@ func (s *KeeperTestSuite) TestStates() {
 
 	// Upload fixtures
 	for _, metadata := range testDataExpected.Metadata {
-		metaState.SetContractMetadata(metadata.MustGetContractAddress(), metadata)
+		err := keeper.ContractMetadata.Set(ctx, metadata.MustGetContractAddress(), metadata)
+		require.NoError(s.T(), err)
 	}
 	for _, blockData := range testDataExpected.Blocks {
 		blockRewards := blockData.BlockRewards
-		blockState.CreateBlockRewards(blockRewards.Height, blockRewards.InflationRewards, blockRewards.MaxGas)
+		err := keeper.BlockRewards.Set(ctx, uint64(blockRewards.Height), blockRewards)
+		require.NoError(s.T(), err)
 
 		for _, txRewards := range blockData.TxRewards {
-			txState.CreateTxRewards(txRewards.TxId, txRewards.Height, txRewards.FeeRewards)
+			s.NoError(keeper.TxRewards.Set(ctx, txRewards.TxId, txRewards))
 		}
 	}
-	rewardsRecordState.Import(
-		testDataExpected.RewardsRecords[len(testDataExpected.RewardsRecords)-1].Id,
-		testDataExpected.RewardsRecords,
-	)
-
-	// Check non-existing records
-	s.Run("Check non-existing metadata record", func() {
-		_, metaFound := metaState.GetContractMetadata(contractAddrs[2])
-		s.Assert().False(metaFound)
-	})
-	s.Run("Check non-existing BlockRewards and TxRewards records", func() {
-		_, blockRewardsFound := blockState.GetBlockRewards(startBlock + 10)
-		s.Assert().False(blockRewardsFound)
-
-		_, txRewardsFound := txState.GetTxRewards(10)
-		s.Assert().False(txRewardsFound)
-	})
-	s.Run("Check non-existing RewardsRecord", func() {
-		_, recordFound := rewardsRecordState.GetRewardsRecord(10)
-		s.Assert().False(recordFound)
-	})
+	s.NoError(keeper.RewardsRecordID.Set(ctx, testDataExpected.RewardsRecords[len(testDataExpected.RewardsRecords)-1].Id))
+	for _, rewardsRecord := range testDataExpected.RewardsRecords {
+		s.NoError(keeper.RewardsRecords.Set(ctx, rewardsRecord.Id, rewardsRecord))
+	}
 
 	// Check that the states are as expected
 	s.Run("Check objects one by one", func() {
 		for _, metadataExpected := range testDataExpected.Metadata {
-			metaReceived, found := metaState.GetContractMetadata(metadataExpected.MustGetContractAddress())
-			s.Require().True(found)
+			metaReceived, err := keeper.ContractMetadata.Get(ctx, metadataExpected.MustGetContractAddress())
+			s.Require().NoError(err)
 			s.Assert().Equal(metadataExpected, metaReceived)
 		}
 
 		for i, blockData := range testDataExpected.Blocks {
 			blockRewardsExpected := blockData.BlockRewards
-			blockRewardsReceived, found := blockState.GetBlockRewards(blockRewardsExpected.Height)
-			s.Require().True(found, "BlockRewards [%d]: not found", i)
+			blockRewardsReceived, err := keeper.BlockRewards.Get(ctx, uint64(blockRewardsExpected.Height))
+			s.Require().NoErrorf(err, "BlockRewards [%d]: not found", i)
 
 			// Modify the expected coin because proto.Unmarshal creates a coin with zero amount (not nil)
 			if blockRewardsExpected.InflationRewards.Amount.IsNil() {
@@ -170,15 +152,15 @@ func (s *KeeperTestSuite) TestStates() {
 			s.Assert().Equal(blockRewardsExpected, blockRewardsReceived, "BlockRewards [%d]: wrong value", i)
 
 			for j, txRewardsExpected := range blockData.TxRewards {
-				txRewardsReceived, found := txState.GetTxRewards(txRewardsExpected.TxId)
-				s.Require().True(found, "TxRewards [%d][%d]: not found", i, j)
+				txRewardsReceived, err := keeper.TxRewards.Get(ctx, txRewardsExpected.TxId)
+				s.NoError(err, "TxRewards [%d][%d]: not found", i, j)
 				s.Assert().Equal(txRewardsExpected, txRewardsReceived, "TxRewards [%d][%d]: wrong value", i, j)
 			}
 		}
 
 		for i, recordExpected := range testDataExpected.RewardsRecords {
-			recordReceived, found := rewardsRecordState.GetRewardsRecord(recordExpected.Id)
-			s.Require().True(found, "RewardsRecord [%d]: not found", i)
+			recordReceived, err := keeper.RewardsRecords.Get(ctx, recordExpected.Id)
+			s.Require().NoError(err, "RewardsRecord [%d]: not found", i)
 			s.Assert().Equal(recordExpected, recordReceived, "RewardsRecord [%d]: wrong value", i)
 		}
 	})
@@ -190,7 +172,8 @@ func (s *KeeperTestSuite) TestStates() {
 			height := testDataExpected.Blocks[0].BlockRewards.Height
 			txRewardsExpected := testDataExpected.Blocks[0].TxRewards
 
-			txRewardsReceived := txState.GetTxRewardsByBlock(height)
+			txRewardsReceived, err := keeper.GetTxRewardsByBlock(ctx, uint64(height))
+			s.Require().NoError(err)
 			s.Assert().ElementsMatch(txRewardsExpected, txRewardsReceived, "TxRewardsByBlock (%d): wrong value", height)
 		}
 
@@ -199,43 +182,17 @@ func (s *KeeperTestSuite) TestStates() {
 			height := testDataExpected.Blocks[1].BlockRewards.Height
 			txRewardsExpected := testDataExpected.Blocks[1].TxRewards
 
-			txRewardsReceived := txState.GetTxRewardsByBlock(height)
+			txRewardsReceived, err := keeper.GetTxRewardsByBlock(ctx, uint64(height))
+			s.Require().NoError(err)
 			s.Assert().ElementsMatch(txRewardsExpected, txRewardsReceived, "TxRewardsByBlock (%d): wrong value", height)
 		}
 
 		// 3rd block (non-existing)
 		{
 			height := testDataExpected.Blocks[1].BlockRewards.Height + 1
-
-			s.Assert().Empty(txState.GetTxRewardsByBlock(height))
-		}
-	})
-
-	// Check RewardsRecord search via RewardsAddress index
-	s.Run("Check RewardsRecord RewardsAddress index", func() {
-		// 1st address
-		{
-			addr := accAddrs[0]
-			recordExpected := testDataExpected.RewardsRecords[:1]
-
-			recordReceived := rewardsRecordState.GetRewardsRecordByRewardsAddress(addr)
-			s.Assert().ElementsMatch(recordExpected, recordReceived, "RewardsRecordsByAddress (%s): wrong value", addr)
-		}
-
-		// 2nd address
-		{
-			addr := accAddrs[1]
-			recordExpected := testDataExpected.RewardsRecords[1:3]
-
-			recordReceived := rewardsRecordState.GetRewardsRecordByRewardsAddress(addr)
-			s.Assert().ElementsMatch(recordExpected, recordReceived, "RewardsRecordsByAddress (%s): wrong value", addr)
-		}
-
-		// 3rd address (non-existing)
-		{
-			addr := accAddrs[2]
-
-			s.Assert().Empty(rewardsRecordState.GetRewardsRecordByRewardsAddress(addr))
+			rewards, err := keeper.GetTxRewardsByBlock(ctx, uint64(height))
+			s.Require().NoError(err)
+			s.Assert().Empty(rewards, "TxRewardsByBlock (%d): want empty", height)
 		}
 	})
 
@@ -253,7 +210,7 @@ func (s *KeeperTestSuite) TestStates() {
 			}
 			recordExpected := testDataExpected.RewardsRecords[1:2]
 
-			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			recordReceived, pageResp, err := keeper.GetRewardsRecordsByWithdrawAddressPaginated(ctx, addr, page)
 			s.Require().NoError(err)
 			s.Assert().ElementsMatch(recordExpected, recordReceived)
 
@@ -271,7 +228,7 @@ func (s *KeeperTestSuite) TestStates() {
 			}
 			recordExpected := testDataExpected.RewardsRecords[2:3]
 
-			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			recordReceived, pageResp, err := keeper.GetRewardsRecordsByWithdrawAddressPaginated(ctx, addr, page)
 			s.Require().NoError(err)
 			s.Assert().ElementsMatch(recordExpected, recordReceived)
 
@@ -287,13 +244,13 @@ func (s *KeeperTestSuite) TestStates() {
 			}
 			recordExpected := testDataExpected.RewardsRecords[2:3]
 
-			_, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			_, pageResp, err := keeper.GetRewardsRecordsByWithdrawAddressPaginated(ctx, addr, page)
 			s.Require().NoError(err)
 			s.Require().NotNil(pageResp)
 			s.Assert().NotNil(pageResp.NextKey)
 
 			page.Key = pageResp.NextKey
-			recordReceived, pageResp, err := rewardsRecordState.GetRewardsRecordByRewardsAddressPaginated(addr, page)
+			recordReceived, pageResp, err := keeper.GetRewardsRecordsByWithdrawAddressPaginated(ctx, addr, page)
 			s.Require().NoError(err)
 			s.Require().NotNil(pageResp)
 			s.Assert().Nil(pageResp.NextKey)
@@ -307,40 +264,33 @@ func (s *KeeperTestSuite) TestStates() {
 		height1, height2 := testDataExpected.Blocks[0].BlockRewards.Height, testDataExpected.Blocks[1].BlockRewards.Height
 		txs2 := testDataExpected.Blocks[1].TxRewards
 
-		keeper.GetState().DeleteBlockRewardsCascade(ctx, height1)
+		keeper.DeleteBlockRewardsCascade(ctx, height1)
 
-		block1Txs := txState.GetTxRewardsByBlock(height1)
+		block1Txs, err := keeper.GetTxRewardsByBlock(ctx, uint64(height1))
+		s.Require().NoError(err)
 		s.Assert().Empty(block1Txs)
 
-		block2Txs := txState.GetTxRewardsByBlock(height2)
+		block2Txs, err := keeper.GetTxRewardsByBlock(ctx, uint64(height2))
+		s.Require().NoError(err)
 		s.Assert().Len(block2Txs, len(txs2))
 
-		_, block1Found := blockState.GetBlockRewards(height1)
-		s.Assert().False(block1Found)
+		_, block1FoundErr := keeper.BlockRewards.Get(ctx, uint64(height1))
+		s.Error(block1FoundErr)
 
-		_, block2Found := blockState.GetBlockRewards(height2)
-		s.Assert().True(block2Found)
+		_, block2FoundErr := keeper.BlockRewards.Get(ctx, uint64(height2))
+		s.NoError(block2FoundErr)
 	})
 
 	s.Run("Check rewards removal for the 2nd block", func() {
 		height2 := testDataExpected.Blocks[1].BlockRewards.Height
 
-		keeper.GetState().DeleteBlockRewardsCascade(ctx, height2)
+		keeper.DeleteBlockRewardsCascade(ctx, height2)
 
-		block2Txs := txState.GetTxRewardsByBlock(height2)
+		block2Txs, err := keeper.GetTxRewardsByBlock(ctx, uint64(height2))
+		s.Require().NoError(err)
 		s.Assert().Empty(block2Txs)
 
-		_, block2Found := blockState.GetBlockRewards(height2)
-		s.Assert().False(block2Found)
-	})
-
-	// Check records removal
-	s.Run("Check rewards records removal", func() {
-		rewardsRecordState.DeleteRewardsRecords(testDataExpected.RewardsRecords...)
-
-		for i, recordExpected := range testDataExpected.RewardsRecords {
-			_, found := rewardsRecordState.GetRewardsRecord(recordExpected.Id)
-			s.Assert().False(found, "RewardsRecord [%d]: found", i)
-		}
+		_, block2FoundErr := keeper.BlockRewards.Get(ctx, uint64(height2))
+		s.Error(block2FoundErr)
 	})
 }

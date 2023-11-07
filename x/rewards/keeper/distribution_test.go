@@ -577,8 +577,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 
 				// Burn inflation rewards for the current block caused by the x/mint (we override this value below)
 				{
-					curBlockRewards, found := rKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(ctx.BlockHeight())
-					require.True(t, found)
+					curBlockRewards, err := rKeeper.BlockRewards.Get(ctx, uint64(ctx.BlockHeight()))
+					require.NoError(t, err)
 					rewardsToBurn := sdk.Coins{curBlockRewards.InflationRewards}
 
 					require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, rewardsToBurn))
@@ -598,7 +598,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, inflationRewards))
 				} else {
 					// We have to remove it since it was created by the x/mint
-					rKeeper.GetState().BlockRewardsState(ctx).DeleteBlockRewards(ctx.BlockHeight())
+					err := rKeeper.BlockRewards.Remove(ctx, uint64(ctx.BlockHeight()))
+					require.NoError(t, err)
 				}
 			}
 
@@ -620,7 +621,8 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 				require.NoError(t, err)
 
 				// Check the number of records created
-				recordsCreated := keepers.RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(outExpected.rewardsAddr)
+				recordsCreated, err := keepers.RewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), outExpected.rewardsAddr)
+				require.NoError(t, err)
 				require.Len(t, recordsCreated, outExpected.recordsNum)
 
 				// Basic check of records and merge total rewards

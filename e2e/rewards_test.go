@@ -140,10 +140,11 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		trackingOp := trackingTx.ContractOperations[0]
 		s.Require().Equal(trackingOp.ContractAddress, contractAddr.String())
 
-		rewardsBlock, found := rewardsKeeper.GetState().BlockRewardsState(ctx).GetBlockRewards(record.CalculatedHeight)
-		s.Require().True(found)
+		rewardsBlock, err := rewardsKeeper.BlockRewards.Get(ctx, uint64(record.CalculatedHeight))
+		s.Require().NoError(err)
 
-		rewardsTxs := rewardsKeeper.GetState().TxRewardsState(ctx).GetTxRewardsByBlock(record.CalculatedHeight)
+		rewardsTxs, err := rewardsKeeper.GetTxRewardsByBlock(ctx, uint64(record.CalculatedHeight))
+		s.Require().NoError(err)
 		s.Require().Len(rewardsTxs, 1)
 		rewardsTx := rewardsTxs[0]
 		s.Require().EqualValues(trackingTx.Info.Id, rewardsTx.TxId)
@@ -162,12 +163,11 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 	// Create a bunch of mock reward records
 	{
 		ctx := chain.GetContext()
-		recordsState := rewardsKeeper.GetState().RewardsRecord(ctx)
-
 		// Create records
 		coinsToMint := sdk.NewCoins()
 		for i := 1; i < recordsLen; i++ {
-			record := recordsState.CreateRewardsRecord(senderAcc.Address, recordRewards, ctx.BlockHeight(), ctx.BlockTime())
+			record, err := rewardsKeeper.CreateRewardsRecord(ctx, senderAcc.Address, recordRewards, ctx.BlockHeight(), ctx.BlockTime())
+			s.Require().NoError(err)
 			s.Require().EqualValues(i+1, record.Id)
 			coinsToMint = coinsToMint.Add(recordRewards...)
 		}
@@ -240,7 +240,7 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 	rewardsTypes.MaxWithdrawRecordsParamLimit = uint64(29500) // an actual value is (thisValue - 1), refer to the query below
 
 	chain := e2eTesting.NewTestChain(s.T(), 1,
-		e2eTesting.WithBlockGasLimit(100_000_000),
+		e2eTesting.WithBlockGasLimit(100_000_001),
 		e2eTesting.WithMaxWithdrawRecords(rewardsTypes.MaxWithdrawRecordsParamLimit),
 	)
 	keepers := chain.GetApp().Keepers
@@ -260,16 +260,16 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 	recordIDs := make([]uint64, 0, rewardsTypes.MaxWithdrawRecordsParamLimit)
 	{
 		ctx := chain.GetContext()
-		recordsState := rewardsKeeper.GetState().RewardsRecord(ctx)
-
 		recordRewards := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
 		for i := uint64(0); i < rewardsTypes.MaxWithdrawRecordsParamLimit; i++ {
-			record := recordsState.CreateRewardsRecord(
+			record, err := rewardsKeeper.CreateRewardsRecord(
+				ctx,
 				contractAddr,
 				sdk.Coins{recordRewards},
 				ctx.BlockHeight(),
 				ctx.BlockTime(),
 			)
+			s.Require().NoError(err)
 
 			recordIDs = append(recordIDs, record.Id)
 		}
@@ -332,17 +332,17 @@ func (s *E2ETestSuite) TestRewardsRecordsQueryLimit() {
 	var recordsExpected []rewardsTypes.RewardsRecord
 	{
 		ctx := chain.GetContext()
-		recordsState := rewardsKeeper.GetState().RewardsRecord(ctx)
-
 		records := make([]rewardsTypes.RewardsRecord, 0, rewardsTypes.MaxRecordsQueryLimit)
 		recordRewards := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
 		for i := uint64(0); i < rewardsTypes.MaxRecordsQueryLimit; i++ {
-			record := recordsState.CreateRewardsRecord(
+			record, err := rewardsKeeper.CreateRewardsRecord(
+				ctx,
 				contractAddr,
 				sdk.Coins{recordRewards},
 				ctx.BlockHeight(),
 				ctx.BlockTime(),
 			)
+			s.Require().NoError(err)
 
 			records = append(records, record)
 		}
@@ -458,7 +458,8 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 	chain.NextBlock(1 * time.Second)
 
 	// only rewards record for contract premiums. no rewards record for feerebaes/inflation because because the TX failed.
-	rewards := rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	rewards, err := rewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), contractAddr)
+	require.NoError(s.T(), err)
 	require.Len(s.T(), rewards, 1)
 	require.Equal(s.T(), flatFees, rewards[0].Rewards[0])
 }
@@ -533,7 +534,8 @@ func (s *E2ETestSuite) TestRewardsFlatFees() {
 	// should find two rewards records
 	// 1. Flatfee rewards record
 	// 2. InflationaryRewards + FeeRewards rewards record
-	rewards := rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	rewards, err := rewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), contractAddr)
+	require.NoError(s.T(), err)
 	require.Len(s.T(), rewards, 2)                        // there are two rewards records. first for flat fees and the second for tx&inflation fees
 	require.Equal(s.T(), flatFees, rewards[0].Rewards[0]) // the first rewards record matches our set flat fees
 
@@ -599,10 +601,12 @@ func (s *E2ETestSuite) TestRewardsFlatFees() {
 		require.NoError(s.T(), err)
 		chain.NextBlock(1 * time.Second)
 	}
-	rewards = rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	rewards, err = rewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), contractAddr)
+	require.NoError(s.T(), err)
 	require.Len(s.T(), rewards, 52) // why 52? cuz we already had 2 rewards record. we made 10 loops with 2 txs for this contract. And second txs contains 2 msgs. so 2 + (10 * (2 + 3)) = 52
 
-	rewards = rewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contract2Addr)
+	rewards, err = rewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), contract2Addr)
+	require.NoError(s.T(), err)
 	require.Len(s.T(), rewards, 40) // why 40? cuz we made 10 loops with 2 txs for this contract. and each msg creates two records. so 10 * 2 * 2 = 40
 }
 
@@ -679,7 +683,6 @@ func (s *E2ETestSuite) TestSubMsgRevert() {
 
 		return
 	}
-	rk := chain.GetApp().Keepers.RewardsKeeper
 
 	// send a message that passes the ante handler but not the wasm execution step
 	sendMsg(&wasmdTypes.MsgExecuteContract{
@@ -692,9 +695,11 @@ func (s *E2ETestSuite) TestSubMsgRevert() {
 	chain.NextBlock(1 * time.Second)
 
 	// has rewards because of reply on error
-	rewards := rk.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
+	rewards, err := rewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), contractAddr)
+	require.NoError(s.T(), err)
 	require.NotEmpty(s.T(), rewards)
 	// does not have rewards because it failed
-	rewards = rk.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(calledContractAddr)
+	rewards, err = rewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), calledContractAddr)
+	require.NoError(s.T(), err)
 	require.Empty(s.T(), rewards)
 }
