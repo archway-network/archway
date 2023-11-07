@@ -4,6 +4,7 @@ on:
     pull_request:
         branches: 
             - main
+            - 'releases/**'
 
 jobs:
     build_images:
@@ -15,10 +16,6 @@ jobs:
               uses: actions/checkout@v3
               with:
                 fetch-depth: 0
-
-            - name: Get last release tag
-              id: lastrelease
-              uses: revam/gh-action-get-tag-and-version@v1
 
             - name: Checkout heighliner
               uses: actions/checkout@v3
@@ -47,14 +44,14 @@ jobs:
                 image: archway:local
                 retention_days: 3
 
-            - name: Build ${{ steps.lastrelease.outputs.tag }} image
+            - name: Build v4.0.2 image
               run: |
-                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --chain archway --tag ${{ steps.lastrelease.outputs.tag }}
+                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref v4.0.2 --chain archway --tag v4.0.2
             
-            - name: Upload ${{ steps.lastrelease.outputs.tag }} image
+            - name: Upload v4.0.2 image
               uses: ishworkh/container-image-artifact-upload@v1.0.0
               with:
-                image: archway:${{ steps.lastrelease.outputs.tag }}
+                image: archway:v4.0.2
                 retention_days: 3
 
     run_chain_upgrade_test:
@@ -85,17 +82,13 @@ jobs:
             - name: Load current image
               run: docker load --input archway_local
 
-            - name: Get last release tag
-              id: lastrelease
-              uses: revam/gh-action-get-tag-and-version@v1
-
-            - name: Download ${{ steps.lastrelease.outputs.tag }} image
+            - name: Download v4.0.2 image
               uses: actions/download-artifact@v3
               with:
-                name: action_image_artifact_archway_${{ steps.lastrelease.outputs.tag }}
+                name: action_image_artifact_archway_v4.0.2
 
-            - name: Load ${{ steps.lastrelease.outputs.tag }} image
-              run: docker load --input archway_${{ steps.lastrelease.outputs.tag }}
+            - name: Load v4.0.2 image
+              run: docker load --input archway_v4.0.2
 
             - name: Run chain upgrade test
               run: |
