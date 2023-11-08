@@ -211,9 +211,9 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	// Check x/rewards Tx record
 	s.Run("Check tx fee rebate rewards records", func() {
 		ctx := chain.GetContext()
-		txRewardsState := rewardsKeeper.GetState().TxRewardsState(ctx)
 
-		txRewards := txRewardsState.GetTxRewardsByBlock(ctx.BlockHeight() - 1)
+		txRewards, err := keepers.RewardsKeeper.GetTxRewardsByBlock(ctx, uint64(ctx.BlockHeight()-1))
+		s.Require().NoError(err)
 		s.Require().Len(txRewards, 1)
 		s.Assert().Equal(txID, txRewards[0].TxId)
 		s.Assert().Equal(ctx.BlockHeight()-1, txRewards[0].Height)
@@ -223,10 +223,9 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	// Check x/rewards Block record
 	s.Run("Check block rewards record", func() {
 		ctx := chain.GetContext()
-		blockRewardsState := rewardsKeeper.GetState().BlockRewardsState(ctx)
 
-		blockRewards, found := blockRewardsState.GetBlockRewards(ctx.BlockHeight() - 1)
-		s.Require().True(found)
+		blockRewards, err := rewardsKeeper.BlockRewards.Get(ctx, uint64(ctx.BlockHeight()-1))
+		s.Require().NoError(err)
 		s.Assert().Equal(ctx.BlockHeight()-1, blockRewards.Height)
 		s.Assert().Equal(blockInflationRewardsExpected.String(), blockRewards.InflationRewards.String())
 		s.Assert().EqualValues(blockGasLimit, blockRewards.MaxGas)
