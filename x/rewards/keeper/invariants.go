@@ -20,9 +20,15 @@ func ModuleAccountBalanceInvariant(k Keeper) sdk.Invariant {
 		poolCurrent := k.UndistributedRewardsPool(ctx)
 
 		poolExpected := sdk.NewCoins()
-		_, records := k.state.RewardsRecord(ctx).Export()
-		for _, record := range records {
-			poolExpected = poolExpected.Add(record.Rewards...)
+		err := k.RewardsRecords.Walk(ctx, nil, func(key uint64, value types.RewardsRecord) (stop bool, err error) {
+			poolExpected = poolExpected.Add(value.Rewards...)
+			return false, nil
+		})
+		if err != nil {
+			return sdk.FormatInvariant(types.ModuleName, "module account and total rewards records coins",
+					"unable to compute rewards",
+				),
+				true // we do not know if the invariant is broken, but we cannot compute the rewards
 		}
 
 		broken := !poolExpected.IsEqual(poolCurrent)

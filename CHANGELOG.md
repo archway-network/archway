@@ -32,6 +32,12 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Added
 
+- [#481](https://github.com/archway-network/archway/pull/481) - Add Release Checklist issue type 
+
+### Improvements
+
+- [#478](https://github.com/archway-network/archway/pull/475) – moves x/rewards state to use collections for state management.
+
 ### Changed
 
 ### Deprecated
@@ -41,6 +47,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Fixed
 
 - [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
+- [#496](https://github.com/archway-network/archway/pull/496) - Fix rest endpoints in App
 
 ### Improvements
 
