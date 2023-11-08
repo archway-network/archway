@@ -1,5 +1,7 @@
 package types
 
+import "cosmossdk.io/collections"
+
 const (
 	// ModuleName is the module name.
 	ModuleName = "rewards"
@@ -17,88 +19,26 @@ const (
 	TreasuryCollector = "treasury"
 )
 
-// ContractMetadata prefixed store state keys.
+// Full prefixes
 var (
-	// ContractMetadataStatePrefix defines the state global prefix.
-	ContractMetadataStatePrefix = []byte{0x00}
-
-	// ContractMetadataPrefix defines the prefix for storing ContractMetadata objects.
-	// Key: ContractMetadataStatePrefix | ContractMetadataPrefix | {ContractAddress}
-	// Value: ContractMetadata
-	ContractMetadataPrefix = []byte{0x00}
-)
-
-// BlockRewards prefixed store state keys.
-var (
-	// BlockRewardsStatePrefix defines the state global prefix.
-	BlockRewardsStatePrefix = []byte{0x01}
-
+	// ContractMetadataPrefix defines the prefix for storing contract metadata.
+	ContractMetadataPrefix = collections.NewPrefix([]byte{0x00, 0x00})
 	// BlockRewardsPrefix defines the prefix for storing BlockRewards objects.
-	// Key: BlockRewardsStatePrefix | BlockRewardsPrefix | {Height}
-	// Value: BlockRewards
-	BlockRewardsPrefix = []byte{0x00}
-)
-
-// TxRewards prefixed store state keys.
-var (
-	// TxRewardsStatePrefix defines the state global prefix.
-	TxRewardsStatePrefix = []byte{0x02}
-
+	BlockRewardsPrefix = collections.NewPrefix([]byte{0x01, 0x00})
 	// TxRewardsPrefix defines the prefix for storing TxRewards objects.
-	// Key: TxRewardsStatePrefix | TxRewardsPrefix | {TxID}
-	// Value: TxRewards
-	TxRewardsPrefix = []byte{0x00}
-
-	// TxRewardsBlockIndexPrefix defines the prefix for storing TxRewards's block index.
-	// Key: TxRewardsStatePrefix | TxRewardsBlockIndexPrefix | {Height} | {TxID}
-	// Value: None
-	TxRewardsBlockIndexPrefix = []byte{0x01}
-)
-
-// Minimum consensus fee store state keys.
-var (
-	// MinConsFeeStatePrefix defines the state global prefix.
-	MinConsFeeStatePrefix = []byte{0x03}
-
-	// MinConsFeeKey defines the key for storing MinConsFee coin.
-	// Key: MinConsFeeStatePrefix | MinConsFeeKey
-	// Value: sdk.Coin
-	MinConsFeeKey = []byte{0x00}
-)
-
-// RewardsRecord prefixed store state keys.
-var (
-	// RewardsRecordStatePrefix defines the state global prefix.
-	RewardsRecordStatePrefix = []byte{0x04}
-
-	// RewardsRecordIDKey defines the key for storing last unique RewardsRecord's ID.
-	// Key: RewardsRecordStatePrefix | RewardsRecordIDKey
-	// Value: uint64
-	RewardsRecordIDKey = []byte{0x00}
-
-	// RewardsRecordPrefix defines the prefix for storing RewardsRecord objects.
-	// Key: RewardsRecordStatePrefix | RewardsRecordPrefix | {ID}
-	// Value: RewardsRecord
-	RewardsRecordPrefix = []byte{0x01}
-
-	// RewardsRecordAddressIndexPrefix defines the prefix for storing RewardsRecord's RewardsAddress index.
-	// Key: RewardsRecordStatePrefix | RewardsRecordAddressIndexPrefix | {RewardsAddress} | {ID}
-	// Value: None
-	RewardsRecordAddressIndexPrefix = []byte{0x02}
-)
-
-// FlatFee prefixed store state keys.
-var (
-	// FlatFeeStatePrefix defines the state global prefix.
-	FlatFeeStatePrefix = []byte{0x05}
-
-	// FlatFeePrefix defines the prefix for storing FlatFee objects.
-	// Key: FlatFeeStatePrefix | FlatFeePrefix | {ContractAddress}
-	// Value: sdk.Coin
-	FlatFeePrefix = []byte{0x00}
-)
-
-// ParamsKey stores the module params
-var (
-	ParamsKey = []byte{0x06}
+	TxRewardsPrefix = collections.NewPrefix([]byte{0x02, 0x00})
+	// TxRewardsHeightIndexPrefix defines the prefix for storing TxRewards's height index.
+	TxRewardsHeightIndexPrefix = collections.NewPrefix([]byte{0x02, 0x01})
+	// MinConsFeePrefix defines the prefix for storing minimum consensus fee.
+	MinConsFeePrefix = collections.NewPrefix([]byte{0x03, 0x00})
+	// RewardsRecordsIDPrefix defines the prefix for storing RewardsRecord last ID.
+	RewardsRecordsIDPrefix = collections.NewPrefix([]byte{0x04, 0x00})
+	// RewwardsRecordStatePrefix defines the prefix for storing RewardsRecord state.
+	RewardsRecordStatePrefix = collections.NewPrefix([]byte{0x04, 0x01})
+	// RewardsRecordAddressIndexPrefix defines the prefix for storing RewardsRecord's rewards address index.
+	RewardsRecordAddressIndexPrefix = collections.NewPrefix([]byte{0x04, 0x02})
+	// FlatFeePrefix defines the prefix for storing flat fees.
+	FlatFeePrefix = collections.NewPrefix([]byte{0x05, 0x00})
+	// ParamsPrefix defines the prefix for storing params.
+	ParamsPrefix = collections.NewPrefix([]byte{0x06})
 )

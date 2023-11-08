@@ -161,8 +161,8 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 			// Check rewards record
 			if tc.rewardRecordExpected {
 				txID := keepers.TrackingKeeper.GetCurrentTxID(ctx)
-				rewardsRecordsReceived, found := keepers.RewardsKeeper.GetState().TxRewardsState(ctx).GetTxRewards(txID)
-				require.True(t, found)
+				rewardsRecordsReceived, err := keepers.RewardsKeeper.TxRewards.Get(ctx, txID)
+				require.NoError(t, err)
 
 				assert.Equal(t, txID, rewardsRecordsReceived.TxId)
 				assert.Equal(t, ctx.BlockHeight(), rewardsRecordsReceived.Height)

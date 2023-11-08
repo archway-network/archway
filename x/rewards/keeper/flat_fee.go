@@ -19,12 +19,18 @@ func (k Keeper) SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, feeUpdate
 	}
 
 	if feeUpdate.FlatFee.Amount.IsZero() {
-		k.state.FlatFee(ctx).RemoveFee(feeUpdate.MustGetContractAddress())
+		err := k.FlatFees.Remove(ctx, feeUpdate.MustGetContractAddress())
+		if err != nil {
+			return err
+		}
 	} else {
 		if contractInfo.RewardsAddress == "" {
 			return errorsmod.Wrap(types.ErrMetadataNotFound, "flat_fee can only be set when rewards address has been configured")
 		}
-		k.state.FlatFee(ctx).SetFee(feeUpdate.MustGetContractAddress(), feeUpdate.FlatFee)
+		err := k.FlatFees.Set(ctx, feeUpdate.MustGetContractAddress(), feeUpdate.FlatFee)
+		if err != nil {
+			return err
+		}
 	}
 
 	types.EmitContractFlatFeeSetEvent(
@@ -37,8 +43,8 @@ func (k Keeper) SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, feeUpdate
 
 // GetFlatFee retreives the flat fee stored for a given contract
 func (k Keeper) GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Coin, bool) {
-	fee, found := k.state.FlatFee(ctx).GetFee(contractAddr)
-	if !found {
+	fee, err := k.FlatFees.Get(ctx, contractAddr)
+	if err != nil {
 		return sdk.Coin{}, false
 	}
 
@@ -47,11 +53,13 @@ func (k Keeper) GetFlatFee(ctx sdk.Context, contractAddr sdk.AccAddress) (sdk.Co
 
 // CreateFlatFeeRewardsRecords creates a rewards record for the flatfees of the given contract
 func (k Keeper) CreateFlatFeeRewardsRecords(ctx sdk.Context, contractAddress sdk.AccAddress, flatfees sdk.Coins) {
-	rewardsRecordState := k.state.RewardsRecord(ctx)
 	calculationHeight, calculationTime := ctx.BlockHeight(), ctx.BlockTime()
 
 	metadata := k.GetContractMetadata(ctx, contractAddress)
 	rewardsAddr := sdk.MustAccAddressFromBech32(metadata.RewardsAddress)
 
-	rewardsRecordState.CreateRewardsRecord(rewardsAddr, flatfees, calculationHeight, calculationTime)
+	_, err := k.CreateRewardsRecord(ctx, rewardsAddr, flatfees, calculationHeight, calculationTime)
+	if err != nil {
+		panic(err)
+	}
 }
