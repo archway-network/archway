@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -14,12 +15,12 @@ const (
 )
 
 var (
-	ParamsKey   = []byte{0x01}
-	CallbackKey = []byte{0x02}
+	ParamsKey         = []byte{0x01}
+	CallbackKeyPrefix = collections.NewPrefix(2)
 )
 
 func GetCallbacksByHeightKey(height int64) []byte {
-	return append(CallbackKey, byte(height))
+	return append(CallbackKeyPrefix, byte(height))
 }
 
 func GetCallbackByFullyQualifiedKey(height int64, contractAddress sdk.AccAddress, jobID uint64) []byte {
