@@ -4,7 +4,6 @@ import (
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
 const (
 	// ModuleName is the module name.
 	ModuleName = "callback"
@@ -15,7 +14,7 @@ const (
 )
 
 var (
-	ParamsKey         = []byte{0x01}
+	ParamsKeyPrefix = collections.NewPrefix(1)
 	CallbackKeyPrefix = collections.NewPrefix(2)
 )
 

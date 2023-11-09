@@ -13,23 +13,22 @@ import (
 
 // Keeper provides module state operations.
 type Keeper struct {
-	cdc            codec.Codec
-	storeKey       storetypes.StoreKey
-	rewardsKeepers types.RewardsKeeperExpected
-	wasmKeeper     types.WasmKeeperExpected
-
-	Callbacks collections.Map[collections.Triple[int64, []byte, uint64], types.Callback]
+	cdc      codec.Codec
+	storeKey storetypes.StoreKey
+	// Params key: ParamsKeyPrefix | value: Params
+	Params collections.Item[types.Params]
+  // Callbacks key: CallbackKeyPrefix | value: []Callback
+  Callbacks collections.Map[collections.Triple[int64, []byte, uint64], types.Callback]
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, rk types.RewardsKeeperExpected, wk types.WasmKeeperExpected) Keeper {
-	schemaBuilder := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) Keeper {
+	sb := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
 	return Keeper{
-		cdc:            cdc,
-		storeKey:       storeKey,
-		rewardsKeepers: rk,
-		wasmKeeper:     wk,
-		Callbacks: collections.NewMap(
+		cdc:      cdc,
+		storeKey: storeKey,
+		Params:   collections.NewItem(sb, types.ParamsKeyPrefix, "params", collcompat.ProtoValue[types.Params](cdc)),
+    Callbacks: collections.NewMap(
 			schemaBuilder,
 			types.CallbackKeyPrefix,
 			"callbacks",
