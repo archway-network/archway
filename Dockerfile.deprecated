@@ -1,7 +1,7 @@
 FROM golang:1.19.5-alpine3.17 AS go-builder
 # arch can be either x86_64 for amd64 or aarch64 for arm
 ARG arch=x86_64
-ARG libwasmvm_version=v1.4.1
+ARG libwasmvm_version=v1.5.0
 ARG libwasmvm_aarch64_sha=2687afbdae1bc6c7c8b05ae20dfb8ffc7ddc5b4e056697d0f37853dfe294e913
 ARG libwasmvm_amd64_sha=465e3a088e96fd009a11bfd234c69fb8a0556967677e54511c084f815cf9ce63
 
