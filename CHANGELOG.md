@@ -36,9 +36,11 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Improvements
 
-- [#478](https://github.com/archway-network/archway/pull/475) – moves x/rewards state to use collections for state management.
+- [#478](https://github.com/archway-network/archway/pull/475) – Moves x/rewards state to use collections for state management.
 
 ### Changed
+
+- [#508](https://github.com/archway-network/archway/pull/508) – Version bump wasmd to v0.45.0 and cosmos-sdk to v0.47.6
 
 ### Deprecated
 
