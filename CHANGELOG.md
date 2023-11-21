@@ -40,7 +40,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 ### Changed
 
-- [#508](https://github.com/archway-network/archway/pull/508) – Version bump wasmd to v0.45.0 and cosmos-sdk to v0.47.6
+- [#507](https://github.com/archway-network/archway/pull/507) – Version bump wasmd to v0.45.0 and cosmos-sdk to v0.47.6
 
 ### Deprecated
 
