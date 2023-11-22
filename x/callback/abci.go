@@ -33,14 +33,24 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) [
 		callbackMsg := types.NewCallbackMsg(callback.GetJobId())
 		// handling any panics
 		defer recoverAnyPanics(logger, callback)()
-		logger.Debug("contract callbacks", "contract_address", callback.ContractAddress, "job_id", callback.GetJobId())
+		logger.Debug(
+			"executing callback",
+			"contract_address", callback.ContractAddress,
+			"job_id", callback.GetJobId(),
+			"msg", callbackMsg.String(),
+		)
 
-		// creating a chiled context with limited gas meter based on configured params
+		// creating a child context with limited gas meter based on configured params
 		childCtx, commit := ctx.WithGasMeter(sdk.NewGasMeter(params.GetCallbackGasLimit())).CacheContext()
 
 		// executing the callback on the contract
 		if _, err := wk.Sudo(childCtx, sdk.MustAccAddressFromBech32(callback.ContractAddress), callbackMsg.Bytes()); err != nil {
-			logger.Error("error executing callback", "contract_address", callback.ContractAddress, "job_id", callback.GetJobId(), "error", err)
+			logger.Error(
+				"error executing callback",
+				"contract_address", callback.ContractAddress,
+				"job_id", callback.GetJobId(),
+				"error", err,
+			)
 		}
 
 		commit()
@@ -63,13 +73,13 @@ func recoverAnyPanics(logger log.Logger, callback types.Callback) func() {
 			default:
 				cause = fmt.Sprintf("%s", r)
 			}
-			logger.
-				Error("panic executing callback",
-					"contract_address", callback.GetContractAddress(),
-					"job_id", callback.GetJobId(),
-					"cause", cause,
-					"stacktrace", string(debug.Stack()),
-				)
+			logger.Error(
+				"panic executing callback",
+				"contract_address", callback.GetContractAddress(),
+				"job_id", callback.GetJobId(),
+				"cause", cause,
+				"stacktrace", string(debug.Stack()),
+			)
 		}
 	}
 }
