@@ -11,6 +11,7 @@ import (
 type WasmKeeperExpected interface {
 	HasContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) bool
 	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmdtypes.ContractInfo
+	Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
 }
 
 type RewardsKeeperExpected interface {
