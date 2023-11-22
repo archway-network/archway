@@ -56,7 +56,16 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) [
 		commit()
 
 		// deleting the callback after execution
-		k.Callbacks.Remove(ctx, collections.Join3(currentHeight, sdk.MustAccAddressFromBech32(callback.ContractAddress).Bytes(), callback.GetJobId()))
+		if err := k.Callbacks.Remove(
+			ctx,
+			collections.Join3(
+				currentHeight,
+				sdk.MustAccAddressFromBech32(callback.ContractAddress).Bytes(),
+				callback.GetJobId(),
+			),
+		); err != nil {
+			panic(err) // should never happen
+		}
 	}
 
 	return nil
