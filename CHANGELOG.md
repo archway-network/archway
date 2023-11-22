@@ -2,45 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!--
-### Added
-
-Contains the new features.
-
-### Changed
-
-Contains API breaking changes to existing functionality.
-
-### Deprecated
-
-Contains the candidates for removal in a future release.
-
-### Removed
-
-Contains API breaking changes of removed APIs.
-
-### Fixed
-
-Contains bug fixes.
-
-### Improvements
-
-Contains all the PRs that improved the code without changing the behaviours.
--->
-
-## [v5.0.2](https://github.com/archway-network/archway/releases/tag/v5.0.2)
-
-### Changed
-
-- [#499](https://github.com/archway-network/archway/pull/499) - Rename the `v5.0.0` upgrade handler to `v5.0.2`
-
-## [v5.0.1](https://github.com/archway-network/archway/releases/tag/v5.0.1)
-
-### Fixed 
-
-- [#497](https://github.com/archway-network/archway/pull/497) - Fix rest endpoints in App. Cherrypicked [#496](https://github.com/archway-network/archway/pull/496) 
-
-## [v5.0.0](https://github.com/archway-network/archway/releases/tag/v5.0.0)
+## [v6.0.0](https://github.com/archway-network/archway/releases/tag/v6.0.0)
 
 ### Added
 
@@ -48,8 +10,9 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#439](https://github.com/archway-network/archway/pull/439) - Adding containerized localnet
 - [#445](https://github.com/archway-network/archway/pull/445) - Adding Archway logo and version number to upgrade logs
 - [#459](https://github.com/archway-network/archway/pull/459) - Add missing ADR references to docs index
-- [#442](https://github.com/archway-network/archway/pull/442) - Upgrade Cosmos-sdk from v0.45.16 to v0.47.5 and all the other things it depends on
+- [#442](https://github.com/archway-network/archway/pull/442) - Upgrade cosmos-sdk from v0.45.16 to v0.47.5 and all the other things it depends on
 - [#470](https://github.com/archway-network/archway/pull/470) - Bumping x/wasmd to v0.43.0
+- [#507](https://github.com/archway-network/archway/pull/507) – Version bump x/wasmd to v0.45.0 and cosmos-sdk to v0.47.6
 
 ### Changed
 
@@ -61,6 +24,15 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#439](https://github.com/archway-network/archway/pull/439) - Renaming `debug` image to `dev`
 - [#461](https://github.com/archway-network/archway/pull/461) - Remove titus network deployment
 
+### Fixed
+
+- [#497](https://github.com/archway-network/archway/pull/497) - Fix rest endpoints in App
+
+## ~~[RETRACTED - v5.0.2](https://github.com/archway-network/archway/releases/tag/v5.0.2)~~
+
+## ~~[RETRACTED - v5.0.1](https://github.com/archway-network/archway/releases/tag/v5.0.1)~~
+
+## ~~[RETRACTED - v5.0.0](https://github.com/archway-network/archway/releases/tag/v5.0.0)~~
 
 ## [v4.0.2](https://github.com/archway-network/archway/releases/tag/v4.0.2)
 
