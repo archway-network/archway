@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/archway-network/archway/x/callback/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/archway-network/archway/x/callback/types"
 )
 
 func TestSudoMsgString(t *testing.T) {
