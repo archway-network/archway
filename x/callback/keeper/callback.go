@@ -8,35 +8,27 @@ import (
 )
 
 // GetAllCallbacks lists all the pending callbacks
-func (k Keeper) GetAllCallbacks(ctx sdk.Context) (callbacks []types.Callback) {
-	k.Callbacks.Walk(ctx, func(key collections.Triple[int64, []byte, uint64], value types.Callback) bool {
+func (k Keeper) GetAllCallbacks(ctx sdk.Context) (callbacks []types.Callback, err error) {
+	err = k.Callbacks.Walk(ctx, nil, func(key collections.Triple[int64, []byte, uint64], value types.Callback) (bool, error) {
 		callbacks = append(callbacks, value)
-		return false
+		return false, nil
 	})
-	return callbacks
+	return callbacks, err
 }
 
 // GetCallbacksByHeight returns the callbacks registered for the given height
 func (k Keeper) GetCallbacksByHeight(ctx sdk.Context, height int64) (callbacks []types.Callback, err error) {
-	key := types.GetCallbacksByHeightKey(height)
-	iterator, err := k.Callbacks.Iterate(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		c, err := iterator.Value()
-		if err != nil {
-			return nil, err
-		}
-		callbacks = append(callbacks, c)
-	}
-	return callbacks, nil
+	rng := collections.NewPrefixedTripleRange[int64, []byte, uint64](height)
+	err = k.Callbacks.Walk(ctx, rng, func(key collections.Triple[int64, []byte, uint64], value types.Callback) (bool, error) {
+		callbacks = append(callbacks, value)
+		return false, nil
+	})
+	return callbacks, err
 }
 
 // ExistsCallback returns true if the callback exists for height with same contract address and same job id
 func (k Keeper) ExistsCallback(ctx sdk.Context, height int64, contractAddress sdk.AccAddress, jobID uint64) (bool, error) {
-	return k.Callbacks.Has(ctx, collections.Join3[int64, []byte, uint64](height, contractAddress.Bytes(), jobID))
+	return k.Callbacks.Has(ctx, collections.Join3(height, contractAddress.Bytes(), jobID))
 }
 
 // DeleteCallback deletes a callback given the height, contract address and job id
@@ -53,7 +45,7 @@ func (k Keeper) DeleteCallback(ctx sdk.Context, sender string, height int64, con
 	if !exists {
 		return types.ErrCallbackNotFound
 	}
-	return k.Callbacks.Remove(ctx, collections.Join3[int64, []byte, uint64](height, contractAddress.Bytes(), jobID))
+	return k.Callbacks.Remove(ctx, collections.Join3(height, contractAddress.Bytes(), jobID))
 }
 
 // SaveCallback saves a callback given the height, contract address and job id and callback data
@@ -80,7 +72,7 @@ func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
 		return types.ErrCallbackHeightNotinFuture
 	}
 
-	return k.Callbacks.Set(ctx, collections.Join3[int64, []byte, uint64](callback.GetCallbackHeight(), contractAddress.Bytes(), callback.GetJobId()), callback)
+	return k.Callbacks.Set(ctx, collections.Join3(callback.GetCallbackHeight(), contractAddress.Bytes(), callback.GetJobId()), callback)
 }
 
 func isAuthorizedToModify(ctx sdk.Context, k Keeper, height int64, contractAddress sdk.AccAddress, sender string) bool {
@@ -93,6 +85,6 @@ func isAuthorizedToModify(ctx sdk.Context, k Keeper, height int64, contractAddre
 		return true
 	}
 
-	contractMetadata := k.rewardsKeepers.GetContractMetadata(ctx, contractAddress)
+	contractMetadata := k.rewardsKeeper.GetContractMetadata(ctx, contractAddress)
 	return sender == contractMetadata.OwnerAddress // Owner of the contract can modify its callbacks
 }
