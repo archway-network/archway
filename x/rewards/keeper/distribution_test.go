@@ -679,7 +679,6 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 					require.NoError(t, err)
 					totalRewardsReceived := sdk.NewCoins()
 					for _, record := range recordsCreated {
-
 						require.NotEmpty(t, record.Id, "output [%d]", i)
 						require.NotEmpty(t, record.CalculatedHeight, "output [%d]", i)
 						require.NotEmpty(t, record.CalculatedTime, "output [%d]", i)
