@@ -1,6 +1,8 @@
 package types
 
-import "cosmossdk.io/collections"
+import (
+	"cosmossdk.io/collections"
+)
 
 const (
 	// ModuleName is the module name.
@@ -12,5 +14,6 @@ const (
 )
 
 var (
-	ParamsKeyPrefix = collections.NewPrefix(1)
+	ParamsKeyPrefix   = collections.NewPrefix(1)
+	CallbackKeyPrefix = collections.NewPrefix(2)
 )

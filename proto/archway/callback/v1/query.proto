@@ -36,7 +36,7 @@ message QueryParamsResponse {
 // QueryEstimateCallbackFeesRequest is the request for Query.EstimateCallbackFees.
 message QueryEstimateCallbackFeesRequest{
   // block_height is the height at which to estimate the callback fees
-  uint64 block_height = 1;
+  int64 block_height = 1;
 }
 
 // QueryEstimateCallbackFeesResponse is the response for Query.EstimateCallbackFees.
@@ -50,7 +50,7 @@ message QueryEstimateCallbackFeesResponse{
 // QueryCallbacksRequest is the request for Query.Callbacks.
 message QueryCallbacksRequest{
   // block_height is the height at which to query the callbacks
-  uint64 block_height = 1;
+  int64 block_height = 1;
 }
 
 // QueryCallbacksResponse is the response for Query.Callbacks.

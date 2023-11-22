@@ -14,7 +14,7 @@ message Callback {
     // job_id is an identifier the callback requestor can pass in to identify the callback when it happens. 
     uint64 job_id = 2;
     // callback_height is the height at which the callback is executed.
-    uint64 callback_height = 3;
+    int64 callback_height = 3;
     // fee_split is the breakdown of the fees paid by the contract to reserve the callback
     CallbackFeesFeeSplit fee_split = 4;
     // reserved_by is the address which reserved the callback (bech32 encoded).
