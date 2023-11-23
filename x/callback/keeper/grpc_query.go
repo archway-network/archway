@@ -41,8 +41,41 @@ func (s *QueryServer) Callbacks(c context.Context, request *types.QueryCallbacks
 }
 
 // EstimateCallbackFees implements types.QueryServer.
-func (*QueryServer) EstimateCallbackFees(context.Context, *types.QueryEstimateCallbackFeesRequest) (*types.QueryEstimateCallbackFeesResponse, error) {
-	panic("unimplemented 👻")
+func (s *QueryServer) EstimateCallbackFees(c context.Context, request *types.QueryEstimateCallbackFeesRequest) (*types.QueryEstimateCallbackFeesResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	if request.BlockHeight < ctx.BlockHeight() {
+		return nil, status.Errorf(codes.InvalidArgument, "block height %d is in the past", request.BlockHeight)
+	}
+
+	params, err := s.keeper.GetParams(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "could not fetch the module params: %s", err.Error())
+	}
+
+	reservationThresholdHeight := ctx.BlockHeight() + int64(params.MaxFutureReservationLimit)
+	if request.BlockHeight > reservationThresholdHeight {
+		return nil, status.Errorf(codes.OutOfRange, "block height %d is too far in the future. max block height can be registered %d", request.BlockHeight, reservationThresholdHeight)
+	}
+
+	// transactionFee := get param gas limit and multiply by estimate-fees
+	// futureREservationFees := get block height diff and multiply by multiplier
+	// blockReservationFees := get number of callbacks in block and how many pending and multiply by multiplier
+
+	futureReservationFeesAmount := params.FutureReservationFeeMultiplier.MulInt64((request.GetBlockHeight() - ctx.BlockHeight()))
+	futureReservationFees := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, futureReservationFeesAmount)
+
+	return &types.QueryEstimateCallbackFeesResponse{
+		FeeSplit: &types.CallbackFeesFeeSplit{
+			TransactionFees:       nil,
+			BlockReservationFees:  nil,
+			FutureReservationFees: futureReservationFees,
+		},
+		TotalFees: nil,
+	}, nil
 }
 
 // Params implements types.QueryServer.
