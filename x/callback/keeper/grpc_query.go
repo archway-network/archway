@@ -24,8 +24,20 @@ func NewQueryServer(keeper Keeper) *QueryServer {
 }
 
 // Callbacks implements types.QueryServer.
-func (*QueryServer) Callbacks(context.Context, *types.QueryCallbacksRequest) (*types.QueryCallbacksResponse, error) {
-	panic("unimplemented 👻")
+func (s *QueryServer) Callbacks(c context.Context, request *types.QueryCallbacksRequest) (*types.QueryCallbacksResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	callbacks, err := s.keeper.GetCallbacksByHeight(ctx, request.GetBlockHeight())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "could not fetch the callbacks at height %d: %s", request.GetBlockHeight(), err.Error())
+	}
+
+	return &types.QueryCallbacksResponse{
+		Callbacks: callbacks,
+	}, nil
 }
 
 // EstimateCallbackFees implements types.QueryServer.
@@ -38,8 +50,8 @@ func (s *QueryServer) Params(c context.Context, request *types.QueryParamsReques
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-
 	ctx := sdk.UnwrapSDKContext(c)
+
 	params, err := s.keeper.GetParams(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "could not fetch the module params: %s", err.Error())
