@@ -3,7 +3,7 @@ package types
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // NewCallback creates a new Callback instance.
-func NewCallback(sender string, contractAddress sdk.AccAddress, height int64, jobID uint64, txFees []*sdk.Coin, blockReservationFees []*sdk.Coin, futureReservationFees []*sdk.Coin, surplusFees []*sdk.Coin) Callback {
+func NewCallback(sender string, contractAddress sdk.AccAddress, height int64, jobID uint64, txFees []*sdk.DecCoin, blockReservationFees []*sdk.DecCoin, futureReservationFees []*sdk.DecCoin, surplusFees []*sdk.DecCoin) Callback {
 	return Callback{
 		ContractAddress: contractAddress.String(),
 		CallbackHeight:  height,
