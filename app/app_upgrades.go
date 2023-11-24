@@ -12,7 +12,7 @@ import (
 	upgrade3_0_0 "github.com/archway-network/archway/app/upgrades/3_0_0"
 	upgrade4_0_0 "github.com/archway-network/archway/app/upgrades/4_0_0"
 	upgrade4_0_2 "github.com/archway-network/archway/app/upgrades/4_0_2"
-	upgrade5_0_2 "github.com/archway-network/archway/app/upgrades/5_0_2"
+	upgrade6_0_0 "github.com/archway-network/archway/app/upgrades/6_0_0"
 )
 
 // UPGRADES
@@ -24,7 +24,7 @@ var Upgrades = []upgrades.Upgrade{
 	upgrade3_0_0.Upgrade,      // v3.0.0
 	upgrade4_0_0.Upgrade,      // v4.0.0
 	upgrade4_0_2.Upgrade,      // v4.0.2
-	upgrade5_0_2.Upgrade,      // v5.0.2
+	upgrade6_0_0.Upgrade,      // v6.0.0
 }
 
 func (app *ArchwayApp) setupUpgrades() {
