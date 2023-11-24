@@ -52,6 +52,9 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 	if metaUpdates.HasRewardsAddress() {
 		metaNew.RewardsAddress = metaUpdates.RewardsAddress
 	}
+	if metaUpdates.WithdrawToWallet != metaOld.WithdrawToWallet {
+		metaNew.WithdrawToWallet = metaUpdates.WithdrawToWallet
+	}
 
 	// Set
 	err = k.ContractMetadata.Set(ctx, contractAddr, metaNew)

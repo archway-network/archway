@@ -33,6 +33,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Added
 
 - [#481](https://github.com/archway-network/archway/pull/481) - Add Release Checklist issue type 
+- [](https://github.com/archway-network/archway/pull/502) - Improve rewards withdrawal experience by allowing a Metadata owner to set that rewards directly go to the reward address.
 - [#504](https://github.com/archway-network/archway/pull/504) - Interchain test gh workflow now runs on PRs targetting release branches as well as main 
 
 ### Improvements
