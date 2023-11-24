@@ -21,6 +21,7 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 	type (
 		contractInput struct {
 			metadataExists bool           // if true, metadata is set
+			distrToWallet  bool           // if true, rewards are distributed to the wallet address
 			contractAddr   sdk.AccAddress // any random address to merge operations [sdk.AccAddr]
 			rewardsAddr    string         // might be empty to skip distribution (should be a real chain address) [sdk.AccAddr]
 			operations     []uint64       // list of gas consumptions per operation (opType is set randomly)
@@ -35,6 +36,7 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 			rewardsAddr sdk.AccAddress // must be set since we are checking its balance [sdk.AccAddr]
 			recordsNum  int            // expected number of rewards records created (0 if none)
 			rewards     string         // expected rewards (might be empty if no rewards are expected) [sdk.Coins]
+			toWallet    string         // expected rewards distributed to the wallet (might be empty if no rewards are expected) [sdk.Coins]
 		}
 
 		testCase struct {
@@ -507,6 +509,51 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 			//   - Inf: 1000stake - 100stake - 200stake = 700stake
 			treasuryExpected: "701stake",
 		},
+		{
+			name:               "1 tx, 2 contracts with the same rewardsAddress (multiple records created) and 1 contract receives to wallet",
+			blockInflationCoin: "1000stake",
+			blockGasLimit:      1000,
+			txs: []transactionInput{
+				{
+					feeCoins: "900stake",
+					contracts: []contractInput{
+						{
+							metadataExists: true,
+							distrToWallet:  true,
+							contractAddr:   contractAddrs[0],
+							rewardsAddr:    accAddrs[0].String(),
+							operations: []uint64{
+								100,
+							},
+						},
+						{
+							metadataExists: true,
+							contractAddr:   contractAddrs[1],
+							rewardsAddr:    accAddrs[0].String(),
+							operations: []uint64{
+								200,
+							},
+						},
+					},
+				},
+			},
+			contractsOutput: []contractOutput{
+				{
+					rewardsAddr: accAddrs[0],
+					// Tx rewards 1st contract:  ~0.33 (100 / 300 tx gas)     = 299stake \_ wallet
+					// Inf rewards 1st contract:  0.1  (100 / 1000 block gas) = 100stake /
+					// Tx rewards 2nd contract:  ~0.66 (200 / 300 tx gas)     = 600stake \_ records
+					// Inf rewards 2nd contract:  0.2  (200 / 1000 block gas) = 200stake /
+					rewards:    "800stake", // second contract gets rewards records
+					toWallet:   "399stake", // first contract gets all to wallet
+					recordsNum: 1,          // from 1 contracts
+				},
+			},
+			// Leftovers:
+			//   - Tx:  900stake - 299stake - 600stake  = 1stake
+			//   - Inf: 1000stake - 100stake - 200stake = 700stake
+			treasuryExpected: "701stake",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -556,6 +603,9 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 							metadata := rewardsTypes.ContractMetadata{
 								OwnerAddress:   acc.Address.String(),
 								RewardsAddress: contract.rewardsAddr,
+							}
+							if contract.distrToWallet {
+								metadata.WithdrawToWallet = true
 							}
 
 							require.NoError(t, rKeeper.SetContractMetadata(ctx, acc.Address, contract.contractAddr, metadata))
@@ -617,26 +667,33 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 
 			// Assert expectations
 			for i, outExpected := range tc.contractsOutput {
-				totalRewardsExpected, err := sdk.ParseCoinsNormalized(outExpected.rewards)
-				require.NoError(t, err)
 
 				// Check the number of records created
 				recordsCreated, err := keepers.RewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), outExpected.rewardsAddr)
 				require.NoError(t, err)
 				require.Len(t, recordsCreated, outExpected.recordsNum)
 
-				// Basic check of records and merge total rewards
-				totalRewardsReceived := sdk.NewCoins()
-				for _, record := range recordsCreated {
-					require.NotEmpty(t, record.Id, "output [%d]", i)
-					require.NotEmpty(t, record.CalculatedHeight, "output [%d]", i)
-					require.NotEmpty(t, record.CalculatedTime, "output [%d]", i)
-					require.Equal(t, outExpected.rewardsAddr.String(), record.RewardsAddress, "output [%d]", i)
+				if outExpected.rewards != "" {
+					// Basic check of records and merge total rewards
+					totalRewardsExpected, err := sdk.ParseCoinsNormalized(outExpected.rewards)
+					require.NoError(t, err)
+					totalRewardsReceived := sdk.NewCoins()
+					for _, record := range recordsCreated {
+						require.NotEmpty(t, record.Id, "output [%d]", i)
+						require.NotEmpty(t, record.CalculatedHeight, "output [%d]", i)
+						require.NotEmpty(t, record.CalculatedTime, "output [%d]", i)
+						require.Equal(t, outExpected.rewardsAddr.String(), record.RewardsAddress, "output [%d]", i)
 
-					totalRewardsReceived = totalRewardsReceived.Add(record.Rewards...)
+						totalRewardsReceived = totalRewardsReceived.Add(record.Rewards...)
+					}
+					assert.Equal(t, totalRewardsExpected.String(), totalRewardsReceived.String(), "output [%d]", i)
 				}
 
-				assert.Equal(t, totalRewardsExpected.String(), totalRewardsReceived.String(), "output [%d]", i)
+				// assert wallet distribution
+				if outExpected.toWallet != "" {
+					balances := keepers.BankKeeper.GetAllBalances(ctx, outExpected.rewardsAddr)
+					require.Equal(t, outExpected.toWallet, balances.String(), "output [%d]", i)
+				}
 			}
 
 			// Assert rewards leftovers
