@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	"github.com/archway-network/archway/x/callback/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/archway-network/archway/x/callback/types"
 )
 
 func (k Keeper) EstimateCallbackFees(request *types.QueryEstimateCallbackFeesRequest, ctx sdk.Context) (sdk.DecCoin, sdk.DecCoin, sdk.DecCoin, error) {
