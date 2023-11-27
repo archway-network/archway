@@ -17,10 +17,10 @@ func (k Keeper) GetAllCallbacks(ctx sdk.Context) (callbacks []types.Callback, er
 }
 
 // GetCallbacksByHeight returns the callbacks registered for the given height
-func (k Keeper) GetCallbacksByHeight(ctx sdk.Context, height int64) (callbacks []types.Callback, err error) {
+func (k Keeper) GetCallbacksByHeight(ctx sdk.Context, height int64) (callbacks []*types.Callback, err error) {
 	rng := collections.NewPrefixedTripleRange[int64, []byte, uint64](height)
 	err = k.Callbacks.Walk(ctx, rng, func(key collections.Triple[int64, []byte, uint64], value types.Callback) (bool, error) {
-		callbacks = append(callbacks, value)
+		callbacks = append(callbacks, &value)
 		return false, nil
 	})
 	return callbacks, err
