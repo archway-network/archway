@@ -31,8 +31,40 @@ func (s MsgServer) CancelCallback(context.Context, *types.MsgCancelCallback) (*t
 }
 
 // RequestCallback implements types.MsgServer.
-func (s MsgServer) RequestCallback(context.Context, *types.MsgRequestCallback) (*types.MsgRequestCallbackResponse, error) {
-	panic("unimplemented 👻")
+func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestCallback) (*types.MsgRequestCallbackResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	sender, err := sdk.AccAddressFromBech32(request.Sender)
+	if err != nil {
+		return nil, err
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	zeroFee := sdk.NewInt64Coin(sdk.DefaultBondDenom, 0) // todo: fee stuff in a diff PR
+	txFees := []*sdk.Coin{&zeroFee}
+	blockReservationFees := []*sdk.Coin{&zeroFee}
+	futureReservationFees := []*sdk.Coin{&zeroFee}
+	surplusFees := []*sdk.Coin{&zeroFee}
+
+	callback := types.NewCallback(
+		request.Sender,
+		request.ContractAddress,
+		request.CallbackHeight,
+		request.GetJobId(),
+		txFees,
+		blockReservationFees,
+		futureReservationFees,
+		surplusFees,
+	)
+
+	err = s.keeper.SaveCallback(ctx, callback)
+	if err != nil {
+		return &types.MsgRequestCallbackResponse{}, err
+	}
+
+	err = s.keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, request.GetFees())
+	return &types.MsgRequestCallbackResponse{}, err
 }
 
 // UpdateParams implements types.MsgServer.

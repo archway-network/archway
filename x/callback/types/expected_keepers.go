@@ -16,3 +16,7 @@ type WasmKeeperExpected interface {
 type RewardsKeeperExpected interface {
 	GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress) *rewardstypes.ContractMetadata
 }
+
+type BankKeeperExpected interface {
+	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+}
