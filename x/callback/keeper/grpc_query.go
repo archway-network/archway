@@ -48,7 +48,7 @@ func (qs *QueryServer) EstimateCallbackFees(c context.Context, request *types.Qu
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	futureReservationFee, blockReservationFee, transactionFee, err := qs.keeper.EstimateCallbackFees(request, ctx)
+	futureReservationFee, blockReservationFee, transactionFee, err := qs.keeper.EstimateCallbackFees(ctx, request.GetBlockHeight())
 	if err != nil {
 		return nil, err
 	}
