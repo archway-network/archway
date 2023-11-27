@@ -48,38 +48,10 @@ func (qs *QueryServer) EstimateCallbackFees(c context.Context, request *types.Qu
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	if request.BlockHeight < ctx.BlockHeight() {
-		return nil, status.Errorf(codes.InvalidArgument, "block height %d is in the past", request.BlockHeight)
-	}
-
-	params, err := qs.keeper.GetParams(ctx)
+	futureReservationFee, blockReservationFee, transactionFee, err := qs.keeper.EstimateCallbackFees(request, ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "could not fetch the module params: %s", err.Error())
+		return nil, err
 	}
-
-	futureReservationThreshold := ctx.BlockHeight() + int64(params.MaxFutureReservationLimit)
-	if request.BlockHeight > futureReservationThreshold {
-		return nil, status.Errorf(codes.OutOfRange, "block height %d is too far in the future. max block height can be registered %d", request.BlockHeight, futureReservationThreshold)
-	}
-
-	futureReservationFeesAmount := params.FutureReservationFeeMultiplier.MulInt64((request.GetBlockHeight() - ctx.BlockHeight()))
-	futureReservationFee := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, futureReservationFeesAmount)
-
-	callbacksForHeight, err := qs.keeper.GetCallbacksByHeight(ctx, request.GetBlockHeight())
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "could not fetch callbacks for given height: %s", err.Error())
-	}
-	totalCallbacks := len(callbacksForHeight)
-	if totalCallbacks >= int(params.MaxBlockReservationLimit) {
-		return nil, status.Errorf(codes.OutOfRange, "block height %d has reached max reservation limit", request.BlockHeight)
-	}
-
-	blockReservationFeesAmount := params.BlockReservationFeeMultiplier.MulInt64(int64(totalCallbacks))
-	blockReservationFee := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, blockReservationFeesAmount)
-
-	transactionFeeAmount := qs.keeper.rewardsKeeper.ComputationalPriceOfGas(ctx).Amount.MulInt64(int64(params.GetCallbackGasLimit()))
-	transactionFee := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, transactionFeeAmount)
-
 	totalFees := transactionFee.Add(blockReservationFee).Add(futureReservationFee)
 
 	return &types.QueryEstimateCallbackFeesResponse{
