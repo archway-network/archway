@@ -6,9 +6,10 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/archway-network/archway/x/callback/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/archway-network/archway/x/callback/types"
 )
 
 var _ types.MsgServer = (*MsgServer)(nil)
