@@ -42,7 +42,7 @@ message QueryEstimateCallbackFeesRequest{
 // QueryEstimateCallbackFeesResponse is the response for Query.EstimateCallbackFees.
 message QueryEstimateCallbackFeesResponse{
   // total_fees is the total fees that needs to be paid by the contract to reserve a callback
-  repeated cosmos.base.v1beta1.Coin total_fees = 1;
+  repeated cosmos.base.v1beta1.DecCoin total_fees = 1;
   // fee_split is the breakdown of the total_fees
   CallbackFeesFeeSplit fee_split = 2;
 }
