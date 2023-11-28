@@ -32,6 +32,7 @@ func (k Keeper) ExistsCallback(ctx sdk.Context, height int64, contractAddr strin
 	return k.Callbacks.Has(ctx, collections.Join3(height, contractAddress.Bytes(), jobID))
 }
 
+// GetCallback returns the callback given the height, contract address and job id
 func (k Keeper) GetCallback(ctx sdk.Context, height int64, contractAddr string, jobID uint64) (types.Callback, error) {
 	contractAddress := sdk.MustAccAddressFromBech32(contractAddr)
 	return k.Callbacks.Get(ctx, collections.Join3(height, contractAddress.Bytes(), jobID))

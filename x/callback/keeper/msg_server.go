@@ -32,19 +32,20 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
+	// If a callback with same job id does not exist, return error
 	callback, err := s.keeper.GetCallback(ctx, request.GetCallbackHeight(), request.GetContractAddress(), request.GetJobId())
 	if err != nil {
-		return &types.MsgCancelCallbackResponse{}, err
+		return nil, err
 	}
 
 	// Returning the transaction fees as the callback was never executed
 	txFee := callback.GetFeeSplit().GetTransactionFees()
 	err = s.keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.MustAccAddressFromBech32(request.Sender), sdk.NewCoins(*txFee))
 	if err != nil {
-		return &types.MsgCancelCallbackResponse{}, err
+		return nil, err
 	}
 
-	// todo: what to do with the rest of the fees
+	// todo: deal with the rest of the fees. later in diff pr
 
 	// Deleting the callback from state
 	err = s.keeper.DeleteCallback(ctx, request.Sender, request.GetCallbackHeight(), request.GetContractAddress(), request.GetJobId())
@@ -60,12 +61,26 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
+	// Get the expected fees which is to be paid
 	futureReservationFee, blockReservationFee, transactionFee, err := s.keeper.EstimateCallbackFees(ctx, request.GetCallbackHeight())
 	if err != nil {
 		return nil, err
 	}
-	//expectedFees := transactionFee.Add(blockReservationFee).Add(futureReservationFee)
+	expectedFees := transactionFee.Add(blockReservationFee).Add(futureReservationFee)
 
+	// If the fees sent by the sender is less than the expected fees, return error
+	if request.GetFees().IsLT(expectedFees) {
+		return nil, errorsmod.Wrapf(types.ErrInsufficientFees, "expected %s, got %s", expectedFees, request.GetFees())
+	}
+	surplusFees := request.GetFees().Sub(expectedFees) // Calculating any surplus user has sent
+
+	// Send the fees into module account
+	err = s.keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(request.Sender), types.ModuleName, sdk.NewCoins(request.GetFees()))
+	if err != nil {
+		return nil, err
+	}
+
+	// Save the callback in state
 	callback := types.NewCallback(
 		request.Sender,
 		request.ContractAddress,
@@ -76,13 +91,7 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 		futureReservationFee,
 		surplusFees,
 	)
-
 	err = s.keeper.SaveCallback(ctx, callback)
-	if err != nil {
-		return &types.MsgRequestCallbackResponse{}, err
-	}
-
-	err = s.keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(request.Sender), types.ModuleName, request.GetFees())
 	return &types.MsgRequestCallbackResponse{}, err
 }
 
@@ -91,12 +100,11 @@ func (s MsgServer) UpdateParams(c context.Context, request *types.MsgUpdateParam
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-
 	ctx := sdk.UnwrapSDKContext(c)
 
 	_, err := sdk.AccAddressFromBech32(request.Authority)
 	if err != nil {
-		return nil, err // returning error "as is" since this should not happen due to the earlier ValidateBasic call
+		return nil, err
 	}
 
 	if request.GetAuthority() != s.keeper.GetAuthority() {
