@@ -41,11 +41,11 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	zeroFee := sdk.NewInt64Coin(sdk.DefaultBondDenom, 0) // todo: fee stuff in a diff PR
-	txFees := []*sdk.Coin{&zeroFee}
-	blockReservationFees := []*sdk.Coin{&zeroFee}
-	futureReservationFees := []*sdk.Coin{&zeroFee}
-	surplusFees := []*sdk.Coin{&zeroFee}
+	zeroFee := sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 0) // todo: fee stuff in a diff PR
+	txFees := []*sdk.DecCoin{&zeroFee}
+	blockReservationFees := []*sdk.DecCoin{&zeroFee}
+	futureReservationFees := []*sdk.DecCoin{&zeroFee}
+	surplusFees := []*sdk.DecCoin{&zeroFee}
 
 	callback := types.NewCallback(
 		request.Sender,
