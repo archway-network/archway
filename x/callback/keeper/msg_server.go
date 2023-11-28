@@ -26,8 +26,31 @@ func NewMsgServer(keeper Keeper) *MsgServer {
 }
 
 // CancelCallback implements types.MsgServer.
-func (s MsgServer) CancelCallback(context.Context, *types.MsgCancelCallback) (*types.MsgCancelCallbackResponse, error) {
-	panic("unimplemented 👻")
+func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCallback) (*types.MsgCancelCallbackResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	callback, err := s.keeper.GetCallback(ctx, request.GetCallbackHeight(), request.GetContractAddress(), request.GetJobId())
+	if err != nil {
+		return &types.MsgCancelCallbackResponse{}, err
+	}
+
+	// Returning the transaction fees as the callback was never executed
+	txFee := callback.GetFeeSplit().GetTransactionFees()
+	err = s.keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.MustAccAddressFromBech32(request.Sender), sdk.NewCoins(*txFee))
+	if err != nil {
+		return &types.MsgCancelCallbackResponse{}, err
+	}
+
+	// todo: what to do with the rest of the fees
+
+	// Deleting the callback from state
+	err = s.keeper.DeleteCallback(ctx, request.Sender, request.GetCallbackHeight(), request.GetContractAddress(), request.GetJobId())
+	return &types.MsgCancelCallbackResponse{
+		Refund: *txFee,
+	}, err
 }
 
 // RequestCallback implements types.MsgServer.
@@ -35,26 +58,22 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	sender, err := sdk.AccAddressFromBech32(request.Sender)
+	ctx := sdk.UnwrapSDKContext(c)
+
+	futureReservationFee, blockReservationFee, transactionFee, err := s.keeper.EstimateCallbackFees(ctx, request.GetCallbackHeight())
 	if err != nil {
 		return nil, err
 	}
-	ctx := sdk.UnwrapSDKContext(c)
-
-	zeroFee := sdk.NewInt64DecCoin(sdk.DefaultBondDenom, 0) // todo: fee stuff in a diff PR
-	txFees := []*sdk.DecCoin{&zeroFee}
-	blockReservationFees := []*sdk.DecCoin{&zeroFee}
-	futureReservationFees := []*sdk.DecCoin{&zeroFee}
-	surplusFees := []*sdk.DecCoin{&zeroFee}
+	//expectedFees := transactionFee.Add(blockReservationFee).Add(futureReservationFee)
 
 	callback := types.NewCallback(
 		request.Sender,
 		request.ContractAddress,
 		request.CallbackHeight,
 		request.GetJobId(),
-		txFees,
-		blockReservationFees,
-		futureReservationFees,
+		transactionFee,
+		blockReservationFee,
+		futureReservationFee,
 		surplusFees,
 	)
 
@@ -63,7 +82,7 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 		return &types.MsgRequestCallbackResponse{}, err
 	}
 
-	err = s.keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, request.GetFees())
+	err = s.keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(request.Sender), types.ModuleName, request.GetFees())
 	return &types.MsgRequestCallbackResponse{}, err
 }
 

@@ -25,13 +25,13 @@ message Callback {
 // CallbackFeesFeeSplit is the breakdown of all the fees that need to be paid by the contract to reserve a callback
 message CallbackFeesFeeSplit {
     // transaction_fees is the transaction fees for the callback based on its gas consumption
-    repeated cosmos.base.v1beta1.DecCoin transaction_fees = 1;
+    cosmos.base.v1beta1.Coin transaction_fees = 1;
     // block_reservation_fees is the block reservation fees portion of the callback reservation fees
-    repeated cosmos.base.v1beta1.DecCoin block_reservation_fees = 2;
+    cosmos.base.v1beta1.Coin block_reservation_fees = 2;
     // future_reservation_fees is the future reservation fees portion of the callback reservation fees
-    repeated cosmos.base.v1beta1.DecCoin future_reservation_fees = 3;
+    cosmos.base.v1beta1.Coin future_reservation_fees = 3;
     // surplus_fees is any extra fees passed in for the registration of the callback
-    repeated cosmos.base.v1beta1.DecCoin surplus_fees = 4;
+    cosmos.base.v1beta1.Coin surplus_fees = 4;
   }
 
 // Params defines the module parameters.

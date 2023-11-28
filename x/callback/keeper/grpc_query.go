@@ -56,11 +56,11 @@ func (qs *QueryServer) EstimateCallbackFees(c context.Context, request *types.Qu
 
 	return &types.QueryEstimateCallbackFeesResponse{
 		FeeSplit: &types.CallbackFeesFeeSplit{
-			TransactionFees:       []*sdk.DecCoin{&transactionFee},
-			BlockReservationFees:  []*sdk.DecCoin{&blockReservationFee},
-			FutureReservationFees: []*sdk.DecCoin{&futureReservationFee},
+			TransactionFees:       &transactionFee,
+			BlockReservationFees:  &blockReservationFee,
+			FutureReservationFees: &futureReservationFee,
 		},
-		TotalFees: []*sdk.DecCoin{&totalFees},
+		TotalFees: &totalFees,
 	}, nil
 }
 
