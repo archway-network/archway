@@ -39,6 +39,12 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 		return nil, errorsmod.Wrap(types.ErrCallbackNotFound, "callback with given job id does not exist for given height")
 	}
 
+	// Deleting the callback from state
+	err = s.keeper.DeleteCallback(ctx, request.Sender, request.GetCallbackHeight(), request.GetContractAddress(), request.GetJobId())
+	if err != nil {
+		return nil, err
+	}
+
 	// Returning the transaction fees as the callback was never executed
 	txFee := callback.GetFeeSplit().GetTransactionFees()
 	err = s.keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.MustAccAddressFromBech32(request.Sender), sdk.NewCoins(*txFee))
@@ -48,11 +54,6 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 
 	// todo: deal with the rest of the fees. later in diff pr
 
-	// Deleting the callback from state
-	err = s.keeper.DeleteCallback(ctx, request.Sender, request.GetCallbackHeight(), request.GetContractAddress(), request.GetJobId())
-	if err != nil {
-		return nil, err
-	}
 	return &types.MsgCancelCallbackResponse{
 		Refund: *txFee,
 	}, nil
@@ -78,12 +79,6 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 	}
 	surplusFees := request.GetFees().Sub(expectedFees) // Calculating any surplus user has sent
 
-	// Send the fees into module account
-	err = s.keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(request.Sender), types.ModuleName, sdk.NewCoins(request.GetFees()))
-	if err != nil {
-		return nil, err
-	}
-
 	// Save the callback in state
 	callback := types.NewCallback(
 		request.Sender,
@@ -96,7 +91,16 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 		surplusFees,
 	)
 	err = s.keeper.SaveCallback(ctx, callback)
-	return &types.MsgRequestCallbackResponse{}, err
+	if err != nil {
+		return nil, err
+	}
+
+	// Send the fees into module account
+	err = s.keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(request.Sender), types.ModuleName, sdk.NewCoins(request.GetFees()))
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgRequestCallbackResponse{}, nil
 }
 
 // UpdateParams implements types.MsgServer.
