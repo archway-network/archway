@@ -213,10 +213,17 @@ func (k Keeper) createRewardsRecords(ctx sdk.Context, blockDistrState *blockRewa
 			Add(contractDistrState.InflationaryRewards).
 			Add(contractDistrState.FeeRewards...)
 
-		// Create a new record
-		_, err := k.CreateRewardsRecord(ctx, rewardsAddr, rewards, calculationHeight, calculationTime)
-		if err != nil {
-			panic(err)
+		// if the metadata says we distribute to the wallet then we do a bank send
+		if contractDistrState.Metadata.WithdrawToWallet {
+			err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ContractRewardCollector, rewardsAddr, rewards)
+			if err != nil {
+				panic(err)
+			}
+		} else { // otherwise we create a rewards record
+			_, err := k.CreateRewardsRecord(ctx, rewardsAddr, rewards, calculationHeight, calculationTime)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		// Update the total rewards distributed counter
