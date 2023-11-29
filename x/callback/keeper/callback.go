@@ -26,6 +26,15 @@ func (k Keeper) GetCallbacksByHeight(ctx sdk.Context, height int64) (callbacks [
 	return callbacks, err
 }
 
+// IterateCallbacksByHeight iterates over callbacks for registered for the given height and executes them
+func (k Keeper) IterateCallbacksByHeight(ctx sdk.Context, height int64, exec func(types.Callback) bool) {
+	rng := collections.NewPrefixedTripleRange[int64, []byte, uint64](height)
+	_ = k.Callbacks.Walk(ctx, rng, func(key collections.Triple[int64, []byte, uint64], value types.Callback) (bool, error) {
+		exec(value)
+		return false, nil
+	})
+}
+
 // ExistsCallback returns true if the callback exists for height with same contract address and same job id
 func (k Keeper) ExistsCallback(ctx sdk.Context, height int64, contractAddress sdk.AccAddress, jobID uint64) (bool, error) {
 	return k.Callbacks.Has(ctx, collections.Join3(height, contractAddress.Bytes(), jobID))

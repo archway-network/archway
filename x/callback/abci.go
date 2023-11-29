@@ -15,20 +15,20 @@ import (
 
 // EndBlocker fetches all the callbacks registered for the current block height and executes them
 func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) []abci.ValidatorUpdate {
-	logger := k.Logger(ctx)
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		panic(err)
 	}
 
 	currentHeight := ctx.BlockHeight()
-	// fetching all callbacks for current height
-	callbacks, err := k.GetCallbacksByHeight(ctx, currentHeight)
-	if err != nil {
-		panic(err)
-	}
+	k.IterateCallbacksByHeight(ctx, currentHeight, callbackExec(ctx, k, wk, params.GetCallbackGasLimit()))
+	return nil
+}
 
-	for _, callback := range callbacks {
+// callbackExec returns a function which executes the callback and deletes it from state after execution
+func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected, callbackGasLimit uint64) func(types.Callback) bool {
+	logger := k.Logger(ctx)
+	return func(callback types.Callback) bool {
 		// creating CallbackMsg which is encoded to json and passed as input to contract execution
 		callbackMsg := types.NewCallbackMsg(callback.GetJobId())
 		// handling any panics
@@ -39,9 +39,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) [
 			"job_id", callback.GetJobId(),
 			"msg", callbackMsg.String(),
 		)
-
 		// creating a child context with limited gas meter based on configured params
-		childCtx, commit := ctx.WithGasMeter(sdk.NewGasMeter(params.GetCallbackGasLimit())).CacheContext()
+		childCtx, commit := ctx.WithGasMeter(sdk.NewGasMeter(callbackGasLimit)).CacheContext()
 
 		// executing the callback on the contract
 		if _, err := wk.Sudo(childCtx, sdk.MustAccAddressFromBech32(callback.ContractAddress), callbackMsg.Bytes()); err != nil {
@@ -53,22 +52,24 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) [
 			)
 		}
 
+		// todo: check unused gas and refund any leftover to the address which reserved the callback. will do in diff PR
+
 		commit()
 
 		// deleting the callback after execution
 		if err := k.Callbacks.Remove(
 			ctx,
 			collections.Join3(
-				currentHeight,
+				callback.CallbackHeight,
 				sdk.MustAccAddressFromBech32(callback.ContractAddress).Bytes(),
 				callback.GetJobId(),
 			),
 		); err != nil {
-			panic(err) // should never happen
+			panic(err)
 		}
-	}
 
-	return nil
+		return false
+	}
 }
 
 // recoverAnyPanics catches any panics and logs cause to error
