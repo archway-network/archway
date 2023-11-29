@@ -4,15 +4,18 @@ package types
 func NewGenesisState(
 	params Params,
 ) *GenesisState {
-	panic("unimplemented 👻")
+	return &GenesisState{
+		Params: params,
+	}
 }
 
 // DefaultGenesisState returns a default genesis state.
 func DefaultGenesis() *GenesisState {
-	panic("unimplemented 👻")
+	defaultParams := DefaultParams()
+	return NewGenesisState(defaultParams)
 }
 
 // Validate perform object fields validation.
-func (m GenesisState) Validate() error {
-	panic("unimplemented 👻")
+func (g GenesisState) Validate() error {
+	return g.Params.Validate()
 }
