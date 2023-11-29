@@ -36,7 +36,7 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 	// If a callback with same job id does not exist, return error
 	callback, err := s.keeper.GetCallback(ctx, request.GetCallbackHeight(), request.GetContractAddress(), request.GetJobId())
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(types.ErrCallbackNotFound, "callback with given job id does not exist for given height")
 	}
 
 	// Returning the transaction fees as the callback was never executed
@@ -50,9 +50,12 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 
 	// Deleting the callback from state
 	err = s.keeper.DeleteCallback(ctx, request.Sender, request.GetCallbackHeight(), request.GetContractAddress(), request.GetJobId())
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgCancelCallbackResponse{
 		Refund: *txFee,
-	}, err
+	}, nil
 }
 
 // RequestCallback implements types.MsgServer.
