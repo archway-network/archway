@@ -9,10 +9,18 @@ import (
 
 // InitGenesis initializes the module genesis state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	panic("unimplemented 👻")
+	params := genState.Params
+	err := k.Params.Set(ctx, params)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis exports the module genesis for the current block.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	panic("unimplemented 👻")
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return types.NewGenesisState(params)
 }
