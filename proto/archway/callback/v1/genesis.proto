@@ -11,6 +11,4 @@ import "archway/callback/v1/callback.proto";
 message GenesisState {
   // params defines all the module parameters.
   Params params = 1 [ (gogoproto.nullable) = false ];
-  // callbacks defines all the callbacks which are yet to be executed
-  repeated Callback callbacks = 2;
 }
