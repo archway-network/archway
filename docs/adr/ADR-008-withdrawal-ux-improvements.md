@@ -18,16 +18,16 @@ are directly sent to a singular address.
 
 ## Decision
 
-A new attribute named `distribute_to_wallet` will be introduced in the `ContractMetadata`. When this attribute is
+A new attribute named `withdraw_to_wallet` will be introduced in the `ContractMetadata`. When this attribute is
 activated (set to true), instead of generating a `RewardRecord` for the contract upon accruing gas or inflationary
 rewards, the rewards will be directly dispatched to the `ContractMetadata.withdraw_address`.
 
-- If `distribute_to_wallet` is set to false, the `RewardRecord` will be generated, necessitating manual withdrawal.
-- If `distribute_to_wallet` is set to true, the `RewardRecord` will not be generated, and rewards will be directly sent
+- If `withdraw_to_wallet` is set to false, the `RewardRecord` will be generated, necessitating manual withdrawal.
+- If `withdraw_to_wallet` is set to true, the `RewardRecord` will not be generated, and rewards will be directly sent
 to the `ContractMetadata.withdraw_address`.
 
-A new message named `MsgDistributeToWallet` will be incorporated into the `x/rewards` module, enabling the
-`ContractMetadata` owner to toggle the `distribute_to_wallet` flag on or off.
+By doing this when a consumer invokes a `MsgSetContractMetadata` TX, it will be allowed to set the `withdraw_to_wallet`
+to `true`. 
 
 ## Consequences
 
