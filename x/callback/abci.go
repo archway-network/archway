@@ -1,14 +1,11 @@
 package callback
 
 import (
-	"fmt"
-	"runtime/debug"
-
 	"cosmossdk.io/collections"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/callback/keeper"
 	"github.com/archway-network/archway/x/callback/types"
 )
@@ -31,30 +28,37 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 	return func(callback types.Callback) bool {
 		// creating CallbackMsg which is encoded to json and passed as input to contract execution
 		callbackMsg := types.NewCallbackMsg(callback.GetJobId())
-		// handling any panics
-		defer recoverAnyPanics(logger, callback)()
+
 		logger.Debug(
 			"executing callback",
 			"contract_address", callback.ContractAddress,
 			"job_id", callback.GetJobId(),
 			"msg", callbackMsg.String(),
 		)
-		// creating a child context with limited gas meter based on configured params
-		childCtx, commit := ctx.WithGasMeter(sdk.NewGasMeter(callbackGasLimit)).CacheContext()
 
-		// executing the callback on the contract
-		if _, err := wk.Sudo(childCtx, sdk.MustAccAddressFromBech32(callback.ContractAddress), callbackMsg.Bytes()); err != nil {
+		gasUsed, err := pkg.ExecuteWithGasLimit(ctx, callbackGasLimit, func(ctx sdk.Context) error {
+			// executing the callback on the contract
+			_, err := wk.Sudo(ctx, sdk.MustAccAddressFromBech32(callback.ContractAddress), callbackMsg.Bytes())
+			return err
+		})
+		if err != nil {
 			logger.Error(
 				"error executing callback",
 				"contract_address", callback.ContractAddress,
 				"job_id", callback.GetJobId(),
 				"error", err,
 			)
+			// todo: throw error event with details on failure. will do in diff PR
 		}
 
-		// todo: check unused gas and refund any leftover to the address which reserved the callback. will do in diff PR
-
-		commit()
+		unusedGas := callbackGasLimit - gasUsed
+		logger.Info(
+			"callback executed with pending gas",
+			"contract_address", callback.ContractAddress,
+			"job_id", callback.GetJobId(),
+			"unused_gas", unusedGas,
+		)
+		// todo: refund any leftover to the address which reserved the callback. will do in diff PR
 
 		// deleting the callback after execution
 		if err := k.Callbacks.Remove(
@@ -65,31 +69,15 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 				callback.GetJobId(),
 			),
 		); err != nil {
-			panic(err)
+			logger.Error(
+				"error deleting callback",
+				"contract_address", callback.ContractAddress,
+				"job_id", callback.GetJobId(),
+				"error", err,
+			)
+			// todo: throw error event with details on failure. will do in diff PR
 		}
 
 		return false
-	}
-}
-
-// recoverAnyPanics catches any panics and logs cause to error
-func recoverAnyPanics(logger log.Logger, callback types.Callback) func() {
-	return func() {
-		if r := recover(); r != nil {
-			var cause string
-			switch rType := r.(type) {
-			case sdk.ErrorOutOfGas:
-				cause = fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-			default:
-				cause = fmt.Sprintf("%s", r)
-			}
-			logger.Error(
-				"panic executing callback",
-				"contract_address", callback.GetContractAddress(),
-				"job_id", callback.GetJobId(),
-				"cause", cause,
-				"stacktrace", string(debug.Stack()),
-			)
-		}
 	}
 }
