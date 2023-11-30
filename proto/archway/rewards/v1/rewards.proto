@@ -52,6 +52,10 @@ message ContractMetadata {
   // rewards_address is an address to distribute rewards to (bech32 encoded).
   // If not set (empty), rewards are not distributed for this contract.
   string rewards_address = 3;
+  // withdraw_to_wallet is a flag that defines if rewards should be immediately
+  // withdrawn to the wallet instead of creating a rewards record to be lazily
+  // withdrawn after.
+  bool withdraw_to_wallet = 4;
 }
 
 // BlockRewards defines block related rewards distribution data.

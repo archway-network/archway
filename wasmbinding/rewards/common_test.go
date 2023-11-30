@@ -327,9 +327,12 @@ func TestRewardsWASMBindings(t *testing.T) {
 	record3RewardsExpected := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
 	recordsRewards := record1RewardsExpected.Add(record2RewardsExpected...).Add(record3RewardsExpected...)
 
-	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record1RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
-	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record2RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
-	keeper.GetState().RewardsRecord(ctx).CreateRewardsRecord(contractAddr, record3RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
+	_, err = keeper.CreateRewardsRecord(ctx, contractAddr, record1RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
+	require.NoError(t, err)
+	_, err = keeper.CreateRewardsRecord(ctx, contractAddr, record2RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
+	require.NoError(t, err)
+	_, err = keeper.CreateRewardsRecord(ctx, contractAddr, record3RewardsExpected, ctx.BlockHeight(), ctx.BlockTime())
+	require.NoError(t, err)
 	require.NoError(t, keepers.MintKeeper.MintCoins(ctx, recordsRewards))
 	require.NoError(t, keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, recordsRewards))
 

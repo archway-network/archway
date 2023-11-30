@@ -990,14 +990,11 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsRewardsRecordsQuery() {
 	})
 
 	// Create a new voting and add a vote to get some rewards
-	var recordsExpected []rewardsTypes.RewardsRecord
-	{
-		s.VoterNewVoting(chain, contractAddr, acc, "Test", []string{"a", "b"}, 1*time.Hour)
-		s.VoterVote(chain, contractAddr, acc, 0, "a", true)
-
-		recordsExpected = chain.GetApp().Keepers.RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
-		s.Require().Len(recordsExpected, 2)
-	}
+	s.VoterNewVoting(chain, contractAddr, acc, "Test", []string{"a", "b"}, 1*time.Hour)
+	s.VoterVote(chain, contractAddr, acc, 0, "a", true)
+	recordsExpected, err := chain.GetApp().Keepers.RewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), contractAddr)
+	require.NoError(s.T(), err)
+	s.Require().Len(recordsExpected, 2)
 
 	// Check existing rewards
 	s.Run("Query all records", func() {
@@ -1093,18 +1090,17 @@ func (s *E2ETestSuite) TestVoter_WASMBindingsWithdrawRewards() {
 	// Create a new voting and add a few votes to get some rewards
 	var recordsExpected []rewardsTypes.RewardsRecord
 	var totalRewardsExpected sdk.Coins
-	{
-		s.VoterNewVoting(chain, contractAddr, acc1, "Test", []string{"a", "b", "c"}, 1*time.Hour)
-		s.VoterVote(chain, contractAddr, acc1, 0, "a", true)
-		s.VoterVote(chain, contractAddr, acc2, 0, "b", false)
-		s.VoterVote(chain, contractAddr, acc3, 0, "c", true)
+	s.VoterNewVoting(chain, contractAddr, acc1, "Test", []string{"a", "b", "c"}, 1*time.Hour)
+	s.VoterVote(chain, contractAddr, acc1, 0, "a", true)
+	s.VoterVote(chain, contractAddr, acc2, 0, "b", false)
+	s.VoterVote(chain, contractAddr, acc3, 0, "c", true)
 
-		recordsExpected = chain.GetApp().Keepers.RewardsKeeper.GetState().RewardsRecord(chain.GetContext()).GetRewardsRecordByRewardsAddress(contractAddr)
-		s.Require().Len(recordsExpected, 4)
+	recordsExpected, err := chain.GetApp().Keepers.RewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), contractAddr)
+	require.NoError(s.T(), err)
+	s.Require().Len(recordsExpected, 4)
 
-		for _, record := range recordsExpected {
-			totalRewardsExpected = totalRewardsExpected.Add(record.Rewards...)
-		}
+	for _, record := range recordsExpected {
+		totalRewardsExpected = totalRewardsExpected.Add(record.Rewards...)
 	}
 
 	// Get the rewardsAddr initial balance to check it after all the withdrawals are done

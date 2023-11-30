@@ -69,11 +69,16 @@ func (s *QueryServer) BlockRewardsTracking(c context.Context, request *types.Que
 	ctx := sdk.UnwrapSDKContext(c)
 	height := ctx.BlockHeight()
 
-	blockRewards, found := s.keeper.state.BlockRewardsState(ctx).GetBlockRewards(height)
-	if !found {
+	blockRewards, err := s.keeper.BlockRewards.Get(ctx, uint64(height))
+	if err == nil {
+		// it makes sense to report a height only if it does exist
+		// if err != nil, it means that the block rewards tracking for the current block does not exist
 		blockRewards.Height = ctx.BlockHeight()
 	}
-	txRewards := s.keeper.state.TxRewardsState(ctx).GetTxRewardsByBlock(height)
+	txRewards, err := s.keeper.GetTxRewardsByBlock(ctx, uint64(height))
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "block rewards tracking for the block %d: not found", height)
+	}
 
 	return &types.QueryBlockRewardsTrackingResponse{
 		Block: types.BlockTracking{
@@ -140,7 +145,10 @@ func (s *QueryServer) OutstandingRewards(c context.Context, request *types.Query
 	ctx := sdk.UnwrapSDKContext(c)
 
 	totalRewards := sdk.NewCoins()
-	records := s.keeper.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddress(rewardsAddr)
+	records, err := s.keeper.GetRewardsRecordsByWithdrawAddress(ctx, rewardsAddr)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "outstanding rewards for the address %s: not found", rewardsAddr)
+	}
 	for _, record := range records {
 		totalRewards = totalRewards.Add(record.Rewards...)
 	}

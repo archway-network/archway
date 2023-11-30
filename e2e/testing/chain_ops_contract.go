@@ -2,7 +2,7 @@ package e2eTesting
 
 import (
 	"encoding/json"
-	"io/ioutil" //nolint: staticcheck
+	"io/ioutil" // nolint: staticcheck
 
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 
@@ -105,10 +105,8 @@ func (chain *TestChain) GetContractInfo(contractAddr sdk.AccAddress) wasmdTypes.
 func (chain *TestChain) GetContractMetadata(contractAddr sdk.AccAddress) rewardsTypes.ContractMetadata {
 	t := chain.t
 
-	state := chain.app.Keepers.RewardsKeeper.GetState().ContractMetadataState(chain.GetContext())
-
-	metadata, found := state.GetContractMetadata(contractAddr)
-	require.True(t, found)
+	metadata, err := chain.app.Keepers.RewardsKeeper.ContractMetadata.Get(chain.GetContext(), contractAddr)
+	require.NoError(t, err)
 
 	return metadata
 }

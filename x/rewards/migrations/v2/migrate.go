@@ -27,7 +27,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace 
 		return err
 	}
 
-	store.Set(types.ParamsKey, bz)
+	store.Set(types.ParamsPrefix, bz)
 
 	return nil
 }
