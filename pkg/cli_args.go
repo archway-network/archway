@@ -27,6 +27,16 @@ func ParseUint64Arg(argName, argValue string) (uint64, error) {
 	return v, nil
 }
 
+// ParseInt64Arg is a helper function to parse int64 CLI argument.
+func ParseInt64Arg(argName, argValue string) (int64, error) {
+	v, err := strconv.ParseInt(argValue, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("parsing %s argument: invalid uint64 value: %w", argName, err)
+	}
+
+	return v, nil
+}
+
 // ParseCoinArg is a helper function to parse uint64 CLI argument.
 func ParseCoinArg(argName, argValue string) (sdk.Coin, error) {
 	deposit, err := sdk.ParseCoinNormalized(argValue)
