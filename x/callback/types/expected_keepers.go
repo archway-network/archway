@@ -17,3 +17,8 @@ type RewardsKeeperExpected interface {
 	GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress) *rewardstypes.ContractMetadata
 	ComputationalPriceOfGas(ctx sdk.Context) sdk.DecCoin
 }
+
+type BankKeeperExpected interface {
+	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+}
