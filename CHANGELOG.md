@@ -33,7 +33,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Added
 
 - [#481](https://github.com/archway-network/archway/pull/481) - Add Release Checklist issue type 
-- [](https://github.com/archway-network/archway/pull/502) - Improve rewards withdrawal experience by allowing a Metadata owner to set that rewards directly go to the reward address.
+- [#502](https://github.com/archway-network/archway/pull/502) - Improve rewards withdrawal experience by allowing a Metadata owner to set that rewards directly go to the reward address.
 - [#504](https://github.com/archway-network/archway/pull/504) - Interchain test gh workflow now runs on PRs targetting release branches as well as main 
 - [#462](https://github.com/archway-network/archway/pull/462) - adding docs ADR-008 – Improvements on rewards withdrawal experience
 
@@ -53,6 +53,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Fixed
 
 - [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
+- [#514](https://github.com/archway-network/archway/pull/514) - Fix snapshot db being hardcoded from goleveldb to based on config 
 
 ### Improvements
 
