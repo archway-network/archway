@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 -   [#470](https://github.com/archway-network/archway/pull/470) - Bumping x/wasmd to v0.43.0
 -   [#507](https://github.com/archway-network/archway/pull/507) – Version bump x/wasmd to v0.45.0 and cosmos-sdk to v0.47.6
 -   [#502](https://github.com/archway-network/archway/pull/502) - Improve rewards withdrawal experience by allowing a Metadata owner to set that rewards directly go to the reward address.
+-   [#462](https://github.com/archway-network/archway/pull/462) - adding docs ADR-008 – Improvements on rewards withdrawal experience
 
 ### Changed
 
