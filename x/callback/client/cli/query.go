@@ -1,11 +1,12 @@
 package cli
 
 import (
-	"github.com/archway-network/archway/pkg"
-	"github.com/archway-network/archway/x/callback/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+
+	"github.com/archway-network/archway/pkg"
+	"github.com/archway-network/archway/x/callback/types"
 )
 
 // GetQueryCmd builds query command group for the module.

@@ -1,12 +1,13 @@
 package cli
 
 import (
-	"github.com/archway-network/archway/pkg"
-	"github.com/archway-network/archway/x/callback/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
+
+	"github.com/archway-network/archway/pkg"
+	"github.com/archway-network/archway/x/callback/types"
 )
 
 // GetTxCmd builds tx command group for the module.
