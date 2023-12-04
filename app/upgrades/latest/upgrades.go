@@ -8,6 +8,7 @@ import (
 
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
+	callbackTypes "github.com/archway-network/archway/x/callback/types"
 )
 
 // This upgrade handler is used for all the current changes to the protocol
@@ -28,5 +29,9 @@ var Upgrade = upgrades.Upgrade{
 			return migrations, nil
 		}
 	},
-	StoreUpgrades: storetypes.StoreUpgrades{},
+	StoreUpgrades: storetypes.StoreUpgrades{
+		Added: []string{
+			callbackTypes.ModuleName,
+		},
+	},
 }
