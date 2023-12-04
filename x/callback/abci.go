@@ -51,14 +51,32 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 			// todo: throw error event with details on failure. will do in diff PR
 		}
 
-		unusedGas := callbackGasLimit - gasUsed
 		logger.Info(
 			"callback executed with pending gas",
 			"contract_address", callback.ContractAddress,
 			"job_id", callback.GetJobId(),
-			"unused_gas", unusedGas,
+			"used_gas", gasUsed,
 		)
-		// todo: refund any leftover to the address which reserved the callback. will do in diff PR
+
+		// Calculate current tx fees based on gasConsumed. Refund any leftover to the address which reserved the callback
+		txFeesConsumed := k.CalculateTransactionFees(ctx, gasUsed)
+		if txFeesConsumed.IsLT(*callback.FeeSplit.TransactionFees) {
+			refundAmount := callback.FeeSplit.TransactionFees.Sub(txFeesConsumed)
+			err := k.SendFromCallbackModule(ctx, callback.ReservedBy, refundAmount)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		// Send fees to fee collector
+		feeCollectorAmount := callback.FeeSplit.BlockReservationFees.
+			Add(*callback.FeeSplit.FutureReservationFees).
+			Add(*callback.FeeSplit.SurplusFees).
+			Add(txFeesConsumed)
+		err = k.SendToFeeCollector(ctx, feeCollectorAmount)
+		if err != nil {
+			panic(err)
+		}
 
 		// deleting the callback after execution
 		if err := k.Callbacks.Remove(
