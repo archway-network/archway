@@ -33,12 +33,16 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Added
 
 - [#481](https://github.com/archway-network/archway/pull/481) - Add Release Checklist issue type 
+- [](https://github.com/archway-network/archway/pull/502) - Improve rewards withdrawal experience by allowing a Metadata owner to set that rewards directly go to the reward address.
+- [#504](https://github.com/archway-network/archway/pull/504) - Interchain test gh workflow now runs on PRs targetting release branches as well as main 
 
 ### Improvements
 
-- [#478](https://github.com/archway-network/archway/pull/475) – moves x/rewards state to use collections for state management.
+- [#478](https://github.com/archway-network/archway/pull/475) – Moves x/rewards state to use collections for state management.
 
 ### Changed
+
+- [#507](https://github.com/archway-network/archway/pull/507) – Version bump wasmd to v0.45.0 and cosmos-sdk to v0.47.6
 
 ### Deprecated
 
@@ -47,11 +51,10 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Fixed
 
 - [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
-- [#496](https://github.com/archway-network/archway/pull/496) - Fix rest endpoints in App
 
 ### Improvements
 
-## [v5.0.0](https://github.com/archway-network/archway/releases/tag/v5.0.0)
+## [v5.0.2](https://github.com/archway-network/archway/releases/tag/v5.0.2)
 
 ### Added
 
@@ -67,10 +70,18 @@ Contains all the PRs that improved the code without changing the behaviours.
 - [#457](https://github.com/archway-network/archway/pull/457) - Modify the upgrade handlers to pass in all the app keepers instead of just the account keeper
 - [#465](https://github.com/archway-network/archway/pull/465) - Change the name of the gh workflow job from `build` to `run-tests` as it runs tests
 
+### Fixed
+
+- [#496](https://github.com/archway-network/archway/pull/496) - Fix rest endpoints in App
+
 ### Deprecated
 
 - [#439](https://github.com/archway-network/archway/pull/439) - Renaming `debug` image to `dev`
 - [#461](https://github.com/archway-network/archway/pull/461) - Remove titus network deployment
+
+## ~~[RETRACTED - v5.0.1](https://github.com/archway-network/archway/releases/tag/v5.0.1)~~
+
+## ~~[RETRACTED - v5.0.0](https://github.com/archway-network/archway/releases/tag/v5.0.0)~~
 
 ## [v4.0.2](https://github.com/archway-network/archway/releases/tag/v4.0.2)
 

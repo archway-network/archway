@@ -47,7 +47,7 @@ message MsgRequestCallback {
     // callback_height is the height at which the callback is executed.
     int64 callback_height = 4;
     // fees is the amount of fees being paid to register the contract
-    repeated cosmos.base.v1beta1.Coin fees = 5 [ (gogoproto.nullable) = false ];
+    cosmos.base.v1beta1.Coin fees = 5 [ (gogoproto.nullable) = false ];
 }
 
 
@@ -59,15 +59,17 @@ message MsgCancelCallback{
   option (cosmos.msg.v1.signer) = "sender";
   // sender is the address of the contract which is cancelling the callback (bech32 encoded)
   string sender = 1;
+  // contract_address is the address of the contract (bech32 encoded)
+  string contract_address = 2;
   // job_id is an identifier the callback requestor had passed during registration of the callback
-  uint64 job_id = 2;
+  uint64 job_id = 3;
   // callback_height is the height at which the callback requestor had registered the callback
-  int64 callback_height = 3;
+  int64 callback_height = 4;
 }
 
 
 // MsgCancelCallbackResponse defines the response structure for executing a MsgCancelCallback message.
 message MsgCancelCallbackResponse {
   // refund is the amount of fees being refunded due to the cancellation of the callback
-  repeated cosmos.base.v1beta1.Coin refund = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin refund = 1 [ (gogoproto.nullable) = false ];
 } 

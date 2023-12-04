@@ -17,6 +17,8 @@ type Keeper struct {
 	storeKey      storetypes.StoreKey
 	wasmKeeper    types.WasmKeeperExpected
 	rewardsKeeper types.RewardsKeeperExpected
+	bankKeeper    types.BankKeeperExpected
+	authority     string // this should be the x/gov module account
 
 	Schema collections.Schema
 
@@ -27,13 +29,15 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, wk types.WasmKeeperExpected, rk types.RewardsKeeperExpected) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, wk types.WasmKeeperExpected, rk types.RewardsKeeperExpected, bk types.BankKeeperExpected, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
 	k := Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
 		wasmKeeper:    wk,
 		rewardsKeeper: rk,
+		bankKeeper:    bk,
+		authority:     authority,
 		Params: collections.NewItem(
 			sb,
 			types.ParamsKeyPrefix,
@@ -59,4 +63,9 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, wk types.WasmKeepe
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+// GetAuthority returns the x/callback module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
