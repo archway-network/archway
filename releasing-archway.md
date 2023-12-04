@@ -29,13 +29,17 @@ Additional labels for release-candidates, pre-release versions and other build m
 
 The standard release process progresses through the following steps:
 
-1. Tag a new release once a major release, update or patch is deemed ready for deployment (release atrifacts are created via automation);
-2. Deploy the new release version to Constantine (testnet);
-3. Conduct final verification for the release on testnet, including verfification of upgrade handlers;
-4. Repeat steps 1-3 until all verification passes, e.g. relevant tests, remediations, etc;
-5. Deploy the release to mainnet via upgrade proposal;
+1. **Tag** a new release candidate once a major release, update or patch is deemed ready for deployment (release atrifacts are created via automation);
+2. **Deploy** the release candidate to Titus (testnet);
+3. **Test** and confirm release candidate stability and features;
+4. **Repeat** steps 1-3 until all tests and sanity checks pass, e.g. relevant tests, remediations, etc;
+5. **Tag** a new general release once all tests pass and stability is confirmed;
+6. **Deploy** the new release version to Constantine (testnet);
+7. **Verify** the release on testnet, inclusing verification of any upgrade handlers;
+8. **Repeat** steps 1-7 until fully verified, e.g. relevant tests, remediations, etc;
+9. **Deploy** the release to mainnet via upgrade proposal;
 
-**Note:** Steps 1-3 may include a number of iterations with various release candidates;
+**Note:** _Every release candidate must pass local sanity checks to ensure the API reference is correctly updated and that common API endpoints (such as `bank`, `gov` and `staking`) are working as expected._
 
 ## Network Upgrades
 
@@ -49,8 +53,7 @@ The standard release process progresses through the following steps:
 - Once a software upgrade proposal passes, all network operator are expected to upgrade to the exact
   same archway protocol release within a reasonable timeframe.
 - Each new release must be adopted and tested on constantine-1 before being adopted on archway-1.
-- titus-1 is an unstable development network, with no guarantees for stability or graceful upgrades. Network upgrades on titus-1 are
-  expected to reset network state and start again from block 1 at any given time.
+- titus-1 is an unstable development network, with no guarantees for stability or graceful upgrades. Network upgrades on titus-1 are expected to reset network state and start again from block 1 at any given time.
 
 ### Important upgrade scenarios with examples
 
