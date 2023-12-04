@@ -96,10 +96,11 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 	}
 
 	// Send the fees into module account
-	err = s.keeper.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(request.Sender), types.ModuleName, sdk.NewCoins(request.GetFees()))
+	err = s.keeper.SendToCallbackModule(ctx, request.Sender, request.GetFees())
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.MsgRequestCallbackResponse{}, nil
 }
 
