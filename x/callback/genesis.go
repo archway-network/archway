@@ -23,5 +23,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		panic(err)
 	}
 	callbacks, err := k.GetAllCallbacks(ctx)
+	if err != nil {
+		panic(err)
+	}
 	return types.NewGenesisState(params, callbacks)
 }
