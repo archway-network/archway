@@ -45,17 +45,22 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 		return nil, err
 	}
 
-	// Returning the transaction fees as the callback was never executed
-	txFee := callback.GetFeeSplit().GetTransactionFees()
-	err = s.keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.MustAccAddressFromBech32(request.Sender), sdk.NewCoins(*txFee))
+	// Returning the transaction fees + surplus fees as the callback was never executed
+	refundFees := callback.FeeSplit.TransactionFees.Add(*callback.FeeSplit.SurplusFees)
+	err = s.keeper.SendFromCallbackModule(ctx, request.Sender, refundFees)
 	if err != nil {
 		return nil, err
 	}
 
-	// todo: deal with the rest of the fees. later in diff pr
+	// Sending the reservation fees to fee collector
+	reservationFees := callback.FeeSplit.BlockReservationFees.Add(*callback.FeeSplit.FutureReservationFees)
+	err = s.keeper.SendToFeeCollector(ctx, reservationFees)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgCancelCallbackResponse{
-		Refund: *txFee,
+		Refund: refundFees,
 	}, nil
 }
 
