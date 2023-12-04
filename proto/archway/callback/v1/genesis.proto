@@ -10,7 +10,7 @@ import "archway/callback/v1/callback.proto";
 // GenesisState defines the initial state of the callback module.
 message GenesisState {
   // params defines all the module parameters.
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [ (gogoproto.nullable) = false ];  
   // callbacks defines all the callbacks which are yet to be executed
   repeated Callback callbacks = 2;
 }
