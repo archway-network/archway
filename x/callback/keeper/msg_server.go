@@ -54,6 +54,16 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 
 	// todo: deal with the rest of the fees. later in diff pr
 
+	// Emit event
+	types.EmitCallbackCancelledEvent(
+		ctx,
+		request.GetContractAddress(),
+		request.GetJobId(),
+		request.GetCallbackHeight(),
+		request.Sender,
+		*txFee,
+	)
+
 	return &types.MsgCancelCallbackResponse{
 		Refund: *txFee,
 	}, nil
@@ -100,6 +110,17 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 	if err != nil {
 		return nil, err
 	}
+
+	// Emit event
+	types.EmitCallbackRegisteredEvent(
+		ctx,
+		request.GetContractAddress(),
+		request.GetJobId(),
+		request.GetCallbackHeight(),
+		callback.GetFeeSplit(),
+		request.Sender,
+	)
+
 	return &types.MsgRequestCallbackResponse{}, nil
 }
 

@@ -39,8 +39,6 @@ message CallbackCancelledEvent {
 message CallbackExecutedSuccessEvent {
     // execution is the callback execution details
     CallbackExecuted execution = 1;
-    // response is the response returned by the callback execution
-    string response = 2;
 }
 
 // CallbackExecutedFailedEvent is emitted when a callback execution fails.

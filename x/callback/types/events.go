@@ -52,11 +52,9 @@ func EmitCallbackExecutedSuccessEvent(
 	jobId uint64,
 	sudoMsg string,
 	gasUsed uint64,
-	response string,
 ) {
 	execution := NewCallbackExecuted(contractAddress, jobId, sudoMsg, gasUsed)
 	err := ctx.EventManager().EmitTypedEvent(&CallbackExecutedSuccessEvent{
-		Response:  response,
 		Execution: &execution,
 	})
 	if err != nil {
