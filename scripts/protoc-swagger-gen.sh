@@ -30,7 +30,7 @@ sed -i "s/$archwayTemplate/$archwayVersion/g" ./tmp-swagger-gen/config.json
 # combine swagger files
 # uses nodejs package `swagger-combine`.
 # all the individual swagger files need to be configured in `config.json` for merging
-swagger-combine ./tmp-swagger-gen/config.json -o ./docs/client/swagger.yaml -f yaml --continueOnConflictingPaths true --includeDefinitions true
+swagger-combine ./tmp-swagger-gen/config.json -o ./docs/client/swagger.yaml -f yaml --includeDefinitions true
 
 # clean swagger files
 rm -rf ./tmp-swagger-gen
