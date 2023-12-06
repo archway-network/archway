@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "title": "Archway - gRPC Gateway docs",
-        "description": "A REST interface for state queries. Using Cosmos SDK {sdk-version} and Wasmd {wasmd-version}",
+        "description": "A REST interface for state queries. \nUsing Cosmos SDK [{sdk-version}](https://github.com/cosmos/cosmos-sdk/releases/tag/{sdk-version}) and Wasmd [{wasmd-version}](https://github.com/CosmWasm/wasmd/releases/tag/{wasmd-version})",
         "version": "{archway-version}"
     },
     "apis": [
