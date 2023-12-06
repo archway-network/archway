@@ -3,11 +3,11 @@
     "info": {
         "title": "Archway - gRPC Gateway docs",
         "description": "A REST interface for state queries",
-        "version": "6.0.0"
+        "version": "{archway-version}"
     },
     "apis": [
         {
-            "url": "https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.47.6/client/docs/swagger-ui/swagger.yaml"
+            "url": "https://raw.githubusercontent.com/cosmos/cosmos-sdk/{sdk-version}/client/docs/swagger-ui/swagger.yaml"
         },
         {
             "url": "./tmp-swagger-gen/archway/rewards/v1/query.swagger.json",
