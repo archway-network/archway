@@ -925,8 +925,11 @@ func (app *ArchwayApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.AP
 
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
-	if err := RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
-		panic(err)
+	// Setup swagger if enabled
+	if apiConfig.Swagger {
+		if err := RegisterSwaggerAPI(apiSvr); err != nil {
+			panic(err)
+		}
 	}
 }
 
