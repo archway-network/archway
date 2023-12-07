@@ -51,6 +51,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 ### Fixed
 
 - [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
+- [#521](https://github.com/archway-network/archway/pull/521) - Fix Archway module endpoints not showing up in swagger
 
 ### Improvements
 
