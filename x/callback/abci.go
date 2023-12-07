@@ -62,7 +62,7 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 		txFeesConsumed := k.CalculateTransactionFees(ctx, gasUsed)
 		if txFeesConsumed.IsLT(*callback.FeeSplit.TransactionFees) {
 			refundAmount := callback.FeeSplit.TransactionFees.Sub(txFeesConsumed)
-			err := k.SendFromCallbackModule(ctx, callback.ReservedBy, refundAmount)
+			err := k.RefundFromCallbackModule(ctx, callback.ReservedBy, refundAmount)
 			if err != nil {
 				panic(err)
 			}

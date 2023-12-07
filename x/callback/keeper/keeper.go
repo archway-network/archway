@@ -80,8 +80,8 @@ func (k Keeper) SendToCallbackModule(ctx sdk.Context, sender string, amount sdk.
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, types.ModuleName, sdk.NewCoins(amount))
 }
 
-// SendFromCallbackModule sends coins from the x/callback module account to the recipient.
-func (k Keeper) SendFromCallbackModule(ctx sdk.Context, recipient string, amount sdk.Coin) error {
+// RefundFromCallbackModule sends coins from the x/callback module account to the recipient.
+func (k Keeper) RefundFromCallbackModule(ctx sdk.Context, recipient string, amount sdk.Coin) error {
 	recipientAddr, err := sdk.AccAddressFromBech32(recipient)
 	if err != nil {
 		return err

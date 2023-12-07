@@ -47,7 +47,7 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 
 	// Returning the transaction fees + surplus fees as the callback was never executed
 	refundFees := callback.FeeSplit.TransactionFees.Add(*callback.FeeSplit.SurplusFees)
-	err = s.keeper.SendFromCallbackModule(ctx, request.Sender, refundFees)
+	err = s.keeper.RefundFromCallbackModule(ctx, request.Sender, refundFees)
 	if err != nil {
 		return nil, err
 	}
