@@ -1,0 +1,36 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Archway - gRPC Gateway docs",
+        "description": "A REST interface for state queries. \nUsing Cosmos SDK [{sdk-version}](https://github.com/cosmos/cosmos-sdk/releases/tag/{sdk-version}) and Wasmd [{wasmd-version}](https://github.com/CosmWasm/wasmd/releases/tag/{wasmd-version})",
+        "version": "{archway-version}"
+    },
+    "apis": [
+        {
+            "url": "https://raw.githubusercontent.com/cosmos/cosmos-sdk/{sdk-version}/client/docs/swagger-ui/swagger.yaml",
+            "tags": {
+                "add": ["Cosmos"],
+                "remove": ["Query", "Service"]
+            }
+        },
+        {
+            "url": "./tmp-swagger-gen/archway/rewards/v1/query.swagger.json",
+            "tags": {
+                "add": ["Archway"],
+                "remove": ["Query", "Service"]
+            },
+            "operationIds": {
+                "rename": {
+                    "Params": "RewardsParams"
+                }
+            }
+        },
+        {
+            "url": "./tmp-swagger-gen/archway/tracking/v1/query.swagger.json",
+            "tags": {
+                "add": ["Archway"],
+                "remove": ["Query", "Service"]
+            }
+        }
+    ]
+}

@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 -   [#497](https://github.com/archway-network/archway/pull/497) - Fix rest endpoints in App
 -   [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
 -   [#514](https://github.com/archway-network/archway/pull/514) - Fix snapshot db being hardcoded from goleveldb to based on config 
+-   [#522](https://github.com/archway-network/archway/pull/522) - Fix Archway module endpoints not showing up in swagger
 
 ## ~~[RETRACTED - v5.0.2](https://github.com/archway-network/archway/releases/tag/v5.0.2)~~
 
