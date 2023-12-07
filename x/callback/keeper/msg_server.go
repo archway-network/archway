@@ -66,7 +66,7 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 		request.GetJobId(),
 		request.GetCallbackHeight(),
 		request.Sender,
-		*txFee,
+		refundFees,
 	)
 
 	return &types.MsgCancelCallbackResponse{
