@@ -48,7 +48,31 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 				"job_id", callback.GetJobId(),
 				"error", err,
 			)
-			// todo: throw error event with details on failure. will do in diff PR
+			// Emit failure event
+			types.EmitCallbackExecutedFailedEvent(
+				ctx,
+				callback.ContractAddress,
+				callback.GetJobId(),
+				callbackMsg.String(),
+				gasUsed,
+				err.Error(),
+			)
+		} else {
+			logger.Info(
+				"callback executed successfully",
+				"contract_address", callback.ContractAddress,
+				"job_id", callback.GetJobId(),
+				"msg", callbackMsg.String(),
+				"gas_used", gasUsed,
+			)
+			// Emit success event
+			types.EmitCallbackExecutedSuccessEvent(
+				ctx,
+				callback.ContractAddress,
+				callback.GetJobId(),
+				callbackMsg.String(),
+				gasUsed,
+			)
 		}
 
 		logger.Info(
@@ -87,13 +111,7 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 				callback.GetJobId(),
 			),
 		); err != nil {
-			logger.Error(
-				"error deleting callback",
-				"contract_address", callback.ContractAddress,
-				"job_id", callback.GetJobId(),
-				"error", err,
-			)
-			// todo: throw error event with details on failure. will do in diff PR
+			panic(err)
 		}
 
 		return false
