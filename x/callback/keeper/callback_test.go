@@ -174,14 +174,105 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 	})
 }
 
-// func (s *KeeperTestSuite) TestDeleteCallback() {
-// 	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
-// 	contractAdminAcc := s.chain.GetAccount(0)
-// 	contractViewer := testutils.NewMockContractViewer()
-// 	keeper.SetContractInfoViewer(contractViewer)
+func (s *KeeperTestSuite) TestDeleteCallback() {
+	ctx, keeper := s.chain.GetContext().WithBlockHeight(100), s.chain.GetApp().Keepers.CallbackKeeper
+	rewardsKeeper := s.chain.GetApp().Keepers.RewardsKeeper
+	contractViewer := testutils.NewMockContractViewer()
+	keeper.SetWasmKeeper(contractViewer)
+	validCoin := sdk.NewInt64Coin("stake", 10)
 
-// 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
-// 	fee := sdk.NewInt64Coin("test", 10)
+	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAdminAcc := s.chain.GetAccount(0)
+	notContractAdminAcc := s.chain.GetAccount(1)
+	contractOwnerAcc := s.chain.GetAccount(2)
 
-// 	s.Run()
-// }
+	contractViewer.AddContractAdmin(
+		contractAddr.String(),
+		contractAdminAcc.Address.String(),
+	)
+
+	var metaCurrent rewardsTypes.ContractMetadata
+	metaCurrent.ContractAddress = contractAddr.String()
+	metaCurrent.OwnerAddress = contractOwnerAcc.Address.String()
+	metaCurrent.RewardsAddress = contractOwnerAcc.Address.String()
+	rewardsKeeper.SetContractInfoViewer(contractViewer)
+	err := rewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
+	s.Require().NoError(err)
+
+	callback := types.Callback{
+		ContractAddress: contractAddr.String(),
+		JobId:           1,
+		CallbackHeight:  101,
+		ReservedBy:      contractAddr.String(),
+		FeeSplit: &types.CallbackFeesFeeSplit{
+			TransactionFees:       &validCoin,
+			BlockReservationFees:  &validCoin,
+			FutureReservationFees: &validCoin,
+			SurplusFees:           &validCoin,
+		},
+	}
+	err = keeper.SaveCallback(ctx, callback)
+	s.Require().NoError(err)
+
+	callback.JobId = 2
+	err = keeper.SaveCallback(ctx, callback)
+	s.Require().NoError(err)
+
+	callback.JobId = 3
+	err = keeper.SaveCallback(ctx, callback)
+	s.Require().NoError(err)
+
+	s.Run("FAIL: Invalid contract address", func() {
+		err := keeper.DeleteCallback(ctx, contractAddr.String(), 101, "👻", 0)
+		s.Assert().ErrorContains(err, "decoding bech32 failed: invalid bech32 string length 4")
+	})
+
+	s.Run("FAIL: Not authorized to delete callback", func() {
+		err := keeper.DeleteCallback(ctx, notContractAdminAcc.Address.String(), 101, contractAddr.String(), 0)
+		s.Assert().ErrorIs(err, types.ErrUnauthorized)
+	})
+
+	s.Run("FAIL: Callback does not exist", func() {
+		err := keeper.DeleteCallback(ctx, contractAddr.String(), 101, contractAddr.String(), 0)
+		s.Assert().ErrorIs(err, types.ErrCallbackNotFound)
+	})
+
+	s.Run("OK: Success delete - sender is contract", func() {
+		exists, err := keeper.ExistsCallback(ctx, 101, contractAddr.String(), 1)
+		s.Assert().NoError(err)
+		s.Assert().True(exists)
+
+		err = keeper.DeleteCallback(ctx, contractAddr.String(), 101, contractAddr.String(), 1)
+		s.Assert().NoError(err)
+
+		exists, err = keeper.ExistsCallback(ctx, 101, contractAddr.String(), 1)
+		s.Assert().NoError(err)
+		s.Assert().False(exists)
+	})
+
+	s.Run("OK: Success delete - sender is contract admin", func() {
+		exists, err := keeper.ExistsCallback(ctx, 101, contractAddr.String(), 2)
+		s.Assert().NoError(err)
+		s.Assert().True(exists)
+
+		err = keeper.DeleteCallback(ctx, contractAdminAcc.Address.String(), 101, contractAddr.String(), 2)
+		s.Assert().NoError(err)
+
+		exists, err = keeper.ExistsCallback(ctx, 101, contractAddr.String(), 2)
+		s.Assert().NoError(err)
+		s.Assert().False(exists)
+	})
+
+	s.Run("OK: Success delete - sender is contract owner", func() {
+		exists, err := keeper.ExistsCallback(ctx, 101, contractAddr.String(), 3)
+		s.Assert().NoError(err)
+		s.Assert().True(exists)
+
+		err = keeper.DeleteCallback(ctx, contractOwnerAcc.Address.String(), 101, contractAddr.String(), 3)
+		s.Assert().NoError(err)
+
+		exists, err = keeper.ExistsCallback(ctx, 101, contractAddr.String(), 3)
+		s.Assert().NoError(err)
+		s.Assert().False(exists)
+	})
+}
