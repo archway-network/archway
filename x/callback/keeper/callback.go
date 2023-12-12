@@ -116,5 +116,5 @@ func isAuthorizedToModify(ctx sdk.Context, k Keeper, height int64, contractAddre
 	}
 
 	contractMetadata := k.rewardsKeeper.GetContractMetadata(ctx, contractAddress)
-	return sender == contractMetadata.OwnerAddress // Owner of the contract can modify its callbacks
+	return contractMetadata != nil && sender == contractMetadata.OwnerAddress // Owner of the contract can modify its callbacks
 }
