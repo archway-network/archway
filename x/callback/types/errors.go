@@ -10,4 +10,5 @@ var (
 	ErrUnauthorized              = errorsmod.Register(DefaultCodespace, 5, "sender not authorized to register callback")
 	ErrCallbackNotFound          = errorsmod.Register(DefaultCodespace, 6, "callback with given job id does not exist for given height")
 	ErrInsufficientFees          = errorsmod.Register(DefaultCodespace, 7, "insufficient fees to register callback")
+	ErrCallbackExists            = errorsmod.Register(DefaultCodespace, 8, "callback with given job id already exists for given height")
 )

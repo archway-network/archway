@@ -92,7 +92,6 @@ func (s *KeeperTestSuite) TestRequestCallback() {
 		{
 			testCase: "OK: register callback",
 			prepare: func() *types.MsgRequestCallback {
-
 				return &types.MsgRequestCallback{
 					ContractAddress: contractAddr.String(),
 					JobId:           1,

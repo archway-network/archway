@@ -187,7 +187,7 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 				SurplusFees:           &validCoin,
 			},
 		})
-		s.Assert().Error(err)
+		s.Assert().ErrorIs(err, types.ErrCallbackExists)
 	})
 }
 

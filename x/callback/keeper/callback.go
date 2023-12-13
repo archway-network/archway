@@ -94,8 +94,8 @@ func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
 	if err != nil {
 		return err
 	}
-	if !exists {
-		return types.ErrCallbackNotFound
+	if exists {
+		return types.ErrCallbackExists
 	}
 	// If callback is requested for height in the past or present, return error
 	if callback.GetCallbackHeight() <= ctx.BlockHeight() {
