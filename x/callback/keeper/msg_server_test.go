@@ -3,15 +3,16 @@ package keeper_test
 import (
 	"fmt"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/pkg/testutils"
-	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
-	"github.com/archway-network/archway/x/callback/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg/testutils"
+	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
+	"github.com/archway-network/archway/x/callback/types"
 )
 
 func (s *KeeperTestSuite) TestRequestCallback() {
