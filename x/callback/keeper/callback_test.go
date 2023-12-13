@@ -97,6 +97,22 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 		s.Assert().ErrorIs(err, types.ErrCallbackHeightNotinFuture)
 	})
 
+	s.Run("FAIL: callback height is current height", func() {
+		err := keeper.SaveCallback(ctx, types.Callback{
+			ContractAddress: contractAddr.String(),
+			JobId:           1,
+			CallbackHeight:  ctx.BlockHeight(),
+			ReservedBy:      contractAddr.String(),
+			FeeSplit: &types.CallbackFeesFeeSplit{
+				TransactionFees:       &validCoin,
+				BlockReservationFees:  &validCoin,
+				FutureReservationFees: &validCoin,
+				SurplusFees:           &validCoin,
+			},
+		})
+		s.Assert().ErrorIs(err, types.ErrCallbackHeightNotinFuture)
+	})
+
 	s.Run("OK: save callback - sender is contract", func() {
 		callback := types.Callback{
 			ContractAddress: contractAddr.String(),
