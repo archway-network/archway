@@ -13,7 +13,7 @@ require (
 	github.com/CosmWasm/wasmd v0.43.0
 	github.com/CosmWasm/wasmvm v1.5.0
 	github.com/archway-network/voter v0.0.0-00010101000000-000000000000
-	github.com/cometbft/cometbft v0.37.2
+	github.com/cometbft/cometbft v0.37.4
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.6
 	github.com/cosmos/gogoproto v1.4.10
@@ -47,7 +47,7 @@ require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
-	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
+	github.com/ChainSafe/go-schnorrkel v1.0.0 // indirect
 	github.com/CosmWasm/tinyjson v0.9.0 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
@@ -187,6 +187,8 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
+
+replace github.com/cosmos/cosmos-sdk => ../cosmos/archway/cosmos-sdk
 
 replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.45.0-archway
 

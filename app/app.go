@@ -40,7 +40,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -126,6 +125,7 @@ import (
 	"github.com/archway-network/archway/x/rewards"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
+	rewardsPost "github.com/archway-network/archway/x/rewards/post"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	"github.com/archway-network/archway/x/tracking"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
@@ -803,12 +803,7 @@ func NewArchwayApp(
 	if err != nil {
 		panic(fmt.Errorf("failed to create AnteHandler: %s", err))
 	}
-	postHandler, err := posthandler.NewPostHandler(
-		posthandler.HandlerOptions{},
-	)
-	if err != nil {
-		panic(fmt.Errorf("failed to create PostHandler: %s", err))
-	}
+	postHandler := sdk.ChainPostDecorators(rewardsPost.NewReimburseFlatFees(app.Keepers.RewardsKeeper))
 
 	app.SetAnteHandler(anteHandler)
 	app.SetInitChainer(app.InitChainer)
