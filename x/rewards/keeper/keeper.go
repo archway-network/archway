@@ -104,6 +104,7 @@ type Keeper struct {
 	TxRewards        *collections.IndexedMap[uint64, types.TxRewards, TxRewardsIndex]
 	RewardsRecordID  collections.Sequence
 	RewardsRecords   *collections.IndexedMap[uint64, types.RewardsRecord, RewardsRecordsIndex]
+	TxFlatFeesIDs    collections.KeySet[uint64] // keeps track of the current TX flat fees rewards records
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -115,8 +116,8 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 	schemaBuilder := collections.NewSchemaBuilder(collcompat.NewKVStoreService(key))
 
 	k := Keeper{
-		storeKey:         key,
 		cdc:              cdc,
+		storeKey:         key,
 		paramStore:       ps,
 		contractInfoView: contractInfoReader,
 		trackingKeeper:   trackingKeeper,
@@ -135,19 +136,19 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 			"min_consensus_fee",
 			collcompat.ProtoValue[sdk.DecCoin](cdc),
 		),
-		BlockRewards: collections.NewMap(
-			schemaBuilder,
-			types.BlockRewardsPrefix,
-			"block_rewards",
-			collections.Uint64Key,
-			collcompat.ProtoValue[types.BlockRewards](cdc),
-		),
 		ContractMetadata: collections.NewMap(
 			schemaBuilder,
 			types.ContractMetadataPrefix,
 			"contract_metadata",
 			collections.BytesKey,
 			collcompat.ProtoValue[types.ContractMetadata](cdc),
+		),
+		BlockRewards: collections.NewMap(
+			schemaBuilder,
+			types.BlockRewardsPrefix,
+			"block_rewards",
+			collections.Uint64Key,
+			collcompat.ProtoValue[types.BlockRewards](cdc),
 		),
 		FlatFees: collections.NewMap(
 			schemaBuilder,
@@ -173,6 +174,7 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 			collcompat.ProtoValue[types.RewardsRecord](cdc),
 			NewRewardsRecordsIndex(schemaBuilder),
 		),
+		TxFlatFeesIDs: collections.NewKeySet(schemaBuilder, types.TxFlatFeesIDsPrefix, "tx_flat_fees_ids", collections.Uint64Key),
 	}
 
 	schema, err := schemaBuilder.Build()

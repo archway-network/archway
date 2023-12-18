@@ -413,37 +413,16 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 		RewardsAddress:  contractAddr.String(),
 	})
 
-	flatFees := sdk.NewInt64Coin("stake", 1000)
+	flatFees := sdk.NewInt64Coin("stake", 10_000)
 	err := rewardsKeeper.SetFlatFee(chain.GetContext(), senderAcc.Address, rewardsTypes.FlatFee{
 		ContractAddress: contractAddr.String(),
 		FlatFee:         flatFees,
 	})
 	require.NoError(s.T(), err)
 
-	sendMsg := func(msg sdk.Msg, passes bool) (gasEstimated, gasUsed uint64, txFees sdk.Coins) {
-		// Simulate msg
-		_, _, _, _ = chain.SendMsgs(senderAcc, passes, []sdk.Msg{msg})
-		gasEstimated = 0
-		gasAdjusted := uint64(float64(gasEstimated) * 1.1)
-
-		// Estimate Tx fees
-		gasPrice, ok := rewardsKeeper.GetMinConsensusFee(chain.GetContext())
-		s.Require().True(ok)
-
-		txFees = sdk.NewCoins(
-			sdk.NewCoin(
-				gasPrice.Denom,
-				gasPrice.Amount.MulInt64(int64(gasAdjusted)).RoundInt(),
-			),
-		)
-
+	sendMsg := func(msg sdk.Msg, passes bool) {
 		// Deliver msg
-		gasUsedInfo, _, _, _ := chain.SendMsgs(senderAcc, passes, []sdk.Msg{msg},
-			e2eTesting.WithTxGasLimit(gasAdjusted),
-			e2eTesting.WithMsgFees(txFees...),
-		)
-		gasUsed = gasUsedInfo.GasUsed
-
+		_, _, _, _ = chain.SendMsgs(senderAcc, passes, []sdk.Msg{msg})
 		return
 	}
 
@@ -457,11 +436,10 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 
 	chain.NextBlock(1 * time.Second)
 
-	// only rewards record for contract premiums. no rewards record for feerebaes/inflation because because the TX failed.
+	// only rewards record for contract premiums. no rewards record for fee rebates/inflation because the TX failed.
 	rewards, err := rewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), contractAddr)
 	require.NoError(s.T(), err)
-	require.Len(s.T(), rewards, 1)
-	require.Equal(s.T(), flatFees, rewards[0].Rewards[0])
+	require.Len(s.T(), rewards, 0)
 }
 
 // TestRewardsFlatFees tests that a contract which has flatfees set, on a successful execution against

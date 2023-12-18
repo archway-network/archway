@@ -41,4 +41,6 @@ var (
 	FlatFeePrefix = collections.NewPrefix([]byte{0x05, 0x00})
 	// ParamsPrefix defines the prefix for storing params.
 	ParamsPrefix = collections.NewPrefix([]byte{0x06})
+	// TxFlatFeesIDsPrefix defines the prefix for storing TxFlatFees last IDs.
+	TxFlatFeesIDsPrefix = collections.NewPrefix([]byte{0x07})
 )
