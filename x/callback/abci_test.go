@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	callbackabci "github.com/archway-network/archway/x/callback"
 	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
