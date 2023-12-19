@@ -293,3 +293,64 @@ func (s *KeeperTestSuite) TestDeleteCallback() {
 		s.Assert().False(exists)
 	})
 }
+
+func (s *KeeperTestSuite) TestGetCallbacksByHeight() {
+	ctx, keeper := s.chain.GetContext().WithBlockHeight(100), s.chain.GetApp().Keepers.CallbackKeeper
+	rewardsKeeper := s.chain.GetApp().Keepers.RewardsKeeper
+	contractViewer := testutils.NewMockContractViewer()
+	keeper.SetWasmKeeper(contractViewer)
+	validCoin := sdk.NewInt64Coin("stake", 10)
+
+	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAdminAcc := s.chain.GetAccount(0)
+	contractOwnerAcc := s.chain.GetAccount(2)
+
+	contractViewer.AddContractAdmin(
+		contractAddr.String(),
+		contractAdminAcc.Address.String(),
+	)
+
+	var metaCurrent rewardsTypes.ContractMetadata
+	metaCurrent.ContractAddress = contractAddr.String()
+	metaCurrent.OwnerAddress = contractOwnerAcc.Address.String()
+	metaCurrent.RewardsAddress = contractOwnerAcc.Address.String()
+	rewardsKeeper.SetContractInfoViewer(contractViewer)
+	err := rewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
+	s.Require().NoError(err)
+
+	callbackHeight := int64(101)
+
+	callback := types.Callback{
+		ContractAddress: contractAddr.String(),
+		JobId:           1,
+		CallbackHeight:  callbackHeight,
+		ReservedBy:      contractAddr.String(),
+		FeeSplit: &types.CallbackFeesFeeSplit{
+			TransactionFees:       &validCoin,
+			BlockReservationFees:  &validCoin,
+			FutureReservationFees: &validCoin,
+			SurplusFees:           &validCoin,
+		},
+	}
+	err = keeper.SaveCallback(ctx, callback)
+	s.Require().NoError(err)
+
+	callback.JobId = 2
+	err = keeper.SaveCallback(ctx, callback)
+	s.Require().NoError(err)
+
+	callback.JobId = 3
+	err = keeper.SaveCallback(ctx, callback)
+	s.Require().NoError(err)
+
+	s.Run("OK: Get all three existing callbacks at height 101", func() {
+		callbacks, err := keeper.GetCallbacksByHeight(ctx, callbackHeight)
+		s.Assert().NoError(err)
+		s.Assert().Equal(3, len(callbacks))
+	})
+	s.Run("OK: Get zero existing callbacks at height 102", func() {
+		callbacks, err := keeper.GetCallbacksByHeight(ctx, callbackHeight+1)
+		s.Assert().NoError(err)
+		s.Assert().Equal(0, len(callbacks))
+	})
+}
