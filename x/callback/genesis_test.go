@@ -115,6 +115,7 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, 0, len(callbacks)) // Ensuring callbacks are not imported
 
 	params, err := keeper.GetParams(ctx)
+	require.NoError(t, err)
 	require.Equal(t, genParams.CallbackGasLimit, params.CallbackGasLimit)
 	require.Equal(t, genParams.MaxBlockReservationLimit, params.MaxBlockReservationLimit)
 	require.Equal(t, genParams.MaxFutureReservationLimit, params.MaxFutureReservationLimit)
