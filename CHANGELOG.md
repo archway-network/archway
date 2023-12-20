@@ -25,7 +25,7 @@ Contains bug fixes.
 
 ### Improvements
 
-Contains all the PRs that improved the code without changing the behaviours.
+Contains all the PRs that improved the code without changing the behaviors.
 -->
 
 ## [Unreleased]
@@ -261,7 +261,7 @@ Archway Network - Capture the value you create!
 
 ### Improvements
 
-- [#342](https://github.com/archway-network/archway/pull/342) - updated the contract premium ADR docs to elaborate on difference between using Contract Premiums and using x/wasmd funds
+- [#342](https://github.com/archway-network/archway/pull/342) - updated the contract premium ADR docs to elaborate on the difference between using Contract Premiums and using x/wasmd funds
 
 ## [v0.4.0](https://github.com/archway-network/archway/releases/tag/v0.4.0)
 
