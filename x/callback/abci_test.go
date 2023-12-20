@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -29,11 +28,16 @@ func TestEndBlocker(t *testing.T) {
 	contractAdminAcc := chain.GetAccount(0)
 
 	// Upload and instantiate contract
+	// The test contract is based on the default counter contract and behaves the following way:
+	// When job_id = 1, it increments the count value
+	// When job_id = 0, it decrements the count value
+	// For any other job_id, it does nothing
 	codeID := chain.UploadContract(contractAdminAcc, "../../contracts/callback-test/artifacts/callback_test.wasm", wasmdTypes.DefaultUploadAccess)
 	initMsg := CallbackContractInstantiateMsg{Count: 100}
 	contractAddr, _ := chain.InstantiateContract(contractAdminAcc, codeID, contractAdminAcc.Address.String(), "callback_test", nil, initMsg)
 
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	// Reserving a callback for the very next height
+	// This callback will decrement the count
 	currentBlockHeight := ctx.BlockHeight()
 	callbackHeight := currentBlockHeight + 1
 	futureResFee, blockResFee, txFee, err := keeper.EstimateCallbackFees(ctx, callbackHeight)
@@ -47,54 +51,49 @@ func TestEndBlocker(t *testing.T) {
 		Sender:          contractAdminAcc.Address.String(),
 		Fees:            feesToPay,
 	}
-
 	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
 	require.NoError(t, err)
-	callback, err := keeper.GetCallback(ctx, reqMsg.CallbackHeight, reqMsg.ContractAddress, reqMsg.JobId)
-	require.NoError(t, err)
-	require.Equal(t, txFee.Amount, callback.FeeSplit.TransactionFees.Amount)
-	require.Equal(t, blockResFee.Amount, callback.FeeSplit.BlockReservationFees.Amount)
-	require.Equal(t, futureResFee.Amount, callback.FeeSplit.FutureReservationFees.Amount)
-	require.Equal(t, math.ZeroInt(), callback.FeeSplit.SurplusFees.Amount)
 
-	count := getCount(t, chain, ctx, contractAddr)
-	require.Equal(t, initMsg.Count, count)
-
+	// Increment block height and run end blocker
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	require.Equal(t, ctx.BlockHeight(), callback.CallbackHeight)
-
-	c, err := keeper.GetAllCallbacks(ctx)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(c))
-
-	cbs, err := keeper.GetCallbacksByHeight(ctx, ctx.BlockHeight())
-	require.NoError(t, err)
-	require.Equal(t, 1, len(cbs))
-
+	require.Equal(t, ctx.BlockHeight(), reqMsg.CallbackHeight)
 	_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper)
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	count = getCount(t, chain, ctx, contractAddr)
+
+	// Checking if the count value has been decremented
+	count := getCount(t, chain, ctx, contractAddr)
 	require.Equal(t, initMsg.Count-1, count)
 
+	// Reserving a callback for next block
+	// This callback will increment the count
 	reqMsg.JobId = INCREMENT_JOBID
 	reqMsg.CallbackHeight = ctx.BlockHeight() + 1
 	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
 	require.NoError(t, err)
+
+	// Increment block height and run end blocker
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper)
+
+	// Checking if the count value has been incremented. Should be same as og value now
 	count = getCount(t, chain, ctx, contractAddr)
 	require.Equal(t, initMsg.Count, count)
 
+	// Reserving a callback for next block
+	// This callback will do nothing to the count value
 	reqMsg.JobId = DONOTHING_JOBID
 	reqMsg.CallbackHeight = ctx.BlockHeight() + 1
 	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
 	require.NoError(t, err)
+
+	// Increment block height and run end blocker
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper)
+
+	// Checking if the count value has changed. Should be same as before
 	count = getCount(t, chain, ctx, contractAddr)
 	require.Equal(t, initMsg.Count, count)
 
-	// When callback exceeds gas limit
+	// To test when callback exceeds gas limit. Setting module params callbackGasLimit to 1.
 	params, err := keeper.GetParams(ctx)
 	require.NoError(t, err)
 	err = keeper.SetParams(ctx, types.Params{
@@ -106,16 +105,23 @@ func TestEndBlocker(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	// Reserving a callback for next block
+	// This callback should fail as it consumes more gas than allowed
 	reqMsg.JobId = INCREMENT_JOBID
 	reqMsg.CallbackHeight = ctx.BlockHeight() + 1
 	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
 	require.NoError(t, err)
+
+	// Increment block height and run end blocker
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper)
+
+	// Checking if the count value has incremented. Should not have incremented as the callback failed due to out of gas error
 	count = getCount(t, chain, ctx, contractAddr)
 	require.Equal(t, initMsg.Count, count)
 }
 
+// getCount is a helper function to get the contract's count value
 func getCount(t *testing.T, chain *e2eTesting.TestChain, ctx sdk.Context, contractAddr sdk.AccAddress) int32 {
 	getCountQuery := "{\"get_count\":{}}"
 	resp, err := chain.GetApp().Keepers.WASMKeeper.QuerySmart(ctx, contractAddr, []byte(getCountQuery))

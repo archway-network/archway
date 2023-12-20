@@ -15,7 +15,6 @@ func TestCallbackValidate(t *testing.T) {
 	accAddrs, _ := e2eTesting.GenAccounts(1)
 	accAddr := accAddrs[0]
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
-
 	validCoin := sdk.NewInt64Coin("stake", 1)
 
 	type testCase struct {
@@ -46,7 +45,7 @@ func TestCallbackValidate(t *testing.T) {
 			errExpected: true,
 		},
 		{
-			name: "Fail: Invalid reserved by address",
+			name: "Fail: Invalid reservedby address",
 			callback: types.Callback{
 				ContractAddress: contractAddr.String(),
 				ReservedBy:      "👻",

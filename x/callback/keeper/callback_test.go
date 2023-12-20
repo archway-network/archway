@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
@@ -10,6 +12,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestSaveCallback() {
+	// Setting up chain and contract in mock wasm keeper
 	ctx, keeper := s.chain.GetContext().WithBlockHeight(100), s.chain.GetApp().Keepers.CallbackKeeper
 	rewardsKeeper := s.chain.GetApp().Keepers.RewardsKeeper
 	contractViewer := testutils.NewMockContractViewer()
@@ -20,44 +23,12 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 	contractAdminAcc := s.chain.GetAccount(0)
 	notContractAdminAcc := s.chain.GetAccount(1)
 	contractOwnerAcc := s.chain.GetAccount(2)
-
-	s.Run("FAIL: contract address is invalid", func() {
-		err := keeper.SaveCallback(ctx, types.Callback{
-			ContractAddress: "👻",
-			JobId:           1,
-			CallbackHeight:  101,
-			ReservedBy:      contractAddr.String(),
-			FeeSplit: &types.CallbackFeesFeeSplit{
-				TransactionFees:       &validCoin,
-				BlockReservationFees:  &validCoin,
-				FutureReservationFees: &validCoin,
-				SurplusFees:           &validCoin,
-			},
-		})
-		s.Assert().ErrorContains(err, "decoding bech32 failed: invalid bech32 string length 4")
-	})
-
-	s.Run("FAIL: contract does not exist", func() {
-		err := keeper.SaveCallback(ctx, types.Callback{
-			ContractAddress: e2eTesting.GenContractAddresses(1)[0].String(),
-			JobId:           1,
-			CallbackHeight:  101,
-			ReservedBy:      contractAddr.String(),
-			FeeSplit: &types.CallbackFeesFeeSplit{
-				TransactionFees:       &validCoin,
-				BlockReservationFees:  &validCoin,
-				FutureReservationFees: &validCoin,
-				SurplusFees:           &validCoin,
-			},
-		})
-		s.Assert().ErrorIs(err, types.ErrContractNotFound)
-	})
-
 	contractViewer.AddContractAdmin(
 		contractAddr.String(),
 		contractAdminAcc.Address.String(),
 	)
 
+	// Setting up contract metadata in rewards keeper
 	var metaCurrent rewardsTypes.ContractMetadata
 	metaCurrent.ContractAddress = contractAddr.String()
 	metaCurrent.OwnerAddress = contractOwnerAcc.Address.String()
@@ -66,129 +37,178 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 	err := rewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
 	s.Require().NoError(err)
 
-	s.Run("FAIL: sender not authorized to modify", func() {
-		err := keeper.SaveCallback(ctx, types.Callback{
-			ContractAddress: contractAddr.String(),
-			JobId:           1,
-			CallbackHeight:  101,
-			ReservedBy:      notContractAdminAcc.Address.String(),
-			FeeSplit: &types.CallbackFeesFeeSplit{
-				TransactionFees:       &validCoin,
-				BlockReservationFees:  &validCoin,
-				FutureReservationFees: &validCoin,
-				SurplusFees:           &validCoin,
+	testCases := []struct {
+		testCase    string
+		callback    types.Callback
+		expectError bool
+		errorType   error
+	}{
+		{
+			testCase: "FAIL: contract address is invalid",
+			callback: types.Callback{
+				ContractAddress: "👻",
+				JobId:           1,
+				CallbackHeight:  101,
+				ReservedBy:      contractAddr.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
 			},
+			expectError: true,
+			errorType:   fmt.Errorf("decoding bech32 failed: invalid bech32 string length 4"),
+		},
+		{
+			testCase: "FAIL: contract does not exist",
+			callback: types.Callback{
+				ContractAddress: e2eTesting.GenContractAddresses(2)[1].String(),
+				JobId:           1,
+				CallbackHeight:  101,
+				ReservedBy:      contractAddr.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: true,
+			errorType:   types.ErrContractNotFound,
+		},
+		{
+			testCase: "FAIL: sender not authorized to modify",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           1,
+				CallbackHeight:  101,
+				ReservedBy:      notContractAdminAcc.Address.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: true,
+			errorType:   types.ErrUnauthorized,
+		},
+		{
+			testCase: "FAIL: callback height is in the past",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           1,
+				CallbackHeight:  99,
+				ReservedBy:      contractAddr.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: true,
+			errorType:   types.ErrCallbackHeightNotinFuture,
+		},
+		{
+			testCase: "FAIL: callback height is current height",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           1,
+				CallbackHeight:  ctx.BlockHeight(),
+				ReservedBy:      contractAddr.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: true,
+			errorType:   types.ErrCallbackHeightNotinFuture,
+		},
+		{
+			testCase: "OK: save callback - sender is contract",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           1,
+				CallbackHeight:  101,
+				ReservedBy:      contractAddr.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: false,
+		},
+		{
+			testCase: "OK: save callback - sender is contract metadata owner",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           2,
+				CallbackHeight:  101,
+				ReservedBy:      contractOwnerAcc.Address.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: false,
+		},
+		{
+			testCase: "OK: save callback - sender is contract admin",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           3,
+				CallbackHeight:  101,
+				ReservedBy:      contractAdminAcc.Address.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: false,
+		},
+		{
+			testCase: "FAIL: callback already exists",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           1,
+				CallbackHeight:  101,
+				ReservedBy:      contractAddr.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: true,
+			errorType:   types.ErrCallbackExists,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
+			err := keeper.SaveCallback(ctx, tc.callback)
+			if tc.expectError {
+				s.Require().Error(err)
+				s.Assert().ErrorContains(err, tc.errorType.Error())
+			} else {
+				s.Require().NoError(err)
+				// Ensuring the callback exists now
+				exists, err := keeper.ExistsCallback(ctx, tc.callback.CallbackHeight, tc.callback.ContractAddress, tc.callback.JobId)
+				s.Require().NoError(err)
+				s.Require().True(exists)
+			}
 		})
-		s.Assert().ErrorIs(err, types.ErrUnauthorized)
-	})
-
-	s.Run("FAIL: callback height is in the past", func() {
-		err := keeper.SaveCallback(ctx, types.Callback{
-			ContractAddress: contractAddr.String(),
-			JobId:           1,
-			CallbackHeight:  99,
-			ReservedBy:      contractAddr.String(),
-			FeeSplit: &types.CallbackFeesFeeSplit{
-				TransactionFees:       &validCoin,
-				BlockReservationFees:  &validCoin,
-				FutureReservationFees: &validCoin,
-				SurplusFees:           &validCoin,
-			},
-		})
-		s.Assert().ErrorIs(err, types.ErrCallbackHeightNotinFuture)
-	})
-
-	s.Run("FAIL: callback height is current height", func() {
-		err := keeper.SaveCallback(ctx, types.Callback{
-			ContractAddress: contractAddr.String(),
-			JobId:           1,
-			CallbackHeight:  ctx.BlockHeight(),
-			ReservedBy:      contractAddr.String(),
-			FeeSplit: &types.CallbackFeesFeeSplit{
-				TransactionFees:       &validCoin,
-				BlockReservationFees:  &validCoin,
-				FutureReservationFees: &validCoin,
-				SurplusFees:           &validCoin,
-			},
-		})
-		s.Assert().ErrorIs(err, types.ErrCallbackHeightNotinFuture)
-	})
-
-	s.Run("OK: save callback - sender is contract", func() {
-		callback := types.Callback{
-			ContractAddress: contractAddr.String(),
-			JobId:           1,
-			CallbackHeight:  101,
-			ReservedBy:      contractAddr.String(),
-			FeeSplit: &types.CallbackFeesFeeSplit{
-				TransactionFees:       &validCoin,
-				BlockReservationFees:  &validCoin,
-				FutureReservationFees: &validCoin,
-				SurplusFees:           &validCoin,
-			},
-		}
-		err := keeper.SaveCallback(ctx, callback)
-		s.Assert().NoError(err)
-		callbackFound, err := keeper.GetCallback(ctx, 101, contractAddr.String(), 1)
-		s.Assert().NoError(err)
-		s.Assert().Equal(callback, callbackFound)
-	})
-
-	s.Run("OK: save callback - sender is contract metadata owner", func() {
-		callback := types.Callback{
-			ContractAddress: contractAddr.String(),
-			JobId:           2,
-			CallbackHeight:  101,
-			ReservedBy:      contractOwnerAcc.Address.String(),
-			FeeSplit: &types.CallbackFeesFeeSplit{
-				TransactionFees:       &validCoin,
-				BlockReservationFees:  &validCoin,
-				FutureReservationFees: &validCoin,
-				SurplusFees:           &validCoin,
-			},
-		}
-		err := keeper.SaveCallback(ctx, callback)
-		s.Assert().NoError(err)
-		callbackFound, err := keeper.GetCallback(ctx, 101, contractAddr.String(), 2)
-		s.Assert().NoError(err)
-		s.Assert().Equal(callback, callbackFound)
-	})
-
-	s.Run("OK: save callback - sender is contract admin", func() {
-		callback := types.Callback{
-			ContractAddress: contractAddr.String(),
-			JobId:           3,
-			CallbackHeight:  101,
-			ReservedBy:      contractAdminAcc.Address.String(),
-			FeeSplit: &types.CallbackFeesFeeSplit{
-				TransactionFees:       &validCoin,
-				BlockReservationFees:  &validCoin,
-				FutureReservationFees: &validCoin,
-				SurplusFees:           &validCoin,
-			},
-		}
-		err := keeper.SaveCallback(ctx, callback)
-		s.Assert().NoError(err)
-		callbackFound, err := keeper.GetCallback(ctx, 101, contractAddr.String(), 3)
-		s.Assert().NoError(err)
-		s.Assert().Equal(callback, callbackFound)
-	})
-
-	s.Run("FAIL: callback already exists", func() {
-		err := keeper.SaveCallback(ctx, types.Callback{
-			ContractAddress: contractAddr.String(),
-			JobId:           1,
-			CallbackHeight:  101,
-			ReservedBy:      contractAddr.String(),
-			FeeSplit: &types.CallbackFeesFeeSplit{
-				TransactionFees:       &validCoin,
-				BlockReservationFees:  &validCoin,
-				FutureReservationFees: &validCoin,
-				SurplusFees:           &validCoin,
-			},
-		})
-		s.Assert().ErrorIs(err, types.ErrCallbackExists)
-	})
+	}
 }
 
 func (s *KeeperTestSuite) TestDeleteCallback() {
@@ -216,6 +236,7 @@ func (s *KeeperTestSuite) TestDeleteCallback() {
 	err := rewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
 	s.Require().NoError(err)
 
+	// Same contract requesting callback at same height with diff job id
 	callback := types.Callback{
 		ContractAddress: contractAddr.String(),
 		JobId:           1,
@@ -230,96 +251,117 @@ func (s *KeeperTestSuite) TestDeleteCallback() {
 	}
 	err = keeper.SaveCallback(ctx, callback)
 	s.Require().NoError(err)
-
 	callback.JobId = 2
 	err = keeper.SaveCallback(ctx, callback)
 	s.Require().NoError(err)
-
 	callback.JobId = 3
 	err = keeper.SaveCallback(ctx, callback)
 	s.Require().NoError(err)
 
-	s.Run("FAIL: Invalid contract address", func() {
-		err := keeper.DeleteCallback(ctx, contractAddr.String(), 101, "👻", 0)
-		s.Assert().ErrorContains(err, "decoding bech32 failed: invalid bech32 string length 4")
-	})
-
-	s.Run("FAIL: Not authorized to delete callback", func() {
-		err := keeper.DeleteCallback(ctx, notContractAdminAcc.Address.String(), 101, contractAddr.String(), 0)
-		s.Assert().ErrorIs(err, types.ErrUnauthorized)
-	})
-
-	s.Run("FAIL: Callback does not exist", func() {
-		err := keeper.DeleteCallback(ctx, contractAddr.String(), 101, contractAddr.String(), 0)
-		s.Assert().ErrorIs(err, types.ErrCallbackNotFound)
-	})
-
-	s.Run("OK: Success delete - sender is contract", func() {
-		exists, err := keeper.ExistsCallback(ctx, 101, contractAddr.String(), 1)
-		s.Assert().NoError(err)
-		s.Assert().True(exists)
-
-		err = keeper.DeleteCallback(ctx, contractAddr.String(), 101, contractAddr.String(), 1)
-		s.Assert().NoError(err)
-
-		exists, err = keeper.ExistsCallback(ctx, 101, contractAddr.String(), 1)
-		s.Assert().NoError(err)
-		s.Assert().False(exists)
-	})
-
-	s.Run("OK: Success delete - sender is contract admin", func() {
-		exists, err := keeper.ExistsCallback(ctx, 101, contractAddr.String(), 2)
-		s.Assert().NoError(err)
-		s.Assert().True(exists)
-
-		err = keeper.DeleteCallback(ctx, contractAdminAcc.Address.String(), 101, contractAddr.String(), 2)
-		s.Assert().NoError(err)
-
-		exists, err = keeper.ExistsCallback(ctx, 101, contractAddr.String(), 2)
-		s.Assert().NoError(err)
-		s.Assert().False(exists)
-	})
-
-	s.Run("OK: Success delete - sender is contract owner", func() {
-		exists, err := keeper.ExistsCallback(ctx, 101, contractAddr.String(), 3)
-		s.Assert().NoError(err)
-		s.Assert().True(exists)
-
-		err = keeper.DeleteCallback(ctx, contractOwnerAcc.Address.String(), 101, contractAddr.String(), 3)
-		s.Assert().NoError(err)
-
-		exists, err = keeper.ExistsCallback(ctx, 101, contractAddr.String(), 3)
-		s.Assert().NoError(err)
-		s.Assert().False(exists)
-	})
+	testCases := []struct {
+		testCase    string
+		callback    types.Callback
+		expectError bool
+		errorType   error
+	}{
+		{
+			testCase: "FAIL: Invalid contract address",
+			callback: types.Callback{
+				ContractAddress: "👻",
+				JobId:           0,
+				CallbackHeight:  101,
+				ReservedBy:      contractAddr.String(),
+			},
+			expectError: true,
+			errorType:   fmt.Errorf("decoding bech32 failed: invalid bech32 string length 4"),
+		},
+		{
+			testCase: "FAIL: Not authorized to delete callback",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           0,
+				CallbackHeight:  101,
+				ReservedBy:      notContractAdminAcc.Address.String(),
+			},
+			expectError: true,
+			errorType:   types.ErrUnauthorized,
+		},
+		{
+			testCase: "FAIL: Callback does not exist",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           0,
+				CallbackHeight:  101,
+				ReservedBy:      contractAddr.String(),
+			},
+			expectError: true,
+			errorType:   types.ErrCallbackNotFound,
+		},
+		{
+			testCase: "OK: Success delete - sender is contract",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           1,
+				CallbackHeight:  101,
+				ReservedBy:      contractAddr.String(),
+			},
+			expectError: false,
+		},
+		{
+			testCase: "OK: Success delete - sender is contract admin",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           2,
+				CallbackHeight:  101,
+				ReservedBy:      contractAdminAcc.Address.String(),
+			},
+			expectError: false,
+		},
+		{
+			testCase: "OK: Success delete - sender is contract owner",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           3,
+				CallbackHeight:  101,
+				ReservedBy:      contractOwnerAcc.Address.String(),
+			},
+			expectError: false,
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
+			err := keeper.DeleteCallback(ctx, tc.callback.ReservedBy, tc.callback.CallbackHeight, tc.callback.ContractAddress, tc.callback.JobId)
+			if tc.expectError {
+				s.Require().Error(err)
+				s.Assert().ErrorContains(err, tc.errorType.Error())
+			} else {
+				s.Require().NoError(err)
+				// Ensuring the callback does not exist anymore
+				exists, err := keeper.ExistsCallback(ctx, tc.callback.CallbackHeight, tc.callback.ContractAddress, tc.callback.JobId)
+				s.Require().NoError(err)
+				s.Require().False(exists)
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGetCallbacksByHeight() {
+	// Setting up chain and contract in mock wasm keeper
 	ctx, keeper := s.chain.GetContext().WithBlockHeight(100), s.chain.GetApp().Keepers.CallbackKeeper
-	rewardsKeeper := s.chain.GetApp().Keepers.RewardsKeeper
 	contractViewer := testutils.NewMockContractViewer()
 	keeper.SetWasmKeeper(contractViewer)
 	validCoin := sdk.NewInt64Coin("stake", 10)
 
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
 	contractAdminAcc := s.chain.GetAccount(0)
-	contractOwnerAcc := s.chain.GetAccount(2)
-
 	contractViewer.AddContractAdmin(
 		contractAddr.String(),
 		contractAdminAcc.Address.String(),
 	)
 
-	var metaCurrent rewardsTypes.ContractMetadata
-	metaCurrent.ContractAddress = contractAddr.String()
-	metaCurrent.OwnerAddress = contractOwnerAcc.Address.String()
-	metaCurrent.RewardsAddress = contractOwnerAcc.Address.String()
-	rewardsKeeper.SetContractInfoViewer(contractViewer)
-	err := rewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
-	s.Require().NoError(err)
-
 	callbackHeight := int64(101)
 
+	// Same contract requesting callback at same height with diff job id
 	callback := types.Callback{
 		ContractAddress: contractAddr.String(),
 		JobId:           1,
@@ -332,7 +374,7 @@ func (s *KeeperTestSuite) TestGetCallbacksByHeight() {
 			SurplusFees:           &validCoin,
 		},
 	}
-	err = keeper.SaveCallback(ctx, callback)
+	err := keeper.SaveCallback(ctx, callback)
 	s.Require().NoError(err)
 
 	callback.JobId = 2
@@ -356,28 +398,18 @@ func (s *KeeperTestSuite) TestGetCallbacksByHeight() {
 }
 
 func (s *KeeperTestSuite) TestGetAllCallbacks() {
+	// Setting up chain and contract in mock wasm keeper
 	ctx, keeper := s.chain.GetContext().WithBlockHeight(100), s.chain.GetApp().Keepers.CallbackKeeper
-	rewardsKeeper := s.chain.GetApp().Keepers.RewardsKeeper
 	contractViewer := testutils.NewMockContractViewer()
 	keeper.SetWasmKeeper(contractViewer)
 	validCoin := sdk.NewInt64Coin("stake", 10)
 
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
 	contractAdminAcc := s.chain.GetAccount(0)
-	contractOwnerAcc := s.chain.GetAccount(2)
-
 	contractViewer.AddContractAdmin(
 		contractAddr.String(),
 		contractAdminAcc.Address.String(),
 	)
-
-	var metaCurrent rewardsTypes.ContractMetadata
-	metaCurrent.ContractAddress = contractAddr.String()
-	metaCurrent.OwnerAddress = contractOwnerAcc.Address.String()
-	metaCurrent.RewardsAddress = contractOwnerAcc.Address.String()
-	rewardsKeeper.SetContractInfoViewer(contractViewer)
-	err := rewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
-	s.Require().NoError(err)
 
 	callbackHeight := int64(105)
 
@@ -399,7 +431,7 @@ func (s *KeeperTestSuite) TestGetAllCallbacks() {
 			SurplusFees:           &validCoin,
 		},
 	}
-	err = keeper.SaveCallback(ctx, callback)
+	err := keeper.SaveCallback(ctx, callback)
 	s.Require().NoError(err)
 
 	callback.JobId = 2
@@ -420,31 +452,22 @@ func (s *KeeperTestSuite) TestGetAllCallbacks() {
 }
 
 func (s *KeeperTestSuite) TestIterateCallbacksByHeight() {
+	// Setting up chain and contract in mock wasm keeper
 	ctx, keeper := s.chain.GetContext().WithBlockHeight(100), s.chain.GetApp().Keepers.CallbackKeeper
-	rewardsKeeper := s.chain.GetApp().Keepers.RewardsKeeper
 	contractViewer := testutils.NewMockContractViewer()
 	keeper.SetWasmKeeper(contractViewer)
 	validCoin := sdk.NewInt64Coin("stake", 10)
 
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
 	contractAdminAcc := s.chain.GetAccount(0)
-	contractOwnerAcc := s.chain.GetAccount(2)
-
 	contractViewer.AddContractAdmin(
 		contractAddr.String(),
 		contractAdminAcc.Address.String(),
 	)
 
-	var metaCurrent rewardsTypes.ContractMetadata
-	metaCurrent.ContractAddress = contractAddr.String()
-	metaCurrent.OwnerAddress = contractOwnerAcc.Address.String()
-	metaCurrent.RewardsAddress = contractOwnerAcc.Address.String()
-	rewardsKeeper.SetContractInfoViewer(contractViewer)
-	err := rewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
-	s.Require().NoError(err)
-
 	callbackHeight := int64(101)
 
+	// Same contract requesting callback at same height with diff job id
 	callback := types.Callback{
 		ContractAddress: contractAddr.String(),
 		JobId:           1,
@@ -457,7 +480,7 @@ func (s *KeeperTestSuite) TestIterateCallbacksByHeight() {
 			SurplusFees:           &validCoin,
 		},
 	}
-	err = keeper.SaveCallback(ctx, callback)
+	err := keeper.SaveCallback(ctx, callback)
 	s.Require().NoError(err)
 
 	callback.JobId = 2
@@ -468,6 +491,7 @@ func (s *KeeperTestSuite) TestIterateCallbacksByHeight() {
 	err = keeper.SaveCallback(ctx, callback)
 	s.Require().NoError(err)
 
+	// Same contract requesting callback at diff height with diff job id
 	callback.JobId = 4
 	callback.CallbackHeight = callbackHeight + 1
 	err = keeper.SaveCallback(ctx, callback)

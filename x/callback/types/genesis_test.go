@@ -16,7 +16,6 @@ func TestGenesisValidate(t *testing.T) {
 	accAddrs, _ := e2eTesting.GenAccounts(1)
 	accAddr := accAddrs[0]
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
-
 	validCoin := sdk.NewInt64Coin("stake", 1)
 
 	type testCase struct {
