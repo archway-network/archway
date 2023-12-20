@@ -37,6 +37,9 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 	err := rewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
 	s.Require().NoError(err)
 
+	params, err := keeper.GetParams(ctx)
+	s.Require().NoError(err)
+
 	testCases := []struct {
 		testCase    string
 		callback    types.Callback
@@ -109,7 +112,7 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 				},
 			},
 			expectError: true,
-			errorType:   types.ErrCallbackHeightNotinFuture,
+			errorType:   types.ErrCallbackHeightNotInFuture,
 		},
 		{
 			testCase: "FAIL: callback height is current height",
@@ -126,7 +129,24 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 				},
 			},
 			expectError: true,
-			errorType:   types.ErrCallbackHeightNotinFuture,
+			errorType:   types.ErrCallbackHeightNotInFuture,
+		},
+		{
+			testCase: "FAIL: callback is too far in the future",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           1,
+				CallbackHeight:  ctx.BlockHeight() + int64(params.MaxFutureReservationLimit) + 1,
+				ReservedBy:      contractAddr.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: true,
+			errorType:   types.ErrCallbackHeightTooFarInFuture,
 		},
 		{
 			testCase: "OK: save callback - sender is contract",
@@ -192,6 +212,23 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 			},
 			expectError: true,
 			errorType:   types.ErrCallbackExists,
+		},
+		{
+			testCase: "FAIL: block is filled with max number of callbacks",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           4,
+				CallbackHeight:  101,
+				ReservedBy:      contractAddr.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: true,
+			errorType:   types.ErrBlockFilled,
 		},
 	}
 	for _, tc := range testCases {

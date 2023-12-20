@@ -99,7 +99,25 @@ func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
 	}
 	// If callback is requested for height in the past or present, return error
 	if callback.GetCallbackHeight() <= ctx.BlockHeight() {
-		return types.ErrCallbackHeightNotinFuture
+		return types.ErrCallbackHeightNotInFuture
+	}
+
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return err
+	}
+	// If callback is requested for height which is too far in the future, return error
+	maxFutureReservationHeight := ctx.BlockHeight() + int64(params.MaxFutureReservationLimit)
+	if callback.GetCallbackHeight() > maxFutureReservationHeight {
+		return types.ErrCallbackHeightTooFarInFuture
+	}
+	// If there are already too many callbacks registered in a given block, return error
+	callbacksForBlock, err := k.GetCallbacksByHeight(ctx, callback.GetCallbackHeight())
+	if err != nil {
+		return err
+	}
+	if len(callbacksForBlock) >= int(params.MaxBlockReservationLimit) {
+		return types.ErrBlockFilled
 	}
 
 	return k.Callbacks.Set(ctx, collections.Join3(callback.GetCallbackHeight(), contractAddress.Bytes(), callback.GetJobId()), callback)
