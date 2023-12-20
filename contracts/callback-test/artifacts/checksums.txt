@@ -1,1 +1,1 @@
-4ff364fd2ed33daee2c99ecafd290e419205a264f1227a101d9dcd829cdf535d  callback_test.wasm
+0e63d0871aaa45519666e1440913c5dd4e729921a72a1b4f5168df7dd1e1d653  callback_test.wasm
