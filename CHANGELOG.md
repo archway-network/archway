@@ -25,7 +25,7 @@ Contains bug fixes.
 
 ### Improvements
 
-Contains all the PRs that improved the code without changing the behaviours.
+Contains all the PRs that improved the code without changing the behaviors.
 -->
 
 ## [Unreleased]
@@ -55,6 +55,7 @@ Contains all the PRs that improved the code without changing the behaviours.
 
 - [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
 - [#514](https://github.com/archway-network/archway/pull/514) - Fix snapshot db being hardcoded from goleveldb to based on config 
+- [#522](https://github.com/archway-network/archway/pull/522) - Fix Archway module endpoints not showing up in swagger
 
 ### Improvements
 
@@ -261,7 +262,7 @@ Archway Network - Capture the value you create!
 
 ### Improvements
 
-- [#342](https://github.com/archway-network/archway/pull/342) - updated the contract premium ADR docs to elaborate on difference between using Contract Premiums and using x/wasmd funds
+- [#342](https://github.com/archway-network/archway/pull/342) - updated the contract premium ADR docs to elaborate on the difference between using Contract Premiums and using x/wasmd funds
 
 ## [v0.4.0](https://github.com/archway-network/archway/releases/tag/v0.4.0)
 

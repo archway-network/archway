@@ -20,7 +20,7 @@ Validators which produce blocks can produce a block with only one TX, with gas w
 The TX can fail, computation is 0, fees paid for this are 0, and inflationary rewards are fully extracted.
 
 ## Proposal
-The solution to make archway efficient and make it impossible for block producers to extract value is to introduce a minimum consesus fee.
+The solution to make archway efficient and make it impossible for block producers to extract value is to introduce a minimum consensus fee.
 This consensus fee creates a minimum gas price (ARCH required for one single unit of gas) inside the network.
 NOTE: fees are sent to the `fee collector` which is then handled by distribution.
 
