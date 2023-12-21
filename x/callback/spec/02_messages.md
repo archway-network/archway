@@ -37,7 +37,7 @@ This message is expected to fail if:
 An existing callback can be cancelled by using th [MsgCancelCallback](../../../proto/archway/callback/v1/tx.proto#L58) message,
 
 On success:
-* The exsiting callback is removed from the execution queue.
+* The exisiting callback is removed from the execution queue.
 * The txFee and surplusFee amount is refunded back to the sender.
 * The rest of the fees are sent to fee_collector to be distributed to validators and stakers
 

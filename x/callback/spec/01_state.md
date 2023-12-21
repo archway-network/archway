@@ -8,7 +8,7 @@ Refer to the [callback.proto](../../../proto/archway/callback/v1/callback.proto)
 
 [Params](../../../proto/archway/callback/v1/callback.proto#L38) object is used to store the module params.
 
-The params value can only be updated by x/gov module via a governance upgrade proposal. [More](./02_messages.md)
+The params value can only be updated by x/gov module via a governance upgrade proposal. [More](./02_messages.md#msgupdateparams)
 
 Storage keys:
 * Params: `ParamsKey -> ProtocolBuffer(Params)`

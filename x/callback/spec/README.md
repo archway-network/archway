@@ -1,6 +1,6 @@
 # Callback
 
-This module enables CosmWasm based smart contracts to receive callbacks at the end of a desired block. This is useful for scheduling actions to happen at an expected time by reserving block execution in advance.
+This module enables CosmWasm based smart contracts to receive callbacks at the end of a desired block. This is useful for scheduling actions to happen at an expected time by reserving execution in advance.
 
 ## Concepts
 
@@ -11,8 +11,6 @@ The authorized user can register a callback by providing the following:
 2. Job ID - User given number which can be used by the contract to handle different callbacks with custom logic.
 3. Callback Height - The height at which the callback will be executed.
 4. Fees - The total fees paid to successfully register a callback. [More](#fees)
-
-The callbacks are executed when the chain reaches the desired height at which they are executed in FIFO order.
 
 ### Fees
 
@@ -34,7 +32,7 @@ $txFee = callbackGasLimit_{params} \times estimateFees(1)$
 where,
 * txFee is the total transaction fees which need to be paid
 * callbackGasLimit is a module param. [More](./01_state.md)
-* estimateFees is the x/rewards endpoint used to calculate the current block price of gas
+* estimateFees is the x/rewards endpoint used to calculate the current block price of gas. [More](../../rewards/spec/07_client.md#estimate-fees)
 
 > **Note**
 >
@@ -51,9 +49,9 @@ where,
 * blockReservationFeeMultiplier is a module param. [More](./01_state.md)
 
 #### 3. Future Reservation Fee
-This part of the fee is calculated based on how far in the future does the user was to register their callback. The further in the future it is, the more expensive it is to request a callback.
+This part of the fee is calculated based on how far in the future does the user want to register their callback. The further in the future it is, the more expensive it is to request a callback.
 
-$futureFee = blockHeight_{callback} - blockHeight_{current} \times futureReservationFeeMultiplier_{params}$
+$futureFee = (blockHeight_{callback} - blockHeight_{current}) \times futureReservationFeeMultiplier_{params}$
 
 where,
 * futureFee is the future reservation fees which need to be paid
@@ -62,6 +60,8 @@ where,
 
 > **Note**
 > Any extra fees paid, is kept as surplus fee and is refunded in case the callback is cancelled. 
+
+Post execution of a callback, all the fees are sent to the `fee_collector` account and are distributed to the validators and stakers
 
 ## How to use in CW contract
 
@@ -91,10 +91,14 @@ A sample contract which shows how the feature can be used can be found [here](..
 
 ## Contents
 
-1. State
-2. Messages
-3. End Block
-4. Events
-5. Client
-6. Wasm bindings
-7. Future Improvements
+1. [State](./01_state.md)
+2. [Messages](./02_messages.md)
+3. [End Block](./03_end_block.md)
+4. [Events](./04_events.md)
+5. [Client](./05_client.md)
+6. [Wasm bindings](./06_wasm_bindings.md)
+
+## References
+
+1. [RFC: x/cw-callback module](https://github.com/orgs/archway-network/discussions/25)
+2. [AIP: x/cw-callback module](https://github.com/archway-network/archway/issues/477)

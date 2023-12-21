@@ -1,6 +1,6 @@
 # End Block
 
-Section describes the module state chanfes on the ABCI end block call
+Section describes the module state changes on the ABCI end block call
 
 ## Callback Execution
 
