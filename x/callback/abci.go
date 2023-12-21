@@ -57,6 +57,13 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 				gasUsed,
 				err.Error(),
 			)
+
+			// This is because gasUsed amount returned is greater than the gas limit. cuz ofc.
+			// so we set it to callbackGasLimit so when we do txFee refund, we arent trying to refund more than we should
+			// e.g if callbackGasLimit is 10, but gasUsed is 100, we need to use 10 to calculate txFeeRefund.
+			// else the module will pay back more than it took from the user 💀
+			// TLDR; this ensures in case of "out of gas error", we keep all txFees and refund nothing.
+			gasUsed = callbackGasLimit
 		} else {
 			logger.Info(
 				"callback executed successfully",

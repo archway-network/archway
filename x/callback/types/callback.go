@@ -27,7 +27,7 @@ func (c Callback) Validate() error {
 		return err
 	}
 	if c.GetCallbackHeight() <= 0 {
-		return ErrCallbackHeightNotinFuture
+		return ErrCallbackHeightNotInFuture
 	}
 	if err := c.GetFeeSplit().GetTransactionFees().Validate(); err != nil {
 		return err
