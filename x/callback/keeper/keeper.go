@@ -71,6 +71,12 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
+// SetWasmKeeper sets the given wasm keeper.
+// Only for testing purposes
+func (k *Keeper) SetWasmKeeper(wk types.WasmKeeperExpected) {
+	k.wasmKeeper = wk
+}
+
 // SendToCallbackModule sends coins from the sender to the x/callback module account.
 func (k Keeper) SendToCallbackModule(ctx sdk.Context, sender string, amount sdk.Coin) error {
 	senderAddr, err := sdk.AccAddressFromBech32(sender)

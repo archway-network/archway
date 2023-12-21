@@ -39,6 +39,17 @@ func (v MockContractViewer) GetContractInfo(ctx sdk.Context, contractAddress sdk
 	}
 }
 
+// HasContractInfo returns true if admin is set.
+func (v MockContractViewer) HasContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) bool {
+	_, found := v.contractAdminSet[contractAddress.String()]
+	return found
+}
+
+// Sudo implements the wasmKeeper.ContractInfoViewer interface.
+func (v MockContractViewer) Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error) {
+	return nil, nil
+}
+
 // MockMessenger mocks x/wasmd module dependency.
 type MockMessenger struct{}
 
