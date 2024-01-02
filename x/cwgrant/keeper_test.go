@@ -10,6 +10,7 @@ import (
 	"github.com/archway-network/archway/x/cwgrant/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/stretchr/testify/require"
 )
 
@@ -67,4 +68,26 @@ func TestFullIntegration(t *testing.T) {
 	cwGranterBalanceAfter := app.GetBalance(cwGranter)
 	require.Equal(t, grantedBalanceBefore.Sub(msg.Amount...), grantedBalanceAfter)
 	require.Equal(t, cwGranterBalanceBefore.Sub(fees), cwGranterBalanceAfter)
+
+	// let's now test the fallthrough case
+
+	humanGranter := app.GetAccount(2)
+
+	err = app.GetApp().Keepers.FeeGrantKeeper.GrantAllowance(
+		app.GetContext(),
+		humanGranter.Address,
+		grantedAcc.Address,
+		&feegrant.BasicAllowance{})
+	require.NoError(t, err)
+
+	// send a tx using fee grant
+	grantedBalanceBefore = app.GetBalance(grantedAcc.Address)
+	granterBalanceBefore := app.GetBalance(humanGranter.Address)
+	_, _, _, err = app.SendMsgs(grantedAcc, true, []sdk.Msg{msg}, e2eTesting.WithGranter(humanGranter.Address), e2eTesting.WithMsgFees(fees))
+	require.NoError(t, err)
+
+	grantedBalanceAfter = app.GetBalance(grantedAcc.Address)
+	granterBalanceAfter := app.GetBalance(humanGranter.Address)
+	require.Equal(t, grantedBalanceBefore.Sub(msg.Amount...), grantedBalanceAfter)
+	require.Equal(t, granterBalanceBefore.Sub(fees), granterBalanceAfter)
 }
