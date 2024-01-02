@@ -89,6 +89,13 @@ pub fn sudo(_deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contrac
 
 A sample contract which shows how the feature can be used can be found [here](../../../contracts/callback-test/).
 
+## Error Handling
+
+As the contracts are executed during the protocol end blocker, it is not possible to return any execution errors to the user. 
+We highly recommend that user do not return any errors for the `SudoMsg::Callback` endpoint. Instead, handle it within the contract logic. 
+
+However, any error encountered during the execution of the contract will be thrown as an explicit event. Users can subscribe to [CallbackExecutedFailedEvent](../../../proto/archway/callback/v1/events.proto#L45) to be notified of any issues with the callback.
+
 ## Contents
 
 1. [State](./01_state.md)

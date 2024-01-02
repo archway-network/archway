@@ -6,6 +6,7 @@ option go_package = "github.com/archway-network/archway/x/callback/types";
 import "archway/callback/v1/callback.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 
 // CallbackRegisteredEvent is emitted when a callback is registered.
 message CallbackRegisteredEvent {
@@ -37,20 +38,6 @@ message CallbackCancelledEvent {
 
 // CallbackExecutedSuccessEvent is emitted when a callback is executed successfully.
 message CallbackExecutedSuccessEvent {
-    // execution is the callback execution details
-    CallbackExecuted execution = 1;
-}
-
-// CallbackExecutedFailedEvent is emitted when a callback execution fails.
-message CallbackExecutedFailedEvent {
-    // execution is the callback execution details
-    CallbackExecuted execution = 1;
-    // error is the error returned during the callback execution
-    string error = 2;
-}
-
-// CallbackExecuted is the callback execution details
-message CallbackExecuted {
     // contract_address is the address of the contract for which callback is being executed (bech32 encoded).
     string contract_address = 1;
     // job_id is an identifier of the callback.
@@ -59,4 +46,18 @@ message CallbackExecuted {
     string sudo_msg = 3;
     // gas_used is the amount of gas consumed during the callback execution
     uint64 gas_used = 4;
+}
+
+// CallbackExecutedFailedEvent is emitted when a callback execution fails.
+message CallbackExecutedFailedEvent {
+    // contract_address is the address of the contract for which callback is being executed (bech32 encoded).
+    string contract_address = 1;
+    // job_id is an identifier of the callback.
+    uint64 job_id = 2;
+    // sudo_msg is the input passed by the module to the contract
+    string sudo_msg = 3;
+    // gas_used is the amount of gas consumed during the callback execution
+    uint64 gas_used = 4;
+    // error is the error returned during the callback execution
+    string error = 5;
 }

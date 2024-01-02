@@ -53,9 +53,11 @@ func EmitCallbackExecutedSuccessEvent(
 	sudoMsg string,
 	gasUsed uint64,
 ) {
-	execution := NewCallbackExecuted(contractAddress, jobId, sudoMsg, gasUsed)
 	err := ctx.EventManager().EmitTypedEvent(&CallbackExecutedSuccessEvent{
-		Execution: &execution,
+		ContractAddress: contractAddress,
+		JobId:           jobId,
+		SudoMsg:         sudoMsg,
+		GasUsed:         gasUsed,
 	})
 	if err != nil {
 		panic(fmt.Errorf("sending CallbackExecutedSuccessEvent event: %w", err))
@@ -70,27 +72,14 @@ func EmitCallbackExecutedFailedEvent(
 	gasUsed uint64,
 	errMsg string,
 ) {
-	execution := NewCallbackExecuted(contractAddress, jobId, sudoMsg, gasUsed)
 	err := ctx.EventManager().EmitTypedEvent(&CallbackExecutedFailedEvent{
-		Error:     errMsg,
-		Execution: &execution,
-	})
-	if err != nil {
-		panic(fmt.Errorf("sending CallbackExecutedFailedEvent event: %w", err))
-	}
-}
-
-func NewCallbackExecuted(
-	contractAddress string,
-	jobId uint64,
-	sudoMsg string,
-	gasUsed uint64,
-) CallbackExecuted {
-	execution := CallbackExecuted{
+		Error:           errMsg,
 		ContractAddress: contractAddress,
 		JobId:           jobId,
 		SudoMsg:         sudoMsg,
 		GasUsed:         gasUsed,
+	})
+	if err != nil {
+		panic(fmt.Errorf("sending CallbackExecutedFailedEvent event: %w", err))
 	}
-	return execution
 }
