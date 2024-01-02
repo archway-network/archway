@@ -55,7 +55,10 @@ jobs:
               uses: docker/setup-buildx-action@v2
               
             - name: Generate Swagger File
-              run: mkdir -p ./tmp-swagger-gen && make proto-swagger-gen 
+              run: |
+                mkdir -p ./tmp-swagger-gen 
+                touch ./tmp-swagger-gen/config.json
+                make proto-swagger-gen 
 
             - name: Commit Changes
               uses: stefanzweifel/git-auto-commit-action@v5
