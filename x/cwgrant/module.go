@@ -3,7 +3,6 @@ package cwgrant
 import (
 	"encoding/json"
 
-	"github.com/archway-network/archway/x/cwgrant/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
+	"github.com/archway-network/archway/x/cwgrant/types"
 )
 
 const (

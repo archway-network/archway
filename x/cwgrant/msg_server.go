@@ -3,8 +3,9 @@ package cwgrant
 import (
 	"context"
 
-	"github.com/archway-network/archway/x/cwgrant/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/cwgrant/types"
 )
 
 var _ types.MsgServer = (*msgServer)(nil)

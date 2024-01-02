@@ -667,7 +667,6 @@ func TestRewardsKeeper_Distribution(t *testing.T) {
 
 			// Assert expectations
 			for i, outExpected := range tc.contractsOutput {
-
 				// Check the number of records created
 				recordsCreated, err := keepers.RewardsKeeper.GetRewardsRecordsByWithdrawAddress(chain.GetContext(), outExpected.rewardsAddr)
 				require.NoError(t, err)

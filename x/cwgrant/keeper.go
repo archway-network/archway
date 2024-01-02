@@ -6,11 +6,12 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-	"github.com/archway-network/archway/internal/collcompat"
-	"github.com/archway-network/archway/x/cwgrant/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/internal/collcompat"
+	"github.com/archway-network/archway/x/cwgrant/types"
 )
 
 type WasmdKeeper interface {

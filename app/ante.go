@@ -5,7 +5,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/archway-network/archway/x/cwgrant"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+
+	"github.com/archway-network/archway/x/cwgrant"
 
 	rewardsAnte "github.com/archway-network/archway/x/rewards/ante"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
