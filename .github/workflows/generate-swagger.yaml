@@ -56,8 +56,7 @@ jobs:
               
             - name: Generate Swagger File
               run: |
-                mkdir -p ./tmp-swagger-gen 
-                touch ./tmp-swagger-gen/config.json
+                git config --global --add safe.directory /workspace
                 make proto-swagger-gen 
 
             - name: Commit Changes
