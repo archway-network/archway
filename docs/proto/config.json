@@ -26,6 +26,18 @@
             }
         },
         {
+            "url": "./tmp-swagger-gen/archway/callback/v1/query.swagger.json",
+            "tags": {
+                "add": ["Archway"],
+                "remove": ["Query", "Service"]
+            },
+            "operationIds": {
+                "rename": {
+                    "Params": "CallbackParams"
+                }
+            }
+        },
+        {
             "url": "./tmp-swagger-gen/archway/tracking/v1/query.swagger.json",
             "tags": {
                 "add": ["Archway"],
