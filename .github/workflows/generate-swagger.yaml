@@ -1,0 +1,26 @@
+name: "Generate Swagger Docs"
+
+on:
+    pull_request:
+        branches: [main]
+
+    push:
+        branches: [spoorthi/generate-swagger-before-release]
+
+jobs:
+    generate:
+        runs-on: ubuntu-latest
+        permissions:
+            pull-requests: read
+        steps:
+            - uses: actions/checkout@v3
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      proto:
+                        - 'proto/**'
+            
+            - name: Generate Swagger File
+              if: steps.filter.outputs.proto == 'true'
+              run: make proto-swagger-gen 
