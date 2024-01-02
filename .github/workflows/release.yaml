@@ -29,6 +29,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Generate swagger file
+        run: make proto-swagger-gen
+
       - name: ${{ matrix.release }}
         run: make ${{ matrix.release }}
         env:
