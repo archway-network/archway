@@ -8,19 +8,56 @@ on:
         branches: [spoorthi/generate-swagger-before-release]
 
 jobs:
-    generate:
+    changes:
         runs-on: ubuntu-latest
         permissions:
             pull-requests: read
+        outputs:
+            proto: ${{ steps.filter.outputs.proto }}
         steps:
-            - uses: actions/checkout@v3
             - uses: dorny/paths-filter@v2
               id: filter
               with:
                   filters: |
                       proto:
                         - 'proto/**'
-            
+
+    proto-format:
+        runs-on: ubuntu-latest
+        needs: changes
+        permissions:
+            contents: write
+        if: ${{ needs.changes.outputs.proto == 'true' }}
+        steps:
+            - uses: actions/checkout@v3
+            - name: Setup Docker Buildx
+              uses: docker/setup-buildx-action@v2
+              
+            - name: Format Proto Files
+              run: make proto-format
+
+            - name: Commit Changes
+              uses: stefanzweifel/git-auto-commit-action@v5
+              with:
+                commit_message: "Format Proto Files"
+                commit_options: '--no-verify'
+
+    proto-swagger:
+        runs-on: ubuntu-latest
+        needs: changes
+        permissions:
+            contents: write
+        if: ${{ needs.changes.outputs.proto == 'true' }}
+        steps:
+            - uses: actions/checkout@v3
+            - name: Setup Docker Buildx
+              uses: docker/setup-buildx-action@v2
+              
             - name: Generate Swagger File
-              if: steps.filter.outputs.proto == 'true'
               run: make proto-swagger-gen 
+
+            - name: Commit Changes
+              uses: stefanzweifel/git-auto-commit-action@v5
+              with:
+                commit_message: "Generate Swagger Docs"
+                commit_options: '--no-verify'
