@@ -1,1 +1,1 @@
-cd78af826010c48ec5fe8b6a221faf7996d7ce83c8f8753e7e7c040981c36c02  /target/wasm32-unknown-unknown/release/cwgrant.wasm
+92df70ecf8e205915633d93114aefd0340e65a72de4390ea2e14c27161271408  /target/wasm32-unknown-unknown/release/cwgrant.wasm

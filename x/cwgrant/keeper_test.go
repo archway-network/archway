@@ -1,11 +1,15 @@
 package cwgrant_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
+	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/cwgrant/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,5 +37,34 @@ func TestKeeper(t *testing.T) {
 }
 
 func TestFullIntegration(t *testing.T) {
+	app := e2eTesting.NewTestChain(t, 0, e2eTesting.WithGenAccounts(10))
+	deployer := app.GetAccount(0)
 
+	codeID := app.UploadContract(deployer, "../../contracts/cwgrant/artifacts/cwgrant.wasm", wasmdTypes.DefaultUploadAccess)
+
+	grantedAcc := app.GetAccount(1) // account who receives grants.
+	initMsg := fmt.Sprintf(`{"grants": ["%s"]}`, grantedAcc.Address)
+	cwGranter, _ := app.InstantiateContract(deployer, codeID, deployer.Address.String(), "cwgrant", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
+
+	// register as cwgrant contract.
+	err := app.GetApp().Keepers.CWGrantKeeper.RegisterAsGranter(app.GetContext(), cwGranter)
+	require.NoError(t, err)
+
+	// now try to send a tx with a cw granter
+	msg := &banktypes.MsgSend{
+		FromAddress: grantedAcc.Address.String(),
+		ToAddress:   deployer.Address.String(),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin("stake", 1)),
+	}
+
+	grantedBalanceBefore := app.GetBalance(grantedAcc.Address)
+	cwGranterBalanceBefore := app.GetBalance(cwGranter)
+	fees := sdk.NewInt64Coin("stake", 100_000_000_000)
+	_, _, _, err = app.SendMsgs(grantedAcc, true, []sdk.Msg{msg}, e2eTesting.WithGranter(cwGranter), e2eTesting.WithMsgFees(fees))
+	require.NoError(t, err)
+
+	grantedBalanceAfter := app.GetBalance(grantedAcc.Address)
+	cwGranterBalanceAfter := app.GetBalance(cwGranter)
+	require.Equal(t, grantedBalanceBefore.Sub(msg.Amount...), grantedBalanceAfter)
+	require.Equal(t, cwGranterBalanceBefore.Sub(fees), cwGranterBalanceAfter)
 }

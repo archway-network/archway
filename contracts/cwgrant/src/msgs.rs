@@ -8,15 +8,15 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum SudoMsg {
-    CWGrant(CWGrant)
+    CwGrant(CwGrant)
 }
 #[cw_serde]
-pub struct CWGrant {
+pub struct CwGrant {
     pub fee_requested: Vec<Coin>,
-    pub msgs: Vec<CWGrantMessage>,
+    pub msgs: Vec<CwGrantMessage>,
 }
 #[cw_serde]
-pub struct CWGrantMessage {
+pub struct CwGrantMessage {
     pub sender: String,
     pub type_url: String,
     pub msg: Binary,

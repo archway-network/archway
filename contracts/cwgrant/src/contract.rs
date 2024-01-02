@@ -1,6 +1,6 @@
 use cosmwasm_std::{DepsMut, Empty, Env, MessageInfo, Response, entry_point};
 use crate::errors::ContractError;
-use crate::msgs::{CWGrant, InstantiateMsg, SudoMsg};
+use crate::msgs::{CwGrant, InstantiateMsg, SudoMsg};
 use crate::state::GRANTS;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -23,13 +23,13 @@ pub fn sudo(
     msg: SudoMsg,
 ) -> Result<Response, ContractError> {
     return match msg {
-        SudoMsg::CWGrant(grant) => {
+        SudoMsg::CwGrant(grant) => {
             sudo_grant(deps, grant)
         }
     }
 }
 
-fn sudo_grant(deps: DepsMut, msg: CWGrant) -> Result<Response, ContractError> {
+fn sudo_grant(deps: DepsMut, msg: CwGrant) -> Result<Response, ContractError> {
     // in order to pay the fees all message senders need to be
     // in the grants list.
     for m in &msg.msgs {
@@ -40,4 +40,18 @@ fn sudo_grant(deps: DepsMut, msg: CWGrant) -> Result<Response, ContractError> {
     }
 
     Ok(Response::default())
+}
+
+#[cfg(test)]
+mod test {
+    use cosmwasm_std::to_json_binary;
+    use crate::msgs::{CwGrant, SudoMsg};
+
+    #[test]
+    fn encoding() {
+        println!("{}", to_json_binary(&SudoMsg::CwGrant(CwGrant{
+            fee_requested: vec![],
+            msgs: vec![],
+        })).unwrap());
+    }
 }
