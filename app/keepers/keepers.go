@@ -2,6 +2,7 @@ package keepers
 
 import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/archway-network/archway/x/cwgrant"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -54,4 +55,5 @@ type ArchwayKeepers struct {
 	WASMKeeper            wasmkeeper.Keeper
 	TrackingKeeper        trackingKeeper.Keeper
 	RewardsKeeper         rewardsKeeper.Keeper
+	CWGrantKeeper         cwgrant.Keeper
 }

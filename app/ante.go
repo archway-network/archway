@@ -5,6 +5,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/archway-network/archway/x/cwgrant"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +34,8 @@ type HandlerOptions struct {
 	TrackingKeeper trackingKeeper.Keeper
 	RewardsKeeper  rewardsKeeper.Keeper
 
-	Codec codec.BinaryCodec
+	Codec         codec.BinaryCodec
+	CWGrantKeeper cwgrant.Keeper
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -78,7 +80,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// Custom Archway interceptor to track new transactions
 		trackingAnte.NewTxGasTrackingDecorator(options.TrackingKeeper),
 		// Custom Archway fee deduction, which splits fees between x/rewards and x/auth fee collector
-		rewardsAnte.NewDeductFeeDecorator(options.Codec, options.AccountKeeper, options.RewardsAnteBankKeeper, options.FeegrantKeeper, options.RewardsKeeper),
+		rewardsAnte.NewDeductFeeDecorator(options.Codec, options.AccountKeeper, options.RewardsAnteBankKeeper, options.FeegrantKeeper, options.RewardsKeeper, nil),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
