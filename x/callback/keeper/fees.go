@@ -35,7 +35,7 @@ func (k Keeper) EstimateCallbackFees(ctx sdk.Context, blockHeight int64) (sdk.Co
 	if totalCallbacks >= int(params.MaxBlockReservationLimit) {
 		return sdk.Coin{}, sdk.Coin{}, sdk.Coin{}, status.Errorf(codes.OutOfRange, "block height %d has reached max reservation limit", blockHeight)
 	}
-	// blockReservatuiionFeeMultiplier * totalCallbacksRegistered
+	// blockReservationFeeMultiplier * totalCallbacksRegistered
 	blockReservationFeesAmount := params.BlockReservationFeeMultiplier.MulInt64(int64(totalCallbacks))
 	blockReservationFee := sdk.NewCoin(sdk.DefaultBondDenom, blockReservationFeesAmount.RoundInt())
 
