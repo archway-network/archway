@@ -1,4 +1,4 @@
-package cwgrant
+package cwfees
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/archway-network/archway/x/cwgrant/types"
+	"github.com/archway-network/archway/x/cwfees/types"
 )
 
 const (

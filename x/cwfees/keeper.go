@@ -1,4 +1,4 @@
-package cwgrant
+package cwfees
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/internal/collcompat"
-	"github.com/archway-network/archway/x/cwgrant/types"
+	"github.com/archway-network/archway/x/cwfees/types"
 )
 
 type WasmdKeeper interface {

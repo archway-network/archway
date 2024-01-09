@@ -1,12 +1,12 @@
 syntax = "proto3";
-package archway.cwgrant.v1;
+package archway.cwfees.v1;
 
 import "google/protobuf/any.proto";
 
 import "cosmos/msg/v1/msg.proto";
 
 
-option go_package = "github.com/archway-network/archway/x/cwgrant/types";
+option go_package = "github.com/archway-network/archway/x/cwfees/types";
 
 service Msg {
   // RegisterAsGranter allows a cosmwasm contract to register itself as a fee granter.
@@ -51,7 +51,7 @@ message IsGrantingContractResponse {
   bool is_granting_contract = 1;
 }
 
-// GenesisState represents the genesis state of the cwgrant module.
+// GenesisState represents the genesis state of the cwfeesant module.
 message GenesisState {
   repeated string granting_contracts = 1;
 }

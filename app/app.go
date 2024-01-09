@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/archway-network/archway/app/keepers"
-	"github.com/archway-network/archway/x/cwgrant"
+	"github.com/archway-network/archway/x/cwfees"
 	"github.com/archway-network/archway/x/genmsg"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -201,7 +201,7 @@ var (
 		tracking.AppModuleBasic{},
 		rewards.AppModuleBasic{},
 		genmsg.AppModule{},
-		cwgrant.AppModule{},
+		cwfees.AppModule{},
 	)
 
 	// module account permissions
@@ -298,7 +298,7 @@ func NewArchwayApp(
 		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
 		icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey,
 
-		trackingTypes.StoreKey, rewardsTypes.StoreKey, cwgrant.ModuleName,
+		trackingTypes.StoreKey, rewardsTypes.StoreKey, cwfees.ModuleName,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -557,7 +557,7 @@ func NewArchwayApp(
 		govModuleAddr,
 	)
 
-	app.Keepers.CWGrantKeeper = cwgrant.NewKeeper(appCodec, keys[cwgrant.ModuleName], app.Keepers.WASMKeeper)
+	app.Keepers.CWFeesKeeper = cwfees.NewKeeper(appCodec, keys[cwfees.ModuleName], app.Keepers.WASMKeeper)
 
 	var transferStack porttypes.IBCModule
 	transferStack = transfer.NewIBCModule(app.Keepers.TransferKeeper)
@@ -631,7 +631,7 @@ func NewArchwayApp(
 		consensus.NewAppModule(appCodec, app.Keepers.ConsensusParamsKeeper),
 		tracking.NewAppModule(app.appCodec, app.Keepers.TrackingKeeper),
 		rewards.NewAppModule(app.appCodec, app.Keepers.RewardsKeeper),
-		cwgrant.NewAppModule(app.Keepers.CWGrantKeeper),
+		cwfees.NewAppModule(app.Keepers.CWFeesKeeper),
 		genmsg.NewAppModule(app.MsgServiceRouter()),
 		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	)
@@ -671,7 +671,7 @@ func NewArchwayApp(
 		// wasm gas tracking
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
-		cwgrant.ModuleName, // does not have being blocker.
+		cwfees.ModuleName, // does not have being blocker.
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -706,7 +706,7 @@ func NewArchwayApp(
 		rewardsTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
-		cwgrant.ModuleName, // does not have end blocker
+		cwfees.ModuleName, // does not have end blocker
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -744,7 +744,7 @@ func NewArchwayApp(
 		// wasm after ibc transfer
 		wasmdTypes.ModuleName,
 		// wasm gas tracking
-		cwgrant.ModuleName, // depends on wasmd.
+		cwfees.ModuleName, // depends on wasmd.
 		trackingTypes.ModuleName,
 		genmsg.ModuleName,
 		// invariants checks are always the last to run
@@ -804,7 +804,7 @@ func NewArchwayApp(
 			TXCounterStoreKey:     keys[wasmdTypes.StoreKey],
 			TrackingKeeper:        app.Keepers.TrackingKeeper,
 			RewardsKeeper:         app.Keepers.RewardsKeeper,
-			CWGrantKeeper:         app.Keepers.CWGrantKeeper,
+			CWFeesKeeper:          app.Keepers.CWFeesKeeper,
 		},
 	)
 	if err != nil {

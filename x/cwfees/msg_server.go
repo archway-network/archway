@@ -1,11 +1,11 @@
-package cwgrant
+package cwfees
 
 import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/archway-network/archway/x/cwgrant/types"
+	"github.com/archway-network/archway/x/cwfees/types"
 )
 
 var _ types.MsgServer = (*msgServer)(nil)

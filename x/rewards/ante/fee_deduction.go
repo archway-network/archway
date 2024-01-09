@@ -22,7 +22,7 @@ type BankKeeper interface {
 	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 }
 
-type CWGrantsKeeper interface {
+type CWFeesKeeper interface {
 	IsGrantingContract(ctx context.Context, granter sdk.AccAddress) (bool, error)
 	RequestGrant(ctx context.Context, grantingContract sdk.AccAddress, txMsgs []sdk.Msg, wantFees sdk.Coins) error
 }
@@ -37,18 +37,18 @@ type DeductFeeDecorator struct {
 	bankKeeper     BankKeeper
 	feegrantKeeper ante.FeegrantKeeper
 	rewardsKeeper  RewardsKeeperExpected
-	cwGrantKeeper  CWGrantsKeeper
+	cwFeesKeeper   CWFeesKeeper
 }
 
 // NewDeductFeeDecorator returns a new DeductFeeDecorator instance.
-func NewDeductFeeDecorator(codec codec.BinaryCodec, ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, rk RewardsKeeperExpected, ck CWGrantsKeeper) DeductFeeDecorator {
+func NewDeductFeeDecorator(codec codec.BinaryCodec, ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, rk RewardsKeeperExpected, ck CWFeesKeeper) DeductFeeDecorator {
 	return DeductFeeDecorator{
 		codec:          codec,
 		ak:             ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
 		rewardsKeeper:  rk,
-		cwGrantKeeper:  ck,
+		cwFeesKeeper:   ck,
 	}
 }
 
@@ -99,21 +99,21 @@ func (dfd DeductFeeDecorator) getFeePayer(ctx sdk.Context, tx sdk.FeeTx) (payer 
 	}
 
 	switch {
-	// we check x/cwgrants first
-	case dfd.cwGrantKeeper != nil:
-		isCWGranter, err := dfd.cwGrantKeeper.IsGrantingContract(ctx, granter)
+	// we check x/cwfees first
+	case dfd.cwFeesKeeper != nil:
+		isCWGranter, err := dfd.cwFeesKeeper.IsGrantingContract(ctx, granter)
 		if err != nil {
 			return nil, err
 		}
 		// the contract is a cw granter, so we request fees from it.
 		if isCWGranter {
-			err = dfd.cwGrantKeeper.RequestGrant(ctx, granter, tx.GetMsgs(), tx.GetFee())
+			err = dfd.cwFeesKeeper.RequestGrant(ctx, granter, tx.GetMsgs(), tx.GetFee())
 			if err != nil {
 				return nil, errorsmod.Wrapf(err, "%s contract is not allowed to pay fees from %s", granter, payer)
 			}
 			return granter, nil
 		}
-		// cannot be handled through x/cwgrant, let's try with x/feegrant
+		// cannot be handled through x/cwfees, let's try with x/feegrant
 		fallthrough
 
 	// we check x/feegrant

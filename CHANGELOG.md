@@ -36,6 +36,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#502](https://github.com/archway-network/archway/pull/502) - Improve rewards withdrawal experience by allowing a Metadata owner to set that rewards directly go to the reward address.
 - [#504](https://github.com/archway-network/archway/pull/504) - Interchain test gh workflow now runs on PRs targetting release branches as well as main 
 - [#462](https://github.com/archway-network/archway/pull/462) - adding docs ADR-008 – Improvements on rewards withdrawal experience
+- [#527](https://github.com/archway-network/archway/pull/527) - Add x/cwfees module for 
 
 ### Improvements
 

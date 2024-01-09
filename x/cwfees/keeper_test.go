@@ -1,4 +1,4 @@
-package cwgrant_test
+package cwfees_test
 
 import (
 	"encoding/json"
@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/x/cwgrant/types"
+	"github.com/archway-network/archway/x/cwfees/types"
 )
 
 func TestKeeper(t *testing.T) {
 	app := e2eTesting.NewTestChain(t, 0)
-	k := app.GetApp().Keepers.CWGrantKeeper
+	k := app.GetApp().Keepers.CWFeesKeeper
 	ctx := app.GetContext()
 
 	t.Run("register as granter – not a cw contract", func(t *testing.T) {
@@ -33,10 +33,10 @@ func TestKeeper(t *testing.T) {
 	})
 
 	t.Run("register as granter OK – unregister as granter OK", func(t *testing.T) {
-		codeID := app.UploadContract(app.GetAccount(0), "../../contracts/cwgrant/artifacts/cwgrant.wasm", wasmdTypes.DefaultUploadAccess)
+		codeID := app.UploadContract(app.GetAccount(0), "../../contracts/cwfees/artifacts/cwfees.wasm", wasmdTypes.DefaultUploadAccess)
 		grantedAcc := app.GetAccount(1) // account who receives grants.
 		initMsg := fmt.Sprintf(`{"grants": ["%s"]}`, grantedAcc.Address)
-		cwGranter, _ := app.InstantiateContract(app.GetAccount(0), codeID, app.GetAccount(0).Address.String(), "cwgrant", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
+		cwGranter, _ := app.InstantiateContract(app.GetAccount(0), codeID, app.GetAccount(0).Address.String(), "cwfees", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
 
 		err := k.RegisterAsGranter(ctx, cwGranter)
 		require.NoError(t, err)
@@ -52,10 +52,10 @@ func TestKeeper(t *testing.T) {
 	})
 
 	t.Run("state import and export", func(t *testing.T) {
-		codeID := app.UploadContract(app.GetAccount(0), "../../contracts/cwgrant/artifacts/cwgrant.wasm", wasmdTypes.DefaultUploadAccess)
+		codeID := app.UploadContract(app.GetAccount(0), "../../contracts/cwfees/artifacts/cwfees.wasm", wasmdTypes.DefaultUploadAccess)
 		grantedAcc := app.GetAccount(1) // account who receives grants.
 		initMsg := fmt.Sprintf(`{"grants": ["%s"]}`, grantedAcc.Address)
-		cwGranter, _ := app.InstantiateContract(app.GetAccount(0), codeID, app.GetAccount(0).Address.String(), "cwgrant", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
+		cwGranter, _ := app.InstantiateContract(app.GetAccount(0), codeID, app.GetAccount(0).Address.String(), "cwfees", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
 
 		wantState := &types.GenesisState{GrantingContracts: []string{cwGranter.String()}}
 		err := k.ImportState(ctx, wantState)
@@ -72,14 +72,14 @@ func TestFullIntegration(t *testing.T) {
 	app := e2eTesting.NewTestChain(t, 0, e2eTesting.WithGenAccounts(10))
 	deployer := app.GetAccount(0)
 
-	codeID := app.UploadContract(deployer, "../../contracts/cwgrant/artifacts/cwgrant.wasm", wasmdTypes.DefaultUploadAccess)
+	codeID := app.UploadContract(deployer, "../../contracts/cwfees/artifacts/cwfees.wasm", wasmdTypes.DefaultUploadAccess)
 
 	grantedAcc := app.GetAccount(1) // account who receives grants.
 	initMsg := fmt.Sprintf(`{"grants": ["%s"]}`, grantedAcc.Address)
-	cwGranter, _ := app.InstantiateContract(deployer, codeID, deployer.Address.String(), "cwgrant", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
+	cwGranter, _ := app.InstantiateContract(deployer, codeID, deployer.Address.String(), "cwfees", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
 
-	// register as cwgrant contract.
-	err := app.GetApp().Keepers.CWGrantKeeper.RegisterAsGranter(app.GetContext(), cwGranter)
+	// register as cwfees contract.
+	err := app.GetApp().Keepers.CWFeesKeeper.RegisterAsGranter(app.GetContext(), cwGranter)
 	require.NoError(t, err)
 
 	// now try to send a tx with a cw granter

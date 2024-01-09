@@ -20,7 +20,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 
-	"github.com/archway-network/archway/x/cwgrant"
+	"github.com/archway-network/archway/x/cwfees"
 
 	icahostkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/keeper"
 	ibcfeekeeper "github.com/cosmos/ibc-go/v7/modules/apps/29-fee/keeper"
@@ -56,5 +56,5 @@ type ArchwayKeepers struct {
 	WASMKeeper            wasmkeeper.Keeper
 	TrackingKeeper        trackingKeeper.Keeper
 	RewardsKeeper         rewardsKeeper.Keeper
-	CWGrantKeeper         cwgrant.Keeper
+	CWFeesKeeper          cwfees.Keeper
 }
