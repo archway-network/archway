@@ -122,10 +122,16 @@ import (
 	"github.com/spf13/cast"
 
 	"github.com/archway-network/archway/wasmbinding"
+
+	"github.com/archway-network/archway/x/callback"
+	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
+	callbackTypes "github.com/archway-network/archway/x/callback/types"
+
 	"github.com/archway-network/archway/x/rewards"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
+
 	"github.com/archway-network/archway/x/tracking"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
@@ -201,6 +207,7 @@ var (
 		tracking.AppModuleBasic{},
 		rewards.AppModuleBasic{},
 		genmsg.AppModule{},
+		callback.AppModuleBasic{},
 		cwfees.AppModule{},
 	)
 
@@ -219,6 +226,7 @@ var (
 		icatypes.ModuleName:                  nil,
 		wasmdTypes.ModuleName:                {authtypes.Burner},
 		rewardsTypes.TreasuryCollector:       {authtypes.Burner},
+		callbackTypes.ModuleName:             nil,
 	}
 )
 
@@ -298,7 +306,7 @@ func NewArchwayApp(
 		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
 		icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey,
 
-		trackingTypes.StoreKey, rewardsTypes.StoreKey, cwfees.ModuleName,
+		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -557,6 +565,15 @@ func NewArchwayApp(
 		govModuleAddr,
 	)
 
+	app.Keepers.CallbackKeeper = callbackKeeper.NewKeeper(
+		appCodec,
+		keys[callbackTypes.StoreKey],
+		app.Keepers.WASMKeeper,
+		app.Keepers.RewardsKeeper,
+		app.Keepers.BankKeeper,
+		govModuleAddr,
+	)
+
 	app.Keepers.CWFeesKeeper = cwfees.NewKeeper(appCodec, keys[cwfees.ModuleName], app.Keepers.WASMKeeper)
 
 	var transferStack porttypes.IBCModule
@@ -633,6 +650,7 @@ func NewArchwayApp(
 		rewards.NewAppModule(app.appCodec, app.Keepers.RewardsKeeper),
 		cwfees.NewAppModule(app.Keepers.CWFeesKeeper),
 		genmsg.NewAppModule(app.MsgServiceRouter()),
+		callback.NewAppModule(app.appCodec, app.Keepers.CallbackKeeper, app.Keepers.WASMKeeper),
 		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -671,6 +689,7 @@ func NewArchwayApp(
 		// wasm gas tracking
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
+		callbackTypes.ModuleName,
 		cwfees.ModuleName, // does not have being blocker.
 	)
 
@@ -704,6 +723,7 @@ func NewArchwayApp(
 		// wasm gas tracking
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
+		callbackTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
 		cwfees.ModuleName, // does not have end blocker
@@ -747,6 +767,7 @@ func NewArchwayApp(
 		cwfees.ModuleName, // depends on wasmd.
 		trackingTypes.ModuleName,
 		genmsg.ModuleName,
+		callbackTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
 	)

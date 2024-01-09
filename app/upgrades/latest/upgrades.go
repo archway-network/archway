@@ -8,6 +8,7 @@ import (
 
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
+	callbackTypes "github.com/archway-network/archway/x/callback/types"
 	"github.com/archway-network/archway/x/cwfees"
 )
 
@@ -30,6 +31,9 @@ var Upgrade = upgrades.Upgrade{
 		}
 	},
 	StoreUpgrades: storetypes.StoreUpgrades{
-		Added: []string{cwfees.ModuleName},
+		Added: []string{
+			callbackTypes.ModuleName,
+			cwfees.ModuleName,
+		},
 	},
 }

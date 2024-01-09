@@ -27,6 +27,7 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
+	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 )
@@ -54,7 +55,10 @@ type ArchwayKeepers struct {
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
 	WASMKeeper            wasmkeeper.Keeper
+
+	// Archway Keepers
 	TrackingKeeper        trackingKeeper.Keeper
 	RewardsKeeper         rewardsKeeper.Keeper
 	CWFeesKeeper          cwfees.Keeper
+	CallbackKeeper        callbackKeeper.Keeper
 }
