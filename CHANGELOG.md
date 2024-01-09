@@ -46,6 +46,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 
 - [#505](https://github.com/archway-network/archway/pull/505) - Update release process to account for release candidates on Titus
 - [#507](https://github.com/archway-network/archway/pull/507) – Version bump wasmd to v0.45.0 and cosmos-sdk to v0.47.6
+- [#529](https://github.com/archway-network/archway/pull/529) – Version bump wasmd to v0.47.6 and cosmos-sdk to v0.47.7
 
 ### Deprecated
 
