@@ -1,7 +1,6 @@
 package upgradelatest
 
 import (
-	"github.com/archway-network/archway/x/cwfees"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
+	"github.com/archway-network/archway/x/cwfees"
 )
 
 // This upgrade handler is used for all the current changes to the protocol
