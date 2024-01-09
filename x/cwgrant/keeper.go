@@ -86,7 +86,7 @@ func (k Keeper) ImportState(ctx context.Context, state *types.GenesisState) erro
 		if err != nil {
 			return fmt.Errorf("invalid address at index %d, %s: %w", i, addrStr, err)
 		}
-		err = k.GrantingContracts.Set(ctx, addr)
+		err = k.RegisterAsGranter(ctx, addr)
 		if err != nil {
 			return err
 		}
