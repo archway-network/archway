@@ -21,3 +21,12 @@ func (m msgServer) RegisterAsGranter(ctx context.Context, msg *types.MsgRegister
 	}
 	return &types.MsgRegisterAsGranterResponse{}, m.k.RegisterAsGranter(ctx, granterAddr)
 }
+
+func (m msgServer) UnregisterAsGranter(ctx context.Context, msg *types.MsgUnregisterAsGranter) (*types.MsgUnregisterAsGranterResponse, error) {
+	granterAddr, err := sdk.AccAddressFromBech32(msg.GrantingContract)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUnregisterAsGranterResponse{}, m.k.UnregisterAsGranter(ctx, granterAddr)
+}

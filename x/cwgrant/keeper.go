@@ -59,6 +59,18 @@ func (k Keeper) RegisterAsGranter(ctx context.Context, granter sdk.AccAddress) e
 	return k.GrantingContracts.Set(ctx, granter)
 }
 
+// UnregisterAsGranter removes the contract from the granting contracts list.
+func (k Keeper) UnregisterAsGranter(ctx context.Context, granter sdk.AccAddress) error {
+	isGranter, err := k.IsGrantingContract(ctx, granter)
+	if err != nil {
+		return err
+	}
+	if !isGranter {
+		return types.ErrNotAGranter.Wrapf("address %s", granter.String())
+	}
+	return k.GrantingContracts.Remove(ctx, granter)
+}
+
 // IsGrantingContract checks if the provided granter address is one of the registered granting contracts.
 func (k Keeper) IsGrantingContract(ctx context.Context, granter sdk.AccAddress) (bool, error) {
 	return k.GrantingContracts.Has(ctx, granter)
