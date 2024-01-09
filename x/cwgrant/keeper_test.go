@@ -26,6 +26,31 @@ func TestKeeper(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrNotAContract)
 	})
 
+	t.Run("unregister as granter – not a granter", func(t *testing.T) {
+		acc := app.GetAccount(0)
+		err := k.UnregisterAsGranter(ctx, acc.Address)
+		require.ErrorIs(t, err, types.ErrNotAGranter)
+	})
+
+	t.Run("register as granter OK – unregister as granter OK", func(t *testing.T) {
+		codeID := app.UploadContract(app.GetAccount(0), "../../contracts/cwgrant/artifacts/cwgrant.wasm", wasmdTypes.DefaultUploadAccess)
+		grantedAcc := app.GetAccount(1) // account who receives grants.
+		initMsg := fmt.Sprintf(`{"grants": ["%s"]}`, grantedAcc.Address)
+		cwGranter, _ := app.InstantiateContract(app.GetAccount(0), codeID, app.GetAccount(0).Address.String(), "cwgrant", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
+
+		err := k.RegisterAsGranter(ctx, cwGranter)
+		require.NoError(t, err)
+		isGranter, err := k.IsGrantingContract(ctx, cwGranter)
+		require.NoError(t, err)
+		require.True(t, isGranter)
+
+		err = k.UnregisterAsGranter(ctx, cwGranter)
+		require.NoError(t, err)
+		isGranter, err = k.IsGrantingContract(ctx, cwGranter)
+		require.NoError(t, err)
+		require.False(t, isGranter)
+	})
+
 	t.Run("state import and export", func(t *testing.T) {
 		codeID := app.UploadContract(app.GetAccount(0), "../../contracts/cwgrant/artifacts/cwgrant.wasm", wasmdTypes.DefaultUploadAccess)
 		grantedAcc := app.GetAccount(1) // account who receives grants.
