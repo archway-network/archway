@@ -27,7 +27,12 @@ func TestKeeper(t *testing.T) {
 	})
 
 	t.Run("state import and export", func(t *testing.T) {
-		wantState := &types.GenesisState{GrantingContracts: []string{sdk.AccAddress("alice").String(), sdk.AccAddress("bob").String()}}
+		codeID := app.UploadContract(app.GetAccount(0), "../../contracts/cwgrant/artifacts/cwgrant.wasm", wasmdTypes.DefaultUploadAccess)
+		grantedAcc := app.GetAccount(1) // account who receives grants.
+		initMsg := fmt.Sprintf(`{"grants": ["%s"]}`, grantedAcc.Address)
+		cwGranter, _ := app.InstantiateContract(app.GetAccount(0), codeID, app.GetAccount(0).Address.String(), "cwgrant", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
+
+		wantState := &types.GenesisState{GrantingContracts: []string{cwGranter.String()}}
 		err := k.ImportState(ctx, wantState)
 		require.NoError(t, err)
 
