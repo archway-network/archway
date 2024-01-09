@@ -57,8 +57,8 @@ type ArchwayKeepers struct {
 	WASMKeeper            wasmkeeper.Keeper
 
 	// Archway Keepers
-	TrackingKeeper        trackingKeeper.Keeper
-	RewardsKeeper         rewardsKeeper.Keeper
-	CWFeesKeeper          cwfees.Keeper
-	CallbackKeeper        callbackKeeper.Keeper
+	TrackingKeeper trackingKeeper.Keeper
+	RewardsKeeper  rewardsKeeper.Keeper
+	CWFeesKeeper   cwfees.Keeper
+	CallbackKeeper callbackKeeper.Keeper
 }

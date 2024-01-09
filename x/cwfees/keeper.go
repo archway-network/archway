@@ -10,6 +10,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/archway-network/archway/pkg"
+
 	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/archway-network/archway/x/cwfees/types"
 )
@@ -76,6 +78,8 @@ func (k Keeper) IsGrantingContract(ctx context.Context, granter sdk.AccAddress) 
 	return k.GrantingContracts.Has(ctx, granter)
 }
 
+const RequestGrantGasLimit = 100_000
+
 // RequestGrant will signal to the contract that there's a grant request for a set of messages and the fees.
 // In case the contract does not accept the grant then an error is returned.
 func (k Keeper) RequestGrant(ctx context.Context, grantingContract sdk.AccAddress, txMsgs []sdk.Msg, wantFees sdk.Coins) error {
@@ -87,7 +91,13 @@ func (k Keeper) RequestGrant(ctx context.Context, grantingContract sdk.AccAddres
 	if err != nil {
 		return err
 	}
-	_, err = k.wasmdKeeper.Sudo(sdk.UnwrapSDKContext(ctx), grantingContract, msgBytes)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// if tx limit remaining is 50_000, we want to pick that over our gas limit.
+	gasLimitToUse := min(sdkCtx.BlockGasMeter().GasRemaining(), RequestGrantGasLimit)
+	_, err = pkg.ExecuteWithGasLimit(sdkCtx, gasLimitToUse, func(ctx sdk.Context) error {
+		_, err = k.wasmdKeeper.Sudo(sdk.UnwrapSDKContext(ctx), grantingContract, msgBytes)
+		return err
+	})
 	return err
 }
 
