@@ -1,6 +1,7 @@
 package upgradelatest
 
 import (
+	"github.com/archway-network/archway/x/cwfees"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -28,5 +29,7 @@ var Upgrade = upgrades.Upgrade{
 			return migrations, nil
 		}
 	},
-	StoreUpgrades: storetypes.StoreUpgrades{},
+	StoreUpgrades: storetypes.StoreUpgrades{
+		Added: []string{cwfees.ModuleName},
+	},
 }
