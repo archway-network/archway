@@ -18,6 +18,8 @@ All notable changes to this project will be documented in this file.
 
 -   [#457](https://github.com/archway-network/archway/pull/457) - Modify the upgrade handlers to pass in all the app keepers instead of just the account keeper
 -   [#465](https://github.com/archway-network/archway/pull/465) - Change the name of the gh workflow job from `build` to `run-tests` as it runs tests
+-   [#507](https://github.com/archway-network/archway/pull/507) – Version bump wasmd to v0.45.0 and cosmos-sdk to v0.47.6
+-   [#529](https://github.com/archway-network/archway/pull/529) – Version bump wasmd to v0.47.6 and cosmos-sdk to v0.47.7
 
 ### Deprecated
 
