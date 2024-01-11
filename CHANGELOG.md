@@ -47,6 +47,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#505](https://github.com/archway-network/archway/pull/505) - Update release process to account for release candidates on Titus
 - [#507](https://github.com/archway-network/archway/pull/507) – Version bump wasmd to v0.45.0 and cosmos-sdk to v0.47.6
 - [#529](https://github.com/archway-network/archway/pull/529) – Version bump wasmd to v0.47.6 and cosmos-sdk to v0.47.7
+- [#531](https://github.com/archway-network/archway/pull/531) - Bump wasmvm from v1.5.0 to v1.5.1. Ref: [CWA-2023-004](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-004.md)
 
 ### Deprecated
 
