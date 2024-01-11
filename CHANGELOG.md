@@ -37,6 +37,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#504](https://github.com/archway-network/archway/pull/504) - Interchain test gh workflow now runs on PRs targetting release branches as well as main 
 - [#462](https://github.com/archway-network/archway/pull/462) - adding docs ADR-008 – Improvements on rewards withdrawal experience
 - [#501](https://github.com/archway-network/archway/pull/501) - Adding x/callback module
+- [#532](https://github.com/archway-network/archway/pull/532) - Adding ADR-009 for x/callback module
 
 ### Improvements
 
