@@ -33,15 +33,15 @@ func (s TestSupport) AppCodec() codec.Codec {
 }
 
 func (s TestSupport) ScopedWasmIBCKeeper() capabilitykeeper.ScopedKeeper {
-	return s.app.ScopedWASMKeeper
+	return s.app.ScopedKeepers.ScopedWASMKeeper
 }
 
 func (s TestSupport) ScopeIBCKeeper() capabilitykeeper.ScopedKeeper {
-	return s.app.ScopedIBCKeeper
+	return s.app.ScopedKeepers.ScopedIBCKeeper
 }
 
 func (s TestSupport) ScopedTransferKeeper() capabilitykeeper.ScopedKeeper {
-	return s.app.ScopedTransferKeeper
+	return s.app.ScopedKeepers.ScopedTransferKeeper
 }
 
 func (s TestSupport) StakingKeeper() stakingkeeper.Keeper {

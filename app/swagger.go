@@ -13,6 +13,6 @@ import (
 func RegisterSwaggerAPI(apiSvr *api.Server) error {
 	// register app's OpenAPI routes.
 	apiSvr.Router.Handle("/static/swagger.min.json", http.FileServer(http.FS(docs.Docs)))
-	apiSvr.Router.HandleFunc("/", openapiconsole.Handler(appName+" Swagger UI", "/static/swagger.min.json"))
+	apiSvr.Router.HandleFunc("/", openapiconsole.Handler(AppName+" Swagger UI", "/static/swagger.min.json"))
 	return nil
 }

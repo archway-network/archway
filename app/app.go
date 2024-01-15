@@ -144,7 +144,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
-const appName = "Archway"
+const AppName = "Archway"
 
 // We pull these out so we can set them with LDFLAGS in the Makefile
 var (
@@ -234,6 +234,13 @@ var (
 )
 
 func init() {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+
+	DefaultNodeHome = filepath.Join(userHomeDir, "."+NodeDir)
+
 	// sets the default power reduction in order to ensure that on high precision numbers, which is a default for archway
 	// the network does not get stalled due to an integer overflow in some edge cases.
 	sdk.DefaultPowerReduction = archway.DefaultPowerReduction
@@ -253,14 +260,9 @@ type ArchwayApp struct {
 	tkeys   map[string]*storetypes.TransientStoreKey
 	memKeys map[string]*storetypes.MemoryStoreKey
 
-	// Keepers
-	Keepers keepers.ArchwayKeepers
-
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-	ScopedIBCFeeKeeper   capabilitykeeper.ScopedKeeper
-	ScopedWASMKeeper     capabilitykeeper.ScopedKeeper
+	// keepers
+	Keepers       keepers.ArchwayKeepers
+	ScopedKeepers keepers.ArchwayScopedKeepers
 
 	// the module manager
 	mm *module.Manager
@@ -289,7 +291,7 @@ func NewArchwayApp(
 	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(AppName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -865,10 +867,10 @@ func NewArchwayApp(
 		}
 	}
 
-	app.ScopedIBCKeeper = scopedIBCKeeper
-	app.ScopedTransferKeeper = scopedTransferKeeper
-	app.ScopedWASMKeeper = scopedWasmKeeper
-	app.ScopedICAHostKeeper = scopedICAHostKeeper
+	app.ScopedKeepers.ScopedIBCKeeper = scopedIBCKeeper
+	app.ScopedKeepers.ScopedTransferKeeper = scopedTransferKeeper
+	app.ScopedKeepers.ScopedWASMKeeper = scopedWasmKeeper
+	app.ScopedKeepers.ScopedICAHostKeeper = scopedICAHostKeeper
 	return app
 }
 

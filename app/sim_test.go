@@ -113,7 +113,7 @@ func TestAppImportExport(t *testing.T) {
 
 	encConf := MakeEncodingConfig()
 	app := NewArchwayApp(logger, db, nil, true, map[int64]bool{}, dir, simcli.FlagPeriodValue, encConf, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
-	require.Equal(t, appName, app.Name())
+	require.Equal(t, AppName, app.Name())
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -152,7 +152,7 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 	newApp := NewArchwayApp(logger, newDB, nil, true, map[int64]bool{}, newDir, simcli.FlagPeriodValue, encConf, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
-	require.Equal(t, appName, newApp.Name())
+	require.Equal(t, AppName, newApp.Name())
 
 	var genesisState GenesisState
 	err = json.Unmarshal(exported.AppState, &genesisState)

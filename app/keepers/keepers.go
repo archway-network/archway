@@ -59,3 +59,11 @@ type ArchwayKeepers struct {
 	RewardsKeeper  rewardsKeeper.Keeper
 	CallbackKeeper callbackKeeper.Keeper
 }
+
+type ArchwayScopedKeepers struct {
+	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
+	ScopedIBCFeeKeeper   capabilitykeeper.ScopedKeeper
+	ScopedWASMKeeper     capabilitykeeper.ScopedKeeper
+}
