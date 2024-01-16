@@ -1,0 +1,57 @@
+syntax = "proto3";
+package archway.cwfees.v1;
+
+import "google/protobuf/any.proto";
+
+import "cosmos/msg/v1/msg.proto";
+
+
+option go_package = "github.com/archway-network/archway/x/cwfees/types";
+
+service Msg {
+  // RegisterAsGranter allows a cosmwasm contract to register itself as a fee granter.
+  rpc RegisterAsGranter(MsgRegisterAsGranter) returns (MsgRegisterAsGranterResponse);
+  // UnregisterAsGranter allows a cosmwasm contract to unregister itself as a fee granter.
+  rpc UnregisterAsGranter(MsgUnregisterAsGranter) returns (MsgUnregisterAsGranterResponse);
+}
+
+// MsgRegisterAsGranter allows a contract to register itself as a fee granter.
+message MsgRegisterAsGranter {
+  option (cosmos.msg.v1.signer) = "granting_contract";
+  string granting_contract = 1;
+}
+
+// MsgRegisterAsGranterResponse defines the response of RegisterAsGranter.
+message MsgRegisterAsGranterResponse {}
+
+// MsgUnregisterAsGranter can be used by a cosmwasm contract to unregister itself as a fee granter.
+message MsgUnregisterAsGranter {
+  option (cosmos.msg.v1.signer) = "granting_contract";
+  string granting_contract = 1;
+}
+
+// MsgUnregisterAsGranterResponse defines the response of UnregisterAsGranter.
+message MsgUnregisterAsGranterResponse {}
+
+service Query {
+  // IsGrantingContract can be used to check if a contract is a granting contract.
+  rpc IsGrantingContract(IsGrantingContractRequest) returns (IsGrantingContractResponse);
+}
+
+// IsGrantingContract is the request type of IsGrantingContract RPC.
+message IsGrantingContractRequest {
+  // contract_address defines the address of the contract
+  // which we want to check if it is a granter or not.
+  string contract_address = 1;
+}
+
+// IsGrantingContractResponse is the response type of IsGRantingContract RPC.
+message IsGrantingContractResponse {
+  // is_granting_contract report if the contract is a granter or not.
+  bool is_granting_contract = 1;
+}
+
+// GenesisState represents the genesis state of the cwfeesant module.
+message GenesisState {
+  repeated string granting_contracts = 1;
+}

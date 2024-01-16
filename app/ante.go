@@ -13,6 +13,8 @@ import (
 	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
+	"github.com/archway-network/archway/x/cwfees"
+
 	rewardsAnte "github.com/archway-network/archway/x/rewards/ante"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	trackingAnte "github.com/archway-network/archway/x/tracking/ante"
@@ -33,7 +35,8 @@ type HandlerOptions struct {
 	TrackingKeeper trackingKeeper.Keeper
 	RewardsKeeper  rewardsKeeper.Keeper
 
-	Codec codec.BinaryCodec
+	Codec        codec.BinaryCodec
+	CWFeesKeeper cwfees.Keeper
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
@@ -78,7 +81,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// Custom Archway interceptor to track new transactions
 		trackingAnte.NewTxGasTrackingDecorator(options.TrackingKeeper),
 		// Custom Archway fee deduction, which splits fees between x/rewards and x/auth fee collector
-		rewardsAnte.NewDeductFeeDecorator(options.Codec, options.AccountKeeper, options.RewardsAnteBankKeeper, options.FeegrantKeeper, options.RewardsKeeper),
+		rewardsAnte.NewDeductFeeDecorator(options.Codec, options.AccountKeeper, options.RewardsAnteBankKeeper, options.FeegrantKeeper, options.RewardsKeeper, options.CWFeesKeeper),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
