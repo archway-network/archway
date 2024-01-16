@@ -37,6 +37,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#504](https://github.com/archway-network/archway/pull/504) - Interchain test gh workflow now runs on PRs targetting release branches as well as main 
 - [#462](https://github.com/archway-network/archway/pull/462) - adding docs ADR-008 – Improvements on rewards withdrawal experience
 - [#501](https://github.com/archway-network/archway/pull/501) - Adding x/callback module
+- [#532](https://github.com/archway-network/archway/pull/532) - Adding ADR-009 for x/callback module
 - [#527](https://github.com/archway-network/archway/pull/527) - Add x/cwfees module for 
 
 ### Improvements
@@ -48,6 +49,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#505](https://github.com/archway-network/archway/pull/505) - Update release process to account for release candidates on Titus
 - [#507](https://github.com/archway-network/archway/pull/507) – Version bump wasmd to v0.45.0 and cosmos-sdk to v0.47.6
 - [#529](https://github.com/archway-network/archway/pull/529) – Version bump wasmd to v0.47.6 and cosmos-sdk to v0.47.7
+- [#531](https://github.com/archway-network/archway/pull/531) - Bump wasmvm from v1.5.0 to v1.5.1. Ref: [CWA-2023-004](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-004.md)
 
 ### Deprecated
 

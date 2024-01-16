@@ -9,8 +9,11 @@
 5. [ADR-005: Introducing Minimum Price of Gas for Transaction Fees](adr/ADR-005-minimum-price-of-gas.md) - **Implemented**
 6. [ADR-006: Introduction of the genmsg module for genesis state configuration](adr/ADR-006-genmsg-module.md) - **Implemented**
 7. [ADR-007: Introduction of fee burning](adr/ADR-007-fee-burning.md) - **Implemented**
+8. [ADR-008: Refined Withdrawal User Experience](adr/ADR-008-withdrawal-ux-improvements.md) - **Implemented**
+9. [ADR-009: Callback module](adr/ADR-009-callback-module.md) - **Implemented**
 
 ## Module Specifications
 
 1. [x/rewards](../x/rewards/spec/README.md)
 2. [x/tracking](../x/tracking/spec/README.md)
+3. [x/callback](../x/callback/spec/README.md)
