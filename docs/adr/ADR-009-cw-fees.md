@@ -2,11 +2,11 @@
 
 # ADR-009: Introduction of CWFees Module
 
-Date: [Insert Date]
+Date: 2023-01-16
 
 ## Status
 
-[Insert Status: Proposed, Accepted, etc.]
+Accepted | Implemented.
 
 ## Context
 
