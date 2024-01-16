@@ -1,6 +1,6 @@
 ---
 
-# ADR-009: Introduction of CWFees Module
+# ADR-010: Introduction of CWFees Module
 
 Date: 2023-01-16
 
