@@ -123,11 +123,11 @@ import (
 	"github.com/archway-network/archway/wasmbinding"
 
 	"github.com/archway-network/archway/x/callback"
-	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
+	callbackkeeper "github.com/archway-network/archway/x/callback/keeper"
 	callbackTypes "github.com/archway-network/archway/x/callback/types"
 
 	"github.com/archway-network/archway/x/rewards"
-	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
+	rewardskeeper "github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 
@@ -139,9 +139,6 @@ import (
 
 	archwayappparams "github.com/archway-network/archway/app/params"
 	archway "github.com/archway-network/archway/types"
-
-	// unnamed import of statik for swagger UI support
-	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
 const AppName = "Archway"
@@ -272,6 +269,9 @@ type ArchwayApp struct {
 
 	// module configurator
 	configurator module.Configurator
+
+	// authority address
+	authority string
 }
 
 // NewArchwayApp returns a reference to an initialized ArchwayApp.
@@ -288,28 +288,12 @@ func NewArchwayApp(
 	wasmOpts []wasmdKeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *ArchwayApp {
-	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
-	interfaceRegistry := encodingConfig.InterfaceRegistry
+	appCodec, legacyAmino, interfaceRegistry := encodingConfig.Marshaler, encodingConfig.Amino, encodingConfig.InterfaceRegistry
 
 	bApp := baseapp.NewBaseApp(AppName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
-
-	govModuleAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-
-	keys := sdk.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
-		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
-		icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey,
-
-		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey,
-	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &ArchwayApp{
 		BaseApp:           bApp,
@@ -317,262 +301,357 @@ func NewArchwayApp(
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
-		keys:              keys,
-		tkeys:             tkeys,
-		memKeys:           memKeys,
+		keys:              make(map[string]*storetypes.KVStoreKey),
+		tkeys:             make(map[string]*storetypes.TransientStoreKey),
+		memKeys:           make(map[string]*storetypes.MemoryStoreKey),
 		Keepers:           keepers.ArchwayKeepers{},
+		ScopedKeepers:     keepers.ArchwayScopedKeepers{},
+		authority:         authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
+	modules := make([]module.AppModule, 0)
+	simModules := make([]module.AppModuleSimulation, 0)
+	beginBlockerModules := make([]string, 0)
+	endBlockerModules := make([]string, 0)
+	initGenesisModules := make([]string, 0)
 
-	app.Keepers.ParamsKeeper = initParamsKeeper(
-		appCodec,
-		legacyAmino,
-		keys[paramstypes.StoreKey],
-		tkeys[paramstypes.TStoreKey],
-	)
+	//
+	// BEGIN: Register Cosmos SDK modules
+	//
 
-	// set the BaseApp's parameter store
-	app.Keepers.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	app.SetParamStore(&app.Keepers.ConsensusParamsKeeper)
+	// NOTE: capability module must occur first in genesis init so that so that other modules
+	// that want to create or claim capabilities afterwards in InitChain can do so safely.
+	initGenesisModules = append(initGenesisModules, capabilitytypes.ModuleName)
 
-	// add capability keeper and ScopeToModule for ibc module
-	app.Keepers.CapabilityKeeper = capabilitykeeper.NewKeeper(
-		appCodec,
-		keys[capabilitytypes.StoreKey],
-		memKeys[capabilitytypes.MemStoreKey],
-	)
-
-	scopedIBCKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	scopedICAHostKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	scopedTransferKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	scopedWasmKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(wasmdTypes.ModuleName)
-	app.Keepers.CapabilityKeeper.Seal()
-
-	// add keepers
+	// 'auth' module
+	app.keys[authtypes.StoreKey] = storetypes.NewKVStoreKey(authtypes.StoreKey)
 	app.Keepers.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
-		keys[authtypes.StoreKey],
+		app.keys[authtypes.StoreKey],
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		Bech32Prefix,
-		govModuleAddr,
+		app.authority,
 	)
+	modules = append(modules, auth.NewAppModule(appCodec, app.Keepers.AccountKeeper, nil, app.getSubspace(authtypes.ModuleName)))
+	simModules = append(simModules, auth.NewAppModule(appCodec, app.Keepers.AccountKeeper, authsims.RandomGenesisAccounts, app.getSubspace(authtypes.ModuleName)))
+	beginBlockerModules = append(beginBlockerModules, authtypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, authtypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, authtypes.ModuleName)
+
+	// 'bank' module
+	app.keys[banktypes.StoreKey] = storetypes.NewKVStoreKey(banktypes.StoreKey)
 	app.Keepers.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
-		keys[banktypes.StoreKey],
+		app.keys[banktypes.StoreKey],
 		app.Keepers.AccountKeeper,
 		BlockedAddresses(),
-		govModuleAddr,
+		app.authority,
 	)
+	modules = append(modules, bank.NewAppModule(appCodec, app.Keepers.BankKeeper, app.Keepers.AccountKeeper, app.getSubspace(banktypes.ModuleName)))
+	simModules = append(simModules, bank.NewAppModule(appCodec, app.Keepers.BankKeeper, app.Keepers.AccountKeeper, app.getSubspace(banktypes.ModuleName)))
+	beginBlockerModules = append(beginBlockerModules, banktypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, banktypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, banktypes.ModuleName)
+
+	// 'authz' module
+	app.keys[authzkeeper.StoreKey] = storetypes.NewKVStoreKey(authzkeeper.StoreKey)
 	app.Keepers.AuthzKeeper = authzkeeper.NewKeeper(
-		keys[authzkeeper.StoreKey],
+		app.keys[authzkeeper.StoreKey],
 		appCodec,
-		app.BaseApp.MsgServiceRouter(),
+		app.MsgServiceRouter(),
 		app.Keepers.AccountKeeper,
 	)
-	app.Keepers.FeeGrantKeeper = feegrantkeeper.NewKeeper(
+	modules = append(modules, authzmodule.NewAppModule(appCodec, app.Keepers.AuthzKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, interfaceRegistry))
+	simModules = append(simModules, authzmodule.NewAppModule(appCodec, app.Keepers.AuthzKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.interfaceRegistry))
+	beginBlockerModules = append(beginBlockerModules, authz.ModuleName)
+	endBlockerModules = append(endBlockerModules, authz.ModuleName)
+	initGenesisModules = append(initGenesisModules, authz.ModuleName)
+
+	// 'capability' module
+	app.keys[capabilitytypes.StoreKey] = storetypes.NewKVStoreKey(capabilitytypes.StoreKey)
+	app.memKeys[capabilitytypes.MemStoreKey] = storetypes.NewMemoryStoreKey(capabilitytypes.MemStoreKey)
+	app.Keepers.CapabilityKeeper = capabilitykeeper.NewKeeper(
 		appCodec,
-		keys[feegrant.StoreKey],
-		app.Keepers.AccountKeeper,
+		app.keys[capabilitytypes.StoreKey],
+		app.memKeys[capabilitytypes.MemStoreKey],
 	)
-	app.Keepers.StakingKeeper = stakingkeeper.NewKeeper(
+	modules = append(modules, capability.NewAppModule(appCodec, *app.Keepers.CapabilityKeeper, false))
+	simModules = append(simModules, capability.NewAppModule(appCodec, *app.Keepers.CapabilityKeeper, false))
+	beginBlockerModules = append(beginBlockerModules, capabilitytypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, capabilitytypes.ModuleName)
+
+	// 'consensus' module
+	app.keys[consensusparamtypes.StoreKey] = storetypes.NewKVStoreKey(consensusparamtypes.StoreKey)
+	app.Keepers.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		appCodec,
-		keys[stakingtypes.StoreKey],
-		app.Keepers.AccountKeeper,
-		app.Keepers.BankKeeper,
-		govModuleAddr,
+		app.keys[consensusparamtypes.StoreKey],
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	app.Keepers.DistrKeeper = distrkeeper.NewKeeper(
-		appCodec,
-		keys[distrtypes.StoreKey],
-		app.Keepers.AccountKeeper,
-		app.Keepers.BankKeeper,
-		app.Keepers.StakingKeeper,
-		authtypes.FeeCollectorName,
-		govModuleAddr,
-	)
-	app.Keepers.SlashingKeeper = slashingkeeper.NewKeeper(
-		appCodec,
-		legacyAmino,
-		keys[slashingtypes.StoreKey],
-		app.Keepers.StakingKeeper,
-		govModuleAddr,
-	)
+	app.SetParamStore(&app.Keepers.ConsensusParamsKeeper)
+	modules = append(modules, consensus.NewAppModule(appCodec, app.Keepers.ConsensusParamsKeeper))
+	beginBlockerModules = append(beginBlockerModules, consensusparamtypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, consensusparamtypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, consensusparamtypes.ModuleName)
+
+	// 'crisis' module
+	app.keys[crisistypes.StoreKey] = storetypes.NewKVStoreKey(crisistypes.StoreKey)
 	app.Keepers.CrisisKeeper = *crisiskeeper.NewKeeper(
 		appCodec,
-		keys[crisistypes.StoreKey],
+		app.keys[crisistypes.StoreKey],
 		invCheckPeriod,
 		app.Keepers.BankKeeper,
 		authtypes.FeeCollectorName,
-		govModuleAddr,
+		app.authority,
 	)
-	app.Keepers.UpgradeKeeper = *upgradekeeper.NewKeeper(
-		skipUpgradeHeights,
-		keys[upgradetypes.StoreKey],
+	beginBlockerModules = append(beginBlockerModules, crisistypes.ModuleName)
+	// NOTE: crisis endblocker is added at the end as invariant checks are always last to run
+	// NOTE: crisis init genesis is added at the end as invariant checks are always last to run
+
+	// 'feegrant' module
+	app.keys[feegrant.StoreKey] = storetypes.NewKVStoreKey(feegrant.StoreKey)
+	app.Keepers.FeeGrantKeeper = feegrantkeeper.NewKeeper(
 		appCodec,
-		homePath,
-		app.BaseApp,
-		govModuleAddr,
+		app.keys[feegrant.StoreKey],
+		app.Keepers.AccountKeeper,
 	)
+	modules = append(modules, feegrantmodule.NewAppModule(appCodec, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.FeeGrantKeeper, interfaceRegistry))
+	simModules = append(simModules, feegrantmodule.NewAppModule(appCodec, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.FeeGrantKeeper, app.interfaceRegistry))
+	beginBlockerModules = append(beginBlockerModules, feegrant.ModuleName)
+	endBlockerModules = append(endBlockerModules, feegrant.ModuleName)
+	initGenesisModules = append(initGenesisModules, feegrant.ModuleName)
 
-	groupConfig := group.DefaultConfig()
-	app.Keepers.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.Keepers.AccountKeeper, groupConfig)
+	// 'group' module
+	app.keys[group.StoreKey] = storetypes.NewKVStoreKey(group.StoreKey)
+	app.Keepers.GroupKeeper = groupkeeper.NewKeeper(
+		app.keys[group.StoreKey],
+		appCodec,
+		app.MsgServiceRouter(),
+		app.Keepers.AccountKeeper,
+		group.DefaultConfig(),
+	)
+	modules = append(modules, groupmodule.NewAppModule(appCodec, app.Keepers.GroupKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, interfaceRegistry))
+	beginBlockerModules = append(beginBlockerModules, group.ModuleName)
+	endBlockerModules = append(endBlockerModules, group.ModuleName)
+	initGenesisModules = append(initGenesisModules, group.ModuleName)
 
+	// 'staking' module
+	app.keys[stakingtypes.StoreKey] = storetypes.NewKVStoreKey(stakingtypes.StoreKey)
+	app.Keepers.StakingKeeper = stakingkeeper.NewKeeper(
+		appCodec,
+		app.keys[stakingtypes.StoreKey],
+		app.Keepers.AccountKeeper,
+		app.Keepers.BankKeeper,
+		app.authority,
+	)
+	stakingHooks := make([]stakingtypes.StakingHooks, 0)
+	modules = append(modules, staking.NewAppModule(appCodec, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(stakingtypes.ModuleName)))
+	simModules = append(simModules, staking.NewAppModule(appCodec, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(stakingtypes.ModuleName)))
+	beginBlockerModules = append(beginBlockerModules, stakingtypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, stakingtypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, stakingtypes.ModuleName)
+
+	// 'nft' module
+	app.keys[nftkeeper.StoreKey] = storetypes.NewKVStoreKey(nftkeeper.StoreKey)
 	app.Keepers.NFTKeeper = nftkeeper.NewKeeper(
-		keys[nftkeeper.StoreKey],
+		app.keys[nftkeeper.StoreKey],
 		appCodec,
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
 	)
+	modules = append(modules, nftmodule.NewAppModule(appCodec, app.Keepers.NFTKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, interfaceRegistry))
+	beginBlockerModules = append(beginBlockerModules, nft.ModuleName)
+	endBlockerModules = append(endBlockerModules, nft.ModuleName)
+	initGenesisModules = append(initGenesisModules, nft.ModuleName)
 
-	// register the staking hooks
-	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	app.Keepers.StakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.Keepers.DistrKeeper.Hooks(), app.Keepers.SlashingKeeper.Hooks()),
+	// 'gov' module - depends on
+	app.keys[govtypes.StoreKey] = storetypes.NewKVStoreKey(govtypes.StoreKey)
+	app.Keepers.GovKeeper = *govkeeper.NewKeeper(
+		appCodec,
+		app.keys[govtypes.StoreKey],
+		app.Keepers.AccountKeeper,
+		app.Keepers.BankKeeper,
+		app.Keepers.StakingKeeper,
+		app.MsgServiceRouter(),
+		govtypes.DefaultConfig(),
+		app.authority,
 	)
+	// Set legacy router for backwards compatibility with gov v1beta1
+	govLegacyRouter := govV1Beta1types.NewRouter()
+	govLegacyRouter.AddRoute(govtypes.RouterKey, govV1Beta1types.ProposalHandler)
+	modules = append(modules, gov.NewAppModule(appCodec, &app.Keepers.GovKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(govtypes.ModuleName)))
+	simModules = append(simModules, gov.NewAppModule(appCodec, &app.Keepers.GovKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(govtypes.ModuleName)))
+	beginBlockerModules = append(beginBlockerModules, govtypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, govtypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, govtypes.ModuleName)
 
+	// 'distribution' module
+	app.keys[distrtypes.StoreKey] = storetypes.NewKVStoreKey(distrtypes.StoreKey)
+	app.Keepers.DistrKeeper = distrkeeper.NewKeeper(
+		appCodec,
+		app.keys[distrtypes.StoreKey],
+		app.Keepers.AccountKeeper,
+		app.Keepers.BankKeeper,
+		app.Keepers.StakingKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	stakingHooks = append(stakingHooks, app.Keepers.DistrKeeper.Hooks())
+	modules = append(modules, distr.NewAppModule(appCodec, app.Keepers.DistrKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(distrtypes.ModuleName)))
+	simModules = append(simModules, distr.NewAppModule(appCodec, app.Keepers.DistrKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(distrtypes.ModuleName)))
+	beginBlockerModules = append(beginBlockerModules, distrtypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, distrtypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, distrtypes.ModuleName)
+
+	// 'slashing' module
+	app.keys[slashingtypes.StoreKey] = storetypes.NewKVStoreKey(slashingtypes.StoreKey)
+	app.Keepers.SlashingKeeper = slashingkeeper.NewKeeper(
+		appCodec,
+		encodingConfig.Amino,
+		app.keys[slashingtypes.StoreKey],
+		app.Keepers.StakingKeeper,
+		app.authority,
+	)
+	stakingHooks = append(stakingHooks, app.Keepers.SlashingKeeper.Hooks())
+	modules = append(modules, slashing.NewAppModule(appCodec, app.Keepers.SlashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(slashingtypes.ModuleName)))
+	simModules = append(simModules, slashing.NewAppModule(appCodec, app.Keepers.SlashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(slashingtypes.ModuleName)))
+	beginBlockerModules = append(beginBlockerModules, slashingtypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, slashingtypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, slashingtypes.ModuleName)
+
+	// 'params' module
+	app.keys[paramstypes.StoreKey] = storetypes.NewKVStoreKey(paramstypes.StoreKey)
+	app.tkeys[paramstypes.TStoreKey] = storetypes.NewTransientStoreKey(paramstypes.TStoreKey)
+	app.Keepers.ParamsKeeper = initParamsKeeper(
+		appCodec,
+		legacyAmino,
+		app.keys[paramstypes.StoreKey],
+		app.tkeys[paramstypes.TStoreKey],
+	)
+	govLegacyRouter.AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.Keepers.ParamsKeeper))
+	modules = append(modules, params.NewAppModule(app.Keepers.ParamsKeeper))
+	simModules = append(simModules, params.NewAppModule(app.Keepers.ParamsKeeper))
+	beginBlockerModules = append(beginBlockerModules, paramstypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, paramstypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, paramstypes.ModuleName)
+
+	// 'evidence' module
+	app.keys[evidencetypes.StoreKey] = storetypes.NewKVStoreKey(evidencetypes.StoreKey)
+	app.Keepers.EvidenceKeeper = *evidencekeeper.NewKeeper(
+		appCodec,
+		app.keys[evidencetypes.StoreKey],
+		app.Keepers.StakingKeeper,
+		app.Keepers.SlashingKeeper,
+	)
+	modules = append(modules, evidence.NewAppModule(app.Keepers.EvidenceKeeper))
+	simModules = append(simModules, evidence.NewAppModule(app.Keepers.EvidenceKeeper))
+	beginBlockerModules = append(beginBlockerModules, evidencetypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, evidencetypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, evidencetypes.ModuleName)
+
+	// 'upgrade' module
+	app.keys[upgradetypes.StoreKey] = storetypes.NewKVStoreKey(upgradetypes.StoreKey)
+	app.Keepers.UpgradeKeeper = *upgradekeeper.NewKeeper(
+		skipUpgradeHeights,
+		app.keys[upgradetypes.StoreKey],
+		appCodec,
+		homePath,
+		app.BaseApp,
+		app.authority,
+	)
+	govLegacyRouter.AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(&app.Keepers.UpgradeKeeper))
+	modules = append(modules, upgrade.NewAppModule(&app.Keepers.UpgradeKeeper))
+	beginBlockerModules = append(beginBlockerModules, upgradetypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, upgradetypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, upgradetypes.ModuleName)
+
+	// 'genutil' module
+	modules = append(modules, genutil.NewAppModule(app.Keepers.AccountKeeper, app.Keepers.StakingKeeper, app.BaseApp.DeliverTx, encodingConfig.TxConfig))
+	beginBlockerModules = append(beginBlockerModules, genutiltypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, genutiltypes.ModuleName)
+
+	// 'vesting' module
+	modules = append(modules, vesting.NewAppModule(app.Keepers.AccountKeeper, app.Keepers.BankKeeper))
+	beginBlockerModules = append(beginBlockerModules, vestingtypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, vestingtypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, vestingtypes.ModuleName)
+
+	//
+	// END: Register Cosmos SDK modules
+	//
+
+	//
+	// BEGIN: Register IBC modules
+	//
+
+	// 'ibc' module
+	app.keys[ibcexported.StoreKey] = storetypes.NewKVStoreKey(ibcexported.StoreKey)
 	app.Keepers.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
-		keys[ibcexported.StoreKey],
+		app.keys[ibcexported.StoreKey],
 		app.getSubspace(ibcexported.ModuleName),
 		app.Keepers.StakingKeeper,
 		app.Keepers.UpgradeKeeper,
-		scopedIBCKeeper,
+		app.Keepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName),
 	)
+	govLegacyRouter.AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.Keepers.IBCKeeper.ClientKeeper))
+	modules = append(modules, ibc.NewAppModule(app.Keepers.IBCKeeper))
+	simModules = append(simModules, ibc.NewAppModule(app.Keepers.IBCKeeper))
+	beginBlockerModules = append(beginBlockerModules, ibcexported.ModuleName)
+	endBlockerModules = append(endBlockerModules, ibcexported.ModuleName)
+	initGenesisModules = append(initGenesisModules, ibcexported.ModuleName)
 
-	// register the proposal types
-	govRouter := govV1Beta1types.NewRouter()
-	govRouter.
-		AddRoute(govtypes.RouterKey, govV1Beta1types.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.Keepers.ParamsKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(&app.Keepers.UpgradeKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.Keepers.IBCKeeper.ClientKeeper))
-
-	// IBC Fee Module keeper
+	// 'ibcfeekeeper' module
+	app.keys[ibcfeetypes.StoreKey] = storetypes.NewKVStoreKey(ibcfeetypes.StoreKey)
 	app.Keepers.IBCFeeKeeper = ibcfeekeeper.NewKeeper(
-		appCodec, keys[ibcfeetypes.StoreKey],
-		app.Keepers.IBCKeeper.ChannelKeeper, // may be replaced with IBC middleware
-		app.Keepers.IBCKeeper.ChannelKeeper,
-		&app.Keepers.IBCKeeper.PortKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper,
-	)
-
-	// Create Transfer Keepers
-	app.Keepers.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
-		keys[ibctransfertypes.StoreKey],
-		app.getSubspace(ibctransfertypes.ModuleName),
-		app.Keepers.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
+		app.keys[ibcfeetypes.StoreKey],
+		app.Keepers.IBCKeeper.ChannelKeeper, // may be replaced with IBC middleware
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		&app.Keepers.IBCKeeper.PortKeeper,
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
-		scopedTransferKeeper)
+	)
+	modules = append(modules, ibcfee.NewAppModule(app.Keepers.IBCFeeKeeper))
+	beginBlockerModules = append(beginBlockerModules, ibcfeetypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, ibcfeetypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, ibcfeetypes.ModuleName)
 
-	transferModule := transfer.NewAppModule(app.Keepers.TransferKeeper)
+	// 'ibctransfer' module
+	app.keys[ibctransfertypes.StoreKey] = storetypes.NewKVStoreKey(ibctransfertypes.StoreKey)
+	app.Keepers.TransferKeeper = ibctransferkeeper.NewKeeper(
+		appCodec,
+		app.keys[ibctransfertypes.StoreKey],
+		app.getSubspace(ibctransfertypes.ModuleName),
+		app.Keepers.IBCFeeKeeper,
+		app.Keepers.IBCKeeper.ChannelKeeper,
+		&app.Keepers.IBCKeeper.PortKeeper,
+		app.Keepers.AccountKeeper,
+		app.Keepers.BankKeeper,
+		app.Keepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName),
+	)
+	modules = append(modules, transfer.NewAppModule(app.Keepers.TransferKeeper))
+	simModules = append(simModules, transfer.NewAppModule(app.Keepers.TransferKeeper))
+	beginBlockerModules = append(beginBlockerModules, ibctransfertypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, ibctransfertypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, ibctransfertypes.ModuleName)
 
+	// 'icahost' module
+	app.keys[icahosttypes.StoreKey] = storetypes.NewKVStoreKey(icahosttypes.StoreKey)
 	app.Keepers.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec,
-		keys[icahosttypes.StoreKey],
+		app.keys[icahosttypes.StoreKey],
 		app.getSubspace(icahosttypes.SubModuleName),
 		app.Keepers.IBCFeeKeeper,
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		&app.Keepers.IBCKeeper.PortKeeper,
 		app.Keepers.AccountKeeper,
-		scopedICAHostKeeper,
+		app.Keepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName),
 		app.MsgServiceRouter(),
 	)
-
-	// create evidence keeper with router
-	evidenceKeeper := evidencekeeper.NewKeeper(
-		appCodec,
-		keys[evidencetypes.StoreKey],
-		app.Keepers.StakingKeeper,
-		app.Keepers.SlashingKeeper,
-	)
-	app.Keepers.EvidenceKeeper = *evidenceKeeper
-
-	defaultGasRegister := wasmdTypes.NewDefaultWasmGasRegister()
-
-	app.Keepers.TrackingKeeper = trackingKeeper.NewKeeper(
-		appCodec,
-		keys[trackingTypes.StoreKey],
-		defaultGasRegister,
-	)
-
-	wasmDir := filepath.Join(homePath, "wasm")
-	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
-	if err != nil {
-		panic(fmt.Sprintf("error while reading wasm config: %s", err))
-	}
-
-	// The last arguments can contain custom message handlers, and custom query handlers,
-	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_3,cosmwasm_1_4"
-
-	wasmer, err := cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
-	if err != nil {
-		panic(err)
-	}
-
-	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
-
-	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
-	// Archway specific options (using a pointer as the keeper is post-initialized below)
-	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.Keepers.RewardsKeeper, &app.Keepers.GovKeeper)...)
-
-	app.Keepers.WASMKeeper = wasmdKeeper.NewKeeper(
-		appCodec,
-		keys[wasmdTypes.StoreKey],
-		app.Keepers.AccountKeeper,
-		app.Keepers.BankKeeper,
-		app.Keepers.StakingKeeper,
-		distrkeeper.NewQuerier(app.Keepers.DistrKeeper),
-		app.Keepers.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
-		app.Keepers.IBCKeeper.ChannelKeeper,
-		&app.Keepers.IBCKeeper.PortKeeper,
-		scopedWasmKeeper,
-		app.Keepers.TransferKeeper,
-		app.MsgServiceRouter(),
-		app.GRPCQueryRouter(),
-		wasmDir,
-		wasmConfig,
-		supportedFeatures,
-		govModuleAddr,
-		wasmOpts...,
-	)
-
-	// Setting gas recorder here to avoid cyclic loop
-	trackingWasmVm.SetGasRecorder(app.Keepers.TrackingKeeper)
-
-	app.Keepers.RewardsKeeper = rewardsKeeper.NewKeeper(
-		appCodec,
-		keys[rewardsTypes.StoreKey],
-		app.Keepers.WASMKeeper,
-		app.Keepers.TrackingKeeper,
-		app.Keepers.AccountKeeper,
-		app.Keepers.BankKeeper,
-		app.getSubspace(rewardsTypes.ModuleName),
-		govModuleAddr,
-	)
-
-	// Note we set up mint keeper after the x/rewards keeper
-	app.Keepers.MintKeeper = mintkeeper.NewKeeper(
-		appCodec,
-		keys[minttypes.StoreKey],
-		app.Keepers.StakingKeeper,
-		app.Keepers.AccountKeeper,
-		mintbankkeeper.NewKeeper(app.Keepers.BankKeeper, app.Keepers.RewardsKeeper),
-		authtypes.FeeCollectorName,
-		govModuleAddr,
-	)
-
-	app.Keepers.CallbackKeeper = callbackKeeper.NewKeeper(
-		appCodec,
-		keys[callbackTypes.StoreKey],
-		app.Keepers.WASMKeeper,
-		app.Keepers.RewardsKeeper,
-		app.Keepers.BankKeeper,
-		govModuleAddr,
-	)
+	modules = append(modules, ica.NewAppModule(nil, &app.Keepers.ICAHostKeeper))
+	beginBlockerModules = append(beginBlockerModules, icatypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, icatypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, icatypes.ModuleName)
 
 	var transferStack porttypes.IBCModule
 	transferStack = transfer.NewIBCModule(app.Keepers.TransferKeeper)
@@ -584,7 +663,7 @@ func NewArchwayApp(
 	var icaHostStack porttypes.IBCModule
 	icaHostStack = icahost.NewIBCModule(app.Keepers.ICAHostKeeper)
 	icaHostStack = ibcfee.NewIBCMiddleware(icaHostStack, app.Keepers.IBCFeeKeeper)
-
+	// Create fee enabled wasm ibc Stack
 	var wasmStack porttypes.IBCModule
 	wasmStack = wasm.NewIBCHandler(app.Keepers.WASMKeeper, app.Keepers.IBCKeeper.ChannelKeeper, app.Keepers.IBCFeeKeeper)
 	wasmStack = ibcfee.NewIBCMiddleware(wasmStack, app.Keepers.IBCFeeKeeper)
@@ -596,249 +675,185 @@ func NewArchwayApp(
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
 	app.Keepers.IBCKeeper.SetRouter(ibcRouter)
 
-	app.Keepers.GovKeeper = *govkeeper.NewKeeper(
+	//
+	// END: Register IBC modules
+	//
+
+	//
+	// BEGIN: Register Wasmd module
+	//
+
+	// 'wasm' module
+	wasmDir := filepath.Join(homePath, "wasm")
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic(fmt.Sprintf("error while reading wasm config: %s", err))
+	}
+
+	supportedFeatures := "iterator,staking,stargate,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_3,cosmwasm_1_4"
+	defaultGasRegister := wasmdTypes.NewDefaultWasmGasRegister()
+	wasmer, err := cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
+	if err != nil {
+		panic(err)
+	}
+	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
+	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
+	// Archway specific options (using a pointer as the keeper is post-initialized below)
+	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.Keepers.RewardsKeeper, &app.Keepers.GovKeeper)...)
+
+	app.keys[wasmdTypes.StoreKey] = storetypes.NewKVStoreKey(wasmdTypes.StoreKey)
+	app.Keepers.WASMKeeper = wasmdKeeper.NewKeeper(
 		appCodec,
-		keys[govtypes.StoreKey],
+		app.keys[wasmdTypes.StoreKey],
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
 		app.Keepers.StakingKeeper,
+		distrkeeper.NewQuerier(app.Keepers.DistrKeeper),
+		app.Keepers.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
+		app.Keepers.IBCKeeper.ChannelKeeper,
+		&app.Keepers.IBCKeeper.PortKeeper,
+		app.Keepers.CapabilityKeeper.ScopeToModule(wasmdTypes.ModuleName),
+		app.Keepers.TransferKeeper,
 		app.MsgServiceRouter(),
-		govtypes.DefaultConfig(),
-		govModuleAddr,
+		app.GRPCQueryRouter(),
+		wasmDir,
+		wasmConfig,
+		supportedFeatures,
+		app.authority,
+		wasmOpts...,
 	)
-	app.Keepers.GovKeeper.SetLegacyRouter(govRouter)
-	/****  Module Options ****/
+	modules = append(modules, wasm.NewAppModule(appCodec, &app.Keepers.WASMKeeper, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.MsgServiceRouter(), app.getSubspace(wasmdTypes.ModuleName)))
+	simModules = append(simModules, wasm.NewAppModule(appCodec, &app.Keepers.WASMKeeper, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.MsgServiceRouter(), app.getSubspace(wasmdTypes.ModuleName)))
+	beginBlockerModules = append(beginBlockerModules, wasmdTypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, wasmdTypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, wasmdTypes.ModuleName)
+	//
+	// END: Register Wasmd module
+	//
 
-	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
-	// we prefer to be more strict in what arguments the modules expect.
-	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	//
+	// BEGIN: Register Archway modules
+	//
 
-	// NOTE: Any module instantiated in the module manager that is later modified
-	// must be passed by reference here.
-	app.mm = module.NewManager(
-		genutil.NewAppModule(
-			app.Keepers.AccountKeeper,
-			app.Keepers.StakingKeeper,
-			app.BaseApp.DeliverTx,
-			encodingConfig.TxConfig,
-		),
-		auth.NewAppModule(appCodec, app.Keepers.AccountKeeper, nil, app.getSubspace(authtypes.ModuleName)),
-		vesting.NewAppModule(app.Keepers.AccountKeeper, app.Keepers.BankKeeper),
-		bank.NewAppModule(appCodec, app.Keepers.BankKeeper, app.Keepers.AccountKeeper, app.getSubspace(banktypes.ModuleName)),
-		capability.NewAppModule(appCodec, *app.Keepers.CapabilityKeeper, false),
-		gov.NewAppModule(appCodec, &app.Keepers.GovKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(govtypes.ModuleName)),
-		groupmodule.NewAppModule(appCodec, app.Keepers.GroupKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.interfaceRegistry),
-		nftmodule.NewAppModule(appCodec, app.Keepers.NFTKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.interfaceRegistry),
-		mint.NewAppModule(appCodec, app.Keepers.MintKeeper, app.Keepers.AccountKeeper, nil, app.getSubspace(minttypes.ModuleName)),
-		slashing.NewAppModule(appCodec, app.Keepers.SlashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(slashingtypes.ModuleName)),
-		distr.NewAppModule(appCodec, app.Keepers.DistrKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(distrtypes.ModuleName)),
-		staking.NewAppModule(appCodec, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(stakingtypes.ModuleName)),
-		upgrade.NewAppModule(&app.Keepers.UpgradeKeeper),
-		wasm.NewAppModule(appCodec, &app.Keepers.WASMKeeper, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.MsgServiceRouter(), app.getSubspace(wasmdTypes.ModuleName)),
-		evidence.NewAppModule(app.Keepers.EvidenceKeeper),
-		feegrantmodule.NewAppModule(appCodec, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.FeeGrantKeeper, app.interfaceRegistry),
-		authzmodule.NewAppModule(appCodec, app.Keepers.AuthzKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.interfaceRegistry),
-		ibc.NewAppModule(app.Keepers.IBCKeeper),
-		params.NewAppModule(app.Keepers.ParamsKeeper),
-		transferModule,
-		ibcfee.NewAppModule(app.Keepers.IBCFeeKeeper),
-		ica.NewAppModule(nil, &app.Keepers.ICAHostKeeper),
-		consensus.NewAppModule(appCodec, app.Keepers.ConsensusParamsKeeper),
-		tracking.NewAppModule(app.appCodec, app.Keepers.TrackingKeeper),
-		rewards.NewAppModule(app.appCodec, app.Keepers.RewardsKeeper),
-		genmsg.NewAppModule(app.MsgServiceRouter()),
-		callback.NewAppModule(app.appCodec, app.Keepers.CallbackKeeper, app.Keepers.WASMKeeper),
-		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
+	// 'tracking' module - tracks wasm gas usage
+	app.keys[trackingTypes.StoreKey] = storetypes.NewKVStoreKey(trackingTypes.StoreKey)
+	app.Keepers.TrackingKeeper = trackingKeeper.NewKeeper(
+		appCodec,
+		app.keys[trackingTypes.StoreKey],
+		defaultGasRegister,
 	)
+	modules = append(modules, tracking.NewAppModule(appCodec, app.Keepers.TrackingKeeper))
+	beginBlockerModules = append(beginBlockerModules, trackingTypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, trackingTypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, trackingTypes.ModuleName)
+	// Setting gas recorder here to avoid cyclic loop
+	trackingWasmVm.SetGasRecorder(app.Keepers.TrackingKeeper)
 
-	// During begin block slashing happens after distr.BeginBlocker so that
-	// there is nothing left over in the validator fee pool, so as to keep the
-	// CanWithdrawInvariant invariant.
-	// NOTE: staking module is required if HistoricalEntries param > 0
-	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName,
-		capabilitytypes.ModuleName,
-		minttypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		govtypes.ModuleName,
-		nft.ModuleName,
-		crisistypes.ModuleName, // doesn't have BeginBlocker, so order is not important
-		genutiltypes.ModuleName,
-		genmsg.ModuleName,
-		group.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
-		paramstypes.ModuleName,
-		vestingtypes.ModuleName,
-		consensusparamtypes.ModuleName,
-		// additional non simd modules
-		ibcexported.ModuleName,
-		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
-		icatypes.ModuleName,
-		// wasm
-		wasmdTypes.ModuleName,
-		// wasm gas tracking
-		trackingTypes.ModuleName,
-		rewardsTypes.ModuleName,
-		callbackTypes.ModuleName,
+	// 'rewards' module
+	app.keys[rewardsTypes.StoreKey] = storetypes.NewKVStoreKey(rewardsTypes.StoreKey)
+	app.Keepers.RewardsKeeper = rewardskeeper.NewKeeper(
+		appCodec,
+		app.keys[rewardsTypes.StoreKey],
+		app.Keepers.WASMKeeper,
+		app.Keepers.TrackingKeeper,
+		app.Keepers.AccountKeeper,
+		app.Keepers.BankKeeper,
+		app.getSubspace(rewardsTypes.ModuleName),
+		app.authority,
 	)
+	modules = append(modules, rewards.NewAppModule(app.appCodec, app.Keepers.RewardsKeeper))
+	beginBlockerModules = append(beginBlockerModules, rewardsTypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, rewardsTypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, rewardsTypes.ModuleName)
 
-	app.mm.SetOrderEndBlockers(
-		// we have to specify all modules here (Cosmos's order is taken as a reference)
-		govtypes.ModuleName,
-		stakingtypes.ModuleName,
-		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
-		ibcexported.ModuleName,
-		icatypes.ModuleName,
-		feegrant.ModuleName,
-		authz.ModuleName,
-		capabilitytypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		distrtypes.ModuleName,
-		nft.ModuleName,
-		slashingtypes.ModuleName,
-		minttypes.ModuleName,
-		genutiltypes.ModuleName,
-		genmsg.ModuleName,
-		group.ModuleName,
-		evidencetypes.ModuleName,
-		paramstypes.ModuleName,
-		upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
-		consensusparamtypes.ModuleName,
-		// wasm
-		wasmdTypes.ModuleName,
-		// wasm gas tracking
-		trackingTypes.ModuleName,
-		rewardsTypes.ModuleName,
-		callbackTypes.ModuleName,
-		// invariants checks are always the last to run
-		crisistypes.ModuleName,
+	// 'mint' module
+	app.keys[minttypes.StoreKey] = storetypes.NewKVStoreKey(minttypes.StoreKey)
+	app.Keepers.MintKeeper = mintkeeper.NewKeeper(
+		appCodec,
+		app.keys[minttypes.StoreKey],
+		app.Keepers.StakingKeeper,
+		app.Keepers.AccountKeeper,
+		mintbankkeeper.NewKeeper(app.Keepers.BankKeeper, app.Keepers.RewardsKeeper),
+		authtypes.FeeCollectorName,
+		app.authority,
 	)
+	modules = append(modules, mint.NewAppModule(appCodec, app.Keepers.MintKeeper, app.Keepers.AccountKeeper, nil, app.getSubspace(minttypes.ModuleName)))
+	simModules = append(simModules, mint.NewAppModule(appCodec, app.Keepers.MintKeeper, app.Keepers.AccountKeeper, nil, app.getSubspace(minttypes.ModuleName)))
+	beginBlockerModules = append(beginBlockerModules, minttypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, minttypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, minttypes.ModuleName)
 
-	// NOTE: The genutils module must occur after staking so that pools are
-	// properly initialized with tokens from genesis accounts.
-	// NOTE: Capability module must occur first so that it can initialize any capabilities
-	// so that other modules that want to create or claim capabilities afterwards in InitChain
-	// can do so safely.
-	// NOTE: wasm module should be at the end as it can call other module functionality direct or via message dispatching during
-	// genesis phase. For example bank transfer, auth account check, staking, ...
-	app.mm.SetOrderInitGenesis(
-		capabilitytypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		distrtypes.ModuleName,
-		stakingtypes.ModuleName,
-		slashingtypes.ModuleName,
-		govtypes.ModuleName,
-		nft.ModuleName,
-		minttypes.ModuleName,
-		rewardsTypes.ModuleName,
-		genutiltypes.ModuleName,
-		group.ModuleName,
-		evidencetypes.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
-		paramstypes.ModuleName,
-		upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
-		consensusparamtypes.ModuleName,
-		// additional non simd modules
-		ibcexported.ModuleName,
-		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
-		icatypes.ModuleName,
-		// wasm after ibc transfer
-		wasmdTypes.ModuleName,
-		// wasm gas tracking
-		trackingTypes.ModuleName,
-		genmsg.ModuleName,
-		callbackTypes.ModuleName,
-		// invariants checks are always the last to run
-		crisistypes.ModuleName,
+	// 'callback' module
+	app.keys[callbackTypes.StoreKey] = storetypes.NewKVStoreKey(callbackTypes.StoreKey)
+	app.Keepers.CallbackKeeper = callbackkeeper.NewKeeper(
+		appCodec,
+		app.keys[callbackTypes.StoreKey],
+		app.Keepers.WASMKeeper,
+		app.Keepers.RewardsKeeper,
+		app.Keepers.BankKeeper,
+		app.authority,
 	)
+	modules = append(modules, callback.NewAppModule(app.appCodec, app.Keepers.CallbackKeeper, app.Keepers.WASMKeeper))
+	beginBlockerModules = append(beginBlockerModules, callbackTypes.ModuleName)
+	endBlockerModules = append(endBlockerModules, callbackTypes.ModuleName)
+	initGenesisModules = append(initGenesisModules, callbackTypes.ModuleName)
 
-	// Uncomment if you want to set a custom migration order here.
-	// app.mm.SetOrderMigrations(custom order)
+	// 'genmsg' module
+	modules = append(modules, genmsg.NewAppModule(app.MsgServiceRouter()))
+	beginBlockerModules = append(beginBlockerModules, genmsg.ModuleName)
+	endBlockerModules = append(endBlockerModules, genmsg.ModuleName)
+	initGenesisModules = append(initGenesisModules, genmsg.ModuleName)
 
+	//
+	// END: Register Archway modules
+	//
+
+	// Wrapping up the keepers
+	app.Keepers.StakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(stakingHooks...))
+	app.Keepers.GovKeeper.SetLegacyRouter(govLegacyRouter)
+	app.Keepers.CapabilityKeeper.Seal()
+
+	modules = append(modules, crisis.NewAppModule(&app.Keepers.CrisisKeeper, cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants)), app.getSubspace(crisistypes.ModuleName))) // always be last to make sure that it checks for all invariants and not only part of them
+	endBlockerModules = append(endBlockerModules, crisistypes.ModuleName)                                                                                                          // NOTE: crisis endblocker is added at the end as invariant checks are always last to run
+	initGenesisModules = append(initGenesisModules, genutiltypes.ModuleName)                                                                                                       //
+	initGenesisModules = append(initGenesisModules, crisistypes.ModuleName)
+
+	//
+	// BEGIN: Module options
+	//
+
+	app.mm = module.NewManager(modules...)
 	app.mm.RegisterInvariants(&app.Keepers.CrisisKeeper)
 
-	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.mm.SetOrderBeginBlockers(beginBlockerModules...)
+	app.mm.SetOrderEndBlockers(endBlockerModules...)
+	app.mm.SetOrderInitGenesis(initGenesisModules...)
+	// app.mm.SetOrderMigrations(custom order)
+
+	app.configurator = module.NewConfigurator(appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
-	app.setupUpgrades()
+	app.SetupUpgrades()
 
-	// create the simulation manager and define the order of the modules for deterministic simulations
-	//
-	// NOTE: this is not required apps that don't use the simulator for fuzz testing
-	// transactions
-	app.sm = module.NewSimulationManager(
-		auth.NewAppModule(appCodec, app.Keepers.AccountKeeper, authsims.RandomGenesisAccounts, app.getSubspace(authtypes.ModuleName)),
-		bank.NewAppModule(appCodec, app.Keepers.BankKeeper, app.Keepers.AccountKeeper, app.getSubspace(banktypes.ModuleName)),
-		capability.NewAppModule(appCodec, *app.Keepers.CapabilityKeeper, false),
-		feegrantmodule.NewAppModule(appCodec, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.FeeGrantKeeper, app.interfaceRegistry),
-		authzmodule.NewAppModule(appCodec, app.Keepers.AuthzKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.interfaceRegistry),
-		gov.NewAppModule(appCodec, &app.Keepers.GovKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(govtypes.ModuleName)),
-		mint.NewAppModule(appCodec, app.Keepers.MintKeeper, app.Keepers.AccountKeeper, nil, app.getSubspace(minttypes.ModuleName)),
-		staking.NewAppModule(appCodec, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(stakingtypes.ModuleName)),
-		distr.NewAppModule(appCodec, app.Keepers.DistrKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(distrtypes.ModuleName)),
-		slashing.NewAppModule(appCodec, app.Keepers.SlashingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.StakingKeeper, app.getSubspace(slashingtypes.ModuleName)),
-		params.NewAppModule(app.Keepers.ParamsKeeper),
-		evidence.NewAppModule(app.Keepers.EvidenceKeeper),
-		wasm.NewAppModule(appCodec, &app.Keepers.WASMKeeper, app.Keepers.StakingKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.MsgServiceRouter(), app.getSubspace(wasmdTypes.ModuleName)),
-		ibc.NewAppModule(app.Keepers.IBCKeeper),
-		transferModule,
-	)
-
+	// Simulation module manager
+	app.sm = module.NewSimulationManager(simModules...)
 	app.sm.RegisterStoreDecoders()
 
-	// initialize stores
-	app.MountKVStores(keys)
-	app.MountTransientStores(tkeys)
-	app.MountMemoryStores(memKeys)
+	//
+	// END: Module options
+	//
 
-	anteHandler, err := NewAnteHandler(
-		HandlerOptions{
-			HandlerOptions: ante.HandlerOptions{
-				AccountKeeper:   app.Keepers.AccountKeeper,
-				BankKeeper:      app.Keepers.BankKeeper,
-				FeegrantKeeper:  app.Keepers.FeeGrantKeeper,
-				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			},
-			IBCKeeper:             app.Keepers.IBCKeeper,
-			WasmConfig:            &wasmConfig,
-			RewardsAnteBankKeeper: app.Keepers.BankKeeper,
-			TXCounterStoreKey:     keys[wasmdTypes.StoreKey],
-			TrackingKeeper:        app.Keepers.TrackingKeeper,
-			RewardsKeeper:         app.Keepers.RewardsKeeper,
-		},
-	)
-	if err != nil {
-		panic(fmt.Errorf("failed to create AnteHandler: %s", err))
-	}
-	postHandler, err := posthandler.NewPostHandler(
-		posthandler.HandlerOptions{},
-	)
-	if err != nil {
-		panic(fmt.Errorf("failed to create PostHandler: %s", err))
-	}
+	app.MountKVStores(app.keys)
+	app.MountTransientStores(app.tkeys)
+	app.MountMemoryStores(app.memKeys)
 
-	app.SetAnteHandler(anteHandler)
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
+	app.SetAnteHandler(app.AnteHandler(wasmConfig, encodingConfig))
 	app.SetEndBlocker(app.EndBlocker)
-	app.SetPostHandler(postHandler)
+	app.SetPostHandler(app.PostHandler())
 
+	// GRPC query service
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
-
 	reflectionSvc, err := runtimeservices.NewReflectionService()
 	if err != nil {
 		panic(err)
@@ -867,10 +882,6 @@ func NewArchwayApp(
 		}
 	}
 
-	app.ScopedKeepers.ScopedIBCKeeper = scopedIBCKeeper
-	app.ScopedKeepers.ScopedTransferKeeper = scopedTransferKeeper
-	app.ScopedKeepers.ScopedWASMKeeper = scopedWasmKeeper
-	app.ScopedKeepers.ScopedICAHostKeeper = scopedICAHostKeeper
 	return app
 }
 
@@ -885,6 +896,41 @@ func (app *ArchwayApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 // EndBlocker application updates every end block
 func (app *ArchwayApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
+}
+
+// AnteHandler application updates every end block
+func (app *ArchwayApp) AnteHandler(wasmConfig wasmdTypes.WasmConfig, encodingConfig archwayappparams.EncodingConfig) sdk.AnteHandler {
+	anteHandler, err := NewAnteHandler(
+		HandlerOptions{
+			HandlerOptions: ante.HandlerOptions{
+				AccountKeeper:   app.Keepers.AccountKeeper,
+				BankKeeper:      app.Keepers.BankKeeper,
+				FeegrantKeeper:  app.Keepers.FeeGrantKeeper,
+				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			},
+			IBCKeeper:             app.Keepers.IBCKeeper,
+			WasmConfig:            &wasmConfig,
+			RewardsAnteBankKeeper: app.Keepers.BankKeeper,
+			TXCounterStoreKey:     app.keys[wasmdTypes.StoreKey],
+			TrackingKeeper:        app.Keepers.TrackingKeeper,
+			RewardsKeeper:         app.Keepers.RewardsKeeper,
+		},
+	)
+	if err != nil {
+		panic(fmt.Errorf("failed to create AnteHandler: %s", err))
+	}
+	return anteHandler
+}
+
+func (app *ArchwayApp) PostHandler() sdk.PostHandler {
+	postHandler, err := posthandler.NewPostHandler(
+		posthandler.HandlerOptions{},
+	)
+	if err != nil {
+		panic(fmt.Errorf("failed to create PostHandler: %s", err))
+	}
+	return postHandler
 }
 
 // InitChainer application update at chain initialization
