@@ -585,13 +585,14 @@ func NewArchwayApp(
 
 	// 'ibc' module
 	app.keys[ibcexported.StoreKey] = storetypes.NewKVStoreKey(ibcexported.StoreKey)
+	app.ScopedKeepers.ScopedIBCKeeper = app.Keepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	app.Keepers.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
 		app.keys[ibcexported.StoreKey],
 		app.getSubspace(ibcexported.ModuleName),
 		app.Keepers.StakingKeeper,
 		app.Keepers.UpgradeKeeper,
-		app.Keepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName),
+		app.ScopedKeepers.ScopedIBCKeeper,
 	)
 	govLegacyRouter.AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.Keepers.IBCKeeper.ClientKeeper))
 	modules = append(modules, ibc.NewAppModule(app.Keepers.IBCKeeper))
@@ -618,6 +619,7 @@ func NewArchwayApp(
 
 	// 'ibctransfer' module
 	app.keys[ibctransfertypes.StoreKey] = storetypes.NewKVStoreKey(ibctransfertypes.StoreKey)
+	app.ScopedKeepers.ScopedTransferKeeper = app.Keepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	app.Keepers.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
 		app.keys[ibctransfertypes.StoreKey],
@@ -627,7 +629,7 @@ func NewArchwayApp(
 		&app.Keepers.IBCKeeper.PortKeeper,
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
-		app.Keepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName),
+		app.ScopedKeepers.ScopedTransferKeeper,
 	)
 	modules = append(modules, transfer.NewAppModule(app.Keepers.TransferKeeper))
 	simModules = append(simModules, transfer.NewAppModule(app.Keepers.TransferKeeper))
@@ -637,6 +639,7 @@ func NewArchwayApp(
 
 	// 'icahost' module
 	app.keys[icahosttypes.StoreKey] = storetypes.NewKVStoreKey(icahosttypes.StoreKey)
+	app.ScopedKeepers.ScopedICAHostKeeper = app.Keepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	app.Keepers.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec,
 		app.keys[icahosttypes.StoreKey],
@@ -645,7 +648,7 @@ func NewArchwayApp(
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		&app.Keepers.IBCKeeper.PortKeeper,
 		app.Keepers.AccountKeeper,
-		app.Keepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName),
+		app.ScopedKeepers.ScopedICAHostKeeper,
 		app.MsgServiceRouter(),
 	)
 	modules = append(modules, ica.NewAppModule(nil, &app.Keepers.ICAHostKeeper))
@@ -702,6 +705,7 @@ func NewArchwayApp(
 	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.Keepers.RewardsKeeper, &app.Keepers.GovKeeper)...)
 
 	app.keys[wasmdTypes.StoreKey] = storetypes.NewKVStoreKey(wasmdTypes.StoreKey)
+	app.ScopedKeepers.ScopedWASMKeeper = app.Keepers.CapabilityKeeper.ScopeToModule(wasmdTypes.ModuleName)
 	app.Keepers.WASMKeeper = wasmdKeeper.NewKeeper(
 		appCodec,
 		app.keys[wasmdTypes.StoreKey],
@@ -712,7 +716,7 @@ func NewArchwayApp(
 		app.Keepers.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		&app.Keepers.IBCKeeper.PortKeeper,
-		app.Keepers.CapabilityKeeper.ScopeToModule(wasmdTypes.ModuleName),
+		app.ScopedKeepers.ScopedWASMKeeper,
 		app.Keepers.TransferKeeper,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
