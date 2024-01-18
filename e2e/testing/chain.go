@@ -10,6 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	dbm "github.com/cometbft/cometbft-db"
@@ -22,8 +24,8 @@ import (
 	cryptoCodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptoTypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	simapp "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -407,8 +409,15 @@ type (
 		gasLimit      uint64
 		noBlockChange bool
 		simulate      bool
+		granter       sdk.AccAddress
 	}
 )
+
+func WithGranter(granter sdk.AccAddress) SendMsgOption {
+	return func(opt *sendMsgOptions) {
+		opt.granter = granter
+	}
+}
 
 // WithMsgFees option add fees to the transaction.
 func WithMsgFees(coins ...sdk.Coin) SendMsgOption {
@@ -476,7 +485,7 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 
 	// Build and sign Tx
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	tx, err := simapp.GenSignedMockTx(
+	tx, err := genSignedMockTx(
 		r,
 		chain.txConfig,
 		msgs,
@@ -485,7 +494,8 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 		chain.GetChainID(),
 		[]uint64{senderAccI.GetAccountNumber()},
 		[]uint64{senderAccI.GetSequence()},
-		senderAcc.PrivKey,
+		[]cryptoTypes.PrivKey{senderAcc.PrivKey},
+		options,
 	)
 	require.NoError(t, err)
 
@@ -535,4 +545,68 @@ func (chain *TestChain) buildSendMsgOptions(opts ...SendMsgOption) sendMsgOption
 	}
 
 	return options
+}
+
+func genSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv []cryptoTypes.PrivKey, opt sendMsgOptions) (sdk.Tx, error) {
+	sigs := make([]signing.SignatureV2, len(priv))
+
+	// create a random length memo
+	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
+
+	signMode := txConfig.SignModeHandler().DefaultMode()
+
+	// 1st round: set SignatureV2 with empty signatures, to set correct
+	// signer infos.
+	for i, p := range priv {
+		sigs[i] = signing.SignatureV2{
+			PubKey: p.PubKey(),
+			Data: &signing.SingleSignatureData{
+				SignMode: signMode,
+			},
+			Sequence: accSeqs[i],
+		}
+	}
+
+	tx := txConfig.NewTxBuilder()
+	err := tx.SetMsgs(msgs...)
+	if err != nil {
+		return nil, err
+	}
+	err = tx.SetSignatures(sigs...)
+	if err != nil {
+		return nil, err
+	}
+	tx.SetMemo(memo)
+	tx.SetFeeAmount(feeAmt)
+	tx.SetGasLimit(gas)
+
+	if opt.granter != nil {
+		tx.SetFeeGranter(opt.granter)
+	}
+
+	// 2nd round: once all signer infos are set, every signer can sign.
+	for i, p := range priv {
+		signerData := authsign.SignerData{
+			Address:       sdk.AccAddress(p.PubKey().Address()).String(),
+			ChainID:       chainID,
+			AccountNumber: accNums[i],
+			Sequence:      accSeqs[i],
+			PubKey:        p.PubKey(),
+		}
+		signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+		if err != nil {
+			panic(err)
+		}
+		sig, err := p.Sign(signBytes)
+		if err != nil {
+			panic(err)
+		}
+		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
+		err = tx.SetSignatures(sigs...)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return tx.GetTx(), nil
 }

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/archway-network/archway/app/keepers"
+	"github.com/archway-network/archway/x/cwfees"
 	"github.com/archway-network/archway/x/genmsg"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -204,6 +205,7 @@ var (
 		rewards.AppModuleBasic{},
 		genmsg.AppModule{},
 		callback.AppModuleBasic{},
+		cwfees.AppModule{},
 	)
 
 	// module account permissions
@@ -802,6 +804,14 @@ func NewArchwayApp(
 	endBlockerModules = append(endBlockerModules, callbackTypes.ModuleName)
 	initGenesisModules = append(initGenesisModules, callbackTypes.ModuleName)
 
+	// 'cwfees' module
+	app.keys[cwfees.ModuleName] = storetypes.NewKVStoreKey(cwfees.ModuleName)
+	app.Keepers.CWFeesKeeper = cwfees.NewKeeper(appCodec, app.keys[cwfees.ModuleName], app.Keepers.WASMKeeper)
+	modules = append(modules, cwfees.NewAppModule(app.Keepers.CWFeesKeeper))
+	beginBlockerModules = append(beginBlockerModules, cwfees.ModuleName)
+	endBlockerModules = append(endBlockerModules, cwfees.ModuleName)
+	initGenesisModules = append(initGenesisModules, cwfees.ModuleName)
+
 	// 'genmsg' module
 	modules = append(modules, genmsg.NewAppModule(app.MsgServiceRouter()))
 	beginBlockerModules = append(beginBlockerModules, genmsg.ModuleName)
@@ -919,6 +929,7 @@ func (app *ArchwayApp) AnteHandler(wasmConfig wasmdTypes.WasmConfig, encodingCon
 			TXCounterStoreKey:     app.keys[wasmdTypes.StoreKey],
 			TrackingKeeper:        app.Keepers.TrackingKeeper,
 			RewardsKeeper:         app.Keepers.RewardsKeeper,
+			CWFeesKeeper:          app.Keepers.CWFeesKeeper,
 		},
 	)
 	if err != nil {

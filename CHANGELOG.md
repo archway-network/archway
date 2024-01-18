@@ -38,6 +38,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#462](https://github.com/archway-network/archway/pull/462) - adding docs ADR-008 – Improvements on rewards withdrawal experience
 - [#501](https://github.com/archway-network/archway/pull/501) - Adding x/callback module
 - [#532](https://github.com/archway-network/archway/pull/532) - Adding ADR-009 for x/callback module
+- [#527](https://github.com/archway-network/archway/pull/527) - Add x/cwfees module for 
 
 ### Improvements
 

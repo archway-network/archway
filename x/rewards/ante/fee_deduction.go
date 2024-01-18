@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"context"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -21,6 +22,11 @@ type BankKeeper interface {
 	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 }
 
+type CWFeesKeeper interface {
+	IsGrantingContract(ctx context.Context, granter sdk.AccAddress) (bool, error)
+	RequestGrant(ctx context.Context, grantingContract sdk.AccAddress, txMsgs []sdk.Msg, wantFees sdk.Coins) error
+}
+
 // DeductFeeDecorator deducts fees from the first signer of the tx.
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error.
 // Call next AnteHandler if fees successfully deducted.
@@ -31,16 +37,18 @@ type DeductFeeDecorator struct {
 	bankKeeper     BankKeeper
 	feegrantKeeper ante.FeegrantKeeper
 	rewardsKeeper  RewardsKeeperExpected
+	cwFeesKeeper   CWFeesKeeper
 }
 
 // NewDeductFeeDecorator returns a new DeductFeeDecorator instance.
-func NewDeductFeeDecorator(codec codec.BinaryCodec, ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, rk RewardsKeeperExpected) DeductFeeDecorator {
+func NewDeductFeeDecorator(codec codec.BinaryCodec, ak ante.AccountKeeper, bk BankKeeper, fk ante.FeegrantKeeper, rk RewardsKeeperExpected, ck CWFeesKeeper) DeductFeeDecorator {
 	return DeductFeeDecorator{
 		codec:          codec,
 		ak:             ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
 		rewardsKeeper:  rk,
+		cwFeesKeeper:   ck,
 	}
 }
 
@@ -55,25 +63,9 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return ctx, fmt.Errorf("fee collector module account (%s) has not been set", authTypes.FeeCollectorName)
 	}
 
-	fee := feeTx.GetFee()
-	feePayer := feeTx.FeePayer()
-	feeGranter := feeTx.FeeGranter()
-
-	deductFeesFrom := feePayer
-
-	// If feegranter set, deduct fee from feegranter account (only when feegrant is enabled)
-	if feeGranter != nil {
-		if dfd.feegrantKeeper == nil {
-			return ctx, errorsmod.Wrap(sdkErrors.ErrInvalidRequest, "fee grants are not enabled")
-		}
-
-		if !feeGranter.Equals(feePayer) {
-			if err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs()); err != nil {
-				return ctx, errorsmod.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
-			}
-		}
-
-		deductFeesFrom = feeGranter
+	deductFeesFrom, err := dfd.getFeePayer(ctx, feeTx)
+	if err != nil {
+		return ctx, err
 	}
 
 	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
@@ -94,6 +86,47 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	ctx.EventManager().EmitEvents(events)
 
 	return next(ctx, tx, simulate)
+}
+
+// getFeePayer returns the address of the entity will we get fees from.
+func (dfd DeductFeeDecorator) getFeePayer(ctx sdk.Context, tx sdk.FeeTx) (payer sdk.AccAddress, err error) {
+	payer = tx.FeePayer()
+	granter := tx.FeeGranter()
+	// in case granter is nil or payer and granter are equal
+	// then we just return the fee payer as the entity who pays the fees.
+	if granter == nil || payer.Equals(granter) {
+		return payer, nil
+	}
+
+	switch {
+	// we check x/cwfees first
+	case dfd.cwFeesKeeper != nil:
+		isCWGranter, err := dfd.cwFeesKeeper.IsGrantingContract(ctx, granter)
+		if err != nil {
+			return nil, err
+		}
+		// the contract is a cw granter, so we request fees from it.
+		if isCWGranter {
+			err = dfd.cwFeesKeeper.RequestGrant(ctx, granter, tx.GetMsgs(), tx.GetFee())
+			if err != nil {
+				return nil, errorsmod.Wrapf(err, "%s contract is not allowed to pay fees from %s", granter, payer)
+			}
+			return granter, nil
+		}
+		// cannot be handled through x/cwfees, let's try with x/feegrant
+		fallthrough
+
+	// we check x/feegrant
+	case dfd.feegrantKeeper != nil:
+		err = dfd.feegrantKeeper.UseGrantedFees(ctx, granter, payer, tx.GetFee(), tx.GetMsgs())
+		if err != nil {
+			return nil, errorsmod.Wrapf(err, "%s not allowed to pay fees from %s", granter, payer)
+		}
+		return granter, nil
+	// the default case is
+	default:
+		return nil, errorsmod.Wrap(sdkErrors.ErrInvalidRequest, "fee grants are not enabled")
+	}
 }
 
 // deductFees deducts fees from the given account if rewards calculation and distribution is enabled.
