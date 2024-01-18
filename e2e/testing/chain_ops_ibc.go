@@ -97,7 +97,7 @@ func (chain *TestChain) SendIBCPacket(packet exported.PacketI) {
 	require.NotNil(t, packet)
 
 	capPath := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
-	cap, ok := chain.app.ScopedIBCKeeper.GetCapability(chain.GetContext(), capPath)
+	cap, ok := chain.app.ScopedKeepers.ScopedIBCKeeper.GetCapability(chain.GetContext(), capPath)
 	require.True(t, ok)
 
 	timeout := clientTypes.Height{
