@@ -101,6 +101,9 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
+	icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icahost "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
@@ -304,7 +307,7 @@ func NewArchwayApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
-		icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey,
+		icacontrollertypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey,
 
 		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName,
 	)
@@ -342,6 +345,7 @@ func NewArchwayApp(
 	)
 
 	scopedIBCKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
+	scopedICAControllerKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedTransferKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(wasmdTypes.ModuleName)
@@ -469,6 +473,17 @@ func NewArchwayApp(
 
 	transferModule := transfer.NewAppModule(app.Keepers.TransferKeeper)
 
+	app.Keepers.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
+		appCodec,
+		keys[icacontrollertypes.StoreKey],
+		app.getSubspace(icacontrollertypes.SubModuleName),
+		app.Keepers.IBCFeeKeeper, // may be replaced with middleware such as ics29 feerefunder
+		app.Keepers.IBCKeeper.ChannelKeeper,
+		&app.Keepers.IBCKeeper.PortKeeper,
+		scopedICAControllerKeeper,
+		app.MsgServiceRouter(),
+	)
+
 	app.Keepers.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec,
 		keys[icahosttypes.StoreKey],
@@ -581,6 +596,12 @@ func NewArchwayApp(
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.Keepers.IBCFeeKeeper)
 
 	// Create Interchain Accounts Stack
+
+	var icaControllerStack porttypes.IBCModule
+	icaControllerStack = interchaintxs.NewIBCModule(app.InterchainTxsKeeper)
+	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.Keepers.ICAControllerKeeper)
+	icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.Keepers.IBCFeeKeeper)
+
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
 	// channel.RecvPacket -> fee.OnRecvPacket -> icaHost.OnRecvPacket
 	var icaHostStack porttypes.IBCModule
@@ -595,6 +616,7 @@ func NewArchwayApp(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 	ibcRouter.AddRoute(wasmdTypes.ModuleName, wasmStack)
+	ibcRouter.AddRoute(interchaintxtypes.ModuleName, icaControllerStack)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
 	app.Keepers.IBCKeeper.SetRouter(ibcRouter)
 

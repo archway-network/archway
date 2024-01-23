@@ -22,6 +22,7 @@ import (
 
 	"github.com/archway-network/archway/x/cwfees"
 
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icahostkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/keeper"
 	ibcfeekeeper "github.com/cosmos/ibc-go/v7/modules/apps/29-fee/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
@@ -49,6 +50,7 @@ type ArchwayKeepers struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	IBCKeeper             *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCFeeKeeper          ibcfeekeeper.Keeper
+	ICAControllerKeeper   icacontrollerkeeper.Keeper
 	ICAHostKeeper         icahostkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
