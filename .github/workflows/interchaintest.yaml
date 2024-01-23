@@ -1,12 +1,50 @@
 name: Run InterchainTest
 
 on:
+    push:
+        branches: 
+            - 'spoorthi/using-heighliner-build-action'
     pull_request:
         branches: 
             - main
             - 'releases/**'
 
 jobs:
+    build_mainnet_image:
+        name: Build mainnet archway image
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout archway-network/archway
+            uses: actions/checkout@v3
+            with:
+              fetch-depth: 0
+
+          - name: Get last release tag
+            id: lastrelease
+            uses: revam/gh-action-get-tag-and-version@v1
+
+          - name: Building the heighliner image - ${{ steps.lastrelease.outputs.tag }}
+            uses: strangelove-ventures/heighliner-build-action@v0.0.3
+            with:
+              chain: archway
+              tag: ${{ steps.lastrelease.outputs.tag }}
+              github-organization: archway-network
+              github-repo: archway
+              git-ref: ${{ steps.lastrelease.outputs.tag }}
+              dockerfile: cosmos
+              build-env: BUILD_TAGS=muslc
+              build-target: |
+                - make build
+              binaries: |
+                - build/archwayd
+              skip: true
+
+          - name: Upload ${{ steps.lastrelease.outputs.tag }} image
+            uses: ishworkh/container-image-artifact-upload@v1.0.0
+            with:
+              image: archway:${{ steps.lastrelease.outputs.tag }}
+              retention_days: 3
+            
     build_images:
         name: Build archway images 
         runs-on: ubuntu-latest
