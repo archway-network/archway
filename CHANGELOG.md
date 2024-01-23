@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v6.0.0](https://github.com/archway-network/archway/releases/tag/v6.0.0)
+## [v6.0.0-rc.4](https://github.com/archway-network/archway/releases/tag/v6.0.0)
 
 ### Added
 
@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 -   [#442](https://github.com/archway-network/archway/pull/442) - Upgrade cosmos-sdk from v0.45.16 to v0.47.5 and all the other things it depends on
 -   [#470](https://github.com/archway-network/archway/pull/470) - Bumping x/wasmd to v0.43.0
 -   [#507](https://github.com/archway-network/archway/pull/507) – Version bump x/wasmd to v0.45.0 and cosmos-sdk to v0.47.6
+-   [#502](https://github.com/archway-network/archway/pull/502) - Improve rewards withdrawal experience by allowing a Metadata owner to set that rewards directly go to the reward address.
+-   [#462](https://github.com/archway-network/archway/pull/462) - adding docs ADR-008 – Improvements on rewards withdrawal experience
 
 ### Changed
 
@@ -34,6 +36,10 @@ All notable changes to this project will be documented in this file.
 -   [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
 -   [#514](https://github.com/archway-network/archway/pull/514) - Fix snapshot db being hardcoded from goleveldb to based on config 
 -   [#522](https://github.com/archway-network/archway/pull/522) - Fix Archway module endpoints not showing up in swagger
+
+### Improvements
+
+-   [#478](https://github.com/archway-network/archway/pull/475) – moves x/rewards state to use collections for state management.
 
 ## ~~[RETRACTED - v5.0.2](https://github.com/archway-network/archway/releases/tag/v5.0.2)~~
 

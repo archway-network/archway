@@ -196,10 +196,8 @@ func (s *E2ETestSuite) TestTxFees() {
 		var blockRewards sdk.Coin
 		{
 			ctx := chain.GetContext()
-			blockRewardsState := keepers.RewardsKeeper.GetState().BlockRewardsState(ctx)
-
-			blockRewardsInfo, found := blockRewardsState.GetBlockRewards(ctx.BlockHeight() - 1)
-			s.Require().True(found)
+			blockRewardsInfo, err := keepers.RewardsKeeper.BlockRewards.Get(ctx, uint64(ctx.BlockHeight()-1))
+			s.Require().NoError(err)
 
 			blockRewards = blockRewardsInfo.InflationRewards
 		}

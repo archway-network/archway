@@ -12,8 +12,6 @@ import (
 //   - Meta could be created by the contract admin (if set);
 //   - Meta could be modified by the contract owner;
 func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sdk.AccAddress, metaUpdates types.ContractMetadata) error {
-	state := k.state.ContractMetadataState(ctx)
-
 	// Check if the contract exists
 	contractInfo := k.contractInfoView.GetContractInfo(ctx, contractAddr)
 	if contractInfo == nil {
@@ -31,8 +29,8 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 	}
 
 	// Check ownership
-	metaOld, metaExists := state.GetContractMetadata(contractAddr)
-	if metaExists {
+	metaOld, err := k.ContractMetadata.Get(ctx, contractAddr)
+	if err == nil {
 		if metaOld.OwnerAddress != senderAddr.String() {
 			return errorsmod.Wrap(types.ErrUnauthorized, "metadata can only be changed by the contract owner")
 		}
@@ -44,7 +42,7 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 
 	// Build the updated meta
 	metaNew := metaOld
-	if !metaExists {
+	if err != nil {
 		metaNew.ContractAddress = contractAddr.String()
 		metaNew.OwnerAddress = senderAddr.String()
 	}
@@ -54,9 +52,15 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 	if metaUpdates.HasRewardsAddress() {
 		metaNew.RewardsAddress = metaUpdates.RewardsAddress
 	}
+	if metaUpdates.WithdrawToWallet != metaOld.WithdrawToWallet {
+		metaNew.WithdrawToWallet = metaUpdates.WithdrawToWallet
+	}
 
 	// Set
-	state.SetContractMetadata(contractAddr, metaNew)
+	err = k.ContractMetadata.Set(ctx, contractAddr, metaNew)
+	if err != nil {
+		return err
+	}
 
 	// Emit event
 	types.EmitContractMetadataSetEvent(
@@ -70,8 +74,8 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 
 // GetContractMetadata returns the contract metadata for the given contract address (if found).
 func (k Keeper) GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress) *types.ContractMetadata {
-	meta, found := k.state.ContractMetadataState(ctx).GetContractMetadata(contractAddr)
-	if !found {
+	meta, err := k.ContractMetadata.Get(ctx, contractAddr)
+	if err != nil {
 		return nil
 	}
 

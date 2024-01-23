@@ -45,8 +45,6 @@ func (k Keeper) AllocateBlockRewards(ctx sdk.Context, height int64) {
 // estimateBlockGasUsage creates a new distribution state for the given block height.
 // Func iterates over all tracked transactions and estimates gas usage for each contract (on block and tx levels) merging operations.
 func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewardsDistributionState {
-	metadataState := k.state.ContractMetadataState(ctx)
-
 	// Get all tracked transactions by the x/tracking module
 	blockGasTrackingInfo := k.trackingKeeper.GetBlockTrackingInfo(ctx, height)
 
@@ -81,7 +79,8 @@ func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewar
 					TxGasUsed:           make(map[uint64]uint64, 0),
 					InflationaryRewards: sdk.Coin{Amount: sdk.ZeroInt()}, // necessary to avoid nil pointer panic on Coins.Add call
 				}
-				if metadata, found := metadataState.GetContractMetadata(contractDistrState.ContractAddress); found {
+				// we only add it to the contract distribution state only if a metadata is found for the provided contract.
+				if metadata, err := k.ContractMetadata.Get(ctx, contractDistrState.ContractAddress); err == nil {
 					contractDistrState.Metadata = &metadata
 				}
 				blockDistrState.Contracts[contractOp.ContractAddress] = contractDistrState
@@ -103,12 +102,10 @@ func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewar
 // Func iterates over all tracked transactions and estimates inflation (on block level) and fee rebate (merging
 // tokens for each transaction contract has operation at) rewards for each contract.
 func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewardsDistributionState) *blockRewardsDistributionState {
-	txRewardsState := k.state.TxRewardsState(ctx)
-
 	// Fetch tracked block rewards by the x/rewards module (might not be found in case this reward is disabled)
 	inlfationRewardsEligible := false
-	blockRewards, found := k.state.BlockRewardsState(ctx).GetBlockRewards(blockDistrState.Height)
-	if found && blockRewards.HasRewards() {
+	blockRewards, err := k.BlockRewards.Get(ctx, uint64(blockDistrState.Height))
+	if err == nil && blockRewards.HasRewards() {
 		blockDistrState.RewardsTotal = blockDistrState.RewardsTotal.Add(blockRewards.InflationRewards)
 		if blockRewards.HasGasLimit() {
 			inlfationRewardsEligible = true
@@ -120,8 +117,8 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 	// Fetch tracked transactions rewards by the x/rewards module (some might not be found in case this reward is disabled)
 	txsRewards := make(map[uint64]sdk.Coins, len(blockDistrState.Txs))
 	for _, txID := range dmap.SortedKeys(blockDistrState.Txs) {
-		txRewards, found := txRewardsState.GetTxRewards(txID)
-		if found && txRewards.HasRewards() {
+		txRewards, err := k.TxRewards.Get(ctx, txID)
+		if err == nil && txRewards.HasRewards() {
 			txsRewards[txID] = txRewards.FeeRewards
 			blockDistrState.RewardsTotal = blockDistrState.RewardsTotal.Add(txRewards.FeeRewards...)
 		} else {
@@ -173,7 +170,6 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 // Leftovers caused by Int truncation or by a tx-less block (inflation rewards are tracked even if there were no transactions)
 // stay in the pool.
 func (k Keeper) createRewardsRecords(ctx sdk.Context, blockDistrState *blockRewardsDistributionState) {
-	rewardsRecordState := k.state.RewardsRecord(ctx)
 	calculationHeight, calculationTime := ctx.BlockHeight(), ctx.BlockTime()
 
 	// Convert contract distribution states to a sorted slice preventing the consensus failure due to x/bank operations order.
@@ -217,8 +213,18 @@ func (k Keeper) createRewardsRecords(ctx sdk.Context, blockDistrState *blockRewa
 			Add(contractDistrState.InflationaryRewards).
 			Add(contractDistrState.FeeRewards...)
 
-		// Create a new record
-		rewardsRecordState.CreateRewardsRecord(rewardsAddr, rewards, calculationHeight, calculationTime)
+		// if the metadata says we distribute to the wallet then we do a bank send
+		if contractDistrState.Metadata.WithdrawToWallet {
+			err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ContractRewardCollector, rewardsAddr, rewards)
+			if err != nil {
+				panic(err)
+			}
+		} else { // otherwise we create a rewards record
+			_, err := k.CreateRewardsRecord(ctx, rewardsAddr, rewards, calculationHeight, calculationTime)
+			if err != nil {
+				panic(err)
+			}
+		}
 
 		// Update the total rewards distributed counter
 		blockDistrState.RewardsDistributed = blockDistrState.RewardsDistributed.Add(rewards...)
@@ -235,7 +241,7 @@ func (k Keeper) cleanupTracking(ctx sdk.Context, height int64) {
 	}
 
 	k.trackingKeeper.RemoveBlockTrackingInfo(ctx, heightToPrune)
-	k.state.DeleteBlockRewardsCascade(ctx, heightToPrune)
+	k.DeleteBlockRewardsCascade(ctx, heightToPrune)
 }
 
 // cleanupRewardsPool transfers all undistributed block rewards to the treasury pool.
@@ -247,5 +253,33 @@ func (k Keeper) cleanupRewardsPool(ctx sdk.Context, blockDistrState *blockReward
 
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ContractRewardCollector, types.TreasuryCollector, rewardsLeftovers); err != nil {
 		panic(fmt.Errorf("failed to transfer undistributed rewards (%s) to %s: %w", rewardsLeftovers, types.TreasuryCollector, err))
+	}
+}
+
+// DeleteBlockRewardsCascade deletes all block rewards for a given height.
+// Function removes BlockRewards and TxRewards objects cleaning up their indexes.
+func (k Keeper) DeleteBlockRewardsCascade(ctx sdk.Context, height int64) {
+	// remove block rewards references
+	err := k.BlockRewards.Remove(ctx, uint64(height))
+	if err != nil {
+		panic(fmt.Errorf("failed to delete block rewards for height %d: %w", height, err))
+	}
+	// remove tx rewards references
+
+	// get all the tx ids for the given height
+	iter, err := k.TxRewards.Indexes.Block.MatchExact(ctx, uint64(height))
+	if err != nil {
+		panic(fmt.Errorf("failed to delete tx rewards for height %d: %w", height, err))
+	}
+	keys, err := iter.PrimaryKeys()
+	if err != nil {
+		panic(fmt.Errorf("failed to delete tx rewards for height %d: %w", height, err))
+	}
+	// remove them from state
+	for _, key := range keys {
+		err := k.TxRewards.Remove(ctx, key)
+		if err != nil {
+			panic(fmt.Errorf("failed to delete tx rewards for height %d: %w", height, err))
+		}
 	}
 }

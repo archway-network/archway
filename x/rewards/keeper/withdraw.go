@@ -3,7 +3,9 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -26,7 +28,7 @@ func (k Keeper) WithdrawRewardsByRecordsLimit(ctx sdk.Context, rewardsAddr sdk.A
 
 	// Get all rewards records for the given address by limit
 	pageReq := &query.PageRequest{Limit: recordsLimit}
-	records, _, err := k.state.RewardsRecord(ctx).GetRewardsRecordByRewardsAddressPaginated(rewardsAddr, pageReq)
+	records, _, err := k.GetRewardsRecordsByWithdrawAddressPaginated(ctx, rewardsAddr, pageReq)
 	if err != nil {
 		return nil, 0, errorsmod.Wrap(types.ErrInternal, err.Error())
 	}
@@ -41,14 +43,13 @@ func (k Keeper) WithdrawRewardsByRecordIDs(ctx sdk.Context, rewardsAddr sdk.AccA
 		return nil, 0, errorsmod.Wrapf(types.ErrInvalidRequest, "max withdraw records (%d) exceeded", maxRecords)
 	}
 
-	rewardsState := k.state.RewardsRecord(ctx)
 	rewardsAddrStr := rewardsAddr.String()
 
 	// Check that provided IDs do exist and belong to the given address
 	records := make([]types.RewardsRecord, 0, len(recordIDs))
 	for _, id := range recordIDs {
-		record, found := rewardsState.GetRewardsRecord(id)
-		if !found {
+		record, err := k.RewardsRecords.Get(ctx, id)
+		if err != nil {
 			return nil, 0, errorsmod.Wrapf(types.ErrInvalidRequest, "rewards record (%d): not found", id)
 		}
 		if record.RewardsAddress != rewardsAddrStr {
@@ -80,7 +81,38 @@ func (k Keeper) withdrawRewardsByRecords(ctx sdk.Context, rewardsAddr sdk.AccAdd
 	}
 
 	// Clean up (safe if there were no rewards)
-	k.state.RewardsRecord(ctx).DeleteRewardsRecords(records...)
-
+	err := fastRemoveRecords(ctx, k.storeKey, k.RewardsRecords, records...)
+	if err != nil {
+		panic(fmt.Errorf("removing rewards records: %w", err))
+	}
 	return totalRewards
+}
+
+// fastRemoveRecords is used to remove rewards records without going through the indexed map
+// which fetches the records from the store. This is used in the case where we know the records.
+func fastRemoveRecords(ctx sdk.Context, storeKey storetypes.StoreKey, im *collections.IndexedMap[uint64, types.RewardsRecord, RewardsRecordsIndex], records ...types.RewardsRecord) error {
+	store := ctx.KVStore(storeKey)
+	primaryKeyCodec := im.KeyCodec()
+	secondaryKeyCodec := im.Indexes.Address.KeyCodec()
+
+	for _, record := range records {
+		primaryKeyBytes, err := collections.EncodeKeyWithPrefix(types.RewardsRecordStatePrefix, primaryKeyCodec, record.Id)
+		if err != nil {
+			return err
+		}
+		rewardAddr, err := sdk.AccAddressFromBech32(record.RewardsAddress)
+		if err != nil {
+			return err
+		}
+		secondaryKey := collections.Join([]byte(rewardAddr), record.Id)
+		secondaryKeyBytes, err := collections.EncodeKeyWithPrefix(types.RewardsRecordAddressIndexPrefix, secondaryKeyCodec, secondaryKey)
+		if err != nil {
+			return err
+		}
+
+		store.Delete(primaryKeyBytes)
+		store.Delete(secondaryKeyBytes)
+	}
+
+	return nil
 }
