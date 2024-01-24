@@ -20,6 +20,8 @@ message Callback {
     CallbackFeesFeeSplit fee_split = 4;
     // reserved_by is the address which reserved the callback (bech32 encoded).
     string reserved_by = 5;
+    // callback_gas_limit is the maximum gas that can be consumed by this callback.
+    uint64 max_gas_limit = 6;
 }
 
 // CallbackFeesFeeSplit is the breakdown of all the fees that need to be paid by the contract to reserve a callback

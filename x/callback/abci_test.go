@@ -107,6 +107,7 @@ func TestEndBlocker(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	// TEST CASE: OUT OF GAS ERROR
 	// Reserving a callback for next block
 	// This callback should fail as it consumes more gas than allowed
 	reqMsg := &types.MsgRequestCallback{

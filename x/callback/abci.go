@@ -12,18 +12,13 @@ import (
 
 // EndBlocker fetches all the callbacks registered for the current block height and executes them
 func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) []abci.ValidatorUpdate {
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		panic(err)
-	}
-
 	currentHeight := ctx.BlockHeight()
-	k.IterateCallbacksByHeight(ctx, currentHeight, callbackExec(ctx, k, wk, params.GetCallbackGasLimit()))
+	k.IterateCallbacksByHeight(ctx, currentHeight, callbackExec(ctx, k, wk))
 	return nil
 }
 
 // callbackExec returns a function which executes the callback and deletes it from state after execution
-func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected, callbackGasLimit uint64) func(types.Callback) bool {
+func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) func(types.Callback) bool {
 	logger := k.Logger(ctx)
 	return func(callback types.Callback) bool {
 		// creating CallbackMsg which is encoded to json and passed as input to contract execution
@@ -36,7 +31,7 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 			"msg", callbackMsg.String(),
 		)
 
-		gasUsed, err := pkg.ExecuteWithGasLimit(ctx, callbackGasLimit, func(ctx sdk.Context) error {
+		gasUsed, err := pkg.ExecuteWithGasLimit(ctx, callback.MaxGasLimit, func(ctx sdk.Context) error {
 			// executing the callback on the contract
 			_, err := wk.Sudo(ctx, sdk.MustAccAddressFromBech32(callback.ContractAddress), callbackMsg.Bytes())
 			return err
@@ -59,11 +54,11 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 			)
 
 			// This is because gasUsed amount returned is greater than the gas limit. cuz ofc.
-			// so we set it to callbackGasLimit so when we do txFee refund, we arent trying to refund more than we should
-			// e.g if callbackGasLimit is 10, but gasUsed is 100, we need to use 10 to calculate txFeeRefund.
+			// so we set it to callback.MaxGasLimit so when we do txFee refund, we arent trying to refund more than we should
+			// e.g if callback.MaxGasLimit is 10, but gasUsed is 100, we need to use 10 to calculate txFeeRefund.
 			// else the module will pay back more than it took from the user 💀
 			// TLDR; this ensures in case of "out of gas error", we keep all txFees and refund nothing.
-			gasUsed = callbackGasLimit
+			gasUsed = callback.MaxGasLimit
 		} else {
 			logger.Info(
 				"callback executed successfully",
