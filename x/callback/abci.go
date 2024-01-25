@@ -97,6 +97,10 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 			if err != nil {
 				panic(err)
 			}
+		} else {
+			// This is to ensure that if the txFeeConsumed is higher due to rise in gas price,
+			// we dont fund fee_collector more than we should
+			txFeesConsumed = *callback.FeeSplit.TransactionFees
 		}
 
 		// Send fees to fee collector
