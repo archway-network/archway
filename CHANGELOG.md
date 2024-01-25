@@ -61,6 +61,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
 - [#514](https://github.com/archway-network/archway/pull/514) - Fix snapshot db being hardcoded from goleveldb to based on config 
 - [#522](https://github.com/archway-network/archway/pull/522) - Fix Archway module endpoints not showing up in swagger
+- [#537](https://github.com/archway-network/archway/pull/537) - Fix issue with callback failing when module param is changed
 
 ### Improvements
 
