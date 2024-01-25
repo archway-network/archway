@@ -114,6 +114,7 @@ func TestEndBlocker(t *testing.T) {
 	// Setting the callbackGasLimit param to 1
 	params.CallbackGasLimit = 1
 	err = keeper.SetParams(ctx, params)
+	require.NoError(t, err)
 
 	// Increment block height and run end blocker
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
