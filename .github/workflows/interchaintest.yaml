@@ -19,10 +19,9 @@ jobs:
 
             - name: Get last release tag
               id: lastrelease
-              uses: revam/gh-action-get-tag-and-version@v1
+              uses: WyriHaximus/github-action-get-previous-tag@v1
               with:
-                suffix: "-rc."
-                suffixRegex: "(-rc\\.\\d+)?"
+                prefix: 'v'
 
             - name: Checkout heighliner
               uses: actions/checkout@v3
