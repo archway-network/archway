@@ -20,6 +20,8 @@ jobs:
             - name: Get last release tag
               id: lastrelease
               uses: revam/gh-action-get-tag-and-version@v1
+              with:
+                suffixRegex: "-rc[0-9]+"
 
             - name: Checkout heighliner
               uses: actions/checkout@v3
