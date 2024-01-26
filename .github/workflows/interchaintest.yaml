@@ -90,7 +90,9 @@ jobs:
 
             - name: Get last release tag
               id: lastrelease
-              uses: revam/gh-action-get-tag-and-version@v1
+              uses: WyriHaximus/github-action-get-previous-tag@v1
+              with:
+                prefix: 'v'
 
             - name: Download ${{ steps.lastrelease.outputs.tag }} image
               uses: actions/download-artifact@v3
