@@ -121,4 +121,15 @@ func TestFullIntegration(t *testing.T) {
 	granterBalanceAfter := app.GetBalance(humanGranter.Address)
 	require.Equal(t, grantedBalanceBefore.Sub(msg.Amount...), grantedBalanceAfter)
 	require.Equal(t, granterBalanceBefore.Sub(fees), granterBalanceAfter)
+
+	// send a malicious tx where the contract is spending all the gas in ante handler
+	// computation. Adding malicious as denom triggers the endless loop on the contract.
+	// We expect this loop to finish on RequestGrantGasLimit.
+	txGasLimit := uint64(1_000_000)
+	maliciousFee := sdk.NewInt64Coin("malicious", 1)
+	gasInfo, _, _, err := app.SendMsgs(grantedAcc, false, []sdk.Msg{msg}, e2eTesting.WithGranter(cwGranter), e2eTesting.WithMsgFees(sdk.NewCoins(fees, maliciousFee)...), e2eTesting.WithTxGasLimit(txGasLimit))
+	require.Error(t, err)
+	// we expect the contract to have consumed less than the tx gas limit,
+	// as RequestGrantGasLimit will have shutdown the execution before.
+	require.Less(t, gasInfo.GasUsed, txGasLimit)
 }
