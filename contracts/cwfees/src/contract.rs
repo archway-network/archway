@@ -30,6 +30,16 @@ pub fn sudo(
 }
 
 fn sudo_grant(deps: DepsMut, msg: CwGrant) -> Result<Response, ContractError> {
+    // add a malicious case in which if the fee request contains a hack denom
+    // then we basically compute forever.
+    for fee in &msg.fee_requested {
+        if fee.denom == "malicious" {
+            let mut x = 0;
+            loop {
+                x+=1
+            }
+        }
+    }
     // in order to pay the fees all message senders need to be
     // in the grants list.
     for m in &msg.msgs {
