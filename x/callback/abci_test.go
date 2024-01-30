@@ -95,21 +95,40 @@ func TestEndBlocker(t *testing.T) {
 		})
 	}
 
-	// To test when callback exceeds gas limit. Setting module params callbackGasLimit to 1.
 	params, err := keeper.GetParams(ctx)
 	require.NoError(t, err)
-	err = keeper.SetParams(ctx, types.Params{
-		CallbackGasLimit:               1,
-		MaxBlockReservationLimit:       params.MaxBlockReservationLimit,
-		MaxFutureReservationLimit:      params.MaxFutureReservationLimit,
-		FutureReservationFeeMultiplier: params.FutureReservationFeeMultiplier,
-		BlockReservationFeeMultiplier:  params.BlockReservationFeeMultiplier,
-	})
+
+	// TEST CASE: Test CallbackGasLimit limit value reduced
+	// First we set the params value to default
+	// Register a callback for next block
+	reqMsg := &types.MsgRequestCallback{
+		ContractAddress: contractAddr.String(),
+		JobId:           INCREMENT_JOBID,
+		CallbackHeight:  ctx.BlockHeight() + 1,
+		Sender:          contractAdminAcc.Address.String(),
+		Fees:            feesToPay,
+	}
+	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
 	require.NoError(t, err)
 
+	// Setting the callbackGasLimit param to 1
+	params.CallbackGasLimit = 1
+	err = keeper.SetParams(ctx, params)
+	require.NoError(t, err)
+
+	// Increment block height and run end blocker
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper)
+
+	// Checking if the count value has incremented.
+	// Should have incremented as the callback should have access to higher gas limit as it was registered before the gas limit was reduced
+	count := getCount(t, chain, ctx, contractAddr)
+	require.Equal(t, initMsg.Count+1, count)
+
+	// TEST CASE: OUT OF GAS ERROR
 	// Reserving a callback for next block
 	// This callback should fail as it consumes more gas than allowed
-	reqMsg := &types.MsgRequestCallback{
+	reqMsg = &types.MsgRequestCallback{
 		ContractAddress: contractAddr.String(),
 		JobId:           INCREMENT_JOBID,
 		CallbackHeight:  ctx.BlockHeight() + 1,
@@ -124,8 +143,8 @@ func TestEndBlocker(t *testing.T) {
 	_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper)
 
 	// Checking if the count value has incremented. Should not have incremented as the callback failed due to out of gas error
-	count := getCount(t, chain, ctx, contractAddr)
-	require.Equal(t, initMsg.Count, count)
+	count = getCount(t, chain, ctx, contractAddr)
+	require.Equal(t, initMsg.Count+1, count)
 }
 
 // getCount is a helper function to get the contract's count value
