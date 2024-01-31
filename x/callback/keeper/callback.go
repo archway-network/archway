@@ -57,24 +57,16 @@ func (k Keeper) GetCallback(ctx sdk.Context, height int64, contractAddr string, 
 }
 
 // DeleteCallback deletes a callback given the height, contract address and job id
-func (k Keeper) DeleteCallback(ctx sdk.Context, sender string, height int64, contractAddr string, jobID uint64) error {
-	contractAddress, err := sdk.AccAddressFromBech32(contractAddr)
+func (k Keeper) DeleteCallback(ctx sdk.Context, sender string, callback types.Callback) error {
+	contractAddress, err := sdk.AccAddressFromBech32(callback.ContractAddress)
 	if err != nil {
 		return err
 	}
 	// If callback delete is requested by someone who is not authorized, return error
-	if !isAuthorizedToModify(ctx, k, height, contractAddress, sender) {
+	if !isAuthorizedToModify(ctx, k, callback.CallbackHeight, contractAddress, sender) {
 		return types.ErrUnauthorized
 	}
-	// If a callback with same job id does not exist, return error
-	exists, err := k.ExistsCallback(ctx, height, contractAddr, jobID)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return types.ErrCallbackNotFound
-	}
-	return k.Callbacks.Remove(ctx, collections.Join3(height, contractAddress.Bytes(), jobID))
+	return k.Callbacks.Remove(ctx, collections.Join3(callback.CallbackHeight, contractAddress.Bytes(), callback.JobId))
 }
 
 // SaveCallback saves a callback given the height, contract address and job id and callback data

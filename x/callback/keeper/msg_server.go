@@ -40,7 +40,7 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 	}
 
 	// Deleting the callback from state
-	err = s.keeper.DeleteCallback(ctx, request.Sender, request.GetCallbackHeight(), request.GetContractAddress(), request.GetJobId())
+	err = s.keeper.DeleteCallback(ctx, request.Sender, callback)
 	if err != nil {
 		return nil, err
 	}

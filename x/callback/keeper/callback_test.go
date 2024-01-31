@@ -348,8 +348,7 @@ func (s *KeeperTestSuite) TestDeleteCallback() {
 				CallbackHeight:  101,
 				ReservedBy:      contractAddr.String(),
 			},
-			expectError: true,
-			errorType:   types.ErrCallbackNotFound,
+			expectError: false, // Should silently fail. MsgSrvr ensures that callback exists before calling keeper
 		},
 		{
 			testCase: "OK: Success delete - sender is contract",
@@ -384,7 +383,7 @@ func (s *KeeperTestSuite) TestDeleteCallback() {
 	}
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
-			err := keeper.DeleteCallback(ctx, tc.callback.ReservedBy, tc.callback.CallbackHeight, tc.callback.ContractAddress, tc.callback.JobId)
+			err := keeper.DeleteCallback(ctx, tc.callback.ReservedBy, tc.callback)
 			if tc.expectError {
 				s.Require().Error(err)
 				s.Assert().ErrorContains(err, tc.errorType.Error())
