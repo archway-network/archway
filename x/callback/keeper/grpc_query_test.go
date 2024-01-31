@@ -158,10 +158,20 @@ func (s *KeeperTestSuite) TestEstimateCallbackFees() {
 			expectedOutput: nil,
 		},
 		{
-			testCase: "OK: fetch fees for next height",
+			testCase: "FAIL: height is the current block height",
 			input: func() *types.QueryEstimateCallbackFeesRequest {
 				return &types.QueryEstimateCallbackFeesRequest{
 					BlockHeight: 101,
+				}
+			},
+			expectError:    true,
+			expectedOutput: nil,
+		},
+		{
+			testCase: "OK: fetch fees for next height",
+			input: func() *types.QueryEstimateCallbackFeesRequest {
+				return &types.QueryEstimateCallbackFeesRequest{
+					BlockHeight: 102,
 				}
 			},
 			expectError: false,
