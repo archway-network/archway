@@ -34,7 +34,7 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// If a callback with same job id does not exist, return error
-	callback, err := s.keeper.GetCallback(ctx, request.GetCallbackHeight(), request.GetContractAddress(), request.GetJobId())
+	callback, err := s.keeper.GetCallback(ctx, request.CallbackHeight, request.ContractAddress, request.JobId)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrCallbackNotFound, "callback with given job id does not exist for given height")
 	}
@@ -62,9 +62,9 @@ func (s MsgServer) CancelCallback(c context.Context, request *types.MsgCancelCal
 	// Emit event
 	types.EmitCallbackCancelledEvent(
 		ctx,
-		request.GetContractAddress(),
-		request.GetJobId(),
-		request.GetCallbackHeight(),
+		request.ContractAddress,
+		request.JobId,
+		request.CallbackHeight,
 		request.Sender,
 		refundFees,
 	)
@@ -82,24 +82,24 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// Get the expected fees which is to be paid
-	futureReservationFee, blockReservationFee, transactionFee, err := s.keeper.EstimateCallbackFees(ctx, request.GetCallbackHeight())
+	futureReservationFee, blockReservationFee, transactionFee, err := s.keeper.EstimateCallbackFees(ctx, request.CallbackHeight)
 	if err != nil {
 		return nil, err
 	}
 	expectedFees := transactionFee.Add(blockReservationFee).Add(futureReservationFee)
 
 	// If the fees sent by the sender is less than the expected fees, return error
-	if request.GetFees().IsLT(expectedFees) {
-		return nil, errorsmod.Wrapf(types.ErrInsufficientFees, "expected %s, got %s", expectedFees, request.GetFees())
+	if request.Fees.IsLT(expectedFees) {
+		return nil, errorsmod.Wrapf(types.ErrInsufficientFees, "expected %s, got %s", expectedFees, request.Fees)
 	}
-	surplusFees := request.GetFees().Sub(expectedFees) // Calculating any surplus user has sent
+	surplusFees := request.Fees.Sub(expectedFees) // Calculating any surplus user has sent
 
 	// Save the callback in state
 	callback := types.NewCallback(
 		request.Sender,
 		request.ContractAddress,
 		request.CallbackHeight,
-		request.GetJobId(),
+		request.JobId,
 		transactionFee,
 		blockReservationFee,
 		futureReservationFee,
@@ -111,7 +111,7 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 	}
 
 	// Send the fees into module account
-	err = s.keeper.SendToCallbackModule(ctx, request.Sender, request.GetFees())
+	err = s.keeper.SendToCallbackModule(ctx, request.Sender, request.Fees)
 	if err != nil {
 		return nil, err
 	}
@@ -119,10 +119,10 @@ func (s MsgServer) RequestCallback(c context.Context, request *types.MsgRequestC
 	// Emit event
 	types.EmitCallbackRegisteredEvent(
 		ctx,
-		request.GetContractAddress(),
-		request.GetJobId(),
-		request.GetCallbackHeight(),
-		callback.GetFeeSplit(),
+		request.ContractAddress,
+		request.JobId,
+		request.CallbackHeight,
+		callback.FeeSplit,
 		request.Sender,
 	)
 
@@ -134,7 +134,6 @@ func (s MsgServer) UpdateParams(c context.Context, request *types.MsgUpdateParam
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
 
 	_, err := sdk.AccAddressFromBech32(request.Authority)
 	if err != nil {
@@ -150,7 +149,7 @@ func (s MsgServer) UpdateParams(c context.Context, request *types.MsgUpdateParam
 		return nil, err
 	}
 
-	err = s.keeper.Params.Set(ctx, request.GetParams())
+	err = s.keeper.Params.Set(sdk.UnwrapSDKContext(c), request.GetParams())
 	if err != nil {
 		return nil, err
 	}

@@ -63,7 +63,7 @@ func (k Keeper) DeleteCallback(ctx sdk.Context, sender string, callback types.Ca
 		return err
 	}
 	// If callback delete is requested by someone who is not authorized, return error
-	if !isAuthorizedToModify(ctx, k, callback.CallbackHeight, contractAddress, sender) {
+	if !isAuthorizedToModify(ctx, k, contractAddress, sender) {
 		return types.ErrUnauthorized
 	}
 	return k.Callbacks.Remove(ctx, collections.Join3(callback.CallbackHeight, contractAddress.Bytes(), callback.JobId))
@@ -71,7 +71,7 @@ func (k Keeper) DeleteCallback(ctx sdk.Context, sender string, callback types.Ca
 
 // SaveCallback saves a callback given the height, contract address and job id and callback data
 func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
-	contractAddress, err := sdk.AccAddressFromBech32(callback.GetContractAddress())
+	contractAddress, err := sdk.AccAddressFromBech32(callback.ContractAddress)
 	if err != nil {
 		return err
 	}
@@ -80,11 +80,11 @@ func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
 		return types.ErrContractNotFound
 	}
 	// If callback is requested by someone which is not authorized, return error
-	if !isAuthorizedToModify(ctx, k, callback.GetCallbackHeight(), contractAddress, callback.ReservedBy) {
+	if !isAuthorizedToModify(ctx, k, contractAddress, callback.ReservedBy) {
 		return types.ErrUnauthorized
 	}
 	// If a callback with same job id exists at same height, return error
-	exists, err := k.ExistsCallback(ctx, callback.GetCallbackHeight(), contractAddress.String(), callback.GetJobId())
+	exists, err := k.ExistsCallback(ctx, callback.CallbackHeight, contractAddress.String(), callback.JobId)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
 		return types.ErrCallbackExists
 	}
 	// If callback is requested for height in the past or present, return error
-	if callback.GetCallbackHeight() <= ctx.BlockHeight() {
+	if callback.CallbackHeight <= ctx.BlockHeight() {
 		return types.ErrCallbackHeightNotInFuture
 	}
 
@@ -102,11 +102,11 @@ func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
 	}
 	// If callback is requested for height which is too far in the future, return error
 	maxFutureReservationHeight := ctx.BlockHeight() + int64(params.MaxFutureReservationLimit)
-	if callback.GetCallbackHeight() > maxFutureReservationHeight {
+	if callback.CallbackHeight > maxFutureReservationHeight {
 		return types.ErrCallbackHeightTooFarInFuture
 	}
 	// If there are already too many callbacks registered in a given block, return error
-	callbacksForBlock, err := k.GetCallbacksByHeight(ctx, callback.GetCallbackHeight())
+	callbacksForBlock, err := k.GetCallbacksByHeight(ctx, callback.CallbackHeight)
 	if err != nil {
 		return err
 	}
@@ -122,12 +122,12 @@ func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
 	if err != nil {
 		return err
 	}
-	callback.MaxGasLimit = params.GetCallbackGasLimit()
+	callback.MaxGasLimit = params.CallbackGasLimit
 
-	return k.Callbacks.Set(ctx, collections.Join3(callback.GetCallbackHeight(), contractAddress.Bytes(), callback.GetJobId()), callback)
+	return k.Callbacks.Set(ctx, collections.Join3(callback.CallbackHeight, contractAddress.Bytes(), callback.JobId), callback)
 }
 
-func isAuthorizedToModify(ctx sdk.Context, k Keeper, height int64, contractAddress sdk.AccAddress, sender string) bool {
+func isAuthorizedToModify(ctx sdk.Context, k Keeper, contractAddress sdk.AccAddress, sender string) bool {
 	if strings.EqualFold(sender, contractAddress.String()) { // A contract can modify its own callbacks
 		return true
 	}

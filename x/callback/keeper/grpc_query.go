@@ -29,9 +29,8 @@ func (qs *QueryServer) Callbacks(c context.Context, request *types.QueryCallback
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
 
-	callbacks, err := qs.keeper.GetCallbacksByHeight(ctx, request.GetBlockHeight())
+	callbacks, err := qs.keeper.GetCallbacksByHeight(sdk.UnwrapSDKContext(c), request.GetBlockHeight())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "could not fetch the callbacks at height %d: %s", request.GetBlockHeight(), err.Error())
 	}
@@ -46,9 +45,8 @@ func (qs *QueryServer) EstimateCallbackFees(c context.Context, request *types.Qu
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
 
-	futureReservationFee, blockReservationFee, transactionFee, err := qs.keeper.EstimateCallbackFees(ctx, request.GetBlockHeight())
+	futureReservationFee, blockReservationFee, transactionFee, err := qs.keeper.EstimateCallbackFees(sdk.UnwrapSDKContext(c), request.GetBlockHeight())
 	if err != nil {
 		return nil, err
 	}
@@ -69,9 +67,8 @@ func (qs *QueryServer) Params(c context.Context, request *types.QueryParamsReque
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
 
-	params, err := qs.keeper.GetParams(ctx)
+	params, err := qs.keeper.GetParams(sdk.UnwrapSDKContext(c))
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "could not fetch the module params: %s", err.Error())
 	}

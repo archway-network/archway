@@ -12,8 +12,7 @@ import (
 
 // EndBlocker fetches all the callbacks registered for the current block height and executes them
 func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) []abci.ValidatorUpdate {
-	currentHeight := ctx.BlockHeight()
-	k.IterateCallbacksByHeight(ctx, currentHeight, callbackExec(ctx, k, wk))
+	k.IterateCallbacksByHeight(ctx, ctx.BlockHeight(), callbackExec(ctx, k, wk))
 	return nil
 }
 
