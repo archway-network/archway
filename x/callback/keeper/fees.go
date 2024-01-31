@@ -8,8 +8,8 @@ import (
 
 // EstimateCallbackFees returns the fees that will be charged for registering a callback at the given block height
 func (k Keeper) EstimateCallbackFees(ctx sdk.Context, blockHeight int64) (sdk.Coin, sdk.Coin, sdk.Coin, error) {
-	if blockHeight < ctx.BlockHeight() {
-		return sdk.Coin{}, sdk.Coin{}, sdk.Coin{}, status.Errorf(codes.InvalidArgument, "block height %d is in the past", blockHeight)
+	if blockHeight <= ctx.BlockHeight() {
+		return sdk.Coin{}, sdk.Coin{}, sdk.Coin{}, status.Errorf(codes.InvalidArgument, "block height %d is not in the future", blockHeight)
 	}
 
 	params, err := k.GetParams(ctx)
