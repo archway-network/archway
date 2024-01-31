@@ -51,6 +51,9 @@ func (m MsgRequestCallback) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
 		return errorsmod.Wrapf(sdkErrors.ErrInvalidAddress, "invalid contract address: %v", err)
 	}
+	if m.Fees.Denom != sdk.DefaultBondDenom {
+		return errorsmod.Wrapf(sdkErrors.ErrInvalidCoins, "invalid fees denom: %v", m.Fees.Denom)
+	}
 
 	return nil
 }
