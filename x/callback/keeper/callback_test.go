@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -187,6 +188,22 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 				JobId:           3,
 				CallbackHeight:  101,
 				ReservedBy:      contractAdminAcc.Address.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: false,
+		},
+		{
+			testCase: "OK: save callback - sender is contract admin but address is in uppercase",
+			callback: types.Callback{
+				ContractAddress: contractAddr.String(),
+				JobId:           1,
+				CallbackHeight:  102,
+				ReservedBy:      strings.ToUpper(contractAdminAcc.Address.String()),
 				FeeSplit: &types.CallbackFeesFeeSplit{
 					TransactionFees:       &validCoin,
 					BlockReservationFees:  &validCoin,

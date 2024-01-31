@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -134,15 +136,15 @@ func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
 }
 
 func isAuthorizedToModify(ctx sdk.Context, k Keeper, height int64, contractAddress sdk.AccAddress, sender string) bool {
-	if sender == contractAddress.String() { // A contract can modify its own callbacks
+	if strings.EqualFold(sender, contractAddress.String()) { // A contract can modify its own callbacks
 		return true
 	}
 
 	contractInfo := k.wasmKeeper.GetContractInfo(ctx, contractAddress)
-	if sender == contractInfo.Admin { // Admin of the contract can modify its callbacks
+	if strings.EqualFold(sender, contractInfo.Admin) { // Admin of the contract can modify its callbacks
 		return true
 	}
 
 	contractMetadata := k.rewardsKeeper.GetContractMetadata(ctx, contractAddress)
-	return contractMetadata != nil && sender == contractMetadata.OwnerAddress // Owner of the contract can modify its callbacks
+	return contractMetadata != nil && strings.EqualFold(sender, contractMetadata.OwnerAddress) // Owner of the contract can modify its callbacks
 }
