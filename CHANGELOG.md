@@ -65,7 +65,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#522](https://github.com/archway-network/archway/pull/522) - Fix Archway module endpoints not showing up in swagger
 - [#537](https://github.com/archway-network/archway/pull/537) - Fix issue with callback failing when module param is changed
 - [#538](https://github.com/archway-network/archway/pull/538) - Fixing the interchain test gh workflow failing cuz rc tags were not recognized 
-- [#539](https://github.com/archway-network/archway/pull/539) - Remidiations for x/callback audit
+- [#539](https://github.com/archway-network/archway/pull/539) - Remediations for x/callback audit
 
 
 ## [v5.0.2](https://github.com/archway-network/archway/releases/tag/v5.0.2)
