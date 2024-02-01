@@ -128,6 +128,10 @@ func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
 }
 
 func isAuthorizedToModify(ctx sdk.Context, k Keeper, contractAddress sdk.AccAddress, sender string) bool {
+	if k.bankKeeper.BlockedAddr(sdk.MustAccAddressFromBech32(sender)) { // Blocked addresses cannot create/delete callbacks as we cant refund to these addresses. And they are module accounts anyway
+		return false
+	}
+
 	if strings.EqualFold(sender, contractAddress.String()) { // A contract can modify its own callbacks
 		return true
 	}

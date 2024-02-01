@@ -92,6 +92,9 @@ func (k Keeper) RefundFromCallbackModule(ctx sdk.Context, recipient string, amou
 	if err != nil {
 		return err
 	}
+	if k.bankKeeper.BlockedAddr(recipientAddr) { // blocked accounts cant receive funds. so in that case we send to fee collector
+		return k.SendToFeeCollector(ctx, amount)
+	}
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipientAddr, sdk.NewCoins(amount))
 }
 

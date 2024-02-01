@@ -20,12 +20,19 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 	keeper.SetWasmKeeper(contractViewer)
 	validCoin := sdk.NewInt64Coin("stake", 10)
 
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
+	contractAddresses := e2eTesting.GenContractAddresses(3)
+	contractAddr := contractAddresses[0]
+	contractAddr2 := contractAddresses[1]
+	contractAddr3 := contractAddresses[2]
 	contractAdminAcc := s.chain.GetAccount(0)
 	notContractAdminAcc := s.chain.GetAccount(1)
 	contractOwnerAcc := s.chain.GetAccount(2)
 	contractViewer.AddContractAdmin(
 		contractAddr.String(),
+		contractAdminAcc.Address.String(),
+	)
+	contractViewer.AddContractAdmin(
+		contractAddr2.String(),
 		contractAdminAcc.Address.String(),
 	)
 
@@ -36,6 +43,16 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 	metaCurrent.RewardsAddress = contractOwnerAcc.Address.String()
 	rewardsKeeper.SetContractInfoViewer(contractViewer)
 	err := rewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
+	s.Require().NoError(err)
+
+	// Setting callback module as contract owner
+	blockedModuleAddr := s.chain.GetApp().Keepers.AccountKeeper.GetModuleAccount(ctx, types.ModuleName).GetAddress()
+	s.Require().True(s.chain.GetApp().Keepers.BankKeeper.BlockedAddr(blockedModuleAddr))
+	var metaCurrent2 rewardsTypes.ContractMetadata
+	metaCurrent2.ContractAddress = contractAddr2.String()
+	metaCurrent2.OwnerAddress = blockedModuleAddr.String()
+	metaCurrent2.RewardsAddress = contractAddr2.String()
+	err = rewardsKeeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr2, metaCurrent2)
 	s.Require().NoError(err)
 
 	params, err := keeper.GetParams(ctx)
@@ -67,7 +84,7 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 		{
 			testCase: "FAIL: contract does not exist",
 			callback: types.Callback{
-				ContractAddress: e2eTesting.GenContractAddresses(2)[1].String(),
+				ContractAddress: contractAddr3.String(),
 				JobId:           1,
 				CallbackHeight:  101,
 				ReservedBy:      contractAddr.String(),
@@ -148,6 +165,23 @@ func (s *KeeperTestSuite) TestSaveCallback() {
 			},
 			expectError: true,
 			errorType:   types.ErrCallbackHeightTooFarInFuture,
+		},
+		{
+			testCase: "FAIL: sender is a blocked address",
+			callback: types.Callback{
+				ContractAddress: contractAddr2.String(),
+				JobId:           1,
+				CallbackHeight:  102,
+				ReservedBy:      blockedModuleAddr.String(),
+				FeeSplit: &types.CallbackFeesFeeSplit{
+					TransactionFees:       &validCoin,
+					BlockReservationFees:  &validCoin,
+					FutureReservationFees: &validCoin,
+					SurplusFees:           &validCoin,
+				},
+			},
+			expectError: true,
+			errorType:   types.ErrUnauthorized,
 		},
 		{
 			testCase: "OK: save callback - sender is contract",
