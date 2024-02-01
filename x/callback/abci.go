@@ -21,13 +21,14 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected)
 	logger := k.Logger(ctx)
 	return func(callback types.Callback) bool {
 		// creating CallbackMsg which is encoded to json and passed as input to contract execution
-		callbackMsg := types.NewCallbackMsg(callback.GetJobId())
+		callbackMsg := types.NewCallbackMsg(callback.JobId)
+		callbackMsgString := callbackMsg.String()
 
 		logger.Debug(
 			"executing callback",
 			"contract_address", callback.ContractAddress,
-			"job_id", callback.GetJobId(),
-			"msg", callbackMsg.String(),
+			"job_id", callback.JobId,
+			"msg", callbackMsgString,
 		)
 
 		gasUsed, err := pkg.ExecuteWithGasLimit(ctx, callback.MaxGasLimit, func(ctx sdk.Context) error {
@@ -39,15 +40,15 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected)
 			logger.Error(
 				"error executing callback",
 				"contract_address", callback.ContractAddress,
-				"job_id", callback.GetJobId(),
+				"job_id", callback.JobId,
 				"error", err,
 			)
 			// Emit failure event
 			types.EmitCallbackExecutedFailedEvent(
 				ctx,
 				callback.ContractAddress,
-				callback.GetJobId(),
-				callbackMsg.String(),
+				callback.JobId,
+				callbackMsgString,
 				gasUsed,
 				err.Error(),
 			)
@@ -62,16 +63,16 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected)
 			logger.Info(
 				"callback executed successfully",
 				"contract_address", callback.ContractAddress,
-				"job_id", callback.GetJobId(),
-				"msg", callbackMsg.String(),
+				"job_id", callback.JobId,
+				"msg", callbackMsgString,
 				"gas_used", gasUsed,
 			)
 			// Emit success event
 			types.EmitCallbackExecutedSuccessEvent(
 				ctx,
 				callback.ContractAddress,
-				callback.GetJobId(),
-				callbackMsg.String(),
+				callback.JobId,
+				callbackMsgString,
 				gasUsed,
 			)
 		}
@@ -79,7 +80,7 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected)
 		logger.Info(
 			"callback executed with pending gas",
 			"contract_address", callback.ContractAddress,
-			"job_id", callback.GetJobId(),
+			"job_id", callback.JobId,
 			"used_gas", gasUsed,
 		)
 
@@ -113,7 +114,7 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected)
 			collections.Join3(
 				callback.CallbackHeight,
 				sdk.MustAccAddressFromBech32(callback.ContractAddress).Bytes(),
-				callback.GetJobId(),
+				callback.JobId,
 			),
 		); err != nil {
 			panic(err)
