@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v6.0.0-rc.4](https://github.com/archway-network/archway/releases/tag/v6.0.0)
+## [v6.0.0](https://github.com/archway-network/archway/releases/tag/v6.0.0)
 
 ### Added
 
