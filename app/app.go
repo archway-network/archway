@@ -598,7 +598,7 @@ func NewArchwayApp(
 	// Create Interchain Accounts Stack
 
 	var icaControllerStack porttypes.IBCModule
-	icaControllerStack = interchaintxs.NewIBCModule(app.InterchainTxsKeeper)
+	//icaControllerStack = interchaintxs.NewIBCModule(app.InterchainTxsKeeper)
 	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.Keepers.ICAControllerKeeper)
 	icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.Keepers.IBCFeeKeeper)
 
@@ -616,7 +616,7 @@ func NewArchwayApp(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 	ibcRouter.AddRoute(wasmdTypes.ModuleName, wasmStack)
-	ibcRouter.AddRoute(interchaintxtypes.ModuleName, icaControllerStack)
+	//ibcRouter.AddRoute(interchaintxtypes.ModuleName, icaControllerStack)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
 	app.Keepers.IBCKeeper.SetRouter(ibcRouter)
 
