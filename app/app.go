@@ -683,7 +683,7 @@ func NewArchwayApp(
 		params.NewAppModule(app.Keepers.ParamsKeeper),
 		transferModule,
 		ibcfee.NewAppModule(app.Keepers.IBCFeeKeeper),
-		ica.NewAppModule(nil, &app.Keepers.ICAHostKeeper),
+		ica.NewAppModule(&app.Keepers.ICAControllerKeeper, &app.Keepers.ICAHostKeeper),
 		consensus.NewAppModule(appCodec, app.Keepers.ConsensusParamsKeeper),
 		tracking.NewAppModule(app.appCodec, app.Keepers.TrackingKeeper),
 		rewards.NewAppModule(app.appCodec, app.Keepers.RewardsKeeper),
