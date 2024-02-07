@@ -9,7 +9,6 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/api/http.proto";
 import "google/protobuf/any.proto";
-import "neutron/interchaintxs/v1/fee.proto";
 import "neutron/interchaintxs/v1/params.proto";
 
 option go_package = "github.com/archway-network/archway/x/interchaintxs/types";
@@ -55,8 +54,6 @@ message MsgSubmitTx {
   string memo = 5;
   // timeout in seconds after which the packet times out
   uint64 timeout = 6;
-
-  Fee fee = 7 [(gogoproto.nullable) = false];
 }
 
 // MsgSubmitTxResponse defines the response for Msg/SubmitTx
