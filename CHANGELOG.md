@@ -33,42 +33,31 @@ Contains all the PRs that improved the code without changing the behaviors.
 ### Added
 
 - [#481](https://github.com/archway-network/archway/pull/481) - Add Release Checklist issue type 
-- [#502](https://github.com/archway-network/archway/pull/502) - Improve rewards withdrawal experience by allowing a Metadata owner to set that rewards directly go to the reward address.
 - [#504](https://github.com/archway-network/archway/pull/504) - Interchain test gh workflow now runs on PRs targetting release branches as well as main 
-- [#462](https://github.com/archway-network/archway/pull/462) - adding docs ADR-008 – Improvements on rewards withdrawal experience
 - [#501](https://github.com/archway-network/archway/pull/501) - Adding x/callback module
 - [#532](https://github.com/archway-network/archway/pull/532) - Adding ADR-009 for x/callback module
 - [#527](https://github.com/archway-network/archway/pull/527) - Add x/cwfees module.
 
 ### Improvements
 
-- [#478](https://github.com/archway-network/archway/pull/475) – Moves x/rewards state to use collections for state management.
 - [#533](https://github.com/archway-network/archway/pull/533) - Add more x/cwfees tests and adjust the gas limit of the RequestGrant call.
 
 
 ### Changed
 
 - [#505](https://github.com/archway-network/archway/pull/505) - Update release process to account for release candidates on Titus
-- [#507](https://github.com/archway-network/archway/pull/507) – Version bump wasmd to v0.45.0 and cosmos-sdk to v0.47.6
-- [#529](https://github.com/archway-network/archway/pull/529) – Version bump wasmd to v0.47.6 and cosmos-sdk to v0.47.7
-- [#531](https://github.com/archway-network/archway/pull/531) - Bump wasmvm from v1.5.0 to v1.5.1. Ref: [CWA-2023-004](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-004.md)
-- [#534](https://github.com/archway-network/archway/pull/534) - Bump wasmvm to v1.5.2.
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
-
-- [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
-- [#514](https://github.com/archway-network/archway/pull/514) - Fix snapshot db being hardcoded from goleveldb to based on config 
-- [#522](https://github.com/archway-network/archway/pull/522) - Fix Archway module endpoints not showing up in swagger
 - [#537](https://github.com/archway-network/archway/pull/537) - Fix issue with callback failing when module param is changed
 - [#538](https://github.com/archway-network/archway/pull/538) - Fixing the interchain test gh workflow failing cuz rc tags were not recognized 
 - [#539](https://github.com/archway-network/archway/pull/539) - Remediations for x/callback audit
 
 
-## [v5.0.2](https://github.com/archway-network/archway/releases/tag/v5.0.2)
+## [v6.0.0](https://github.com/archway-network/archway/releases/tag/v6.0.0)
 
 ### Added
 
@@ -78,24 +67,43 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#459](https://github.com/archway-network/archway/pull/459) - Add missing ADR references to docs index
 - [#442](https://github.com/archway-network/archway/pull/442) - Upgrade Cosmos-sdk from v0.45.16 to v0.47.5 and all the other things it depends on
 - [#470](https://github.com/archway-network/archway/pull/470) - Bumping x/wasmd to v0.43.0
+- [#502](https://github.com/archway-network/archway/pull/502) - Improve rewards withdrawal experience by allowing a Metadata owner to set that rewards directly go to the reward address.
+- [#462](https://github.com/archway-network/archway/pull/462) - adding docs ADR-008 – Improvements on rewards withdrawal experience
 
 ### Changed
 
 - [#457](https://github.com/archway-network/archway/pull/457) - Modify the upgrade handlers to pass in all the app keepers instead of just the account keeper
 - [#465](https://github.com/archway-network/archway/pull/465) - Change the name of the gh workflow job from `build` to `run-tests` as it runs tests
+- [#507](https://github.com/archway-network/archway/pull/507) – Version bump wasmd to v0.45.0 and cosmos-sdk to v0.47.6
+- [#529](https://github.com/archway-network/archway/pull/529) – Version bump wasmd to v0.47.6 and cosmos-sdk to v0.47.7
+- [#531](https://github.com/archway-network/archway/pull/531) - Bump wasmvm from v1.5.0 to v1.5.1. Ref: [CWA-2023-004](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-004.md)
+- [#534](https://github.com/archway-network/archway/pull/534) - Bump wasmvm to v1.5.2.
 
 ### Fixed
 
 - [#496](https://github.com/archway-network/archway/pull/496) - Fix rest endpoints in App
+- [#476](https://github.com/archway-network/archway/pull/476) - Fix amd64 binary compatibility on newer linux OS
+- [#514](https://github.com/archway-network/archway/pull/514) - Fix snapshot db being hardcoded from goleveldb to based on config 
+- [#522](https://github.com/archway-network/archway/pull/522) - Fix Archway module endpoints not showing up in swagger
 
 ### Deprecated
 
 - [#439](https://github.com/archway-network/archway/pull/439) - Renaming `debug` image to `dev`
 - [#461](https://github.com/archway-network/archway/pull/461) - Remove titus network deployment
 
+### Improvements
+
+- [#478](https://github.com/archway-network/archway/pull/475) – Moves x/rewards state to use collections for state management.
+
 ## ~~[RETRACTED - v5.0.1](https://github.com/archway-network/archway/releases/tag/v5.0.1)~~
 
 ## ~~[RETRACTED - v5.0.0](https://github.com/archway-network/archway/releases/tag/v5.0.0)~~
+
+## [v4.0.3](https://github.com/archway-network/archway/releases/tag/v4.0.3)
+
+### Changed
+- https://github.com/archway-network/archway/pull/530 - [CWA-2023-004](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-004.md) - This release fixes patches a flawed dependency on cosmwasm, the patch can be immediately applied and is not consensus breaking.
+
 
 ## [v4.0.2](https://github.com/archway-network/archway/releases/tag/v4.0.2)
 
