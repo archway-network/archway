@@ -13,12 +13,14 @@ var _ wasmKeeper.Messenger = (*MockMessenger)(nil)
 // Mock returns a contract info if admin is set.
 type MockContractViewer struct {
 	contractAdminSet map[string]string // key: contractAddr, value: adminAddr
+	returnSudoError  error
 }
 
 // NewMockContractViewer creates a new MockContractViewer instance.
 func NewMockContractViewer() *MockContractViewer {
 	return &MockContractViewer{
 		contractAdminSet: make(map[string]string),
+		returnSudoError:  nil,
 	}
 }
 
@@ -47,7 +49,12 @@ func (v MockContractViewer) HasContractInfo(ctx sdk.Context, contractAddress sdk
 
 // Sudo implements the wasmKeeper.ContractInfoViewer interface.
 func (v MockContractViewer) Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error) {
-	return nil, nil
+	return nil, v.returnSudoError
+}
+
+func (v *MockContractViewer) SetReturnSudoError(returnSudoError error) {
+	v.returnSudoError = returnSudoError
+
 }
 
 // MockMessenger mocks x/wasmd module dependency.
