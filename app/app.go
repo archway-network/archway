@@ -604,7 +604,7 @@ func NewArchwayApp(
 		app.Keepers.ICAControllerKeeper,
 		app.Keepers.WASMKeeper,
 		app.Keepers.BankKeeper,
-		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(authtypes.FeeCollectorName).String(),
 		govModuleAddr,
 	)
 

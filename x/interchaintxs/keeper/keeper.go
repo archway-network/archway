@@ -99,3 +99,21 @@ func (k Keeper) GetICARegistrationFeeFirstCodeID(ctx sdk.Context) (codeID uint64
 	}
 	return sdk.BigEndianToUint64(bytes)
 }
+
+// SetWasmKeeper sets the given wasm keeper.
+// Only for testing purposes
+func (k *Keeper) SetWasmKeeper(wk types.WasmKeeper) {
+	k.sudoKeeper = wk
+}
+
+// SetICAControllerKeeper sets the given ica controller keeper.
+// Only for testing purposes
+func (k *Keeper) SetICAControllerKeeper(icak types.ICAControllerKeeper) {
+	k.icaControllerKeeper = icak
+}
+
+// SetChannelKeeper sets the given channel keeper.
+// Only for testing purposes
+func (k *Keeper) SetChannelKeeper(ck types.ChannelKeeper) {
+	k.channelKeeper = ck
+}
