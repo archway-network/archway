@@ -12,31 +12,26 @@ import (
 
 // EndBlocker fetches all the callbacks registered for the current block height and executes them
 func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) []abci.ValidatorUpdate {
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	currentHeight := ctx.BlockHeight()
-	k.IterateCallbacksByHeight(ctx, currentHeight, callbackExec(ctx, k, wk, params.GetCallbackGasLimit()))
+	k.IterateCallbacksByHeight(ctx, ctx.BlockHeight(), callbackExec(ctx, k, wk))
 	return nil
 }
 
 // callbackExec returns a function which executes the callback and deletes it from state after execution
-func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected, callbackGasLimit uint64) func(types.Callback) bool {
+func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) func(types.Callback) bool {
 	logger := k.Logger(ctx)
 	return func(callback types.Callback) bool {
 		// creating CallbackMsg which is encoded to json and passed as input to contract execution
-		callbackMsg := types.NewCallbackMsg(callback.GetJobId())
+		callbackMsg := types.NewCallbackMsg(callback.JobId)
+		callbackMsgString := callbackMsg.String()
 
 		logger.Debug(
 			"executing callback",
 			"contract_address", callback.ContractAddress,
-			"job_id", callback.GetJobId(),
-			"msg", callbackMsg.String(),
+			"job_id", callback.JobId,
+			"msg", callbackMsgString,
 		)
 
-		gasUsed, err := pkg.ExecuteWithGasLimit(ctx, callbackGasLimit, func(ctx sdk.Context) error {
+		gasUsed, err := pkg.ExecuteWithGasLimit(ctx, callback.MaxGasLimit, func(ctx sdk.Context) error {
 			// executing the callback on the contract
 			_, err := wk.Sudo(ctx, sdk.MustAccAddressFromBech32(callback.ContractAddress), callbackMsg.Bytes())
 			return err
@@ -45,39 +40,39 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 			logger.Error(
 				"error executing callback",
 				"contract_address", callback.ContractAddress,
-				"job_id", callback.GetJobId(),
+				"job_id", callback.JobId,
 				"error", err,
 			)
 			// Emit failure event
 			types.EmitCallbackExecutedFailedEvent(
 				ctx,
 				callback.ContractAddress,
-				callback.GetJobId(),
-				callbackMsg.String(),
+				callback.JobId,
+				callbackMsgString,
 				gasUsed,
 				err.Error(),
 			)
 
 			// This is because gasUsed amount returned is greater than the gas limit. cuz ofc.
-			// so we set it to callbackGasLimit so when we do txFee refund, we arent trying to refund more than we should
-			// e.g if callbackGasLimit is 10, but gasUsed is 100, we need to use 10 to calculate txFeeRefund.
+			// so we set it to callback.MaxGasLimit so when we do txFee refund, we arent trying to refund more than we should
+			// e.g if callback.MaxGasLimit is 10, but gasUsed is 100, we need to use 10 to calculate txFeeRefund.
 			// else the module will pay back more than it took from the user 💀
 			// TLDR; this ensures in case of "out of gas error", we keep all txFees and refund nothing.
-			gasUsed = callbackGasLimit
+			gasUsed = callback.MaxGasLimit
 		} else {
 			logger.Info(
 				"callback executed successfully",
 				"contract_address", callback.ContractAddress,
-				"job_id", callback.GetJobId(),
-				"msg", callbackMsg.String(),
+				"job_id", callback.JobId,
+				"msg", callbackMsgString,
 				"gas_used", gasUsed,
 			)
 			// Emit success event
 			types.EmitCallbackExecutedSuccessEvent(
 				ctx,
 				callback.ContractAddress,
-				callback.GetJobId(),
-				callbackMsg.String(),
+				callback.JobId,
+				callbackMsgString,
 				gasUsed,
 			)
 		}
@@ -85,7 +80,7 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 		logger.Info(
 			"callback executed with pending gas",
 			"contract_address", callback.ContractAddress,
-			"job_id", callback.GetJobId(),
+			"job_id", callback.JobId,
 			"used_gas", gasUsed,
 		)
 
@@ -97,6 +92,10 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 			if err != nil {
 				panic(err)
 			}
+		} else {
+			// This is to ensure that if the txFeeConsumed is higher due to rise in gas price,
+			// we dont fund fee_collector more than we should
+			txFeesConsumed = *callback.FeeSplit.TransactionFees
 		}
 
 		// Send fees to fee collector
@@ -115,7 +114,7 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 			collections.Join3(
 				callback.CallbackHeight,
 				sdk.MustAccAddressFromBech32(callback.ContractAddress).Bytes(),
-				callback.GetJobId(),
+				callback.JobId,
 			),
 		); err != nil {
 			panic(err)

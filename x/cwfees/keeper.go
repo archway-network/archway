@@ -92,8 +92,12 @@ func (k Keeper) RequestGrant(ctx context.Context, grantingContract sdk.AccAddres
 		return err
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// if tx limit remaining is 50_000, we want to pick that over our gas limit.
-	gasLimitToUse := min(sdkCtx.BlockGasMeter().GasRemaining(), RequestGrantGasLimit)
+	// if tx limit remaining is < RequestGrantGasLimit, we want to pick that over our gas limit.
+	// otherwise we pick request grant gas limit because a failure in the ante means the whole
+	// tx is reverted, so if a malicious user creates a granting contract that consumes 100_000_000gas,
+	// and we allow it to run fully, then basically the malicious user can make the chain do
+	// computation for free.
+	gasLimitToUse := min(sdkCtx.GasMeter().GasRemaining(), RequestGrantGasLimit)
 	_, err = pkg.ExecuteWithGasLimit(sdkCtx, gasLimitToUse, func(ctx sdk.Context) error {
 		_, err = k.wasmdKeeper.Sudo(sdk.UnwrapSDKContext(ctx), grantingContract, msgBytes)
 		return err

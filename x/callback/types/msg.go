@@ -35,12 +35,7 @@ func NewMsgRequestCallback(
 
 // GetSigners implements the sdk.Msg interface.
 func (m MsgRequestCallback) GetSigners() []sdk.AccAddress {
-	senderAddr, err := sdk.AccAddressFromBech32(m.Sender)
-	if err != nil {
-		panic(fmt.Errorf("parsing sender address (%s): %w", m.Sender, err))
-	}
-
-	return []sdk.AccAddress{senderAddr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(m.Sender)}
 }
 
 // ValidateBasic implements the sdk.Msg interface.
@@ -50,6 +45,9 @@ func (m MsgRequestCallback) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(m.ContractAddress); err != nil {
 		return errorsmod.Wrapf(sdkErrors.ErrInvalidAddress, "invalid contract address: %v", err)
+	}
+	if m.Fees.Denom != sdk.DefaultBondDenom {
+		return errorsmod.Wrapf(sdkErrors.ErrInvalidCoins, "invalid fees denom: %v", m.Fees.Denom)
 	}
 
 	return nil
@@ -74,12 +72,7 @@ func NewMsgCancelCallback(
 
 // GetSigners implements the sdk.Msg interface.
 func (m MsgCancelCallback) GetSigners() []sdk.AccAddress {
-	senderAddr, err := sdk.AccAddressFromBech32(m.Sender)
-	if err != nil {
-		panic(fmt.Errorf("parsing sender address (%s): %w", m.Sender, err))
-	}
-
-	return []sdk.AccAddress{senderAddr}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(m.Sender)}
 }
 
 // ValidateBasic implements the sdk.Msg interface.
