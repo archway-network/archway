@@ -1,6 +1,9 @@
 name: Run InterchainTest
 
 on:
+    push:
+        branches: 
+            - spoorthi/adding-ica-controller
     pull_request:
         branches: 
             - main
