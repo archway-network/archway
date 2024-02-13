@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"cosmossdk.io/math"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -85,7 +86,8 @@ func TestInterchainTxs(t *testing.T) {
 
 	// Upload the contract to archway chain
 	archwayChainUser := fundChainUser(t, ctx, archwayChain)
-	codeId, err := archwayChain.StoreContract(ctx, archwayChainUser.KeyName(), "contract.wasm")
+	counterpartyChainUser := fundChainUser(t, ctx, counterpartyChain)
+	codeId, err := archwayChain.StoreContract(ctx, archwayChainUser.KeyName(), "artifacts/contract.wasm")
 	require.NoError(t, err)
 	require.NotEmpty(t, codeId)
 	// Instantiate the contract
@@ -121,7 +123,32 @@ func TestInterchainTxs(t *testing.T) {
 	require.NoError(t, err, "could not parse the interchain account query response")
 	require.NotEmpty(t, queryRes.InterchainAccountAddress)
 	icaCounterpartyAddress := queryRes.InterchainAccountAddress
-	// Check if the ica account has been registered on the counterparty chain
+	// Check the balance of the ica on the counterparty chain
+	balance, err := counterpartyChain.GetBalance(ctx, icaCounterpartyAddress, counterpartyChain.Config().Denom)
+	require.NoError(t, err)
+	require.Equal(t, int64(0), balance.Int64())
+	// Send some money to the ica account from faucet
+	err = counterpartyChain.SendFunds(ctx, counterpartyChainUser.KeyName(), ibc.WalletAmount{
+		Address: icaCounterpartyAddress,
+		Denom:   counterpartyChain.Config().Denom,
+		Amount:  math.NewInt(1000),
+	})
+	require.NoError(t, err)
+	// Ensure ica account has the funds just sent
+	balance, err = counterpartyChain.GetBalance(ctx, icaCounterpartyAddress, counterpartyChain.Config().Denom)
+	require.NoError(t, err)
+	require.Equal(t, int64(1000), balance.Int64())
+	// SubmitTx on contract which will send money back to the initial account
+	res, err = archwayChain.ExecuteContract(ctx, archwayChainUser.KeyName(), contractAddress, "{}")
+	require.NoError(t, err)
+	require.NotEmpty(t, res)
+	// Wait for a while to ensure the relayer picks up the packet
+	err = testutil.WaitForBlocks(ctx, 5, archwayChain, counterpartyChain)
+	require.NoError(t, err)
+	// Check the balance of the ica account on counterparty chain. Should be none
+	balance, err = counterpartyChain.GetBalance(ctx, icaCounterpartyAddress, counterpartyChain.Config().Denom)
+	require.NoError(t, err)
+	require.Equal(t, int64(0), balance.Int64())
 }
 
 type InterchainAccountAccountQueryResponse struct {
