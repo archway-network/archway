@@ -45,7 +45,7 @@ jobs:
 
             - name: Build current image
               run: |
-                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ github.head_ref }} --chain archway --tag local
+                heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref "spoorthi/adding-ica-controller" --chain archway --tag local
 
             - name: Upload current image
               uses: ishworkh/container-image-artifact-upload@v1.0.0
