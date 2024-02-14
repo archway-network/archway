@@ -2,7 +2,6 @@ package interchaintest
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -73,26 +72,8 @@ func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, nextUpgrade
 
 	haltHeight := height + haltHeightDelta // The height at which upgrade should be applied
 
-	govAuthorityAddr := ""
-	cmd := []string{
-		"archwayd", "q", "auth", "module-account", "gov",
-		"--node", archwayChain.GetRPCAddress(),
-		"--home", archwayChain.HomeDir(),
-		"--chain-id", archwayChain.Config().ChainID,
-		"--output", "json",
-	}
-	stdout, _, err := archwayChain.Exec(ctx, cmd, nil)
-	require.NoError(t, err, "could not query the gov module account")
-
-	queryRes := ModuleAccountQueryResponse{}
-	err = json.Unmarshal(stdout, &queryRes)
-	require.NoError(t, err, "could not parse the response")
-
-	if queryRes.Account.Name == "gov" {
-		govAuthorityAddr = queryRes.Account.BaseAccount.Address
-	} else {
-		t.Fatal("could not find the gov module account")
-	}
+	govAuthorityAddr, err := archwayChain.GetGovernanceAddress(ctx)
+	require.NoError(t, err, "could not fetch governance address")
 
 	proposalMsg := upgradetypes.MsgSoftwareUpgrade{
 		Authority: govAuthorityAddr,
@@ -151,20 +132,4 @@ func startChain(t *testing.T, startingVersion string) (*cosmos.CosmosChain, *cli
 		_ = ic.Close()
 	})
 	return archwayChain, client, ctx
-}
-
-type ModuleAccountQueryResponse struct {
-	Account ModuleAccountData `json:"account"`
-}
-
-type ModuleAccountData struct {
-	BaseAccount BaseAccountData `json:"base_account"`
-	Name        string          `json:"name"`
-}
-
-type BaseAccountData struct {
-	AccountNumber string `json:"account_number"`
-	Address       string `json:"address"`
-	PubKey        string `json:"pub_key"`
-	Sequence      string `json:"sequence"`
 }
