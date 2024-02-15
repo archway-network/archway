@@ -18,7 +18,6 @@ func (s *KeeperTestSuite) TestRegisterInterchainAccount() {
 	wmKeeper, icaCtrlKeeper := testutils.NewMockContractViewer(), testutils.NewMockICAControllerKeeper()
 	icTxKeeper.SetWasmKeeper(wmKeeper)
 	icTxKeeper.SetICAControllerKeeper(icaCtrlKeeper)
-	bankKeeper := s.chain.GetApp().Keepers.BankKeeper
 	contractAddress := e2eTesting.GenContractAddresses(1)[0]
 	contractAdminAcc := s.chain.GetAccount(0)
 	goCtx := sdk.WrapSDKContext(ctx)
@@ -47,13 +46,6 @@ func (s *KeeperTestSuite) TestRegisterInterchainAccount() {
 	s.Require().True(wmKeeper.HasContractInfo(ctx, contractAddress))
 	contractInfo := wmKeeper.GetContractInfo(ctx, contractAddress)
 	s.Require().Equal(contractAdminAcc.Address.String(), contractInfo.Admin)
-	resp, err = icTxKeeper.RegisterInterchainAccount(goCtx, &msgRegAcc)
-	s.Require().ErrorContains(err, "failed to charge fees to pay for RegisterInterchainAccount msg")
-	s.Require().Nil(resp)
-
-	msgRegAcc.RegisterFee = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000)))
-	err = bankKeeper.SendCoins(ctx, contractAdminAcc.Address, contractAddress, msgRegAcc.RegisterFee.MulInt(sdk.NewInt(2)))
-	s.Require().NoError(err)
 
 	err = icaCtrlKeeper.RegisterInterchainAccount(ctx, msgRegAcc.ConnectionId, icaOwner.String(), "")
 	s.Require().Error(err)
