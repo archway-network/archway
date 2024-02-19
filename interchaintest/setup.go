@@ -43,20 +43,19 @@ func GetArchwaySpec(dockerImageVersion string, numOfVals int) *interchaintest.Ch
 
 func getDefaultChainConfig() ibc.ChainConfig {
 	return ibc.ChainConfig{
-		Type:                   chainType,
-		Name:                   chainName,
-		ChainID:                "archway-local",
-		Bin:                    "archwayd",
-		Bech32Prefix:           bech32Prefix,
-		Denom:                  denom,
-		CoinType:               coinType,
-		GasPrices:              fmt.Sprintf("0%s", denom),
-		GasAdjustment:          2.0,
-		TrustingPeriod:         ibcTrustingPeriod,
-		NoHostMount:            false,
-		SkipGenTx:              false,
-		PreGenesis:             nil,
-		UsingNewGenesisCommand: true,
+		Type:           chainType,
+		Name:           chainName,
+		ChainID:        "archway-local",
+		Bin:            "archwayd",
+		Bech32Prefix:   bech32Prefix,
+		Denom:          denom,
+		CoinType:       coinType,
+		GasPrices:      fmt.Sprintf("0%s", denom),
+		GasAdjustment:  2.0,
+		TrustingPeriod: ibcTrustingPeriod,
+		NoHostMount:    false,
+		SkipGenTx:      false,
+		PreGenesis:     nil,
 		ModifyGenesisAmounts: func() (types.Coin, types.Coin) {
 			genesisAmount := types.Coin{
 				Amount: types.NewInt(9_000_000_000_000_000_000),

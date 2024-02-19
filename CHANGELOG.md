@@ -37,11 +37,11 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#501](https://github.com/archway-network/archway/pull/501) - Adding x/callback module
 - [#532](https://github.com/archway-network/archway/pull/532) - Adding ADR-009 for x/callback module
 - [#527](https://github.com/archway-network/archway/pull/527) - Add x/cwfees module.
+- [#541](https://github.com/archway-network/archway/pull/541) - Update the interchaintest framework to v7
 
 ### Improvements
 
 - [#533](https://github.com/archway-network/archway/pull/533) - Add more x/cwfees tests and adjust the gas limit of the RequestGrant call.
-
 
 ### Changed
 

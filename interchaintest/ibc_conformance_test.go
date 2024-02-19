@@ -22,7 +22,7 @@ func TestGaiaConformance(t *testing.T) {
 	gaiaChainSpec := &interchaintest.ChainSpec{
 		Name:      "gaia",
 		ChainName: "gaia",
-		Version:   "latest",
+		Version:   "v14.1.0",
 	}
 	runConformanceTest(t, gaiaChainSpec)
 }

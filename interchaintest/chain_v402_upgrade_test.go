@@ -103,6 +103,6 @@ type QueryModuleAccountResponse struct {
 }
 
 type AccountData struct {
-	Name        string   `json:"name`
-	Permissions []string `json:"permissions`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
 }
