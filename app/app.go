@@ -634,6 +634,7 @@ func NewArchwayApp(
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 	ibcRouter.AddRoute(wasmdTypes.ModuleName, wasmStack)
 	ibcRouter.AddRoute(interchaintxstypes.ModuleName, icaControllerStack)
+	ibcRouter.AddRoute(icacontrollertypes.SubModuleName, icaControllerStack)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
 	app.Keepers.IBCKeeper.SetRouter(ibcRouter)
 
