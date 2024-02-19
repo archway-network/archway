@@ -3,11 +3,13 @@ package interchaintest
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"strconv"
 	"testing"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cosmosproto "github.com/cosmos/gogoproto/proto"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -26,13 +28,13 @@ func TestInterchainTxs(t *testing.T) {
 
 	numOfVals := 1
 	gaiaChainSpec := &interchaintest.ChainSpec{
-		Name:      "juno",
-		ChainName: "juno",
-		Version:   "v20.0.0",
-		ChainConfig: ibc.ChainConfig{
-			UsingNewGenesisCommand: true,
-		},
+		Name:          "juno",
+		ChainName:     "juno",
+		Version:       "v20.0.0",
 		NumValidators: &numOfVals,
+		ChainConfig: ibc.ChainConfig{
+			GasAdjustment: 2,
+		},
 	}
 	archwayChainSpec := GetArchwaySpec("local", numOfVals)
 
@@ -234,13 +236,57 @@ func TestInterchainTxs(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int64(1000), balance.Int64())
 
-	// SubmitTx on contract which will send these tokens back to the og address
-	res, err := archwayChain.ExecuteContract(ctx, archwayChainUser.KeyName(), contractAddress, "{}")
+	// Create a dummy gov prop on the counterparty chain
+	propMsg, err := counterpartyChain.BuildProposal([]cosmosproto.Message{}, "Text Proposal", "Doesnt do anything", "metadata", "10000000000"+counterpartyChain.Config().Denom)
 	require.NoError(t, err)
-	require.NotEmpty(t, res)
+	textProp, err := counterpartyChain.SubmitProposal(ctx, counterpartyChainUser.KeyName(), propMsg)
+	require.NoError(t, err)
+	testutil.WaitForBlocks(ctx, 1, counterpartyChain)
+
+	// Vote on the proposal as counterpartyChainUser
+	cmd = []string{
+		counterpartyChain.Config().Bin, "tx", "gov", "vote", textProp.ProposalID, "yes",
+		"--from", counterpartyChainUser.KeyName(), "--keyring-backend", keyring.BackendTest,
+		"--gas", "auto", "--gas-prices", "1" + counterpartyChain.Config().Denom, "--gas-adjustment", "2",
+		"--node", counterpartyChain.GetRPCAddress(),
+		"--home", counterpartyChain.HomeDir(),
+		"--chain-id", counterpartyChain.Config().ChainID,
+		"--output", "json",
+		"-y",
+	}
+	stdout, _, err = counterpartyChain.Exec(ctx, cmd, nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, stdout)
+	testutil.WaitForBlocks(ctx, 1, counterpartyChain)
+
+	cmd = []string{
+		counterpartyChain.Config().Bin, "q", "gov", "vote", textProp.ProposalID, counterpartyChainUser.FormattedAddress(),
+		"--node", counterpartyChain.GetRPCAddress(),
+		"--home", counterpartyChain.HomeDir(),
+		"--chain-id", counterpartyChain.Config().ChainID,
+		"--output", "json",
+	}
+	stdout, _, err = counterpartyChain.Exec(ctx, cmd, nil)
+	require.NoError(t, err, "could not query the vote")
+	require.NotEmpty(t, stdout)
+
+	var propResponse QueryVoteResponse
+	err = json.Unmarshal(stdout, &propResponse)
+	require.NoError(t, err)
+	t.Log(propResponse.Options[0].Option)
+
+	// t.Log("--------------------------------------------------------------------")
+
+	// // SubmitTx on contract which will vote on the proposal
+	// voteMsg := `{"vote":{"proposal_id":"` + textProp.ProposalID + `","option":1}}`
+	// t.Log(voteMsg)
+	// res, err := archwayChain.ExecuteContract(ctx, archwayChainUser.KeyName(), contractAddress, voteMsg)
+	// require.NoError(t, err)
+	// require.NotEmpty(t, res)
 	// // Wait for a while to ensure the relayer picks up the packet
 	// err = testutil.WaitForBlocks(ctx, 5, archwayChain, counterpartyChain)
 	// require.NoError(t, err)
+
 	// // Check the balance of the ica account on counterparty chain. Should be none
 	// balance, err = counterpartyChain.GetBalance(ctx, icaCounterpartyAddress, counterpartyChain.Config().Denom)
 	// require.NoError(t, err)
@@ -259,14 +305,14 @@ func TestInterchainTxs(t *testing.T) {
 	// err = ioutil.WriteFile("./testdata/archway_state.json", []byte(state), 0644)
 	// require.NoError(t, err)
 
-	// h, err = counterpartyChain.Height(ctx)
-	// require.NoError(t, err)
-	// err = counterpartyChain.StopAllNodes(ctx)
-	// require.NoError(t, err)
-	// state, err = counterpartyChain.ExportState(ctx, int64(h))
-	// require.NoError(t, err)
-	// err = ioutil.WriteFile("./testdata/juno_state.json", []byte(state), 0644)
-	// require.NoError(t, err)
+	h, err := counterpartyChain.Height(ctx)
+	require.NoError(t, err)
+	err = counterpartyChain.StopAllNodes(ctx)
+	require.NoError(t, err)
+	state, err := counterpartyChain.ExportState(ctx, int64(h))
+	require.NoError(t, err)
+	err = ioutil.WriteFile("./testdata/juno_state.json", []byte(state), 0644)
+	require.NoError(t, err)
 }
 
 type InterchainAccountAccountQueryResponse struct {
@@ -286,4 +332,16 @@ type ContractResponseObj struct {
 
 type QueryMsg struct {
 	DumpState *struct{} `json:"dump_state"`
+}
+
+type QueryVoteResponse struct {
+	ProposalID string       `json:"proposal_id"`
+	Voter      string       `json:"voter"`
+	Options    []VoteOption `json:"options"`
+	Metadata   string       `json:"metadata"`
+}
+
+type VoteOption struct {
+	Option string `json:"option"`
+	Weight string `json:"weight"`
 }
