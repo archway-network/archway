@@ -2,7 +2,6 @@ package interchaintest
 
 import (
 	"context"
-	"strconv"
 	"testing"
 
 	cosmosproto "github.com/cosmos/gogoproto/proto"
@@ -106,8 +105,7 @@ func TestInterchainTxs(t *testing.T) {
 	require.NotEmpty(t, codeId)
 
 	// Instantiate the contract
-	initCounter := 1
-	initMsg := "{\"count\":" + strconv.Itoa(initCounter) + ",\"connection_id\":\"" + connection.ID + "\"}"
+	initMsg := "{\"connection_id\":\"" + connection.ID + "\"}"
 	contractAddress, err := InstantiateContract(archwayChain, archwayChainUser, ctx, codeId, initMsg)
 	require.NoError(t, err)
 
@@ -136,18 +134,18 @@ func TestInterchainTxs(t *testing.T) {
 
 	// Wait for the MsgChannelOpenAck on archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgChannelOpenAck) bool {
-		return found.PortId == "icacontroller-"+contractAddress+"."+strconv.Itoa(initCounter)
+		return found.PortId == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
 	})
 	require.NoError(t, err)
 
 	// Get the address of the ica account address of the counterparty chain
-	icaCounterpartyAddress, err := GetInterchainAccountAddress(archwayChain, ctx, contractAddress, connection.ID, strconv.Itoa(initCounter))
+	icaCounterpartyAddress, err := GetInterchainAccountAddress(archwayChain, ctx, contractAddress, connection.ID, archwayChainUser.FormattedAddress())
 	require.NoError(t, err)
 
 	// Ensure the contract is in the expected state - the ica address should be stored by the contract
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
-	require.Equal(t, icaCounterpartyAddress, contractRes.Data.CounterpartyVersion)
+	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
 
 	// Create a dummy gov prop on the counterparty chain
 	propMsg, err := counterpartyChain.BuildProposal([]cosmosproto.Message{}, "TextProp", "Summary", "Metadata", "10000000000"+counterpartyChain.Config().Denom)
@@ -167,13 +165,13 @@ func TestInterchainTxs(t *testing.T) {
 
 	// Wait for the MsgRecvPacket on the counterparty chain
 	_, err = cosmos.PollForMessage(ctx, counterpartyChain, ir, cH, cH+10, func(found *channeltypes.MsgRecvPacket) bool {
-		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+strconv.Itoa(initCounter)
+		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
 	})
 	require.NoError(t, err)
 
 	// Wait for the MsgAcknowledgement on the archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgAcknowledgement) bool {
-		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+strconv.Itoa(initCounter)
+		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
 	})
 	require.NoError(t, err)
 
@@ -185,7 +183,7 @@ func TestInterchainTxs(t *testing.T) {
 	// Ensure the contract is in the expected state - voted yes
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
-	require.False(t, contractRes.Data.Voted)
+	require.True(t, contractRes.Data.Voted)
 
 	// h, err := archwayChain.Height(ctx)
 	// require.NoError(t, err)
@@ -211,9 +209,8 @@ type interchaintxsContractResponse struct {
 }
 
 type interchaintxsContractResponseObj struct {
-	Count               int32  `json:"count"`
-	Owner               string `json:"owner"`
-	ConnectionId        string `json:"connection_id"`
-	CounterpartyVersion string `json:"counterparty_version"`
-	Voted               bool   `json:"voted"`
+	Owner        string `json:"owner"`
+	ConnectionId string `json:"connection_id"`
+	ICAAddress   string `json:"ica_address"`
+	Voted        bool   `json:"voted"`
 }
