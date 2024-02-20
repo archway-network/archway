@@ -80,3 +80,20 @@ func GetInterchainAccountAddress(chain *cosmos.CosmosChain, ctx context.Context,
 	err = json.Unmarshal(stdout, &queryRes)
 	return queryRes.InterchainAccountAddress, err
 }
+
+func GetUserVote(chain *cosmos.CosmosChain, ctx context.Context, proposalId string, address string) (QueryVoteResponse, error) {
+	cmd := []string{
+		chain.Config().Bin, "q", "gov", "vote", proposalId, address,
+		"--node", chain.GetRPCAddress(),
+		"--home", chain.HomeDir(),
+		"--chain-id", chain.Config().ChainID,
+		"--output", "json",
+	}
+	stdout, _, err := chain.Exec(ctx, cmd, nil)
+	if err != nil {
+		return QueryVoteResponse{}, err
+	}
+	var propResponse QueryVoteResponse
+	err = json.Unmarshal(stdout, &propResponse)
+	return propResponse, err
+}

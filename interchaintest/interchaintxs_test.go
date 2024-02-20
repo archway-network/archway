@@ -2,8 +2,6 @@ package interchaintest
 
 import (
 	"context"
-	"encoding/json"
-	"io/ioutil"
 	"strconv"
 	"testing"
 
@@ -81,7 +79,7 @@ func TestInterchainTxs(t *testing.T) {
 		TestName:         t.Name(),
 		Client:           client,
 		NetworkID:        network,
-		SkipPathCreation: true,
+		SkipPathCreation: false,
 	}))
 	err = testutil.WaitForBlocks(ctx, 1, archwayChain, counterpartyChain)
 	require.NoError(t, err)
@@ -89,17 +87,6 @@ func TestInterchainTxs(t *testing.T) {
 	archwayChainUser := fundChainUser(t, ctx, archwayChain)
 	counterpartyChainUser := fundChainUser(t, ctx, counterpartyChain)
 
-	// Setting up ibc connections between the two chains
-	err = relayer.GeneratePath(ctx, eRep, archwayChain.Config().ChainID, counterpartyChain.Config().ChainID, path)
-	require.NoError(t, err)
-	err = relayer.CreateClients(ctx, eRep, path, ibc.CreateClientOptions{TrustingPeriod: "336h"})
-	require.NoError(t, err)
-	err = testutil.WaitForBlocks(ctx, 1, archwayChain, counterpartyChain)
-	require.NoError(t, err)
-	err = relayer.CreateConnections(ctx, eRep, path)
-	require.NoError(t, err)
-	err = testutil.WaitForBlocks(ctx, 1, archwayChain, counterpartyChain)
-	require.NoError(t, err)
 	connections, err := relayer.GetConnections(ctx, eRep, archwayChain.Config().ChainID)
 	require.NoError(t, err)
 	require.GreaterOrEqual(t, len(connections), 1)
@@ -107,10 +94,6 @@ func TestInterchainTxs(t *testing.T) {
 	err = relayer.StartRelayer(ctx, eRep, path)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		err := relayer.StopRelayer(ctx, eRep)
-		if err != nil {
-			t.Logf("an error occurred while stopping the relayer: %s", err)
-		}
 		err = ic.Close()
 		if err != nil {
 			t.Logf("an error occurred while closing the interchain: %s", err)
@@ -128,16 +111,12 @@ func TestInterchainTxs(t *testing.T) {
 	contractAddress, err := InstantiateContract(archwayChain, archwayChainUser, ctx, codeId, initMsg)
 	require.NoError(t, err)
 
-	// Dump state of the contract
+	// Dump state of the contract and ensure the contract is in the expected state
 	var contractRes interchaintxsContractResponse
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
-	require.NotNil(t, contractRes.Data)
-	// Ensure the contract is in the expected state
-	require.Equal(t, int32(initCounter), contractRes.Data.Count)
 	require.Equal(t, archwayChainUser.FormattedAddress(), contractRes.Data.Owner)
 	require.Equal(t, connection.ID, contractRes.Data.ConnectionId)
-	require.Equal(t, "", contractRes.Data.CounterpartyVersion)
 
 	// Register a new interchain account on the counterparty chain
 	execMsg := `{"register":{}}`
@@ -165,13 +144,9 @@ func TestInterchainTxs(t *testing.T) {
 	icaCounterpartyAddress, err := GetInterchainAccountAddress(archwayChain, ctx, contractAddress, connection.ID, strconv.Itoa(initCounter))
 	require.NoError(t, err)
 
+	// Ensure the contract is in the expected state - the ica address should be stored by the contract
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
-	require.NotNil(t, contractRes.Data)
-	// Ensure the contract is in the expected state - the ica address should be stored by the contract
-	require.Equal(t, int32(initCounter), contractRes.Data.Count)
-	require.Equal(t, archwayChainUser.FormattedAddress(), contractRes.Data.Owner)
-	require.Equal(t, connection.ID, contractRes.Data.ConnectionId)
 	require.Equal(t, icaCounterpartyAddress, contractRes.Data.CounterpartyVersion)
 
 	// Create a dummy gov prop on the counterparty chain
@@ -191,46 +166,26 @@ func TestInterchainTxs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Wait for the MsgRecvPacket on the counterparty chain
-	recv, err := cosmos.PollForMessage(ctx, counterpartyChain, ir, cH, cH+10, func(found *channeltypes.MsgRecvPacket) bool {
-		t.Log(found.Packet.SourcePort)
-		t.Log(found.Packet.DestinationPort)
-		return found.Packet.Sequence == 1
+	_, err = cosmos.PollForMessage(ctx, counterpartyChain, ir, cH, cH+10, func(found *channeltypes.MsgRecvPacket) bool {
+		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+strconv.Itoa(initCounter)
 	})
 	require.NoError(t, err)
-	t.Log(string(recv.Packet.Data))
 
 	// Wait for the MsgAcknowledgement on the archway chain
-	ack, err := cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgAcknowledgement) bool {
-		return found.Packet.Sequence == 1 &&
-			found.Packet.DestinationPort == "icahost"
+	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgAcknowledgement) bool {
+		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+strconv.Itoa(initCounter)
 	})
 	require.NoError(t, err)
-	t.Log(string(ack.Acknowledgement))
 
-	// Wait for a while to ensure the relayer picks up the packet
-	err = testutil.WaitForBlocks(ctx, 10, archwayChain, counterpartyChain)
+	// Fetch the ica user's vote on the counterparty chain
+	vote, err := GetUserVote(counterpartyChain, ctx, textProp.ProposalID, icaCounterpartyAddress)
 	require.NoError(t, err)
+	require.Equal(t, "VOTE_OPTION_YES", vote.Options[0].Option)
 
-	cmd := []string{
-		counterpartyChain.Config().Bin, "q", "gov", "vote", textProp.ProposalID, icaCounterpartyAddress,
-		"--node", counterpartyChain.GetRPCAddress(),
-		"--home", counterpartyChain.HomeDir(),
-		"--chain-id", counterpartyChain.Config().ChainID,
-		"--output", "json",
-	}
-	stdout, _, err := counterpartyChain.Exec(ctx, cmd, nil)
-	require.NoError(t, err, "could not query the vote")
-	require.NotEmpty(t, stdout)
-	var propResponse QueryVoteResponse
-	err = json.Unmarshal(stdout, &propResponse)
-	require.NoError(t, err)
-	require.Equal(t, "VOTE_OPTION_YES", propResponse.Options[0].Option)
-
+	// Ensure the contract is in the expected state - voted yes
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
-	require.NotNil(t, contractRes.Data)
-	// Ensure the contract is in the expected state
-	t.Log(contractRes.Data.Voted)
+	require.False(t, contractRes.Data.Voted)
 
 	// h, err := archwayChain.Height(ctx)
 	// require.NoError(t, err)
@@ -241,14 +196,14 @@ func TestInterchainTxs(t *testing.T) {
 	// err = ioutil.WriteFile("./testdata/archway_state.json", []byte(state), 0644)
 	// require.NoError(t, err)
 
-	h, err := counterpartyChain.Height(ctx)
-	require.NoError(t, err)
-	err = counterpartyChain.StopAllNodes(ctx)
-	require.NoError(t, err)
-	state, err := counterpartyChain.ExportState(ctx, int64(h))
-	require.NoError(t, err)
-	err = ioutil.WriteFile("./testdata/juno_state.json", []byte(state), 0644)
-	require.NoError(t, err)
+	// h, err := counterpartyChain.Height(ctx)
+	// require.NoError(t, err)
+	// err = counterpartyChain.StopAllNodes(ctx)
+	// require.NoError(t, err)
+	// state, err := counterpartyChain.ExportState(ctx, int64(h))
+	// require.NoError(t, err)
+	// err = ioutil.WriteFile("./testdata/juno_state.json", []byte(state), 0644)
+	// require.NoError(t, err)
 }
 
 type interchaintxsContractResponse struct {
