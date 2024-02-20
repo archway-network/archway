@@ -1,0 +1,12 @@
+syntax = "proto3";
+package archway.custodian.v1;
+
+import "gogoproto/gogo.proto";
+import "archway/custodian/v1/params.proto";
+
+option go_package = "github.com/archway-network/archway/x/custodian/types";
+
+// GenesisState defines the custodian module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+}

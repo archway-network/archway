@@ -1,22 +1,22 @@
 syntax = "proto3";
-package archway.interchaintxs.v1;
+package archway.custodian.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "archway/interchaintxs/v1/params.proto";
+import "archway/custodian/v1/params.proto";
 
-option go_package = "github.com/archway-network/archway/x/interchaintxs/types";
+option go_package = "github.com/archway-network/archway/x/custodian/types";
 
 // Query defines the gRPC querier service.
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/neutron/interchaintxs/params";
+    option (google.api.http).get = "/archway/custodian/params";
   }
   rpc InterchainAccountAddress(QueryInterchainAccountAddressRequest) returns (QueryInterchainAccountAddressResponse) {
     option (google.api.http).get =
-      "/neutron/interchaintxs/{owner_address}/{interchain_account_id}/"
+      "/archway/custodian/{owner_address}/{interchain_account_id}/"
       "{connection_id}/interchain_account_address";
   }
 }
