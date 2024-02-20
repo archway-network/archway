@@ -7,10 +7,11 @@ import (
 	"github.com/archway-network/archway/x/custodian/keeper"
 	"github.com/archway-network/archway/x/custodian/types"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 func (s *KeeperTestSuite) TestRegisterInterchainAccount() {

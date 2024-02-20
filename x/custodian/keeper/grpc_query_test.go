@@ -3,11 +3,12 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/archway-network/archway/pkg/testutils"
-	"github.com/archway-network/archway/x/custodian/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	types2 "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+
+	"github.com/archway-network/archway/pkg/testutils"
+	"github.com/archway-network/archway/x/custodian/types"
 )
 
 func (s *KeeperTestSuite) TestKeeper_InterchainAccountAddress() {

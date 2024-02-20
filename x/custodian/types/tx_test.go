@@ -3,11 +3,12 @@ package types_test
 import (
 	"testing"
 
-	"github.com/archway-network/archway/x/custodian/types"
 	cosmosTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
+	"github.com/archway-network/archway/x/custodian/types"
 )
 
 const TestAddress = "cosmos1c4k24jzduc365kywrsvf5ujz4ya6mwymy8vq4q"

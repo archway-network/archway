@@ -3,12 +3,13 @@ package custodian
 import (
 	"errors"
 
-	"github.com/archway-network/archway/x/custodian/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+
+	"github.com/archway-network/archway/x/custodian/keeper"
 )
 
 var _ porttypes.IBCModule = IBCModule{}

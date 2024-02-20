@@ -3,13 +3,14 @@ package keeper_test
 import (
 	"errors"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/custodian/keeper"
 	"github.com/archway-network/archway/x/custodian/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 )
 
 func (s *KeeperTestSuite) TestHandleAcknowledgement() {
@@ -47,7 +48,8 @@ func (s *KeeperTestSuite) TestHandleAcknowledgement() {
 
 	// success contract SudoResponse
 	ctx = ctx.WithGasMeter(sdk.NewGasMeter(1_000_000_000_000))
-	wmKeeper.Sudo(ctx, contractAddress, msgAck)
+	_, err = wmKeeper.Sudo(ctx, contractAddress, msgAck)
+	s.Require().NoError(err)
 	err = custodianKeeper.HandleAcknowledgement(ctx, p, resAckData, relayerAddress)
 	s.Require().NoError(err)
 
@@ -87,7 +89,8 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 
 	// contract success
 	ctx = ctx.WithGasMeter(sdk.NewGasMeter(1_000_000_000_000))
-	wmKeeper.Sudo(ctx, contractAddress, msgAck)
+	_, err = wmKeeper.Sudo(ctx, contractAddress, msgAck)
+	s.Require().NoError(err)
 	err = custodianKeeper.HandleTimeout(ctx, p, relayerAddress)
 	s.Require().NoError(err)
 
@@ -136,7 +139,8 @@ func (s *KeeperTestSuite) TestHandleChanOpenAck() {
 
 	// sudo success
 	wmKeeper.SetReturnSudoError(nil)
-	wmKeeper.Sudo(ctx, contractAddress, msg)
+	_, err = wmKeeper.Sudo(ctx, contractAddress, msg)
+	s.Require().NoError(err)
 	err = custodianKeeper.HandleChanOpenAck(ctx, portID, channelID, counterpartyChannelID, "1")
 	s.Require().NoError(err)
 }

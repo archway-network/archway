@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/archway-network/archway/x/custodian/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/archway-network/archway/x/custodian/types"
 )
 
 func TestICAOwner(t *testing.T) {

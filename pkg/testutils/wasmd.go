@@ -54,7 +54,6 @@ func (v MockContractViewer) Sudo(ctx sdk.Context, contractAddress sdk.AccAddress
 
 func (v *MockContractViewer) SetReturnSudoError(returnSudoError error) {
 	v.returnSudoError = returnSudoError
-
 }
 
 // MockMessenger mocks x/wasmd module dependency.

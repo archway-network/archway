@@ -1,9 +1,10 @@
 package custodian
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/archway-network/archway/x/custodian/keeper"
 	"github.com/archway-network/archway/x/custodian/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the custodian module's state from a provided genesis

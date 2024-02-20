@@ -3,10 +3,11 @@ package custodian_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/custodian"
 	"github.com/archway-network/archway/x/custodian/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGenesis(t *testing.T) {

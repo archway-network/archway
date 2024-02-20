@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
-	"github.com/archway-network/archway/x/custodian/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/archway-network/archway/x/custodian/types"
 )
 
 var _ types.QueryServer = Keeper{}

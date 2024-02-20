@@ -7,9 +7,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
-	"github.com/archway-network/archway/x/custodian/client/cli"
-	"github.com/archway-network/archway/x/custodian/keeper"
-	"github.com/archway-network/archway/x/custodian/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +16,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
+	"github.com/archway-network/archway/x/custodian/client/cli"
+	"github.com/archway-network/archway/x/custodian/keeper"
+	"github.com/archway-network/archway/x/custodian/types"
 )
 
 var (
