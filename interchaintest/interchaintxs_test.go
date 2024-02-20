@@ -11,7 +11,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 	"github.com/strangelove-ventures/interchaintest/v7/relayer"
 	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -80,8 +79,6 @@ func TestInterchainTxs(t *testing.T) {
 		NetworkID:        network,
 		SkipPathCreation: false,
 	}))
-	err = testutil.WaitForBlocks(ctx, 1, archwayChain, counterpartyChain)
-	require.NoError(t, err)
 
 	archwayChainUser := fundChainUser(t, ctx, archwayChain)
 	counterpartyChainUser := fundChainUser(t, ctx, counterpartyChain)
@@ -92,6 +89,7 @@ func TestInterchainTxs(t *testing.T) {
 	connection := connections[0]
 	err = relayer.StartRelayer(ctx, eRep, path)
 	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		err = ic.Close()
 		if err != nil {
@@ -121,15 +119,7 @@ func TestInterchainTxs(t *testing.T) {
 	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
 	require.NoError(t, err)
 
-	cH, err := counterpartyChain.Height(ctx)
-	require.NoError(t, err)
 	aH, err := archwayChain.Height(ctx)
-	require.NoError(t, err)
-
-	// Wait for the MsgChannelOpenConfirm on the counterparty chain
-	_, err = cosmos.PollForMessage(ctx, counterpartyChain, ir, cH, cH+10, func(found *channeltypes.MsgChannelOpenConfirm) bool {
-		return found.PortId == "icahost"
-	})
 	require.NoError(t, err)
 
 	// Wait for the MsgChannelOpenAck on archway chain
@@ -138,7 +128,7 @@ func TestInterchainTxs(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Get the address of the ica account address of the counterparty chain
+	// Get the address of the ica account address of the counterparty chain which has just been registered
 	icaCounterpartyAddress, err := GetInterchainAccountAddress(archwayChain, ctx, contractAddress, connection.ID, archwayChainUser.FormattedAddress())
 	require.NoError(t, err)
 
@@ -147,26 +137,12 @@ func TestInterchainTxs(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
 
-	// Create a dummy gov prop on the counterparty chain
-	propMsg, err := counterpartyChain.BuildProposal([]cosmosproto.Message{}, "TextProp", "Summary", "Metadata", "10000000000"+counterpartyChain.Config().Denom)
-	require.NoError(t, err)
-	textProp, err := counterpartyChain.SubmitProposal(ctx, counterpartyChainUser.KeyName(), propMsg)
-	require.NoError(t, err)
-
-	// SubmitTx on contract which will vote on the proposal
-	execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":1}}`
+	// SubmitTx on contract which will vote on the proposal - There is no proposal on chain. Should error out
+	execMsg = `{"vote":{"proposal_id":2,"option":1,"tiny_timeout": false}}`
 	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
 	require.NoError(t, err)
 
 	aH, err = archwayChain.Height(ctx)
-	require.NoError(t, err)
-	cH, err = counterpartyChain.Height(ctx)
-	require.NoError(t, err)
-
-	// Wait for the MsgRecvPacket on the counterparty chain
-	_, err = cosmos.PollForMessage(ctx, counterpartyChain, ir, cH, cH+10, func(found *channeltypes.MsgRecvPacket) bool {
-		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
-	})
 	require.NoError(t, err)
 
 	// Wait for the MsgAcknowledgement on the archway chain
@@ -175,33 +151,64 @@ func TestInterchainTxs(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Fetch the ica user's vote on the counterparty chain
+	// Ensure the contract is in the expected state - The error on the ica tx should be stored by the contract
+	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
+	require.NoError(t, err)
+	require.Contains(t, contractRes.Data.Errors, "error handling packet")
+
+	// Create a gov prop on the counterparty chain
+	propMsg, err := counterpartyChain.BuildProposal([]cosmosproto.Message{}, "TextProp", "Summary", "Metadata", "10000000000"+counterpartyChain.Config().Denom)
+	require.NoError(t, err)
+	textProp, err := counterpartyChain.SubmitProposal(ctx, counterpartyChainUser.KeyName(), propMsg)
+	require.NoError(t, err)
+
+	// SubmitTx on contract which will vote "YES" on the proposal
+	execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":1,"tiny_timeout": false}}`
+	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
+	require.NoError(t, err)
+
+	aH, err = archwayChain.Height(ctx)
+	require.NoError(t, err)
+
+	// Wait for the MsgAcknowledgement on the archway chain
+	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgAcknowledgement) bool {
+		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
+	})
+	require.NoError(t, err)
+
+	// Fetch the ica user's vote on the counterparty chain. Should be yes.
 	vote, err := GetUserVote(counterpartyChain, ctx, textProp.ProposalID, icaCounterpartyAddress)
 	require.NoError(t, err)
 	require.Equal(t, "VOTE_OPTION_YES", vote.Options[0].Option)
 
-	// Ensure the contract is in the expected state - voted yes
+	// Ensure the contract is in the expected state - voted status is true
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
 	require.True(t, contractRes.Data.Voted)
 
-	// h, err := archwayChain.Height(ctx)
-	// require.NoError(t, err)
-	// err = archwayChain.StopAllNodes(ctx)
-	// require.NoError(t, err)
-	// state, err := archwayChain.ExportState(ctx, int64(h))
-	// require.NoError(t, err)
-	// err = ioutil.WriteFile("./testdata/archway_state.json", []byte(state), 0644)
-	// require.NoError(t, err)
+	// SubmitTx on contract which will vote "NO" on the proposal -- Very small timeout (1s) so should fail
+	execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":3,"tiny_timeout": true}}`
+	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
+	require.NoError(t, err)
 
-	// h, err := counterpartyChain.Height(ctx)
-	// require.NoError(t, err)
-	// err = counterpartyChain.StopAllNodes(ctx)
-	// require.NoError(t, err)
-	// state, err := counterpartyChain.ExportState(ctx, int64(h))
-	// require.NoError(t, err)
-	// err = ioutil.WriteFile("./testdata/juno_state.json", []byte(state), 0644)
-	// require.NoError(t, err)
+	aH, err = archwayChain.Height(ctx)
+	require.NoError(t, err)
+
+	// Wait for the MsgAcknowledgement on the archway chain
+	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgTimeout) bool {
+		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
+	})
+	require.NoError(t, err)
+
+	// Fetch the ica user's vote on the counterparty chain - Should still be YES as the no vote timed out
+	vote, err = GetUserVote(counterpartyChain, ctx, textProp.ProposalID, icaCounterpartyAddress)
+	require.NoError(t, err)
+	require.Equal(t, "VOTE_OPTION_YES", vote.Options[0].Option)
+
+	// Ensure the contract is in the expected state - the timeout state is true
+	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
+	require.NoError(t, err)
+	require.True(t, contractRes.Data.Timeout)
 }
 
 type interchaintxsContractResponse struct {
@@ -213,4 +220,6 @@ type interchaintxsContractResponseObj struct {
 	ConnectionId string `json:"connection_id"`
 	ICAAddress   string `json:"ica_address"`
 	Voted        bool   `json:"voted"`
+	Errors       string `json:"errors"`
+	Timeout      bool   `json:"timeout"`
 }
