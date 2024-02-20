@@ -9,7 +9,6 @@ import (
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/x/cwfees"
 	"github.com/archway-network/archway/x/genmsg"
-	"github.com/archway-network/archway/x/interchaintxs"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -140,8 +139,9 @@ import (
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
 
-	interchaintxskeeper "github.com/archway-network/archway/x/interchaintxs/keeper"
-	interchaintxstypes "github.com/archway-network/archway/x/interchaintxs/types"
+	"github.com/archway-network/archway/x/custodian"
+	custodiankeeper "github.com/archway-network/archway/x/custodian/keeper"
+	custodiantypes "github.com/archway-network/archway/x/custodian/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
@@ -216,7 +216,7 @@ var (
 		genmsg.AppModule{},
 		callback.AppModuleBasic{},
 		cwfees.AppModule{},
-		interchaintxs.AppModuleBasic{},
+		custodian.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -312,12 +312,12 @@ func NewArchwayApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
-		icacontrollertypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey, interchaintxstypes.StoreKey,
+		icacontrollertypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey, custodiantypes.StoreKey,
 
 		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, interchaintxstypes.MemStoreKey)
+	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, custodiantypes.MemStoreKey)
 
 	app := &ArchwayApp{
 		BaseApp:           bApp,
@@ -596,14 +596,13 @@ func NewArchwayApp(
 
 	app.Keepers.CWFeesKeeper = cwfees.NewKeeper(appCodec, keys[cwfees.ModuleName], app.Keepers.WASMKeeper)
 
-	app.Keepers.InterchainTxsKeeper = *interchaintxskeeper.NewKeeper(
+	app.Keepers.CustodianKeeper = *custodiankeeper.NewKeeper(
 		appCodec,
-		keys[interchaintxstypes.StoreKey],
-		memKeys[interchaintxstypes.MemStoreKey],
+		keys[custodiantypes.StoreKey],
+		memKeys[custodiantypes.MemStoreKey],
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		app.Keepers.ICAControllerKeeper,
 		app.Keepers.WASMKeeper,
-		app.Keepers.BankKeeper,
 		authtypes.NewModuleAddress(authtypes.FeeCollectorName).String(),
 		govModuleAddr,
 	)
@@ -615,7 +614,7 @@ func NewArchwayApp(
 	// Create Interchain Accounts Stack
 
 	var icaControllerStack porttypes.IBCModule
-	icaControllerStack = interchaintxs.NewIBCModule(app.Keepers.InterchainTxsKeeper)
+	icaControllerStack = custodian.NewIBCModule(app.Keepers.CustodianKeeper)
 	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.Keepers.ICAControllerKeeper)
 	//icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.Keepers.IBCFeeKeeper)
 
@@ -633,7 +632,7 @@ func NewArchwayApp(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 	ibcRouter.AddRoute(wasmdTypes.ModuleName, wasmStack)
-	ibcRouter.AddRoute(interchaintxstypes.ModuleName, icaControllerStack)
+	ibcRouter.AddRoute(custodiantypes.ModuleName, icaControllerStack)
 	ibcRouter.AddRoute(icacontrollertypes.SubModuleName, icaControllerStack)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
 	app.Keepers.IBCKeeper.SetRouter(ibcRouter)
@@ -691,7 +690,7 @@ func NewArchwayApp(
 		cwfees.NewAppModule(app.Keepers.CWFeesKeeper),
 		genmsg.NewAppModule(app.MsgServiceRouter()),
 		callback.NewAppModule(app.appCodec, app.Keepers.CallbackKeeper, app.Keepers.WASMKeeper),
-		interchaintxs.NewAppModule(appCodec, app.Keepers.InterchainTxsKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper),
+		custodian.NewAppModule(appCodec, app.Keepers.CustodianKeeper, app.Keepers.AccountKeeper),
 		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -732,7 +731,7 @@ func NewArchwayApp(
 		rewardsTypes.ModuleName,
 		callbackTypes.ModuleName,
 		cwfees.ModuleName, // does not have being blocker.
-		interchaintxstypes.ModuleName,
+		custodiantypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -769,7 +768,7 @@ func NewArchwayApp(
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
 		cwfees.ModuleName, // does not have end blocker
-		interchaintxstypes.ModuleName,
+		custodiantypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -813,7 +812,7 @@ func NewArchwayApp(
 		callbackTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
-		interchaintxstypes.ModuleName,
+		custodiantypes.ModuleName,
 	)
 
 	// Uncomment if you want to set a custom migration order here.

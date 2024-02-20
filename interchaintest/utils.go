@@ -15,7 +15,7 @@ func InstantiateContract(chain *cosmos.CosmosChain, user ibc.Wallet, ctx context
 	// Instantiate the contract
 	cmd := []string{
 		chain.Config().Bin, "tx", "wasm", "instantiate", codeId, initMsg,
-		"--label", "interchaintxs", "--admin", user.FormattedAddress(),
+		"--label", "custodian-contract", "--admin", user.FormattedAddress(),
 		"--from", user.KeyName(), "--keyring-backend", keyring.BackendTest,
 		"--gas", "auto", "--gas-prices", "0aarch", "--gas-adjustment", "2",
 		"--node", chain.GetRPCAddress(),
@@ -66,7 +66,7 @@ func ExecuteContract(chain *cosmos.CosmosChain, user ibc.Wallet, ctx context.Con
 
 func GetInterchainAccountAddress(chain *cosmos.CosmosChain, ctx context.Context, ownerAddress string, connectionId string, interchainAccountId string) (string, error) {
 	cmd := []string{
-		chain.Config().Bin, "q", "interchaintxs", "interchain-account", ownerAddress, connectionId, interchainAccountId,
+		chain.Config().Bin, "q", "custodian", "interchain-account", ownerAddress, connectionId, interchainAccountId,
 		"--node", chain.GetRPCAddress(),
 		"--home", chain.HomeDir(),
 		"--chain-id", chain.Config().ChainID,

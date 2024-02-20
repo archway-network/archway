@@ -29,7 +29,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
 	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
-	interchaintxsKeeper "github.com/archway-network/archway/x/interchaintxs/keeper"
+	custodianKeeper "github.com/archway-network/archway/x/custodian/keeper"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 )
@@ -65,5 +65,5 @@ type ArchwayKeepers struct {
 	CWFeesKeeper   cwfees.Keeper
 	CallbackKeeper callbackKeeper.Keeper
 
-	InterchainTxsKeeper interchaintxsKeeper.Keeper
+	CustodianKeeper custodianKeeper.Keeper
 }

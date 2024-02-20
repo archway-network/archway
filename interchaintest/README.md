@@ -40,13 +40,13 @@ cd interchaintest
 go test -v -race -run TestChainUpgrade
 ```
 
-## Interchaintxs test
+## Custodian test
 
 To run the IBC conformance test locally go to Archway repo root and
   
 ```sh
 cd interchaintest
-go test -v -race -run TestInterchainTxs
+go test -v -race -run TestCustodian
 ```
 
 The contract binary used for testing is located in the artifacts folder and the source is available at https://github.com/archway-network/test-contracts

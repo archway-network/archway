@@ -140,7 +140,7 @@ jobs:
               cd interchaintest
               go test -v -race -run  TestGaiaConformance
 
-    interchaintxs_tests:
+    custodian_tests:
       name: Interchain transactions test
       needs: [build_images]
       runs-on: ubuntu-latest
@@ -171,4 +171,4 @@ jobs:
         - name: Run interchain transactions test
           run: |
             cd interchaintest
-            go test -v -race -run  TestInterchainTxs
+            go test -v -race -run  TestCustodian
