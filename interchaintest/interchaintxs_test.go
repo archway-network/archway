@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cosmosproto "github.com/cosmos/gogoproto/proto"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -275,17 +276,90 @@ func TestInterchainTxs(t *testing.T) {
 	require.NoError(t, err)
 	t.Log(propResponse.Options[0].Option)
 
-	// t.Log("--------------------------------------------------------------------")
+	// SubmitTx on contract which will vote on the proposal
+	execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":1}}`
+	t.Log(execMsg)
+	cmd = []string{
+		"archwayd", "tx", "wasm", "execute", contractAddress, execMsg,
+		"--from", archwayChainUser.KeyName(), "--keyring-backend", keyring.BackendTest,
+		"--gas", "auto", "--gas-prices", "0" + archwayChain.Config().Denom, "--gas-adjustment", "2",
+		"--node", archwayChain.GetRPCAddress(),
+		"--home", archwayChain.HomeDir(),
+		"--chain-id", archwayChain.Config().ChainID,
+		"--output", "json",
+		"-y",
+	}
+	stdout, _, err = archwayChain.Exec(ctx, cmd, nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, stdout)
 
-	// // SubmitTx on contract which will vote on the proposal
-	// voteMsg := `{"vote":{"proposal_id":"` + textProp.ProposalID + `","option":1}}`
-	// t.Log(voteMsg)
-	// res, err := archwayChain.ExecuteContract(ctx, archwayChainUser.KeyName(), contractAddress, voteMsg)
+	var txRes cosmos.CosmosTx
+	err = json.Unmarshal(stdout, &txRes)
+	require.NoError(t, err)
+	t.Log(txRes.TxHash)
+
+	err = testutil.WaitForBlocks(ctx, 1, archwayChain)
+	require.NoError(t, err)
+
+	cmd = []string{
+		"archwayd", "q", "tx", txRes.TxHash,
+		"--node", archwayChain.GetRPCAddress(),
+		"--home", archwayChain.HomeDir(),
+		"--chain-id", archwayChain.Config().ChainID,
+		"--output", "json",
+	}
+	stdout, _, err = archwayChain.Exec(ctx, cmd, nil)
+	require.NoError(t, err, "could not query the tx")
+
+	aH, err := archwayChain.Height(ctx)
+	require.NoError(t, err)
+
+	cH, err := counterpartyChain.Height(ctx)
+	require.NoError(t, err)
+
+	ir := cosmos.DefaultEncoding().InterfaceRegistry
+	recv, err := cosmos.PollForMessage(ctx, counterpartyChain, ir, cH, cH+10, func(found *channeltypes.MsgRecvPacket) bool {
+		return found.Packet.Sequence == 1
+	})
+	require.NoError(t, err)
+	t.Log(string(recv.Packet.Data))
+
+	ackFound := func(found *channeltypes.MsgAcknowledgement) bool {
+		return found.Packet.Sequence == 1 &&
+			found.Packet.DestinationPort == "icahost"
+	}
+
+	ack, err := cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, ackFound)
+	require.NoError(t, err)
+	t.Log(string(ack.Acknowledgement))
+
+	// Wait for a while to ensure the relayer picks up the packet
+	err = testutil.WaitForBlocks(ctx, 10, archwayChain, counterpartyChain)
+	require.NoError(t, err)
+
+	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
+	require.NoError(t, err)
+	require.NotNil(t, contractRes.Data)
+	// Ensure the contract is in the expected state
+	t.Log(contractRes.Data.Voted)
+
+	t.Log("--------------------------------------------------------------------")
+	cmd = []string{
+		counterpartyChain.Config().Bin, "q", "gov", "votes", textProp.ProposalID, // icaCounterpartyAddress,
+		"--node", counterpartyChain.GetRPCAddress(),
+		"--home", counterpartyChain.HomeDir(),
+		"--chain-id", counterpartyChain.Config().ChainID,
+		"--output", "json",
+	}
+	stdout, _, err = counterpartyChain.Exec(ctx, cmd, nil)
+	require.NoError(t, err, "could not query the vote")
+	require.NotEmpty(t, stdout)
+
+	t.Log(string(stdout))
+
+	// err = json.Unmarshal(stdout, &propResponse)
 	// require.NoError(t, err)
-	// require.NotEmpty(t, res)
-	// // Wait for a while to ensure the relayer picks up the packet
-	// err = testutil.WaitForBlocks(ctx, 5, archwayChain, counterpartyChain)
-	// require.NoError(t, err)
+	// t.Log(propResponse.Options[0].Option)
 
 	// // Check the balance of the ica account on counterparty chain. Should be none
 	// balance, err = counterpartyChain.GetBalance(ctx, icaCounterpartyAddress, counterpartyChain.Config().Denom)
@@ -328,6 +402,7 @@ type ContractResponseObj struct {
 	Owner               string `json:"owner"`
 	ConnectionId        string `json:"connection_id"`
 	CounterpartyVersion string `json:"counterparty_version"`
+	Voted               bool   `json:"voted"`
 }
 
 type QueryMsg struct {
