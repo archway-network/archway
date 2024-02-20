@@ -6,9 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
 	callbackTypes "github.com/archway-network/archway/x/callback/types"
+	custodianTypes "github.com/archway-network/archway/x/custodian/types"
 	"github.com/archway-network/archway/x/cwfees"
 )
 
@@ -34,6 +37,8 @@ var Upgrade = upgrades.Upgrade{
 		Added: []string{
 			callbackTypes.ModuleName,
 			cwfees.ModuleName,
+			icacontrollertypes.StoreKey,
+			custodianTypes.ModuleName,
 		},
 	},
 }
