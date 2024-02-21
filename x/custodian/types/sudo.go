@@ -4,21 +4,25 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 )
 
+// Sudopayload is the payload for the sudo call sent by the custodian module on IBC actions
 type SudoPayload struct {
-	Custodian *MessageSuccess `json:"custodian,omitempty"`
-	Failure   *MessageFailure `json:"failure,omitempty"`
+	Custodian *MessageCustodianSuccess `json:"custodian,omitempty"`
+	Error     *MessageCustodianError   `json:"error,omitempty"`
 }
 
-type MessageSuccess struct {
-	OpenAck  OpenAckDetails       `json:"open_ack,omitempty"`
-	Response *ResponseSudoPayload `json:"response,omitempty"`
+// MessageCustodianSuccess is the success message for the sudo call
+type MessageCustodianSuccess struct {
+	AccountRegistered OpenAckDetails `json:"account_registered,omitempty"`
+	TxExecuted        *ICATxResponse `json:"tx_executed,omitempty"`
 }
 
-type MessageFailure struct {
-	Error   *ErrorSudoPayload `json:"error,omitempty"`
-	Timeout *TimeoutPayload   `json:"timeout,omitempty"`
+// MessageCustodianError is the error message for the sudo call
+type MessageCustodianError struct {
+	Failure *ICATxError   `json:"failure,omitempty"`
+	Timeout *ICATxTimeout `json:"timeout,omitempty"`
 }
 
+// OpenAckDetails is the details of the open ack message - when an interchain account is registered
 type OpenAckDetails struct {
 	PortID                string `json:"port_id"`
 	ChannelID             string `json:"channel_id"`
@@ -26,30 +30,19 @@ type OpenAckDetails struct {
 	CounterpartyVersion   string `json:"counterparty_version"`
 }
 
-// // MessageOnChanOpenAck is passed to a contract's sudo() entrypoint when an interchain
-// // account was successfully  registered.
-// type MessageOnChanOpenAck struct {
-// 	OpenAck OpenAckDetails `json:"open_ack"`
-// }
-
-// // MessageSudoCallback is passed to a contract's sudo() entrypoint when an interchain
-// // transaction ended up with Success/Error or timed out.
-// type MessageSudoCallback struct {
-// 	Response *ResponseSudoPayload `json:"response,omitempty"`
-// 	Error    *ErrorSudoPayload    `json:"error,omitempty"`
-// 	Timeout  *TimeoutPayload      `json:"timeout,omitempty"`
-// }
-
-type ResponseSudoPayload struct {
+// ICATxResponse is the response message after the execute of the ICA tx
+type ICATxResponse struct {
 	Request channeltypes.Packet `json:"request"`
 	Data    []byte              `json:"data"` // Message data
 }
 
-type ErrorSudoPayload struct {
+// ICATxError is the error message after the execute of the ICA tx
+type ICATxError struct {
 	Request channeltypes.Packet `json:"request"`
 	Details string              `json:"details"`
 }
 
-type TimeoutPayload struct {
+// ICATxTimeout is the timeout message after the execute of the ICA tx
+type ICATxTimeout struct {
 	Request channeltypes.Packet `json:"request"`
 }

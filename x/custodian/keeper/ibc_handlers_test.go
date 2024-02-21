@@ -44,8 +44,8 @@ func (s *KeeperTestSuite) TestHandleAcknowledgement() {
 	s.Require().ErrorContains(err, "cannot unmarshal ICS-27 packet acknowledgement")
 
 	sudoMsg := types.SudoPayload{
-		Custodian: &types.MessageSuccess{
-			Response: &types.ResponseSudoPayload{
+		Custodian: &types.MessageCustodianSuccess{
+			TxExecuted: &types.ICATxResponse{
 				Data:    resACK.GetResult(),
 				Request: p,
 			},
@@ -90,8 +90,8 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 	}
 
 	sudoMsg := types.SudoPayload{
-		Failure: &types.MessageFailure{
-			Timeout: &types.TimeoutPayload{Request: p},
+		Error: &types.MessageCustodianError{
+			Timeout: &types.ICATxTimeout{Request: p},
 		},
 	}
 	msgAck, err := json.Marshal(sudoMsg)
@@ -136,8 +136,8 @@ func (s *KeeperTestSuite) TestHandleChanOpenAck() {
 	s.Require().ErrorContains(err, "failed to get ica owner from port")
 
 	sudoMsg := types.SudoPayload{
-		Custodian: &types.MessageSuccess{
-			OpenAck: types.OpenAckDetails{
+		Custodian: &types.MessageCustodianSuccess{
+			AccountRegistered: types.OpenAckDetails{
 				PortID:                portID,
 				ChannelID:             channelID,
 				CounterpartyChannelID: counterpartyChannelID,

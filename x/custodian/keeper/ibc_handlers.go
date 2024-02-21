@@ -34,8 +34,8 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	var sudoMsgPayload []byte
 	if ack.GetError() == "" {
 		sudoMsg := types.SudoPayload{
-			Custodian: &types.MessageSuccess{
-				Response: &types.ResponseSudoPayload{
+			Custodian: &types.MessageCustodianSuccess{
+				TxExecuted: &types.ICATxResponse{
 					Data:    ack.GetResult(),
 					Request: packet,
 				},
@@ -47,8 +47,8 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		}
 	} else {
 		sudoMsg := types.SudoPayload{
-			Failure: &types.MessageFailure{
-				Error: &types.ErrorSudoPayload{
+			Error: &types.MessageCustodianError{
+				Failure: &types.ICATxError{
 					Request: packet,
 					Details: ack.GetError(),
 				},
@@ -82,8 +82,8 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 	}
 
 	sudoMsg := types.SudoPayload{
-		Failure: &types.MessageFailure{
-			Timeout: &types.TimeoutPayload{
+		Error: &types.MessageCustodianError{
+			Timeout: &types.ICATxTimeout{
 				Request: packet,
 			},
 		},
@@ -120,8 +120,8 @@ func (k *Keeper) HandleChanOpenAck(
 		return errors.Wrap(err, "failed to get ica owner from port")
 	}
 	successMsg := types.SudoPayload{
-		Custodian: &types.MessageSuccess{
-			OpenAck: types.OpenAckDetails{
+		Custodian: &types.MessageCustodianSuccess{
+			AccountRegistered: types.OpenAckDetails{
 				PortID:                portID,
 				ChannelID:             channelID,
 				CounterpartyChannelID: counterpartyChannelID,
@@ -141,23 +141,3 @@ func (k *Keeper) HandleChanOpenAck(
 
 	return nil
 }
-
-// func PrepareSudoCallbackMessage(request channeltypes.Packet, ack *channeltypes.Acknowledgement) ([]byte, error) {
-// 	m := types.MessageSudoCallback{}
-// 	if ack != nil && ack.GetError() == "" { //nolint:gocritic //
-// 		m.Response = &types.ResponseSudoPayload{
-// 			Data:    ack.GetResult(),
-// 			Request: request,
-// 		}
-// 	} else if ack != nil {
-// 		m.Error = &types.ErrorSudoPayload{
-// 			Request: request,
-// 			Details: ack.GetError(),
-// 		}
-// 	}
-// 	data, err := json.Marshal(m)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to marshal MessageSudoCallback: %v", err)
-// 	}
-// 	return data, nil
-// }
