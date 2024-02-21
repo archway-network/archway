@@ -121,7 +121,7 @@ func (k *Keeper) HandleChanOpenAck(
 	}
 	successMsg := types.SudoPayload{
 		Custodian: &types.MessageCustodianSuccess{
-			AccountRegistered: types.OpenAckDetails{
+			AccountRegistered: &types.OpenAckDetails{
 				PortID:                portID,
 				ChannelID:             channelID,
 				CounterpartyChannelID: counterpartyChannelID,

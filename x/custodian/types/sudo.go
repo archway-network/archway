@@ -12,8 +12,8 @@ type SudoPayload struct {
 
 // MessageCustodianSuccess is the success message for the sudo call
 type MessageCustodianSuccess struct {
-	AccountRegistered OpenAckDetails `json:"account_registered,omitempty"`
-	TxExecuted        *ICATxResponse `json:"tx_executed,omitempty"`
+	AccountRegistered *OpenAckDetails `json:"account_registered,omitempty"`
+	TxExecuted        *ICATxResponse  `json:"tx_executed,omitempty"`
 }
 
 // MessageCustodianError is the error message for the sudo call

@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestHandleChanOpenAck() {
 
 	sudoMsg := types.SudoPayload{
 		Custodian: &types.MessageCustodianSuccess{
-			AccountRegistered: types.OpenAckDetails{
+			AccountRegistered: &types.OpenAckDetails{
 				PortID:                portID,
 				ChannelID:             channelID,
 				CounterpartyChannelID: counterpartyChannelID,
