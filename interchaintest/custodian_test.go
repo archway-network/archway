@@ -200,7 +200,7 @@ func TestCustodian(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Fetch the ica user's vote on the counterparty chain - Should still be YES as the no vote timed out
+	// Fetch the ica user's vote on the counterparty chain - Should still be YES as the "no" vote timed out
 	vote, err = GetUserVote(counterpartyChain, ctx, textProp.ProposalID, icaCounterpartyAddress)
 	require.NoError(t, err)
 	require.Equal(t, "VOTE_OPTION_YES", vote.Options[0].Option)
