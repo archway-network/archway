@@ -32,17 +32,17 @@ type OpenAckDetails struct {
 
 // ICATxResponse is the response message after the execute of the ICA tx
 type ICATxResponse struct {
-	Request channeltypes.Packet `json:"request"`
-	Data    []byte              `json:"data"` // Message data
+	Packet channeltypes.Packet `json:"packet"`
+	Data   []byte              `json:"data"` // Message response
 }
 
 // ICATxError is the error message after the execute of the ICA tx
 type ICATxError struct {
-	Request channeltypes.Packet `json:"request"`
+	Packet  channeltypes.Packet `json:"packet"`
 	Details string              `json:"details"`
 }
 
 // ICATxTimeout is the timeout message after the execute of the ICA tx
 type ICATxTimeout struct {
-	Request channeltypes.Packet `json:"request"`
+	Packet channeltypes.Packet `json:"packet"`
 }

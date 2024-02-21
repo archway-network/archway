@@ -36,8 +36,8 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		sudoMsg := types.SudoPayload{
 			Custodian: &types.MessageCustodianSuccess{
 				TxExecuted: &types.ICATxResponse{
-					Data:    ack.GetResult(),
-					Request: packet,
+					Data:   ack.GetResult(),
+					Packet: packet,
 				},
 			},
 		}
@@ -49,7 +49,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		sudoMsg := types.SudoPayload{
 			Error: &types.MessageCustodianError{
 				Failure: &types.ICATxError{
-					Request: packet,
+					Packet:  packet,
 					Details: ack.GetError(),
 				},
 			},
@@ -84,7 +84,7 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 	sudoMsg := types.SudoPayload{
 		Error: &types.MessageCustodianError{
 			Timeout: &types.ICATxTimeout{
-				Request: packet,
+				Packet: packet,
 			},
 		},
 	}

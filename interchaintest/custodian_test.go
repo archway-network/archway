@@ -137,7 +137,7 @@ func TestCustodian(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
 
-	// SubmitTx on contract which will vote on the proposal - There is no proposal on chain. Should error out
+	// SubmitTx on contract which will vote on the proposal on counterparty chain - There is no proposal on chain. Should error out
 	execMsg = `{"vote":{"proposal_id":2,"option":1,"tiny_timeout": false}}`
 	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
 	require.NoError(t, err)
@@ -194,7 +194,7 @@ func TestCustodian(t *testing.T) {
 	aH, err = archwayChain.Height(ctx)
 	require.NoError(t, err)
 
-	// Wait for the MsgAcknowledgement on the archway chain
+	// Wait for the MsgTimeout on the archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgTimeout) bool {
 		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
 	})

@@ -46,8 +46,8 @@ func (s *KeeperTestSuite) TestHandleAcknowledgement() {
 	sudoMsg := types.SudoPayload{
 		Custodian: &types.MessageCustodianSuccess{
 			TxExecuted: &types.ICATxResponse{
-				Data:    resACK.GetResult(),
-				Request: p,
+				Data:   resACK.GetResult(),
+				Packet: p,
 			},
 		},
 	}
@@ -91,7 +91,7 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 
 	sudoMsg := types.SudoPayload{
 		Error: &types.MessageCustodianError{
-			Timeout: &types.ICATxTimeout{Request: p},
+			Timeout: &types.ICATxTimeout{Packet: p},
 		},
 	}
 	msgAck, err := json.Marshal(sudoMsg)
