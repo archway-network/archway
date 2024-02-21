@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,7 +10,6 @@ import (
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
-	"github.com/archway-network/archway/x/custodian/keeper"
 	"github.com/archway-network/archway/x/custodian/types"
 )
 
@@ -43,7 +43,15 @@ func (s *KeeperTestSuite) TestHandleAcknowledgement() {
 	err = custodianKeeper.HandleAcknowledgement(ctx, p, nil, relayerAddress)
 	s.Require().ErrorContains(err, "cannot unmarshal ICS-27 packet acknowledgement")
 
-	msgAck, err := keeper.PrepareSudoCallbackMessage(p, &resACK)
+	sudoMsg := types.SudoPayload{
+		Custodian: &types.MessageSuccess{
+			Response: &types.ResponseSudoPayload{
+				Data:    resACK.GetResult(),
+				Request: p,
+			},
+		},
+	}
+	msgAck, err := json.Marshal(sudoMsg)
 	s.Require().NoError(err)
 
 	// success contract SudoResponse
@@ -81,7 +89,12 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 		SourceChannel: "channel-0",
 	}
 
-	msgAck, err := keeper.PrepareSudoCallbackMessage(p, nil)
+	sudoMsg := types.SudoPayload{
+		Failure: &types.MessageFailure{
+			Timeout: &types.TimeoutPayload{Request: p},
+		},
+	}
+	msgAck, err := json.Marshal(sudoMsg)
 	s.Require().NoError(err)
 
 	err = custodianKeeper.HandleTimeout(ctx, channeltypes.Packet{}, relayerAddress)
@@ -122,12 +135,17 @@ func (s *KeeperTestSuite) TestHandleChanOpenAck() {
 	err := custodianKeeper.HandleChanOpenAck(ctx, "", channelID, counterpartyChannelID, "1")
 	s.Require().ErrorContains(err, "failed to get ica owner from port")
 
-	msg, err := keeper.PrepareOpenAckCallbackMessage(types.OpenAckDetails{
-		PortID:                portID,
-		ChannelID:             channelID,
-		CounterpartyChannelID: counterpartyChannelID,
-		CounterpartyVersion:   "1",
-	})
+	sudoMsg := types.SudoPayload{
+		Custodian: &types.MessageSuccess{
+			OpenAck: types.OpenAckDetails{
+				PortID:                portID,
+				ChannelID:             channelID,
+				CounterpartyChannelID: counterpartyChannelID,
+				CounterpartyVersion:   "1",
+			},
+		},
+	}
+	msg, err := json.Marshal(sudoMsg)
 	s.Require().NoError(err)
 
 	// sudo error

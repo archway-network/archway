@@ -4,6 +4,21 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 )
 
+type SudoPayload struct {
+	Custodian *MessageSuccess `json:"custodian,omitempty"`
+	Failure   *MessageFailure `json:"failure,omitempty"`
+}
+
+type MessageSuccess struct {
+	OpenAck  OpenAckDetails       `json:"open_ack,omitempty"`
+	Response *ResponseSudoPayload `json:"response,omitempty"`
+}
+
+type MessageFailure struct {
+	Error   *ErrorSudoPayload `json:"error,omitempty"`
+	Timeout *TimeoutPayload   `json:"timeout,omitempty"`
+}
+
 type OpenAckDetails struct {
 	PortID                string `json:"port_id"`
 	ChannelID             string `json:"channel_id"`
@@ -11,19 +26,19 @@ type OpenAckDetails struct {
 	CounterpartyVersion   string `json:"counterparty_version"`
 }
 
-// MessageOnChanOpenAck is passed to a contract's sudo() entrypoint when an interchain
-// account was successfully  registered.
-type MessageOnChanOpenAck struct {
-	OpenAck OpenAckDetails `json:"open_ack"`
-}
+// // MessageOnChanOpenAck is passed to a contract's sudo() entrypoint when an interchain
+// // account was successfully  registered.
+// type MessageOnChanOpenAck struct {
+// 	OpenAck OpenAckDetails `json:"open_ack"`
+// }
 
-// MessageSudoCallback is passed to a contract's sudo() entrypoint when an interchain
-// transaction ended up with Success/Error or timed out.
-type MessageSudoCallback struct {
-	Response *ResponseSudoPayload `json:"response,omitempty"`
-	Error    *ErrorSudoPayload    `json:"error,omitempty"`
-	Timeout  *TimeoutPayload      `json:"timeout,omitempty"`
-}
+// // MessageSudoCallback is passed to a contract's sudo() entrypoint when an interchain
+// // transaction ended up with Success/Error or timed out.
+// type MessageSudoCallback struct {
+// 	Response *ResponseSudoPayload `json:"response,omitempty"`
+// 	Error    *ErrorSudoPayload    `json:"error,omitempty"`
+// 	Timeout  *TimeoutPayload      `json:"timeout,omitempty"`
+// }
 
 type ResponseSudoPayload struct {
 	Request channeltypes.Packet `json:"request"`

@@ -30,13 +30,39 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		k.Logger(ctx).Error("HandleAcknowledgement: cannot unmarshal ICS-27 packet acknowledgement", "error", err)
 		return errors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-27 packet acknowledgement: %v", err)
 	}
-	msg, err := PrepareSudoCallbackMessage(packet, &ack)
-	if err != nil {
-		return errors.Wrapf(sdkerrors.ErrJSONMarshal, "failed to marshal Packet/Acknowledgment: %v", err)
+
+	var sudoMsgPayload []byte
+	if ack.GetError() == "" {
+		sudoMsg := types.SudoPayload{
+			Custodian: &types.MessageSuccess{
+				Response: &types.ResponseSudoPayload{
+					Data:    ack.GetResult(),
+					Request: packet,
+				},
+			},
+		}
+		sudoMsgPayload, err = json.Marshal(sudoMsg)
+		if err != nil {
+			return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
+		}
+	} else {
+		sudoMsg := types.SudoPayload{
+			Failure: &types.MessageFailure{
+				Error: &types.ErrorSudoPayload{
+					Request: packet,
+					Details: ack.GetError(),
+				},
+			},
+		}
+		sudoMsgPayload, err = json.Marshal(sudoMsg)
+		if err != nil {
+			return fmt.Errorf("failed to marshal MessageFailure: %v", err)
+		}
 	}
+
 	// Actually we have only one kind of error returned from acknowledgement
 	// maybe later we'll retrieve actual errors from events
-	_, err = k.sudoKeeper.Sudo(ctx, icaOwner.GetContract(), msg)
+	_, err = k.sudoKeeper.Sudo(ctx, icaOwner.GetContract(), sudoMsgPayload)
 	if err != nil {
 		k.Logger(ctx).Debug("HandleAcknowledgement: failed to Sudo contract on packet acknowledgement", "error", err)
 	}
@@ -55,11 +81,18 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 		return errors.Wrap(err, "failed to get ica owner from port")
 	}
 
-	msg, err := PrepareSudoCallbackMessage(packet, nil)
-	if err != nil {
-		return errors.Wrapf(sdkerrors.ErrJSONMarshal, "failed to marshal Packet: %v", err)
+	sudoMsg := types.SudoPayload{
+		Failure: &types.MessageFailure{
+			Timeout: &types.TimeoutPayload{
+				Request: packet,
+			},
+		},
 	}
-	_, err = k.sudoKeeper.Sudo(ctx, icaOwner.GetContract(), msg)
+	sudoMsgPayload, err := json.Marshal(sudoMsg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal MessageSudoCallback: %v", err)
+	}
+	_, err = k.sudoKeeper.Sudo(ctx, icaOwner.GetContract(), sudoMsgPayload)
 	if err != nil {
 		k.Logger(ctx).Debug("HandleTimeout: failed to Sudo contract on packet timeout", "error", err)
 	}
@@ -86,18 +119,22 @@ func (k *Keeper) HandleChanOpenAck(
 		k.Logger(ctx).Error("HandleChanOpenAck: failed to get ica owner from source port", "error", err)
 		return errors.Wrap(err, "failed to get ica owner from port")
 	}
-
-	payload, err := PrepareOpenAckCallbackMessage(types.OpenAckDetails{
-		PortID:                portID,
-		ChannelID:             channelID,
-		CounterpartyChannelID: counterpartyChannelID,
-		CounterpartyVersion:   counterpartyVersion,
-	})
+	successMsg := types.SudoPayload{
+		Custodian: &types.MessageSuccess{
+			OpenAck: types.OpenAckDetails{
+				PortID:                portID,
+				ChannelID:             channelID,
+				CounterpartyChannelID: counterpartyChannelID,
+				CounterpartyVersion:   counterpartyVersion,
+			},
+		},
+	}
+	sudoPayload, err := json.Marshal(successMsg)
 	if err != nil {
-		return errors.Wrapf(sdkerrors.ErrJSONMarshal, "failed to marshal OpenAckDetails: %v", err)
+		return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
 	}
 
-	_, err = k.sudoKeeper.Sudo(ctx, icaOwner.GetContract(), payload)
+	_, err = k.sudoKeeper.Sudo(ctx, icaOwner.GetContract(), sudoPayload)
 	if err != nil {
 		k.Logger(ctx).Debug("HandleChanOpenAck: failed to sudo contract on channel open acknowledgement", "error", err)
 	}
@@ -105,35 +142,22 @@ func (k *Keeper) HandleChanOpenAck(
 	return nil
 }
 
-func PrepareOpenAckCallbackMessage(details types.OpenAckDetails) ([]byte, error) {
-	x := types.MessageOnChanOpenAck{
-		OpenAck: details,
-	}
-	m, err := json.Marshal(x)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal MessageOnChanOpenAck: %v", err)
-	}
-	return m, nil
-}
-
-func PrepareSudoCallbackMessage(request channeltypes.Packet, ack *channeltypes.Acknowledgement) ([]byte, error) {
-	m := types.MessageSudoCallback{}
-	if ack != nil && ack.GetError() == "" { //nolint:gocritic //
-		m.Response = &types.ResponseSudoPayload{
-			Data:    ack.GetResult(),
-			Request: request,
-		}
-	} else if ack != nil {
-		m.Error = &types.ErrorSudoPayload{
-			Request: request,
-			Details: ack.GetError(),
-		}
-	} else {
-		m.Timeout = &types.TimeoutPayload{Request: request}
-	}
-	data, err := json.Marshal(m)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal MessageSudoCallback: %v", err)
-	}
-	return data, nil
-}
+// func PrepareSudoCallbackMessage(request channeltypes.Packet, ack *channeltypes.Acknowledgement) ([]byte, error) {
+// 	m := types.MessageSudoCallback{}
+// 	if ack != nil && ack.GetError() == "" { //nolint:gocritic //
+// 		m.Response = &types.ResponseSudoPayload{
+// 			Data:    ack.GetResult(),
+// 			Request: request,
+// 		}
+// 	} else if ack != nil {
+// 		m.Error = &types.ErrorSudoPayload{
+// 			Request: request,
+// 			Details: ack.GetError(),
+// 		}
+// 	}
+// 	data, err := json.Marshal(m)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to marshal MessageSudoCallback: %v", err)
+// 	}
+// 	return data, nil
+// }
