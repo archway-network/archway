@@ -46,13 +46,16 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
 		}
 	} else {
+		packetMsg, err := json.Marshal(packet)
+		if err != nil {
+			return fmt.Errorf("failed to marshal packet: %v", err)
+		}
 		sudoMsg := types.SudoPayload{
-			Error: &types.MessageCustodianError{
-				Failure: &types.ICATxError{
-					Packet:  packet,
-					Details: ack.GetError(),
-				},
-			},
+			Error: types.NewSudoErrorMsg(types.SudoError{
+				ErrorCode: types.ModuleErrors_ERR_FAILURE,
+				Payload:   string(packetMsg),
+				ErrorMsg:  ack.GetError(),
+			}),
 		}
 		sudoMsgPayload, err = json.Marshal(sudoMsg)
 		if err != nil {
@@ -80,13 +83,15 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 		k.Logger(ctx).Error("HandleTimeout: failed to get ica owner from source port", "error", err)
 		return errors.Wrap(err, "failed to get ica owner from port")
 	}
-
+	packetMsg, err := json.Marshal(packet)
+	if err != nil {
+		return fmt.Errorf("failed to marshal packet: %v", err)
+	}
 	sudoMsg := types.SudoPayload{
-		Error: &types.MessageCustodianError{
-			Timeout: &types.ICATxTimeout{
-				Packet: packet,
-			},
-		},
+		Error: types.NewSudoErrorMsg(types.SudoError{
+			ErrorCode: types.ModuleErrors_ERR_PACKET_TIMEOUT,
+			Payload:   string(packetMsg),
+		}),
 	}
 	sudoMsgPayload, err := json.Marshal(sudoMsg)
 	if err != nil {

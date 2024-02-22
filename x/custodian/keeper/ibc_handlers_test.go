@@ -88,11 +88,14 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 		SourcePort:    icatypes.ControllerPortPrefix + contractAddress.String() + ".ica0",
 		SourceChannel: "channel-0",
 	}
+	pJson, err := json.Marshal(p)
+	s.Require().NoError(err)
 
 	sudoMsg := types.SudoPayload{
-		Error: &types.MessageCustodianError{
-			Timeout: &types.ICATxTimeout{Packet: p},
-		},
+		Error: types.NewSudoErrorMsg(types.SudoError{
+			ErrorCode: types.ModuleErrors_ERR_PACKET_TIMEOUT,
+			Payload:   string(pJson),
+		}),
 	}
 	msgAck, err := json.Marshal(sudoMsg)
 	s.Require().NoError(err)

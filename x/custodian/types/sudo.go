@@ -7,7 +7,7 @@ import (
 // Sudopayload is the payload for the sudo call sent by the custodian module on IBC actions
 type SudoPayload struct {
 	Custodian *MessageCustodianSuccess `json:"custodian,omitempty"`
-	Error     *MessageCustodianError   `json:"error,omitempty"`
+	Error     *SudoErrorMsg            `json:"error,omitempty"`
 }
 
 // MessageCustodianSuccess is the success message for the sudo call
@@ -18,8 +18,9 @@ type MessageCustodianSuccess struct {
 
 // MessageCustodianError is the error message for the sudo call
 type MessageCustodianError struct {
-	Failure *ICATxError   `json:"failure,omitempty"`
-	Timeout *ICATxTimeout `json:"timeout,omitempty"`
+	Error *SudoErrorMsg `json:"error,omitempty"`
+	// Failure *ICATxError   `json:"failure,omitempty"`
+	// Timeout *ICATxTimeout `json:"timeout,omitempty"`
 }
 
 // OpenAckDetails is the details of the open ack message - when an interchain account is registered
