@@ -14,13 +14,13 @@ var (
 	ErrEmptyConnectionID         = errors.Register(ModuleName, 1105, "empty connection id")
 	ErrNoMessages                = errors.Register(ModuleName, 1106, "no messages provided")
 	ErrInvalidTimeout            = errors.Register(ModuleName, 1107, "invalid timeout")
-	ErrLongInterchainAccountID   = errors.Register(ModuleName, 1109, "interchain account id is too long")
+	ErrLongInterchainAccountID   = errors.Register(ModuleName, 1108, "interchain account id is too long")
 )
 
 type SudoErrorMsg struct {
 	ModuleName   string       `json:"module_name"`
 	ErrorCode    ModuleErrors `json:"error_code"`
-	Payload      string       `json:"payload"`
+	InputPayload string       `json:"input_payload"`
 	ErrorMessage string       `json:"error_message"`
 }
 
@@ -29,7 +29,7 @@ func NewSudoErrorMsg(err SudoError) *SudoErrorMsg {
 	return &SudoErrorMsg{
 		ModuleName:   ModuleName,
 		ErrorCode:    err.GetErrorCode(),
-		Payload:      err.Payload,
+		InputPayload: err.Payload,
 		ErrorMessage: err.ErrorMsg,
 	}
 }
