@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v6.0.1](https://github.com/archway-network/archway/releases/tag/v6.0.1)
+
+- [#543](https://github.com/archway-network/archway/pull/543) - Bumping sdk to v0.47.9
+
 ## [v6.0.0](https://github.com/archway-network/archway/releases/tag/v6.0.0)
 
 ### Added
