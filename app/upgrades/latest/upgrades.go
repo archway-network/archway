@@ -11,8 +11,8 @@ import (
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
 	callbackTypes "github.com/archway-network/archway/x/callback/types"
-	custodianTypes "github.com/archway-network/archway/x/custodian/types"
 	"github.com/archway-network/archway/x/cwfees"
+	cwicatypes "github.com/archway-network/archway/x/cwica/types"
 )
 
 // This upgrade handler is used for all the current changes to the protocol
@@ -38,7 +38,7 @@ var Upgrade = upgrades.Upgrade{
 			callbackTypes.ModuleName,
 			cwfees.ModuleName,
 			icacontrollertypes.StoreKey,
-			custodianTypes.ModuleName,
+			cwicatypes.ModuleName,
 		},
 	},
 }

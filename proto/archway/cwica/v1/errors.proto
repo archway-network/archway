@@ -1,0 +1,18 @@
+syntax = "proto3";
+package archway.cwica.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwica/types";
+
+message SudoError {
+  ModuleErrors error_code = 1;
+  string payload = 2;
+  string error_msg = 3;
+}
+
+enum ModuleErrors {
+  ERR_UNKNOWN = 0;
+  ERR_PACKET_TIMEOUT = 1;
+  ERR_EXEC_FAILURE = 2;
+}

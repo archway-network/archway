@@ -1,0 +1,57 @@
+syntax = "proto3";
+package archway.cwica.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "archway/cwica/v1/params.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwica/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params queries the module parameters
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/archway/cwica/params";
+  }
+  // InterchainAccountAddress queries the interchain account address for the
+  // given owner address and interchain account id for a given connection
+  rpc InterchainAccountAddress(QueryInterchainAccountAddressRequest)
+      returns (QueryInterchainAccountAddressResponse) {
+    option (google.api.http).get =
+        "/archway/cwica/{owner_address}/{interchain_account_id}/"
+        "{connection_id}/interchain_account_address";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters for the module
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryInterchainAccountAddressRequest is the request type for the
+// Query/InterchainAccountAddress RPC method.
+message QueryInterchainAccountAddressRequest {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // owner_address is the address of the owner of the interchain account
+  string owner_address = 1;
+  // interchain_account_id is a custom identifier of the interchain account as
+  // defined by the owner
+  string interchain_account_id = 2;
+  // connection_id is the connection identifier between the two chains
+  string connection_id = 3;
+}
+
+// QueryInterchainAccountAddressResponse is the response type for the
+// Query/InterchainAccountAddress RPC method.
+message QueryInterchainAccountAddressResponse {
+  // interchain_account_address is the address of the interchain account on the
+  // counterparty chain
+  string interchain_account_address = 1;
+}
