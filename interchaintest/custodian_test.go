@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-func TestCustodian(t *testing.T) {
+func TestCWICA(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
@@ -98,7 +98,7 @@ func TestCustodian(t *testing.T) {
 	})
 
 	// Upload the contract to archway chain
-	codeId, err := archwayChain.StoreContract(ctx, archwayChainUser.KeyName(), "artifacts/custodian.wasm")
+	codeId, err := archwayChain.StoreContract(ctx, archwayChainUser.KeyName(), "artifacts/cwica.wasm")
 	require.NoError(t, err)
 	require.NotEmpty(t, codeId)
 
@@ -108,7 +108,7 @@ func TestCustodian(t *testing.T) {
 	require.NoError(t, err)
 
 	// Dump state of the contract and ensure the contract is in the expected state
-	var contractRes custodianContractResponse
+	var contractRes cwicaContractResponse
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
 	require.Equal(t, archwayChainUser.FormattedAddress(), contractRes.Data.Owner)
@@ -211,11 +211,11 @@ func TestCustodian(t *testing.T) {
 	require.True(t, contractRes.Data.Timeout)
 }
 
-type custodianContractResponse struct {
-	Data custodianContractResponseObj `json:"data"`
+type cwicaContractResponse struct {
+	Data cwicaContractResponseObj `json:"data"`
 }
 
-type custodianContractResponseObj struct {
+type cwicaContractResponseObj struct {
 	Owner        string `json:"owner"`
 	ConnectionId string `json:"connection_id"`
 	ICAAddress   string `json:"ica_address"`
