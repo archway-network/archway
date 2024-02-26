@@ -6,7 +6,7 @@ import (
 
 // Sudopayload is the payload for the sudo call sent by the cwica module on IBC actions
 type SudoPayload struct {
-	ICA   *MessageICASuccess `json:"ica,omitempty"`
+	ICA   *MessageICASuccess `json:"ICA,omitempty"`
 	Error *SudoErrorMsg      `json:"error,omitempty"`
 }
 
