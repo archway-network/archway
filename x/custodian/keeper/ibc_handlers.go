@@ -52,7 +52,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		}
 		sudoMsg := types.SudoPayload{
 			Error: types.NewSudoErrorMsg(types.SudoError{
-				ErrorCode: types.ModuleErrors_ERR_FAILURE,
+				ErrorCode: types.ModuleErrors_ERR_EXEC_FAILURE,
 				Payload:   string(packetMsg),
 				ErrorMsg:  ack.GetError(),
 			}),
