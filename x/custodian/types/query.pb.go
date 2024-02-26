@@ -113,11 +113,13 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-// QueryInterchainAccountAddressRequest is the request type for the Query/InterchainAccountAddress RPC method.
+// QueryInterchainAccountAddressRequest is the request type for the
+// Query/InterchainAccountAddress RPC method.
 type QueryInterchainAccountAddressRequest struct {
 	// owner_address is the address of the owner of the interchain account
 	OwnerAddress string `protobuf:"bytes,1,opt,name=owner_address,json=ownerAddress,proto3" json:"owner_address,omitempty"`
-	// interchain_account_id is a custom identifier of the interchain account as defined by the owner
+	// interchain_account_id is a custom identifier of the interchain account as
+	// defined by the owner
 	InterchainAccountId string `protobuf:"bytes,2,opt,name=interchain_account_id,json=interchainAccountId,proto3" json:"interchain_account_id,omitempty"`
 	// connection_id is the connection identifier between the two chains
 	ConnectionId string `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
@@ -156,9 +158,11 @@ func (m *QueryInterchainAccountAddressRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryInterchainAccountAddressRequest proto.InternalMessageInfo
 
-// QueryInterchainAccountAddressResponse is the response type for the Query/InterchainAccountAddress RPC method.
+// QueryInterchainAccountAddressResponse is the response type for the
+// Query/InterchainAccountAddress RPC method.
 type QueryInterchainAccountAddressResponse struct {
-	// interchain_account_address is the address of the interchain account on the counterparty chain
+	// interchain_account_address is the address of the interchain account on the
+	// counterparty chain
 	InterchainAccountAddress string `protobuf:"bytes,1,opt,name=interchain_account_address,json=interchainAccountAddress,proto3" json:"interchain_account_address,omitempty"`
 }
 
@@ -260,7 +264,8 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params queries the module parameters
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// InterchainAccountAddress queries the interchain account address for the given owner address and interchain account id for a given connection
+	// InterchainAccountAddress queries the interchain account address for the
+	// given owner address and interchain account id for a given connection
 	InterchainAccountAddress(ctx context.Context, in *QueryInterchainAccountAddressRequest, opts ...grpc.CallOption) (*QueryInterchainAccountAddressResponse, error)
 }
 
@@ -294,7 +299,8 @@ func (c *queryClient) InterchainAccountAddress(ctx context.Context, in *QueryInt
 type QueryServer interface {
 	// Params queries the module parameters
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// InterchainAccountAddress queries the interchain account address for the given owner address and interchain account id for a given connection
+	// InterchainAccountAddress queries the interchain account address for the
+	// given owner address and interchain account id for a given connection
 	InterchainAccountAddress(context.Context, *QueryInterchainAccountAddressRequest) (*QueryInterchainAccountAddressResponse, error)
 }
 

@@ -9,5 +9,5 @@ option go_package = "github.com/archway-network/archway/x/custodian/types";
 // GenesisState defines the custodian module's genesis state.
 message GenesisState {
   // params defines all the parameters of the module.
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }

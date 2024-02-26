@@ -34,9 +34,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgRegisterInterchainAccount defines the Msg/RegisterInterchainAccount request type.
+// MsgRegisterInterchainAccount defines the Msg/RegisterInterchainAccount
+// request type.
 type MsgRegisterInterchainAccount struct {
-	// from_address is the address of the who wants to register an ica account on the counterparty chain
+	// from_address is the address of the who wants to register an ica account on
+	// the counterparty chain
 	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 	// connection_id is the connection id between the two chains
 	ConnectionId string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
@@ -77,7 +79,8 @@ func (m *MsgRegisterInterchainAccount) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterInterchainAccount proto.InternalMessageInfo
 
-// MsgRegisterInterchainAccountResponse defines the response for Msg/RegisterInterchainAccount
+// MsgRegisterInterchainAccountResponse defines the response for
+// Msg/RegisterInterchainAccount
 type MsgRegisterInterchainAccountResponse struct {
 }
 
@@ -116,9 +119,11 @@ var xxx_messageInfo_MsgRegisterInterchainAccountResponse proto.InternalMessageIn
 
 // MsgSubmitTx defines the Msg/SubmitTx request type.
 type MsgSubmitTx struct {
-	// from_address is the address of the who wants to submit a transaction to the counterparty chain
+	// from_address is the address of the who wants to submit a transaction to the
+	// counterparty chain
 	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
-	// interchain_account_id is the custom value used by the contract to identify the account
+	// interchain_account_id is the custom value used by the contract to identify
+	// the account
 	InterchainAccountId string `protobuf:"bytes,2,opt,name=interchain_account_id,json=interchainAccountId,proto3" json:"interchain_account_id,omitempty"`
 	// connection_id is the connection id between the two chains
 	ConnectionId string `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
@@ -165,7 +170,8 @@ var xxx_messageInfo_MsgSubmitTx proto.InternalMessageInfo
 
 // MsgSubmitTxResponse defines the response for Msg/SubmitTx
 type MsgSubmitTxResponse struct {
-	// sequence_id is the channel's sequence_id for outgoing ibc packet. Unique per a channel.
+	// sequence_id is the channel's sequence_id for outgoing ibc packet. Unique
+	// per a channel.
 	SequenceId uint64 `protobuf:"varint,1,opt,name=sequence_id,json=sequenceId,proto3" json:"sequence_id,omitempty"`
 	// channel is the channel id the transaction was submitted from
 	Channel string `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"`
@@ -220,7 +226,8 @@ func (m *MsgSubmitTxResponse) GetChannel() string {
 
 // MsgUpdateParams is the MsgUpdateParams request type.
 type MsgUpdateParams struct {
-	// authority is the address of the authority that is allowed to update the custodian module parameters.
+	// authority is the address of the authority that is allowed to update the
+	// custodian module parameters.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// params deines the module parmeters to update
 	// NOTE: All parameters must be supplied.
