@@ -12,7 +12,7 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 
 var (
 	KeyMsgSubmitTxMaxMessages     = []byte("MsgSubmitTxMaxMessages")
-	DefaultMsgSubmitTxMaxMessages = uint64(16)
+	DefaultMsgSubmitTxMaxMessages = uint64(5)
 )
 
 // NewParams creates a new Params instance
