@@ -34,9 +34,6 @@ message MsgRegisterInterchainAccount {
   string from_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   // connection_id is the connection id between the two chains
   string connection_id = 2 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
-  // interchain_account_id is custom value given by the contract
-  string interchain_account_id = 3
-      [ (gogoproto.moretags) = "yaml:\"interchain_account_id\"" ];
 }
 
 // MsgRegisterInterchainAccountResponse defines the response for
@@ -50,17 +47,14 @@ message MsgSubmitTx {
   // from_address is the address of the who wants to submit a transaction to the
   // counterparty chain
   string from_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  // interchain_account_id is the custom value used by the contract to identify
-  // the account
-  string interchain_account_id = 2;
   // connection_id is the connection id between the two chains
-  string connection_id = 3;
+  string connection_id = 2;
   // msgs are the messages to be submitted to the counterparty chain
-  repeated google.protobuf.Any msgs = 4;
+  repeated google.protobuf.Any msgs = 3;
   // memo is the memo to be included in the packet
-  string memo = 5;
+  string memo = 4;
   // timeout in seconds after which the packet times out
-  uint64 timeout = 6;
+  uint64 timeout = 5;
 }
 
 // MsgSubmitTxResponse defines the response for Msg/SubmitTx

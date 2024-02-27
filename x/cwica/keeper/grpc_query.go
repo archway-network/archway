@@ -22,12 +22,12 @@ func (k Keeper) InterchainAccountAddress(c context.Context, req *types.QueryInte
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	icaOwner, err := types.NewICAOwner(req.OwnerAddress, req.InterchainAccountId)
+	_, err := sdk.AccAddressFromBech32(req.OwnerAddress)
 	if err != nil {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to create ica owner: %s", err)
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse address: %s", req.OwnerAddress)
 	}
 
-	portID, err := icatypes.NewControllerPortID(icaOwner.String())
+	portID, err := icatypes.NewControllerPortID(req.OwnerAddress)
 	if err != nil {
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "failed to get controller portID: %s", err)
 	}

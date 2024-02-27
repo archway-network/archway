@@ -33,26 +33,19 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 // RegisterInterchainAccount registers a new interchain account for the contract
 func (k Keeper) RegisterInterchainAccount(goCtx context.Context, msg *types.MsgRegisterInterchainAccount) (*types.MsgRegisterInterchainAccountResponse, error) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelRegisterInterchainAccount)
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	k.Logger(ctx).Debug("RegisterInterchainAccount", "connection_id", msg.ConnectionId, "from_address", msg.FromAddress, "interchain_account_id", msg.InterchainAccountId)
 
 	senderAddr, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
-		k.Logger(ctx).Debug("RegisterInterchainAccount: failed to parse sender address", "from_address", msg.FromAddress)
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse address: %s", msg.FromAddress)
 	}
 
 	if !k.sudoKeeper.HasContractInfo(ctx, senderAddr) {
-		k.Logger(ctx).Debug("RegisterInterchainAccount: contract not found", "from_address", msg.FromAddress)
 		return nil, errors.Wrapf(types.ErrNotContract, "%s is not a contract address", msg.FromAddress)
 	}
 
-	icaOwner := types.NewICAOwnerFromAddress(senderAddr, msg.InterchainAccountId)
-
 	// FIXME: empty version string doesn't look good
-	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, icaOwner.String(), ""); err != nil {
-		k.Logger(ctx).Debug("RegisterInterchainAccount: failed to create RegisterInterchainAccount:", "error", err, "owner", icaOwner.String(), "msg", &msg)
+	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.FromAddress, ""); err != nil {
 		return nil, errors.Wrap(err, "failed to RegisterInterchainAccount")
 	}
 
@@ -72,26 +65,18 @@ func (k Keeper) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*types.
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	k.Logger(ctx).Debug("SubmitTx", "connection_id", msg.ConnectionId, "from_address", msg.FromAddress, "interchain_account_id", msg.InterchainAccountId)
 
 	senderAddr, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
-		k.Logger(ctx).Debug("SubmitTx: failed to parse sender address", "from_address", msg.FromAddress)
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse address: %s", msg.FromAddress)
 	}
 
 	if !k.sudoKeeper.HasContractInfo(ctx, senderAddr) {
-		k.Logger(ctx).Debug("SubmitTx: contract not found", "from_address", msg.FromAddress)
 		return nil, errors.Wrapf(types.ErrNotContract, "%s is not a contract address", msg.FromAddress)
 	}
 
 	params := k.GetParams(ctx)
 	if uint64(len(msg.Msgs)) > params.GetMsgSubmitTxMaxMessages() {
-		k.Logger(ctx).Debug("SubmitTx: provided MsgSubmitTx contains more messages than allowed",
-			"msg", msg,
-			"has", len(msg.Msgs),
-			"max", params.GetMsgSubmitTxMaxMessages(),
-		)
 		return nil, fmt.Errorf(
 			"MsgSubmitTx contains more messages than allowed, has=%d, max=%d",
 			len(msg.Msgs),
@@ -99,23 +84,18 @@ func (k Keeper) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*types.
 		)
 	}
 
-	icaOwner := types.NewICAOwnerFromAddress(senderAddr, msg.InterchainAccountId)
-
-	portID, err := icatypes.NewControllerPortID(icaOwner.String())
+	portID, err := icatypes.NewControllerPortID(msg.FromAddress)
 	if err != nil {
-		k.Logger(ctx).Error("SubmitTx: failed to create NewControllerPortID:", "error", err, "owner", icaOwner)
 		return nil, errors.Wrap(err, "failed to create NewControllerPortID")
 	}
 
 	channelID, found := k.icaControllerKeeper.GetActiveChannelID(ctx, msg.ConnectionId, portID)
 	if !found {
-		k.Logger(ctx).Debug("SubmitTx: failed to GetActiveChannelID", "connection_id", msg.ConnectionId, "port_id", portID)
 		return nil, errors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to GetActiveChannelID for port %s", portID)
 	}
 
 	data, err := SerializeCosmosTx(k.Codec, msg.Msgs)
 	if err != nil {
-		k.Logger(ctx).Debug("SubmitTx: failed to SerializeCosmosTx", "error", err, "connection_id", msg.ConnectionId, "port_id", portID, "channel_id", channelID)
 		return nil, errors.Wrap(err, "failed to SerializeCosmosTx")
 	}
 
@@ -136,7 +116,6 @@ func (k Keeper) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*types.
 	timeoutTimestamp := ctx.BlockTime().Add(time.Duration(msg.Timeout) * time.Second).UnixNano()
 	_, err = k.icaControllerKeeper.SendTx(ctx, nil, msg.ConnectionId, portID, packetData, uint64(timeoutTimestamp))
 	if err != nil {
-		k.Logger(ctx).Error("SubmitTx", "error", err, "connection_id", msg.ConnectionId, "port_id", portID, "channel_id", channelID)
 		return nil, errors.Wrap(err, "failed to SendTx")
 	}
 

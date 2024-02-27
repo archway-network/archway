@@ -23,9 +23,8 @@ func TestMsgRegisterInterchainAccountValidate(t *testing.T) {
 			"valid",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:         TestAddress,
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "1",
+					FromAddress:  TestAddress,
+					ConnectionId: "connection-id",
 				}
 			},
 			nil,
@@ -34,9 +33,8 @@ func TestMsgRegisterInterchainAccountValidate(t *testing.T) {
 			"empty fromAddress",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:         "",
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "1",
+					FromAddress:  "",
+					ConnectionId: "connection-id",
 				}
 			},
 			sdkerrors.ErrInvalidAddress,
@@ -45,9 +43,8 @@ func TestMsgRegisterInterchainAccountValidate(t *testing.T) {
 			"invalid fromAddress",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:         "invalid address",
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "1",
+					FromAddress:  "invalid address",
+					ConnectionId: "connection-id",
 				}
 			},
 			sdkerrors.ErrInvalidAddress,
@@ -56,23 +53,11 @@ func TestMsgRegisterInterchainAccountValidate(t *testing.T) {
 			"empty connection id",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:         TestAddress,
-					ConnectionId:        "",
-					InterchainAccountId: "1",
+					FromAddress:  TestAddress,
+					ConnectionId: "",
 				}
 			},
 			types.ErrEmptyConnectionID,
-		},
-		{
-			"empty interchain account",
-			func() sdktypes.Msg {
-				return &types.MsgRegisterInterchainAccount{
-					FromAddress:         TestAddress,
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "",
-				}
-			},
-			types.ErrEmptyInterchainAccountID,
 		},
 	}
 
@@ -96,9 +81,8 @@ func TestMsgRegisterInterchainAccountGetSigners(t *testing.T) {
 			"valid_signer",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:         TestAddress,
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "1",
+					FromAddress:  TestAddress,
+					ConnectionId: "connection-id",
 				}
 			},
 		},
@@ -121,9 +105,8 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 			"valid",
 			func() sdktypes.Msg {
 				return &types.MsgSubmitTx{
-					FromAddress:         TestAddress,
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "1",
+					FromAddress:  TestAddress,
+					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil
@@ -137,9 +120,8 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 			"invalid timeout",
 			func() sdktypes.Msg {
 				return &types.MsgSubmitTx{
-					FromAddress:         TestAddress,
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "1",
+					FromAddress:  TestAddress,
+					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil
@@ -153,9 +135,8 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 			"empty connection id",
 			func() sdktypes.Msg {
 				return &types.MsgSubmitTx{
-					FromAddress:         TestAddress,
-					ConnectionId:        "",
-					InterchainAccountId: "1",
+					FromAddress:  TestAddress,
+					ConnectionId: "",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil
@@ -166,30 +147,13 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 			types.ErrEmptyConnectionID,
 		},
 		{
-			"empty interchain account id",
-			func() sdktypes.Msg {
-				return &types.MsgSubmitTx{
-					FromAddress:         TestAddress,
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "",
-					Msgs: []*cosmosTypes.Any{{
-						TypeUrl: "msg",
-						Value:   []byte{100}, // just check that values are not nil
-					}},
-					Timeout: 1,
-				}
-			},
-			types.ErrEmptyInterchainAccountID,
-		},
-		{
 			"no messages",
 			func() sdktypes.Msg {
 				return &types.MsgSubmitTx{
-					FromAddress:         TestAddress,
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "1",
-					Msgs:                nil,
-					Timeout:             1,
+					FromAddress:  TestAddress,
+					ConnectionId: "connection-id",
+					Msgs:         nil,
+					Timeout:      1,
 				}
 			},
 			types.ErrNoMessages,
@@ -198,9 +162,8 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 			"empty FromAddress",
 			func() sdktypes.Msg {
 				return &types.MsgSubmitTx{
-					FromAddress:         "",
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "1",
+					FromAddress:  "",
+					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil
@@ -214,9 +177,8 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 			"invalid FromAddress",
 			func() sdktypes.Msg {
 				return &types.MsgSubmitTx{
-					FromAddress:         "invalid_address",
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "1",
+					FromAddress:  "invalid_address",
+					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil
@@ -250,9 +212,8 @@ func TestMsgSubmitTXGetSigners(t *testing.T) {
 			"valid_signer",
 			func() sdktypes.Msg {
 				return &types.MsgSubmitTx{
-					FromAddress:         TestAddress,
-					ConnectionId:        "connection-id",
-					InterchainAccountId: "1",
+					FromAddress:  TestAddress,
+					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil

@@ -19,15 +19,14 @@ import (
 func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelHandleAcknowledgment)
 	k.Logger(ctx).Debug("Handling acknowledgement")
-	icaOwner, err := types.ICAOwnerFromPort(packet.SourcePort)
+	icaOwner := types.ICAOwnerFromPort(packet.SourcePort)
+	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
 	if err != nil {
-		k.Logger(ctx).Error("HandleAcknowledgement: failed to get ica owner from source port", "error", err)
-		return errors.Wrap(err, "failed to get ica owner from port")
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse contract address: %s", icaOwner)
 	}
 
 	var ack channeltypes.Acknowledgement
 	if err := channeltypes.SubModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
-		k.Logger(ctx).Error("HandleAcknowledgement: cannot unmarshal ICS-27 packet acknowledgement", "error", err)
 		return errors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-27 packet acknowledgement: %v", err)
 	}
 
@@ -63,9 +62,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		}
 	}
 
-	// Actually we have only one kind of error returned from acknowledgement
-	// maybe later we'll retrieve actual errors from events
-	_, err = k.sudoKeeper.Sudo(ctx, icaOwner.GetContract(), sudoMsgPayload)
+	_, err = k.sudoKeeper.Sudo(ctx, contractAddress, sudoMsgPayload)
 	if err != nil {
 		k.Logger(ctx).Debug("HandleAcknowledgement: failed to Sudo contract on packet acknowledgement", "error", err)
 	}
@@ -78,10 +75,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelHandleTimeout)
 	k.Logger(ctx).Debug("HandleTimeout")
-	icaOwner, err := types.ICAOwnerFromPort(packet.SourcePort)
+	icaOwner := types.ICAOwnerFromPort(packet.SourcePort)
+	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
 	if err != nil {
-		k.Logger(ctx).Error("HandleTimeout: failed to get ica owner from source port", "error", err)
-		return errors.Wrap(err, "failed to get ica owner from port")
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse contract address: %s", icaOwner)
 	}
 	packetMsg, err := json.Marshal(packet)
 	if err != nil {
@@ -97,7 +94,7 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 	if err != nil {
 		return fmt.Errorf("failed to marshal MessageSudoCallback: %v", err)
 	}
-	_, err = k.sudoKeeper.Sudo(ctx, icaOwner.GetContract(), sudoMsgPayload)
+	_, err = k.sudoKeeper.Sudo(ctx, contractAddress, sudoMsgPayload)
 	if err != nil {
 		k.Logger(ctx).Debug("HandleTimeout: failed to Sudo contract on packet timeout", "error", err)
 	}
@@ -119,10 +116,10 @@ func (k *Keeper) HandleChanOpenAck(
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelLabelHandleChanOpenAck)
 
 	k.Logger(ctx).Debug("HandleChanOpenAck", "port_id", portID, "channel_id", channelID, "counterparty_channel_id", counterpartyChannelID, "counterparty_version", counterpartyVersion)
-	icaOwner, err := types.ICAOwnerFromPort(portID)
+	icaOwner := types.ICAOwnerFromPort(portID)
+	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
 	if err != nil {
-		k.Logger(ctx).Error("HandleChanOpenAck: failed to get ica owner from source port", "error", err)
-		return errors.Wrap(err, "failed to get ica owner from port")
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse contract address: %s", icaOwner)
 	}
 	successMsg := types.SudoPayload{
 		ICA: &types.MessageICASuccess{
@@ -139,7 +136,7 @@ func (k *Keeper) HandleChanOpenAck(
 		return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
 	}
 
-	_, err = k.sudoKeeper.Sudo(ctx, icaOwner.GetContract(), sudoPayload)
+	_, err = k.sudoKeeper.Sudo(ctx, contractAddress, sudoPayload)
 	if err != nil {
 		k.Logger(ctx).Debug("HandleChanOpenAck: failed to sudo contract on channel open acknowledgement", "error", err)
 	}

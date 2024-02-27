@@ -12,12 +12,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
-// const interchainAccountIDLimit = 47
-const interchainAccountIDLimit = 128 -
-	len("icacontroller-") -
-	len("archway10gc8cwfa63uc6hgdk8lyrjut2up0nt86j2a3cy3p6pw3ycu02xkqsxlwnn") - // just a random contract address
-	len(".")
-
 var _ codectypes.UnpackInterfacesMessage = &MsgSubmitTx{}
 
 func (msg *MsgRegisterInterchainAccount) ValidateBasic() error {
@@ -27,14 +21,6 @@ func (msg *MsgRegisterInterchainAccount) ValidateBasic() error {
 
 	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
 		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse FromAddress: %s", msg.FromAddress)
-	}
-
-	if len(msg.InterchainAccountId) == 0 {
-		return ErrEmptyInterchainAccountID
-	}
-
-	if len(msg.InterchainAccountId) > interchainAccountIDLimit {
-		return ErrLongInterchainAccountID
 	}
 
 	return nil
@@ -66,10 +52,6 @@ func (msg *MsgSubmitTx) ValidateBasic() error {
 
 	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
 		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse FromAddress: %s", msg.FromAddress)
-	}
-
-	if len(msg.InterchainAccountId) == 0 {
-		return ErrEmptyInterchainAccountID
 	}
 
 	if len(msg.Msgs) == 0 {

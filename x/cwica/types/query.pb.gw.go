@@ -73,17 +73,6 @@ func request_Query_InterchainAccountAddress_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner_address", err)
 	}
 
-	val, ok = pathParams["interchain_account_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "interchain_account_id")
-	}
-
-	protoReq.InterchainAccountId, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "interchain_account_id", err)
-	}
-
 	val, ok = pathParams["connection_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "connection_id")
@@ -120,17 +109,6 @@ func local_request_Query_InterchainAccountAddress_0(ctx context.Context, marshal
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner_address", err)
-	}
-
-	val, ok = pathParams["interchain_account_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "interchain_account_id")
-	}
-
-	protoReq.InterchainAccountId, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "interchain_account_id", err)
 	}
 
 	val, ok = pathParams["connection_id"]
@@ -288,7 +266,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"archway", "cwica", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_InterchainAccountAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"archway", "cwica", "owner_address", "interchain_account_id", "connection_id", "interchain_account_address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_InterchainAccountAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"archway", "cwica", "owner_address", "connection_id", "interchain_account_address"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

@@ -24,11 +24,9 @@ func (s *KeeperTestSuite) TestRegisterInterchainAccount() {
 	goCtx := sdk.WrapSDKContext(ctx)
 
 	msgRegAcc := types.MsgRegisterInterchainAccount{
-		FromAddress:         contractAddress.String(),
-		ConnectionId:        "connection-0",
-		InterchainAccountId: "ica0",
+		FromAddress:  contractAddress.String(),
+		ConnectionId: "connection-0",
 	}
-	icaOwner := types.NewICAOwnerFromAddress(contractAddress, msgRegAcc.InterchainAccountId)
 
 	resp, err := cwicaKeeper.RegisterInterchainAccount(goCtx, &types.MsgRegisterInterchainAccount{})
 	s.Require().ErrorContains(err, "failed to parse address")
@@ -48,14 +46,14 @@ func (s *KeeperTestSuite) TestRegisterInterchainAccount() {
 	contractInfo := wmKeeper.GetContractInfo(ctx, contractAddress)
 	s.Require().Equal(contractAdminAcc.Address.String(), contractInfo.Admin)
 
-	err = icaCtrlKeeper.RegisterInterchainAccount(ctx, msgRegAcc.ConnectionId, icaOwner.String(), "")
+	err = icaCtrlKeeper.RegisterInterchainAccount(ctx, msgRegAcc.ConnectionId, contractAddress.String(), "")
 	s.Require().Error(err)
 	resp, err = cwicaKeeper.RegisterInterchainAccount(goCtx, &msgRegAcc)
 	s.Require().ErrorContains(err, "failed to RegisterInterchainAccount")
 	s.Require().Nil(resp)
 
 	icaCtrlKeeper.SetTestStateRegisterInterchainAccount(false)
-	err = icaCtrlKeeper.RegisterInterchainAccount(ctx, msgRegAcc.ConnectionId, icaOwner.String(), "")
+	err = icaCtrlKeeper.RegisterInterchainAccount(ctx, msgRegAcc.ConnectionId, contractAddress.String(), "")
 	s.Require().NoError(err)
 	resp, err = cwicaKeeper.RegisterInterchainAccount(goCtx, &msgRegAcc)
 	s.Require().NoError(err)
@@ -77,12 +75,11 @@ func (s *KeeperTestSuite) TestSubmitTx() {
 		Value:   []byte{26, 10, 10, 5, 115, 116, 97, 107, 101, 18, 1, 48},
 	}
 	submitMsg := types.MsgSubmitTx{
-		FromAddress:         contractAddress.String(),
-		InterchainAccountId: "ica0",
-		ConnectionId:        "connection-0",
-		Msgs:                []*codectypes.Any{&cosmosMsg},
-		Memo:                "memo",
-		Timeout:             100,
+		FromAddress:  contractAddress.String(),
+		ConnectionId: "connection-0",
+		Msgs:         []*codectypes.Any{&cosmosMsg},
+		Memo:         "memo",
+		Timeout:      100,
 	}
 
 	resp, err := cwicaKeeper.SubmitTx(goCtx, nil)

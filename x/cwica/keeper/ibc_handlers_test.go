@@ -32,13 +32,13 @@ func (s *KeeperTestSuite) TestHandleAcknowledgement() {
 	s.Require().NoError(err)
 	p := channeltypes.Packet{
 		Sequence:      100,
-		SourcePort:    icatypes.ControllerPortPrefix + contractAddress.String() + ".ica0",
+		SourcePort:    icatypes.ControllerPortPrefix + contractAddress.String(),
 		SourceChannel: "channel-0",
 	}
 	relayerAddress := s.chain.GetAccount(1).Address
 
 	err = cwicaKeeper.HandleAcknowledgement(ctx, channeltypes.Packet{}, nil, relayerAddress)
-	s.Require().ErrorContains(err, "failed to get ica owner from port")
+	s.Require().ErrorContains(err, "failed to parse contract address: : invalid address")
 
 	err = cwicaKeeper.HandleAcknowledgement(ctx, p, nil, relayerAddress)
 	s.Require().ErrorContains(err, "cannot unmarshal ICS-27 packet acknowledgement")
@@ -85,7 +85,7 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 	relayerAddress := s.chain.GetAccount(1).Address
 	p := channeltypes.Packet{
 		Sequence:      100,
-		SourcePort:    icatypes.ControllerPortPrefix + contractAddress.String() + ".ica0",
+		SourcePort:    icatypes.ControllerPortPrefix + contractAddress.String(),
 		SourceChannel: "channel-0",
 	}
 	pJson, err := json.Marshal(p)
@@ -101,7 +101,7 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 	s.Require().NoError(err)
 
 	err = cwicaKeeper.HandleTimeout(ctx, channeltypes.Packet{}, relayerAddress)
-	s.Require().ErrorContains(err, "failed to get ica owner from port")
+	s.Require().ErrorContains(err, "failed to parse contract address: : invalid address")
 
 	// contract success
 	ctx = ctx.WithGasMeter(sdk.NewGasMeter(1_000_000_000_000))
@@ -131,12 +131,12 @@ func (s *KeeperTestSuite) TestHandleChanOpenAck() {
 		contractAddress.String(),
 		contractAdminAcc.Address.String(),
 	)
-	portID := icatypes.ControllerPortPrefix + contractAddress.String() + ".ica0"
+	portID := icatypes.ControllerPortPrefix + contractAddress.String()
 	channelID := "channel-0"
 	counterpartyChannelID := "channel-1"
 
 	err := cwicaKeeper.HandleChanOpenAck(ctx, "", channelID, counterpartyChannelID, "1")
-	s.Require().ErrorContains(err, "failed to get ica owner from port")
+	s.Require().ErrorContains(err, "failed to parse contract address: : invalid address")
 
 	sudoMsg := types.SudoPayload{
 		ICA: &types.MessageICASuccess{

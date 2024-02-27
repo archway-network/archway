@@ -19,7 +19,7 @@ service Query {
   rpc InterchainAccountAddress(QueryInterchainAccountAddressRequest)
       returns (QueryInterchainAccountAddressResponse) {
     option (google.api.http).get =
-        "/archway/cwica/{owner_address}/{interchain_account_id}/"
+        "/archway/cwica/{owner_address}/"
         "{connection_id}/interchain_account_address";
   }
 }
@@ -41,11 +41,8 @@ message QueryInterchainAccountAddressRequest {
 
   // owner_address is the address of the owner of the interchain account
   string owner_address = 1;
-  // interchain_account_id is a custom identifier of the interchain account as
-  // defined by the owner
-  string interchain_account_id = 2;
   // connection_id is the connection identifier between the two chains
-  string connection_id = 3;
+  string connection_id = 2;
 }
 
 // QueryInterchainAccountAddressResponse is the response type for the

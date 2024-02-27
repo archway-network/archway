@@ -24,21 +24,19 @@ func (s *KeeperTestSuite) TestKeeper_InterchainAccountAddress() {
 	s.Require().Nil(resp)
 
 	resp, err = keeper.InterchainAccountAddress(wctx, &types.QueryInterchainAccountAddressRequest{
-		OwnerAddress:        "nonbetch32",
-		InterchainAccountId: "test1",
-		ConnectionId:        "connection-0",
+		OwnerAddress: "nonbech32",
+		ConnectionId: "connection-0",
 	})
-	s.Require().ErrorContains(err, "failed to create ica owner")
+	s.Require().ErrorContains(err, "failed to parse address")
 	s.Require().Nil(resp)
 
-	portID := fmt.Sprintf("%s%s.%s", types2.ControllerPortPrefix, contractAdminAcc.Address.String(), "test1")
+	portID := fmt.Sprintf("%s%s.%s", types2.ControllerPortPrefix, contractAdminAcc.Address.String())
 	addr, found := icaCtrlKeeper.GetInterchainAccountAddress(ctx, "connection-0", portID)
 	s.Require().False(found)
 	s.Require().Equal("", addr)
 	resp, err = keeper.InterchainAccountAddress(wctx, &types.QueryInterchainAccountAddressRequest{
-		OwnerAddress:        contractAdminAcc.Address.String(),
-		InterchainAccountId: "test1",
-		ConnectionId:        "connection-0",
+		OwnerAddress: contractAdminAcc.Address.String(),
+		ConnectionId: "connection-0",
 	})
 	s.Require().ErrorContains(err, "no interchain account found for portID")
 	s.Require().Nil(resp)
@@ -49,9 +47,8 @@ func (s *KeeperTestSuite) TestKeeper_InterchainAccountAddress() {
 	s.Require().True(found)
 	s.Require().Equal(contractAdminAcc.Address.String(), addr)
 	resp, err = keeper.InterchainAccountAddress(wctx, &types.QueryInterchainAccountAddressRequest{
-		OwnerAddress:        contractAdminAcc.Address.String(),
-		InterchainAccountId: "test1",
-		ConnectionId:        "connection-0",
+		OwnerAddress: contractAdminAcc.Address.String(),
+		ConnectionId: "connection-0",
 	})
 	s.Require().NoError(err)
 	s.Require().Equal(&types.QueryInterchainAccountAddressResponse{InterchainAccountAddress: contractAdminAcc.Address.String()}, resp)
