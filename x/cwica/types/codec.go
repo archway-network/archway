@@ -12,7 +12,7 @@ import (
 // RegisterCodec registers concrete types on the Amino codec
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgRegisterInterchainAccount{}, "/archway.cwica.v1.MsgRegisterInterchainAccount", nil)
-	cdc.RegisterConcrete(&MsgSubmitTx{}, "/archway.cwica.v1.MsgSubmitTx", nil)
+	cdc.RegisterConcrete(&MsgSendTx{}, "/archway.cwica.v1.MsgSendTx", nil)
 	cdc.RegisterConcrete(&MsgUpdateParams{}, "/archway.cwica.v1.MsgUpdateParams", nil)
 }
 
@@ -20,7 +20,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgRegisterInterchainAccount{},
-		&MsgSubmitTx{},
+		&MsgSendTx{},
 		&MsgUpdateParams{},
 	)
 

@@ -44,7 +44,6 @@ func (k Keeper) RegisterInterchainAccount(goCtx context.Context, msg *types.MsgR
 		return nil, errors.Wrapf(types.ErrNotContract, "%s is not a contract address", msg.FromAddress)
 	}
 
-	// FIXME: empty version string doesn't look good
 	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.FromAddress, ""); err != nil {
 		return nil, errors.Wrap(err, "failed to RegisterInterchainAccount")
 	}
@@ -52,9 +51,9 @@ func (k Keeper) RegisterInterchainAccount(goCtx context.Context, msg *types.MsgR
 	return &types.MsgRegisterInterchainAccountResponse{}, nil
 }
 
-// SubmitTx submits a transaction to the interchain account
-func (k Keeper) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*types.MsgSubmitTxResponse, error) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelSubmitTx)
+// SendTx submits a transaction to the interchain account
+func (k Keeper) SendTx(goCtx context.Context, msg *types.MsgSendTx) (*types.MsgSendTxResponse, error) {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelSendTx)
 
 	if msg == nil {
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "nil msg is prohibited")
@@ -119,7 +118,7 @@ func (k Keeper) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*types.
 		return nil, errors.Wrap(err, "failed to SendTx")
 	}
 
-	return &types.MsgSubmitTxResponse{
+	return &types.MsgSendTxResponse{
 		SequenceId: sequence,
 		Channel:    channelID,
 	}, nil

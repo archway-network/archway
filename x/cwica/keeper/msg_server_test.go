@@ -74,7 +74,7 @@ func (s *KeeperTestSuite) TestSubmitTx() {
 		TypeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
 		Value:   []byte{26, 10, 10, 5, 115, 116, 97, 107, 101, 18, 1, 48},
 	}
-	submitMsg := types.MsgSubmitTx{
+	submitMsg := types.MsgSendTx{
 		FromAddress:  contractAddress.String(),
 		ConnectionId: "connection-0",
 		Msgs:         []*codectypes.Any{&cosmosMsg},
@@ -82,20 +82,20 @@ func (s *KeeperTestSuite) TestSubmitTx() {
 		Timeout:      100,
 	}
 
-	resp, err := cwicaKeeper.SubmitTx(goCtx, nil)
+	resp, err := cwicaKeeper.SendTx(goCtx, nil)
 	s.Require().Nil(resp)
 	s.Require().ErrorContains(err, "nil msg is prohibited")
 
-	resp, err = cwicaKeeper.SubmitTx(goCtx, &types.MsgSubmitTx{})
+	resp, err = cwicaKeeper.SendTx(goCtx, &types.MsgSendTx{})
 	s.Require().Nil(resp)
 	s.Require().ErrorContains(err, "empty Msgs field is prohibited")
 
-	resp, err = cwicaKeeper.SubmitTx(goCtx, &types.MsgSubmitTx{Msgs: []*codectypes.Any{&cosmosMsg}})
+	resp, err = cwicaKeeper.SendTx(goCtx, &types.MsgSendTx{Msgs: []*codectypes.Any{&cosmosMsg}})
 	s.Require().Nil(resp)
 	s.Require().ErrorContains(err, "failed to parse address")
 
 	s.Require().False(wmKeeper.HasContractInfo(ctx, contractAddress))
-	resp, err = cwicaKeeper.SubmitTx(goCtx, &submitMsg)
+	resp, err = cwicaKeeper.SendTx(goCtx, &submitMsg)
 	s.Require().Nil(resp)
 	s.Require().ErrorContains(err, "is not a contract address")
 
@@ -107,7 +107,7 @@ func (s *KeeperTestSuite) TestSubmitTx() {
 	maxMsgs := params.GetMsgSubmitTxMaxMessages()
 	submitMsg.Msgs = make([]*codectypes.Any, maxMsgs+1)
 	s.Require().True(wmKeeper.HasContractInfo(ctx, contractAddress))
-	resp, err = cwicaKeeper.SubmitTx(goCtx, &submitMsg)
+	resp, err = cwicaKeeper.SendTx(goCtx, &submitMsg)
 	s.Require().Nil(resp)
 	s.Require().ErrorContains(err, "MsgSubmitTx contains more messages than allowed")
 	submitMsg.Msgs = []*codectypes.Any{&cosmosMsg}
@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestSubmitTx() {
 	cid, found := icaCtrlKeeper.GetActiveChannelID(ctx, "connection-0", portID)
 	s.Require().False(found)
 	s.Require().Equal("", cid)
-	resp, err = cwicaKeeper.SubmitTx(goCtx, &submitMsg)
+	resp, err = cwicaKeeper.SendTx(goCtx, &submitMsg)
 	s.Require().Nil(resp)
 	s.Require().ErrorContains(err, "failed to GetActiveChannelID for port")
 
@@ -129,7 +129,7 @@ func (s *KeeperTestSuite) TestSubmitTx() {
 	seq, found := channelKeeper.GetNextSequenceSend(ctx, portID, activeChannel)
 	s.Require().False(found)
 	s.Require().Equal(uint64(0), seq)
-	resp, err = cwicaKeeper.SubmitTx(goCtx, &submitMsg)
+	resp, err = cwicaKeeper.SendTx(goCtx, &submitMsg)
 	s.Require().Nil(resp)
 	s.Require().ErrorContains(err, "sequence send not found")
 
@@ -151,7 +151,7 @@ func (s *KeeperTestSuite) TestSubmitTx() {
 	packetSeq, err := icaCtrlKeeper.SendTx(ctx, nil, "connection-0", portID, packetData, uint64(timeoutTimestamp))
 	s.Require().Equal(uint64(0), packetSeq)
 	s.Require().ErrorContains(err, "failed to send tx")
-	resp, err = cwicaKeeper.SubmitTx(goCtx, &submitMsg)
+	resp, err = cwicaKeeper.SendTx(goCtx, &submitMsg)
 	s.Require().Nil(resp)
 	s.Require().ErrorContains(err, "failed to SendTx")
 
@@ -159,8 +159,8 @@ func (s *KeeperTestSuite) TestSubmitTx() {
 	packetSeq, err = icaCtrlKeeper.SendTx(ctx, nil, "connection-0", portID, packetData, uint64(timeoutTimestamp))
 	s.Require().Equal(uint64(100), packetSeq)
 	s.Require().NoError(err)
-	resp, err = cwicaKeeper.SubmitTx(goCtx, &submitMsg)
-	s.Require().Equal(types.MsgSubmitTxResponse{
+	resp, err = cwicaKeeper.SendTx(goCtx, &submitMsg)
+	s.Require().Equal(types.MsgSendTxResponse{
 		SequenceId: sequence,
 		Channel:    activeChannel,
 	}, *resp)

@@ -12,7 +12,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
-var _ codectypes.UnpackInterfacesMessage = &MsgSubmitTx{}
+var _ codectypes.UnpackInterfacesMessage = &MsgSendTx{}
 
 func (msg *MsgRegisterInterchainAccount) ValidateBasic() error {
 	if len(msg.ConnectionId) == 0 {
@@ -45,7 +45,7 @@ func (msg *MsgRegisterInterchainAccount) GetSignBytes() []byte {
 
 //----------------------------------------------------------------
 
-func (msg *MsgSubmitTx) ValidateBasic() error {
+func (msg *MsgSendTx) ValidateBasic() error {
 	if len(msg.ConnectionId) == 0 {
 		return ErrEmptyConnectionID
 	}
@@ -65,20 +65,20 @@ func (msg *MsgSubmitTx) ValidateBasic() error {
 	return nil
 }
 
-func (msg *MsgSubmitTx) GetSigners() []sdk.AccAddress {
+func (msg *MsgSendTx) GetSigners() []sdk.AccAddress {
 	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
 	return []sdk.AccAddress{fromAddress}
 }
 
-func (msg *MsgSubmitTx) Route() string {
+func (msg *MsgSendTx) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgSubmitTx) Type() string {
-	return "submit-tx"
+func (msg *MsgSendTx) Type() string {
+	return "send-tx"
 }
 
-func (msg *MsgSubmitTx) GetSignBytes() []byte {
+func (msg *MsgSendTx) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
@@ -98,7 +98,7 @@ func PackTxMsgAny(sdkMsg sdk.Msg) (*codectypes.Any, error) {
 }
 
 // implements UnpackInterfacesMessage.UnpackInterfaces (https://github.com/cosmos/cosmos-sdk/blob/d07d35f29e0a0824b489c552753e8798710ff5a8/codec/types/interface_registry.go#L60)
-func (msg *MsgSubmitTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (msg *MsgSendTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var sdkMsg sdk.Msg
 	for _, m := range msg.Msgs {
 		if err := unpacker.UnpackAny(m, &sdkMsg); err != nil {

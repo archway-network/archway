@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	LabelSubmitTx                  = "submit_tx"
+	LabelSendTx                    = "submit_tx"
 	LabelHandleAcknowledgment      = "handle_ack"
 	LabelLabelHandleChanOpenAck    = "handle_chan_open_ack"
 	LabelRegisterInterchainAccount = "register_interchain_account"

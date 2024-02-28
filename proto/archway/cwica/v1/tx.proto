@@ -18,8 +18,8 @@ service Msg {
   // RegisterInterchainAccount registers an account on the counterparty chain.
   rpc RegisterInterchainAccount(MsgRegisterInterchainAccount)
       returns (MsgRegisterInterchainAccountResponse) {}
-  // SubmitTx submits a transaction with msgs to the counterparty chain.
-  rpc SubmitTx(MsgSubmitTx) returns (MsgSubmitTxResponse) {}
+  // SendTx submits a transaction with msgs to the counterparty chain.
+  rpc SendTx(MsgSendTx) returns (MsgSendTxResponse) {}
   // UpdateParams updates the cwica module parameters.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
@@ -40,8 +40,8 @@ message MsgRegisterInterchainAccount {
 // Msg/RegisterInterchainAccount
 message MsgRegisterInterchainAccountResponse {}
 
-// MsgSubmitTx defines the Msg/SubmitTx request type.
-message MsgSubmitTx {
+// MsgSendTx defines the Msg/SendTx request type.
+message MsgSendTx {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   // from_address is the address of the who wants to submit a transaction to the
@@ -57,8 +57,8 @@ message MsgSubmitTx {
   uint64 timeout = 5;
 }
 
-// MsgSubmitTxResponse defines the response for Msg/SubmitTx
-message MsgSubmitTxResponse {
+// MsgSendTxResponse defines the response for Msg/SendTx
+message MsgSendTxResponse {
   // sequence_id is the channel's sequence_id for outgoing ibc packet. Unique
   // per a channel.
   uint64 sequence_id = 1;

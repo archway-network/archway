@@ -140,6 +140,7 @@ func TestCWICA(t *testing.T) {
 	// Trying to register the same interchain account again should error out as channel already exists
 	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
 	require.Error(t, err)
+	t.Log(err)
 
 	// SubmitTx on contract which will vote on the proposal on counterparty chain - There is no proposal on chain. Should error out
 	execMsg = `{"vote":{"proposal_id":2,"option":1,"tiny_timeout": false}}`
@@ -214,9 +215,49 @@ func TestCWICA(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, contractRes.Data.Timeout)
 
-	// execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":3,"tiny_timeout": false}}`
-	// err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
-	// require.NoError(t, err)
+	// Now with MsgTimeout, the channel is closed. So trying to vote again should error out
+	execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":3,"tiny_timeout": false}}`
+	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
+	require.ErrorContains(t, err, "no active channel for this owner")
+
+	// We register the account again to open the channel
+	execMsg = `{"register":{}}`
+	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
+	require.NoError(t, err)
+
+	aH, err = archwayChain.Height(ctx)
+	require.NoError(t, err)
+
+	// Wait for the MsgChannelOpenAck on archway chain
+	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+20, func(found *channeltypes.MsgChannelOpenAck) bool {
+		return found.PortId == "icacontroller-"+contractAddress
+	})
+	require.NoError(t, err)
+
+	// Ensure the contract is in the expected state - the ica address should be stored by the contract
+	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
+	require.NoError(t, err)
+	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
+
+	// Attempt to vote No on the proposal. Previously it was Yes, now this ica tx should pass
+	execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":3,"tiny_timeout": false}}`
+	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
+	require.NoError(t, err)
+
+	aH, err = archwayChain.Height(ctx)
+	require.NoError(t, err)
+
+	// Wait for the MsgAcknowledgement on the archway chain
+	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgAcknowledgement) bool {
+		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress
+	})
+	require.NoError(t, err)
+
+	// Fetch the ica user's vote on the counterparty chain. Should be NO.
+	vote, err = GetUserVote(counterpartyChain, ctx, textProp.ProposalID, icaCounterpartyAddress)
+	require.NoError(t, err)
+	require.Equal(t, "VOTE_OPTION_NO", vote.Options[0].Option)
+
 }
 
 type cwicaContractResponse struct {

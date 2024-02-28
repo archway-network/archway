@@ -95,7 +95,7 @@ func TestMsgRegisterInterchainAccountGetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgSubmitTXValidate(t *testing.T) {
+func TestMsgSendTxValidate(t *testing.T) {
 	tests := []struct {
 		name        string
 		malleate    func() sdktypes.Msg
@@ -104,7 +104,7 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 		{
 			"valid",
 			func() sdktypes.Msg {
-				return &types.MsgSubmitTx{
+				return &types.MsgSendTx{
 					FromAddress:  TestAddress,
 					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
@@ -119,7 +119,7 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 		{
 			"invalid timeout",
 			func() sdktypes.Msg {
-				return &types.MsgSubmitTx{
+				return &types.MsgSendTx{
 					FromAddress:  TestAddress,
 					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
@@ -134,7 +134,7 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 		{
 			"empty connection id",
 			func() sdktypes.Msg {
-				return &types.MsgSubmitTx{
+				return &types.MsgSendTx{
 					FromAddress:  TestAddress,
 					ConnectionId: "",
 					Msgs: []*cosmosTypes.Any{{
@@ -149,7 +149,7 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 		{
 			"no messages",
 			func() sdktypes.Msg {
-				return &types.MsgSubmitTx{
+				return &types.MsgSendTx{
 					FromAddress:  TestAddress,
 					ConnectionId: "connection-id",
 					Msgs:         nil,
@@ -161,7 +161,7 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 		{
 			"empty FromAddress",
 			func() sdktypes.Msg {
-				return &types.MsgSubmitTx{
+				return &types.MsgSendTx{
 					FromAddress:  "",
 					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
@@ -176,7 +176,7 @@ func TestMsgSubmitTXValidate(t *testing.T) {
 		{
 			"invalid FromAddress",
 			func() sdktypes.Msg {
-				return &types.MsgSubmitTx{
+				return &types.MsgSendTx{
 					FromAddress:  "invalid_address",
 					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
@@ -211,7 +211,7 @@ func TestMsgSubmitTXGetSigners(t *testing.T) {
 		{
 			"valid_signer",
 			func() sdktypes.Msg {
-				return &types.MsgSubmitTx{
+				return &types.MsgSendTx{
 					FromAddress:  TestAddress,
 					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
