@@ -137,6 +137,10 @@ func TestCWICA(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
 
+	// Trying to register the same interchain account again should error out as channel already exists
+	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
+	require.Error(t, err)
+
 	// SubmitTx on contract which will vote on the proposal on counterparty chain - There is no proposal on chain. Should error out
 	execMsg = `{"vote":{"proposal_id":2,"option":1,"tiny_timeout": false}}`
 	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
@@ -209,6 +213,10 @@ func TestCWICA(t *testing.T) {
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
 	require.True(t, contractRes.Data.Timeout)
+
+	// execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":3,"tiny_timeout": false}}`
+	// err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
+	// require.NoError(t, err)
 }
 
 type cwicaContractResponse struct {
