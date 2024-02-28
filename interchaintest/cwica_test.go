@@ -124,12 +124,12 @@ func TestCWICA(t *testing.T) {
 
 	// Wait for the MsgChannelOpenAck on archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgChannelOpenAck) bool {
-		return found.PortId == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
+		return found.PortId == "icacontroller-"+contractAddress
 	})
 	require.NoError(t, err)
 
 	// Get the address of the ica account address of the counterparty chain which has just been registered
-	icaCounterpartyAddress, err := GetInterchainAccountAddress(archwayChain, ctx, contractAddress, connection.ID, archwayChainUser.FormattedAddress())
+	icaCounterpartyAddress, err := GetInterchainAccountAddress(archwayChain, ctx, contractAddress, connection.ID)
 	require.NoError(t, err)
 
 	// Ensure the contract is in the expected state - the ica address should be stored by the contract
@@ -147,7 +147,7 @@ func TestCWICA(t *testing.T) {
 
 	// Wait for the MsgAcknowledgement on the archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgAcknowledgement) bool {
-		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
+		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress
 	})
 	require.NoError(t, err)
 
@@ -172,7 +172,7 @@ func TestCWICA(t *testing.T) {
 
 	// Wait for the MsgAcknowledgement on the archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgAcknowledgement) bool {
-		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
+		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress
 	})
 	require.NoError(t, err)
 
@@ -196,7 +196,7 @@ func TestCWICA(t *testing.T) {
 
 	// Wait for the MsgTimeout on the archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgTimeout) bool {
-		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress+"."+archwayChainUser.FormattedAddress()
+		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress
 	})
 	require.NoError(t, err)
 

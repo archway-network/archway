@@ -64,9 +64,9 @@ func ExecuteContract(chain *cosmos.CosmosChain, user ibc.Wallet, ctx context.Con
 	return err
 }
 
-func GetInterchainAccountAddress(chain *cosmos.CosmosChain, ctx context.Context, ownerAddress string, connectionId string, interchainAccountId string) (string, error) {
+func GetInterchainAccountAddress(chain *cosmos.CosmosChain, ctx context.Context, ownerAddress string, connectionId string) (string, error) {
 	cmd := []string{
-		chain.Config().Bin, "q", "cwica", "interchain-account", ownerAddress, connectionId, interchainAccountId,
+		chain.Config().Bin, "q", "cwica", "interchain-account", ownerAddress, connectionId,
 		"--node", chain.GetRPCAddress(),
 		"--home", chain.HomeDir(),
 		"--chain-id", chain.Config().ChainID,
