@@ -113,6 +113,7 @@ func TestCWICA(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, archwayChainUser.FormattedAddress(), contractRes.Data.Owner)
 	require.Equal(t, connection.ID, contractRes.Data.ConnectionId)
+	require.False(t, contractRes.Data.AccountOpen)
 
 	// Register a new interchain account on the counterparty chain
 	execMsg := `{"register":{}}`
@@ -136,6 +137,7 @@ func TestCWICA(t *testing.T) {
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
 	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
+	require.True(t, contractRes.Data.AccountOpen)
 
 	// Trying to register the same interchain account again should error out as channel already exists
 	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
@@ -214,6 +216,7 @@ func TestCWICA(t *testing.T) {
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
 	require.True(t, contractRes.Data.Timeout)
+	require.False(t, contractRes.Data.AccountOpen)
 
 	// Now with MsgTimeout, the channel is closed. So trying to vote again should error out
 	execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":3,"tiny_timeout": false}}`
@@ -238,6 +241,7 @@ func TestCWICA(t *testing.T) {
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
 	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
+	require.True(t, contractRes.Data.AccountOpen)
 
 	// Attempt to vote No on the proposal. Previously it was Yes, now this ica tx should pass
 	execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":3,"tiny_timeout": false}}`
@@ -271,4 +275,5 @@ type cwicaContractResponseObj struct {
 	Voted        bool   `json:"voted"`
 	Errors       string `json:"errors"`
 	Timeout      bool   `json:"timeout"`
+	AccountOpen  bool   `json:"account_open"`
 }

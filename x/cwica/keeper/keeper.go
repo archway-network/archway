@@ -14,9 +14,10 @@ import (
 const (
 	LabelSendTx                    = "submit_tx"
 	LabelHandleAcknowledgment      = "handle_ack"
-	LabelLabelHandleChanOpenAck    = "handle_chan_open_ack"
+	LabelHandleChanOpenAck         = "handle_chan_open_ack"
 	LabelRegisterInterchainAccount = "register_interchain_account"
 	LabelHandleTimeout             = "handle_timeout"
+	LabelHandleChanCloseConfirm    = "handle_chan_close_confirm"
 )
 
 type (

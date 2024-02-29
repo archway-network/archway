@@ -113,7 +113,7 @@ func (k *Keeper) HandleChanOpenAck(
 	counterpartyChannelID,
 	counterpartyVersion string,
 ) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelLabelHandleChanOpenAck)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelHandleChanOpenAck)
 
 	k.Logger(ctx).Debug("HandleChanOpenAck", "port_id", portID, "channel_id", channelID, "counterparty_channel_id", counterpartyChannelID, "counterparty_version", counterpartyVersion)
 	icaOwner := types.ICAOwnerFromPort(portID)
@@ -141,5 +141,35 @@ func (k *Keeper) HandleChanOpenAck(
 		k.Logger(ctx).Debug("HandleChanOpenAck: failed to sudo contract on channel open acknowledgement", "error", err)
 	}
 
+	return nil
+}
+
+// HandleChanCloseConfirm passes the data about a successfully closed channel to the appropriate contract
+func (k *Keeper) HandleChanCloseConfirm(ctx sdk.Context, portID string, channelID string) error {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelHandleChanCloseConfirm)
+
+	icaOwner := types.ICAOwnerFromPort(portID)
+	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
+	if err != nil {
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse contract address: %s", icaOwner)
+	}
+
+	msg := types.SudoPayload{
+		ICA: &types.MessageICASuccess{
+			AccountClosed: &types.ChannelClosed{
+				PortID:    portID,
+				ChannelID: channelID,
+			},
+		},
+	}
+	sudoPayload, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
+	}
+
+	_, err = k.sudoKeeper.Sudo(ctx, contractAddress, sudoPayload)
+	if err != nil {
+		k.Logger(ctx).Debug("HandleChanCloseConfirm: failed to sudo contract on channel close confirmation", "error", err)
+	}
 	return nil
 }

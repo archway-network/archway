@@ -13,6 +13,7 @@ type SudoPayload struct {
 // MessageICASuccess is the success message for the sudo call
 type MessageICASuccess struct {
 	AccountRegistered *OpenAckDetails `json:"account_registered,omitempty"`
+	AccountClosed     *ChannelClosed  `json:"account_closed,omitempty"`
 	TxExecuted        *ICATxResponse  `json:"tx_executed,omitempty"`
 }
 
@@ -29,6 +30,11 @@ type OpenAckDetails struct {
 	ChannelID             string `json:"channel_id"`
 	CounterpartyChannelID string `json:"counterparty_channel_id"`
 	CounterpartyVersion   string `json:"counterparty_version"`
+}
+
+type ChannelClosed struct {
+	PortID    string `json:"port_id"`
+	ChannelID string `json:"channel_id"`
 }
 
 // ICATxResponse is the response message after the execute of the ICA tx
