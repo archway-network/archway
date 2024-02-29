@@ -51,9 +51,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		}
 		sudoMsg := types.SudoPayload{
 			Error: types.NewSudoErrorMsg(types.SudoError{
-				ErrorCode: types.ModuleErrors_ERR_EXEC_FAILURE,
-				Payload:   string(packetMsg),
-				ErrorMsg:  ack.GetError(),
+				ErrorCode:    types.ModuleErrors_ERR_EXEC_FAILURE,
+				InputPayload: string(packetMsg),
+				ErrorMsg:     ack.GetError(),
 			}),
 		}
 		sudoMsgPayload, err = json.Marshal(sudoMsg)
@@ -86,8 +86,8 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 	}
 	sudoMsg := types.SudoPayload{
 		Error: types.NewSudoErrorMsg(types.SudoError{
-			ErrorCode: types.ModuleErrors_ERR_PACKET_TIMEOUT,
-			Payload:   string(packetMsg),
+			ErrorCode:    types.ModuleErrors_ERR_PACKET_TIMEOUT,
+			InputPayload: string(packetMsg),
 		}),
 	}
 	sudoMsgPayload, err := json.Marshal(sudoMsg)

@@ -93,8 +93,8 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 
 	sudoMsg := types.SudoPayload{
 		Error: types.NewSudoErrorMsg(types.SudoError{
-			ErrorCode: types.ModuleErrors_ERR_PACKET_TIMEOUT,
-			Payload:   string(pJson),
+			ErrorCode:    types.ModuleErrors_ERR_PACKET_TIMEOUT,
+			InputPayload: string(pJson),
 		}),
 	}
 	msgAck, err := json.Marshal(sudoMsg)

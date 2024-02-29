@@ -37,7 +37,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgRegisterInterchainAccount defines the Msg/RegisterInterchainAccount
 // request type.
 type MsgRegisterInterchainAccount struct {
-	// from_address is the address of the who wants to register an ica account on
+	// from_address is the address of the contrat who wants to register an ica account on
 	// the counterparty chain
 	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 	// connection_id is the connection id between the two chains

@@ -28,7 +28,7 @@ func NewSudoErrorMsg(err SudoError) *SudoErrorMsg {
 	return &SudoErrorMsg{
 		ModuleName:   ModuleName,
 		ErrorCode:    err.GetErrorCode(),
-		InputPayload: err.Payload,
-		ErrorMessage: err.ErrorMsg,
+		InputPayload: err.GetInputPayload(),
+		ErrorMessage: err.GetErrorMsg(),
 	}
 }
