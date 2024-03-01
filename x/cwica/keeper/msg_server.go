@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
@@ -32,7 +31,6 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 // RegisterInterchainAccount registers a new interchain account for the contract
 func (k Keeper) RegisterInterchainAccount(goCtx context.Context, msg *types.MsgRegisterInterchainAccount) (*types.MsgRegisterInterchainAccountResponse, error) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelRegisterInterchainAccount)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	senderAddr, err := sdk.AccAddressFromBech32(msg.FromAddress)
@@ -53,8 +51,6 @@ func (k Keeper) RegisterInterchainAccount(goCtx context.Context, msg *types.MsgR
 
 // SendTx submits a transaction to the interchain account
 func (k Keeper) SendTx(goCtx context.Context, msg *types.MsgSendTx) (*types.MsgSendTxResponse, error) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelSendTx)
-
 	if msg == nil {
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "nil msg is prohibited")
 	}
@@ -93,7 +89,7 @@ func (k Keeper) SendTx(goCtx context.Context, msg *types.MsgSendTx) (*types.MsgS
 		return nil, errors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to GetActiveChannelID for port %s", portID)
 	}
 
-	data, err := SerializeCosmosTx(k.Codec, msg.Msgs)
+	data, err := SerializeCosmosTxs(k.Codec, msg.Msgs)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to SerializeCosmosTx")
 	}
@@ -124,10 +120,8 @@ func (k Keeper) SendTx(goCtx context.Context, msg *types.MsgSendTx) (*types.MsgS
 	}, nil
 }
 
-// SerializeCosmosTx serializes a slice of *types.Any messages using the CosmosTx type. The proto marshaled CosmosTx
-// bytes are returned. This differs from icatypes.SerializeCosmosTx in that it does not serialize sdk.Msgs, but
-// simply uses the already serialized values.
-func SerializeCosmosTx(cdc codec.BinaryCodec, msgs []*codectypes.Any) (bz []byte, err error) {
+// SerializeCosmosTxs serializes a slice of *types.Any messages using the CosmosTx type.
+func SerializeCosmosTxs(cdc codec.BinaryCodec, msgs []*codectypes.Any) (bz []byte, err error) {
 	// only ProtoCodec is supported
 	if _, ok := cdc.(*codec.ProtoCodec); !ok {
 		return nil, errors.Wrap(icatypes.ErrInvalidCodec,
@@ -154,6 +148,10 @@ func (k Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) 
 	authority := k.GetAuthority()
 	if authority != req.Authority {
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid authority; expected %s, got %s", authority, req.Authority)
+	}
+
+	if err := req.Params.Validate(); err != nil {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid parameters; %s", err)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

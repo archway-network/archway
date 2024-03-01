@@ -20,8 +20,6 @@ type MessageICASuccess struct {
 // MessageICAError is the error message for the sudo call
 type MessageICAError struct {
 	Error *SudoErrorMsg `json:"error,omitempty"`
-	// Failure *ICATxError   `json:"failure,omitempty"`
-	// Timeout *ICATxTimeout `json:"timeout,omitempty"`
 }
 
 // OpenAckDetails is the details of the open ack message - when an interchain account is registered

@@ -11,15 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	LabelSendTx                    = "submit_tx"
-	LabelHandleAcknowledgment      = "handle_ack"
-	LabelHandleChanOpenAck         = "handle_chan_open_ack"
-	LabelRegisterInterchainAccount = "register_interchain_account"
-	LabelHandleTimeout             = "handle_timeout"
-	LabelHandleChanCloseConfirm    = "handle_chan_close_confirm"
-)
-
 type (
 	Keeper struct {
 		Codec               codec.BinaryCodec

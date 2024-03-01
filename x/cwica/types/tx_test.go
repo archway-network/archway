@@ -13,6 +13,7 @@ import (
 
 const TestAddress = "cosmos1c4k24jzduc365kywrsvf5ujz4ya6mwymy8vq4q"
 
+// TestMsgRegisterInterchainAccountValidate tests the validation of the MsgRegisterInterchainAccount
 func TestMsgRegisterInterchainAccountValidate(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -72,11 +73,21 @@ func TestMsgRegisterInterchainAccountValidate(t *testing.T) {
 	}
 }
 
+// TestMsgRegisterInterchainAccountGetSigners tests the GetSigners of the MsgRegisterInterchainAccount
 func TestMsgRegisterInterchainAccountGetSigners(t *testing.T) {
 	tests := []struct {
 		name     string
 		malleate func() sdktypes.Msg
 	}{
+		{
+			"valid_signer",
+			func() sdktypes.Msg {
+				return &types.MsgRegisterInterchainAccount{
+					FromAddress:  "👻",
+					ConnectionId: "connection-id",
+				}
+			},
+		},
 		{
 			"valid_signer",
 			func() sdktypes.Msg {
@@ -95,6 +106,7 @@ func TestMsgRegisterInterchainAccountGetSigners(t *testing.T) {
 	}
 }
 
+// TestMsgSendTxValidate tests the validation of the MsgSendTx
 func TestMsgSendTxValidate(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -177,7 +189,7 @@ func TestMsgSendTxValidate(t *testing.T) {
 			"invalid FromAddress",
 			func() sdktypes.Msg {
 				return &types.MsgSendTx{
-					FromAddress:  "invalid_address",
+					FromAddress:  "👻",
 					ConnectionId: "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",

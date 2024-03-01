@@ -10,6 +10,9 @@ import (
 // InitGenesis initializes the cwica module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	if err := genState.Params.Validate(); err != nil {
+		panic(err)
+	}
 	err := k.SetParams(ctx, genState.Params)
 	if err != nil {
 		panic(err)

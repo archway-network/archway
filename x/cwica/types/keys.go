@@ -18,10 +18,11 @@ const (
 )
 
 const (
-	// parameters key
+	// params key
 	prefixParamsKey = iota + 1
 )
 
 var (
+	// params store key
 	ParamsKey = []byte{prefixParamsKey}
 )

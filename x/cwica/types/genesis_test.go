@@ -8,6 +8,7 @@ import (
 	"github.com/archway-network/archway/x/cwica/types"
 )
 
+// TestGenesisState_Validate tests the Validate method of GenesisState
 func TestGenesisState_Validate(t *testing.T) {
 	for _, tc := range []struct {
 		desc     string

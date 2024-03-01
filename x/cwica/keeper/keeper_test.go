@@ -14,6 +14,7 @@ type KeeperTestSuite struct {
 	chain *e2eTesting.TestChain
 }
 
+// SetupTest creates a new test chain and instantiates the keeper
 func (s *KeeperTestSuite) SetupTest() {
 	s.chain = e2eTesting.NewTestChain(s.T(), 1)
 }

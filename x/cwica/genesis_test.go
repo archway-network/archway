@@ -10,6 +10,7 @@ import (
 	"github.com/archway-network/archway/x/cwica/types"
 )
 
+// TestGenesis tests the genesis import and export of the module
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params: types.DefaultParams(),

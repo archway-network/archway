@@ -15,6 +15,16 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
+// TestCWICA tests the CWICA functionality.
+// It tests the following:
+// 1. Registering an interchain account on the counterparty chain via a cw smart contract on the archway chain => Contract receives ica address and stores it
+// 2. Trying to register the same interchain account again => Tx fails with error
+// 3. Submitting a tx on the contract which will vote on the proposal on counterparty chain - There is no proposal on chain => Contract receives error details
+// 4. Submitting a tx on the contract which will vote on the proposal on counterparty chain - There is a proposal on chain => Contract receives vote ack
+// 5. Submitting a tx on the contract which will vote on the proposal on counterparty chain - The message timeout is too small => Contract receives timeout msg
+// 6. Submitting a tx on the contract which will vote on the proposal on counterparty chain - The channel is closed => Tx fails with error
+// 7. Registering the interchain account again to open the channel => Contract receives ica address and stores it. Channel is opened
+// 8. Submitting a tx on the contract which will vote on the proposal on counterparty chain - Vote is different => Contract receives vote ack
 func TestCWICA(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
@@ -113,7 +123,6 @@ func TestCWICA(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, archwayChainUser.FormattedAddress(), contractRes.Data.Owner)
 	require.Equal(t, connection.ID, contractRes.Data.ConnectionId)
-	require.False(t, contractRes.Data.AccountOpen)
 
 	// Register a new interchain account on the counterparty chain
 	execMsg := `{"register":{}}`
@@ -125,6 +134,7 @@ func TestCWICA(t *testing.T) {
 
 	// Wait for the MsgChannelOpenAck on archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgChannelOpenAck) bool {
+		t.Log(found)
 		return found.PortId == "icacontroller-"+contractAddress
 	})
 	require.NoError(t, err)
@@ -137,7 +147,15 @@ func TestCWICA(t *testing.T) {
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
 	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
-	require.True(t, contractRes.Data.AccountOpen)
+
+	// Ensure an IBC channel is opened between the two chains
+	channels, err := relayer.GetChannels(ctx, eRep, archwayChain.Config().ChainID)
+	require.NoError(t, err)
+	for _, channel := range channels {
+		if channel.Counterparty.PortID == "icahost" && channel.PortID == "icacontroller-"+contractAddress {
+			require.Equal(t, "STATE_OPEN", channel.State)
+		}
+	}
 
 	// Trying to register the same interchain account again should error out as channel already exists
 	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
@@ -154,6 +172,7 @@ func TestCWICA(t *testing.T) {
 
 	// Wait for the MsgAcknowledgement on the archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgAcknowledgement) bool {
+		t.Log(found)
 		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress
 	})
 	require.NoError(t, err)
@@ -179,6 +198,7 @@ func TestCWICA(t *testing.T) {
 
 	// Wait for the MsgAcknowledgement on the archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgAcknowledgement) bool {
+		t.Log(found)
 		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress
 	})
 	require.NoError(t, err)
@@ -203,6 +223,7 @@ func TestCWICA(t *testing.T) {
 
 	// Wait for the MsgTimeout on the archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgTimeout) bool {
+		t.Log(found)
 		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress
 	})
 	require.NoError(t, err)
@@ -216,7 +237,15 @@ func TestCWICA(t *testing.T) {
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
 	require.True(t, contractRes.Data.Timeout)
-	require.False(t, contractRes.Data.AccountOpen)
+
+	// Get the channels and check if the channel is closed
+	channels, err = relayer.GetChannels(ctx, eRep, archwayChain.Config().ChainID)
+	require.NoError(t, err)
+	for _, channel := range channels {
+		if channel.Counterparty.PortID == "icahost" {
+			require.Equal(t, "STATE_CLOSED", channel.State)
+		}
+	}
 
 	// Now with MsgTimeout, the channel is closed. So trying to vote again should error out
 	execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":3,"tiny_timeout": false}}`
@@ -233,15 +262,15 @@ func TestCWICA(t *testing.T) {
 
 	// Wait for the MsgChannelOpenAck on archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+20, func(found *channeltypes.MsgChannelOpenAck) bool {
+		t.Log(found)
 		return found.PortId == "icacontroller-"+contractAddress
 	})
 	require.NoError(t, err)
 
-	// Ensure the contract is in the expected state - the ica address should be stored by the contract
+	// Ensure the contract is in the expected state - the same ica address should be stored by the contract
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
 	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
-	require.True(t, contractRes.Data.AccountOpen)
 
 	// Attempt to vote No on the proposal. Previously it was Yes, now this ica tx should pass
 	execMsg = `{"vote":{"proposal_id":` + textProp.ProposalID + `,"option":3,"tiny_timeout": false}}`
@@ -253,6 +282,7 @@ func TestCWICA(t *testing.T) {
 
 	// Wait for the MsgAcknowledgement on the archway chain
 	_, err = cosmos.PollForMessage(ctx, archwayChain, ir, aH, aH+10, func(found *channeltypes.MsgAcknowledgement) bool {
+		t.Log(found)
 		return found.Packet.DestinationPort == "icahost" && found.Packet.SourcePort == "icacontroller-"+contractAddress
 	})
 	require.NoError(t, err)
@@ -275,5 +305,4 @@ type cwicaContractResponseObj struct {
 	Voted        bool   `json:"voted"`
 	Errors       string `json:"errors"`
 	Timeout      bool   `json:"timeout"`
-	AccountOpen  bool   `json:"account_open"`
 }

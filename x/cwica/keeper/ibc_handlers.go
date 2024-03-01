@@ -3,11 +3,9 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
@@ -17,8 +15,6 @@ import (
 
 // HandleAcknowledgement passes the acknowledgement data to the appropriate contract via a sudo call.
 func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelHandleAcknowledgment)
-	k.Logger(ctx).Debug("Handling acknowledgement")
 	icaOwner := types.ICAOwnerFromPort(packet.SourcePort)
 	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
 	if err != nil {
@@ -31,7 +27,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	}
 
 	var sudoMsgPayload []byte
-	if ack.GetError() == "" {
+	if ack.GetError() == "" { // if no error from the counterparty chain
 		sudoMsg := types.SudoPayload{
 			ICA: &types.MessageICASuccess{
 				TxExecuted: &types.ICATxResponse{
@@ -44,7 +40,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		if err != nil {
 			return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
 		}
-	} else {
+	} else { // if error from the counterparty chain
 		packetMsg, err := json.Marshal(packet)
 		if err != nil {
 			return fmt.Errorf("failed to marshal packet: %v", err)
@@ -72,9 +68,8 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 // HandleTimeout passes the timeout data to the appropriate contract via a sudo call.
 // Since all ICA channels are ORDERED, a single timeout shuts down a channel.
+// The channel can be reopened by registering the ICA account again.
 func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelHandleTimeout)
-	k.Logger(ctx).Debug("HandleTimeout")
 	icaOwner := types.ICAOwnerFromPort(packet.SourcePort)
 	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
 	if err != nil {
@@ -102,10 +97,7 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 	return nil
 }
 
-// HandleChanOpenAck passes the data about a successfully created channel to the appropriate contract
-// (== the data about a successfully registered interchain account).
-// Notice that in the case of an ICA channel - it is not yet in OPEN state here
-// the last step of channel opening(confirm) happens on the host chain.
+// HandleChanOpenAck passes the data about a successfully created channel to the appropriate contract via sudo call
 func (k *Keeper) HandleChanOpenAck(
 	ctx sdk.Context,
 	portID,
@@ -113,14 +105,12 @@ func (k *Keeper) HandleChanOpenAck(
 	counterpartyChannelID,
 	counterpartyVersion string,
 ) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelHandleChanOpenAck)
-
-	k.Logger(ctx).Debug("HandleChanOpenAck", "port_id", portID, "channel_id", channelID, "counterparty_channel_id", counterpartyChannelID, "counterparty_version", counterpartyVersion)
 	icaOwner := types.ICAOwnerFromPort(portID)
 	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
 	if err != nil {
 		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse contract address: %s", icaOwner)
 	}
+
 	successMsg := types.SudoPayload{
 		ICA: &types.MessageICASuccess{
 			AccountRegistered: &types.OpenAckDetails{
@@ -146,8 +136,6 @@ func (k *Keeper) HandleChanOpenAck(
 
 // HandleChanCloseConfirm passes the data about a successfully closed channel to the appropriate contract
 func (k *Keeper) HandleChanCloseConfirm(ctx sdk.Context, portID string, channelID string) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), LabelHandleChanCloseConfirm)
-
 	icaOwner := types.ICAOwnerFromPort(portID)
 	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
 	if err != nil {
