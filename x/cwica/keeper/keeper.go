@@ -17,6 +17,7 @@ type (
 		storeKey            storetypes.StoreKey
 		memKey              storetypes.StoreKey
 		channelKeeper       types.ChannelKeeper
+		connectionKeeper    types.ConnectionKeeper
 		icaControllerKeeper types.ICAControllerKeeper
 		sudoKeeper          types.WasmKeeper
 		feeCollectorAddr    string
@@ -29,6 +30,7 @@ func NewKeeper(
 	storeKey,
 	memKey storetypes.StoreKey,
 	channelKeeper types.ChannelKeeper,
+	connectionKeeper types.ConnectionKeeper,
 	icaControllerKeeper types.ICAControllerKeeper,
 	sudoKeeper types.WasmKeeper,
 	feeCollectorAddr string,
@@ -39,6 +41,7 @@ func NewKeeper(
 		storeKey:            storeKey,
 		memKey:              memKey,
 		channelKeeper:       channelKeeper,
+		connectionKeeper:    connectionKeeper,
 		icaControllerKeeper: icaControllerKeeper,
 		sudoKeeper:          sudoKeeper,
 		feeCollectorAddr:    feeCollectorAddr,
@@ -71,4 +74,10 @@ func (k *Keeper) SetICAControllerKeeper(icak types.ICAControllerKeeper) {
 // NOTE: Only for testing purposes
 func (k *Keeper) SetChannelKeeper(ck types.ChannelKeeper) {
 	k.channelKeeper = ck
+}
+
+// SetConnectionKeeper sets the given connection keeper.
+// NOTE: Only for testing purposes
+func (k *Keeper) SetConnectionKeeper(ck types.ConnectionKeeper) {
+	k.connectionKeeper = ck
 }

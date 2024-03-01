@@ -601,6 +601,7 @@ func NewArchwayApp(
 		keys[cwicatypes.StoreKey],
 		memKeys[cwicatypes.MemStoreKey],
 		app.Keepers.IBCKeeper.ChannelKeeper,
+		app.Keepers.IBCKeeper.ConnectionKeeper,
 		app.Keepers.ICAControllerKeeper,
 		app.Keepers.WASMKeeper,
 		authtypes.NewModuleAddress(authtypes.FeeCollectorName).String(),

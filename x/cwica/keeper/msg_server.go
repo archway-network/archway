@@ -42,7 +42,25 @@ func (k Keeper) RegisterInterchainAccount(goCtx context.Context, msg *types.MsgR
 		return nil, errors.Wrapf(types.ErrNotContract, "%s is not a contract address", msg.FromAddress)
 	}
 
-	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.FromAddress, ""); err != nil {
+	// Getting counterparty connection
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, msg.ConnectionId)
+	if !found {
+		return nil, errors.Wrapf(types.ErrCounterpartyConnectionNotFoundID, "failed to get connection for counterparty %s", msg.ConnectionId)
+	}
+	icaMetadata := icatypes.Metadata{
+		Version:                icatypes.Version,
+		ControllerConnectionId: msg.ConnectionId,
+		HostConnectionId:       connectionEnd.Counterparty.ConnectionId,
+		Encoding:               icatypes.EncodingProtobuf,
+		TxType:                 icatypes.TxTypeSDKMultiMsg,
+	}
+	icaMetadataBytes, err := icatypes.ModuleCdc.MarshalJSON(&icaMetadata)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to MarshalJSON ica metadata")
+	}
+	version := string(icaMetadataBytes)
+
+	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.FromAddress, version); err != nil {
 		return nil, errors.Wrap(err, "failed to RegisterInterchainAccount")
 	}
 

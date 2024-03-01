@@ -13,9 +13,10 @@ import (
 // TestKeeper_RegisterInterchainAccount tests the RegisterInterchainAccount gRPC service method
 func (s *KeeperTestSuite) TestRegisterInterchainAccount() {
 	ctx, cwicaKeeper := s.chain.GetContext().WithBlockHeight(100), s.chain.GetApp().Keepers.CWICAKeeper
-	wmKeeper, icaCtrlKeeper := testutils.NewMockContractViewer(), testutils.NewMockICAControllerKeeper()
+	wmKeeper, icaCtrlKeeper, connectionKeeper := testutils.NewMockContractViewer(), testutils.NewMockICAControllerKeeper(), testutils.NewMockConnectionlKeeper()
 	cwicaKeeper.SetWasmKeeper(wmKeeper)
 	cwicaKeeper.SetICAControllerKeeper(icaCtrlKeeper)
+	cwicaKeeper.SetConnectionKeeper(connectionKeeper)
 	contractAddress := e2eTesting.GenContractAddresses(1)[0]
 	contractAdminAcc := s.chain.GetAccount(0)
 	goCtx := sdk.WrapSDKContext(ctx)
@@ -35,17 +36,23 @@ func (s *KeeperTestSuite) TestRegisterInterchainAccount() {
 	s.Require().ErrorContains(err, "is not a contract address")
 	s.Require().Nil(resp)
 
-	// TEST CASE 3: failed to RegisterInterchainAccount at ica controller error - maybe due to no ibc connection
+	// TEST CASE 3: ibc connection not found for counterparty
 	wmKeeper.AddContractAdmin(
 		contractAddress.String(),
 		contractAdminAcc.Address.String(),
 	)
 	s.Require().True(wmKeeper.HasContractInfo(ctx, contractAddress))
 	resp, err = cwicaKeeper.RegisterInterchainAccount(goCtx, &msgRegAcc)
-	s.Require().ErrorContains(err, "failed to RegisterInterchainAccount")
+	s.Require().ErrorContains(err, "failed to get connection for counterparty")
 	s.Require().Nil(resp)
 
-	// TEST CASE 4: successfully registered interchain account
+	// TEST CASE 4: failed to register interchain account - e.g ica controller module disabled
+	connectionKeeper.SetTestStateConnection()
+	resp, err = cwicaKeeper.RegisterInterchainAccount(goCtx, &msgRegAcc)
+	s.Require().ErrorContains(err, "failed to create RegisterInterchainAccount")
+	s.Require().Nil(resp)
+
+	// TEST CASE 5: successfully registered interchain account
 	icaCtrlKeeper.SetTestStateRegisterInterchainAccount(false)
 	resp, err = cwicaKeeper.RegisterInterchainAccount(goCtx, &msgRegAcc)
 	s.Require().NoError(err)
