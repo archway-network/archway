@@ -4,7 +4,7 @@ This module enables Cosmwasm based smart contracts to register ICA accounts and 
 
 ## Concepts
 
-Interchain Accounts is the Cosmos SDK implementation of the ICS-27 protocol, which enables cross-chain account management built upon IBC. Unlike regular accounts, interchain acocunts are contolled programatically by the smart contracts on archway via IBC packets.
+Interchain Accounts is the Cosmos SDK implementation of the ICS-27 protocol, which enables cross-chain account management built upon IBC. Unlike regular accounts, interchain accounts are contolled programatically by the smart contracts on archway via IBC packets.
 
 The module has been designed such that a single smart contract can have one account per ibc connection.
 
@@ -23,7 +23,7 @@ The contract can register an interchain account as is shown in the following sni
 ```rust
 let regsiter_msg = MsgRegisterInterchainAccount {
     from_address: env.contract.address.to_string(), // the smart contract address
-    connection_id: connection_id, // the IBC connection id which will be used to create the interchain accountzd
+    connection_id: connection_id, // the IBC connection id which will be used to create the interchain accounts
 };
 
 let register_stargate_msg = CosmosMsg::Stargate { 
@@ -34,17 +34,6 @@ let register_stargate_msg = CosmosMsg::Stargate {
 Ok(Response::new().add_message(register_stargate_msg))
 ```
 
-Once the interchain account is generated on the counterparty chain, the contract will receive a callback at the following Sudo endpoint.  The address of the account on the counterparty chain is available in `counterparty_version`.
-
-```rust
-#[cw_serde]
-pub enum SudoMsg  {
-    Ica {
-        account_registered: Option<AccountRegistered>, // This endpoint is hit on the creation of the interchain account. It will also include the address on the counterparty chain
-    },
-}
-```
-
 #### Submit Txs
 
 Once an interchain account is created, the contract can submit txs to be executed on the counterparty chain as is shown in the following snippet.
@@ -52,7 +41,7 @@ Once an interchain account is created, the contract can submit txs to be execute
 ```rust
 let vote_msg = MsgVote { // this example votes on behalf of the counterparty account
     proposal_id: proposal_id, // the governance proposal id
-    voter: ica_address, // the address on the conterparty chain
+    voter: ica_address, // the address on the counterparty chain
     option: option, // the vote option
 };
 
@@ -61,28 +50,28 @@ let vote_msg_stargate_msg = prost_types::Any { // proto encoding the MsgVote
     value: vote_msg.encode_to_vec(),
 };
 
-let submittx_msg = MsgSubmitTx {
+let sendtx_msg = MsgSendTx {
     from_address: env.contract.address.to_string(), // the smart contract address
     connection_id: connection_id, // the ibc connection used when creating the ica
     msgs: vec![vote_msg_stargate_msg], // all the msgs to execute on the counterparty chain
-    memo: "sent from contract".to_string(), // tx memo
+    memo: "sent from archway".to_string(), // tx memo
     timeout: 200, // timeout in seconds
 };
         
-let submittx_stargate_msg = CosmosMsg::Stargate {
-    type_url: "/archway.cwica.v1.MsgSubmitTx".to_string(),
-    value: Binary::from(prost::Message::encode_to_vec(&submittx_msg)),
+let sendtx_stargate_msg = CosmosMsg::Stargate {
+    type_url: "/archway.cwica.v1.MsgSendTx".to_string(),
+    value: Binary::from(prost::Message::encode_to_vec(&sendtx_msg)),
 };
         
-Ok(Response::new().add_message(submittx_stargate_msg))
+Ok(Response::new().add_message(sendtx_stargate_msg))
 ```
 
-Once the txs have been submitted, the contract will receive a callback at the Sudo entrypoints. [More info](../../../proto/archway/cwica/v1/sudo.proto)
+Once the txs have been submitted, the contract will receive a callback at the Sudo entrypoints. [Here is how to integrate them](../../../proto/archway/cwica/v1/sudo.proto)
 
 
 > **NOTE** 
 > 
-> Please note that packet timeouts cause the ibc channel to be closed. The channel can be reopened again by registering the ica account again.
+> Please note that packet timeouts cause the ibc channel to be closed, which means the account is not accessible. The channel can be reopened by registering the ica account again.
 
 ## Contents
 

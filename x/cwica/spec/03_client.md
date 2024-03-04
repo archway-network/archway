@@ -34,11 +34,11 @@ To fetch the interchain-account addresses, use the interchain accounts module.
 
 Usage: 
 
-`archwayd query interchain-accounts controller interchain-account <smart_contract_address> <ibc_connection_id>`
+`archwayd q interchain-accounts controller interchain-account <smart_contract_address> <ibc_connection_id>`
 
 Example input:
 
-`archwayd query interchain-accounts controller interchain-account archway1zlc00gjw4ecan3tkk5g0lfd78gyfldh4hvkv2g8z5qnwlkz9vqmsdfvs7q connection-1`
+`archwayd q interchain-accounts controller interchain-account archway1zlc00gjw4ecan3tkk5g0lfd78gyfldh4hvkv2g8z5qnwlkz9vqmsdfvs7q connection-1`
 
 Example output:
 

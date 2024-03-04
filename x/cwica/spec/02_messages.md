@@ -37,9 +37,9 @@ A new interchain account can be registered by using the [MsgRegisterInterchainAc
 message MsgRegisterInterchainAccount {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
-  // from_address is the address of the contrat who wants to register an ica account on
+  // contract_address is the address of the contract who wants to register an ica account on
   // the counterparty chain
-  string from_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string contract_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   // connection_id is the connection id between the two chains
   string connection_id = 2 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
 }
@@ -52,17 +52,17 @@ This message is expected to fail if:
 * The sender/ From Address is not a cosmwasm smart contract
 * The connection id is non existent
 
-## MsgSubmitTx
+## MsgSendTx
 
-A collection of transactions can be submitted to be executed as a transaction from the ICA account on a counterparty chain by using the [MsgSubmitTx](../../../proto/archway/cwica/v1/tx.proto#L43)
+A collection of transactions can be submitted to be executed as a transaction from the ICA account on a counterparty chain by using the [MsgSendTx](../../../proto/archway/cwica/v1/tx.proto#L43)
 
 ```proto
 message MsgSendTx {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
-  // from_address is the address of the who wants to submit a transaction to the
+  // contract_address is the address of the contract who wants to submit a transaction to the
   // counterparty chain
-  string from_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string contract_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   // connection_id is the connection id between the two chains
   string connection_id = 2;
   // msgs are the messages to be submitted to the counterparty chain

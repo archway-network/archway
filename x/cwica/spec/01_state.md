@@ -1,6 +1,6 @@
 # State
 
-Section describes all stored by the module objects and their stoarage keys
+Section describes all stored by the module objects and their storage keys
 
 ## Params
 
@@ -10,3 +10,11 @@ The params value can only be updated by x/gov module via a governance upgrade pr
 
 Storage keys:
 * Params: `ParamsKey -> ProtocolBuffer(Params)`
+
+```protobuf
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  // Defines maximum amount of messages which can be passed in MsgSubmitTx
+  uint64 msg_submit_tx_max_messages = 1;
+}
+```

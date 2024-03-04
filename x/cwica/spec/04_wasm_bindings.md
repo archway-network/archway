@@ -2,7 +2,7 @@
 
 The module exposes custom bindings such that the contracts can access the IBC acknowledgements of the ICA interactions.
 
-The proto definitions can be found [here](../../../proto/archway/cwica/v1/sudo.proto)
+The proto definitions can be found [here](../../../proto/archway/cwica/v1/sudo.proto).
 
 ## Account Creation Callback
 
@@ -38,14 +38,14 @@ After successful interchain account transaction execution on the counterparty ch
 
 ## Transaction Execution - Failed 
 
-If the interachain account transation failed on the counterparty chain, the sudo entrypoint will be called with the following json
+If the interachain account transaction failed on the counterparty chain, the sudo entrypoint will be called with the following json
 
 ```jsonc
 {
 	"error": {
 		"module_name": "cwica",
 		"error_code": 2, // More details, look at archway/cwica/v1/errors.proto
-		"input_payload": "", // ibc packet info
+		"input_payload": "", // ibc packet info, serialized into a string
 		"error_message": "" // any relevant error message sent by the counterparty chain
 	}
 }
@@ -60,7 +60,7 @@ In case the ibc packet timed out ([more info on packet timeouts](https://ibc.cos
 	"error": {
 		"module_name": "cwica",
 		"error_code": 1, // More details, look at archway/cwica/v1/errors.proto
-		"input_payload": "", // ibc packet info
+		"input_payload": "", // ibc packet info, serialized into a string
 		"error_message": "IBC packet timeout" 
 	}
 }
