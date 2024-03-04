@@ -26,7 +26,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params defines the parameters for the module.
 type Params struct {
-	// Defines maximum amount of messages whic can be passed in MsgSubmitTx
+	// Defines maximum amount of messages which can be passed in MsgSubmitTx
 	MsgSubmitTxMaxMessages uint64 `protobuf:"varint,1,opt,name=msg_submit_tx_max_messages,json=msgSubmitTxMaxMessages,proto3" json:"msg_submit_tx_max_messages,omitempty"`
 }
 

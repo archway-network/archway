@@ -35,7 +35,7 @@ func (im IBCModule) OnChanOpenAck(ctx sdk.Context, portID, channelID, counterPar
 
 // OnChanCloseConfirm implements the IBCModule interface.
 func (im IBCModule) OnChanCloseConfirm(ctx sdk.Context, portID string, channelID string) error {
-	return im.keeper.HandleChanCloseConfirm(ctx, portID, channelID)
+	return nil //return im.keeper.HandleChanCloseConfirm(ctx, portID, channelID)
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface.

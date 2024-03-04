@@ -65,8 +65,9 @@ func ExecuteContract(chain *cosmos.CosmosChain, user ibc.Wallet, ctx context.Con
 }
 
 func GetInterchainAccountAddress(chain *cosmos.CosmosChain, ctx context.Context, ownerAddress string, connectionId string) (string, error) {
+	// archwayd query interchain-accounts controller interchain-account cosmos1layxcsmyye0dc0har9sdfzwckaz8sjwlfsj8zs connection-0
 	cmd := []string{
-		chain.Config().Bin, "q", "cwica", "interchain-account", ownerAddress, connectionId,
+		chain.Config().Bin, "q", "interchain-accounts", "controller", "interchain-account", ownerAddress, connectionId,
 		"--node", chain.GetRPCAddress(),
 		"--home", chain.HomeDir(),
 		"--chain-id", chain.Config().ChainID,
@@ -78,7 +79,7 @@ func GetInterchainAccountAddress(chain *cosmos.CosmosChain, ctx context.Context,
 	}
 	var queryRes InterchainAccountAccountQueryResponse
 	err = json.Unmarshal(stdout, &queryRes)
-	return queryRes.InterchainAccountAddress, err
+	return queryRes.Address, err
 }
 
 func GetUserVote(chain *cosmos.CosmosChain, ctx context.Context, proposalId string, address string) (QueryVoteResponse, error) {

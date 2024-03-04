@@ -22,38 +22,6 @@ func GetQueryCmd(_ string) *cobra.Command {
 	}
 
 	cmd.AddCommand(CmdQueryParams())
-	cmd.AddCommand(CmdInterchainAccountCmd())
-
-	return cmd
-}
-
-func CmdInterchainAccountCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "interchain-account [owner-address] [connection-id]",
-		Short:   "Gets the interchain account address that is associated with the given owner-address and connection-id",
-		Long:    "Gets the interchain account address that is associated with the given owner-address and connection-id. \nThe owner-address is the address of the contract account that is associated with the interchain account. \nThe connection-id is the IBC connection id between the two chains.",
-		Example: "archway query cwica interchain-account archway14k24jzduc365kywrsvf5ujz4ya6mwymy8vq4q connection-0 1",
-		Args:    cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.InterchainAccountAddress(cmd.Context(), &types.QueryInterchainAccountAddressRequest{
-				OwnerAddress: args[0],
-				ConnectionId: args[1],
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

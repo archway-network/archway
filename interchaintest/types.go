@@ -1,7 +1,7 @@
 package interchaintest
 
 type InterchainAccountAccountQueryResponse struct {
-	InterchainAccountAddress string `json:"interchain_account_address"`
+	Address string `json:"address"`
 }
 
 type QueryMsg struct {
