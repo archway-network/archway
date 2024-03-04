@@ -8,10 +8,50 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	"github.com/archway-network/archway/x/cwica/types"
 )
+
+// HandleChanOpenAck passes the data about a successfully created channel to the appropriate contract via sudo call
+func (k *Keeper) HandleChanOpenAck(
+	ctx sdk.Context,
+	portID,
+	channelID,
+	counterpartyChannelID,
+	counterpartyVersion string,
+) error {
+	icaOwner := types.ICAOwnerFromPort(portID)
+	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
+	if err != nil {
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse contract address: %s", icaOwner)
+	}
+
+	var metadata icatypes.Metadata
+	if err := icatypes.ModuleCdc.UnmarshalJSON([]byte(counterpartyVersion), &metadata); err != nil {
+		return errors.Wrapf(icatypes.ErrUnknownDataType, "cannot unmarshal ICS-27 interchain accounts metadata")
+	}
+
+	successMsg := types.SudoPayload{
+		ICA: &types.MessageICASuccess{
+			AccountRegistered: &types.AccountRegistered{
+				CounterpartyAddress: metadata.Address,
+			},
+		},
+	}
+	sudoPayload, err := json.Marshal(successMsg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
+	}
+
+	_, err = k.sudoKeeper.Sudo(ctx, contractAddress, sudoPayload)
+	if err != nil {
+		k.Logger(ctx).Debug("HandleChanOpenAck: failed to sudo contract on channel open acknowledgement", "error", err)
+	}
+
+	return nil
+}
 
 // HandleAcknowledgement passes the acknowledgement data to the appropriate contract via a sudo call.
 func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
@@ -92,43 +132,6 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 	_, err = k.sudoKeeper.Sudo(ctx, contractAddress, sudoMsgPayload)
 	if err != nil {
 		k.Logger(ctx).Debug("HandleTimeout: failed to Sudo contract on packet timeout", "error", err)
-	}
-
-	return nil
-}
-
-// HandleChanOpenAck passes the data about a successfully created channel to the appropriate contract via sudo call
-func (k *Keeper) HandleChanOpenAck(
-	ctx sdk.Context,
-	portID,
-	channelID,
-	counterpartyChannelID,
-	counterpartyVersion string,
-) error {
-	icaOwner := types.ICAOwnerFromPort(portID)
-	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
-	if err != nil {
-		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse contract address: %s", icaOwner)
-	}
-
-	successMsg := types.SudoPayload{
-		ICA: &types.MessageICASuccess{
-			AccountRegistered: &types.OpenAckDetails{
-				PortID:                portID,
-				ChannelID:             channelID,
-				CounterpartyChannelID: counterpartyChannelID,
-				CounterpartyVersion:   counterpartyVersion,
-			},
-		},
-	}
-	sudoPayload, err := json.Marshal(successMsg)
-	if err != nil {
-		return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
-	}
-
-	_, err = k.sudoKeeper.Sudo(ctx, contractAddress, sudoPayload)
-	if err != nil {
-		k.Logger(ctx).Debug("HandleChanOpenAck: failed to sudo contract on channel open acknowledgement", "error", err)
 	}
 
 	return nil

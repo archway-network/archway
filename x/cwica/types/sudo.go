@@ -12,9 +12,9 @@ type SudoPayload struct {
 
 // MessageICASuccess is the success message for the sudo call
 type MessageICASuccess struct {
-	AccountRegistered *OpenAckDetails `json:"account_registered,omitempty"`
-	AccountClosed     *ChannelClosed  `json:"account_closed,omitempty"`
-	TxExecuted        *ICATxResponse  `json:"tx_executed,omitempty"`
+	AccountRegistered *AccountRegistered `json:"account_registered,omitempty"`
+	AccountClosed     *ChannelClosed     `json:"account_closed,omitempty"`
+	TxExecuted        *ICATxResponse     `json:"tx_executed,omitempty"`
 }
 
 // MessageICAError is the error message for the sudo call
@@ -22,12 +22,9 @@ type MessageICAError struct {
 	Error *SudoErrorMsg `json:"error,omitempty"`
 }
 
-// OpenAckDetails is the details of the open ack message - when an interchain account is registered
-type OpenAckDetails struct {
-	PortID                string `json:"port_id"`
-	ChannelID             string `json:"channel_id"`
-	CounterpartyChannelID string `json:"counterparty_channel_id"`
-	CounterpartyVersion   string `json:"counterparty_version"`
+// AccountRegistered is contains the address of the registered account on the counterparty chain
+type AccountRegistered struct {
+	CounterpartyAddress string `json:"counterparty_address"`
 }
 
 type ChannelClosed struct {

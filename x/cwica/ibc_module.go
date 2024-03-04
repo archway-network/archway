@@ -28,7 +28,7 @@ func (im IBCModule) OnChanOpenInit(_ sdk.Context, _ channeltypes.Order, _ []stri
 }
 
 // OnChanOpenAck implements the IBCModule interface. This handler is called after we create an
-// account on a remote zone (because icaControllerKeeper.RegisterInterchainAccount opens a channel).
+// account on the counterparty chain (because icaControllerKeeper.RegisterInterchainAccount opens a channel).
 func (im IBCModule) OnChanOpenAck(ctx sdk.Context, portID, channelID, counterPartyChannelID, counterpartyVersion string) error {
 	return im.keeper.HandleChanOpenAck(ctx, portID, channelID, counterPartyChannelID, counterpartyVersion)
 }
