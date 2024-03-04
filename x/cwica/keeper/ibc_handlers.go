@@ -34,12 +34,13 @@ func (k *Keeper) HandleChanOpenAck(
 	}
 
 	successMsg := types.SudoPayload{
-		ICA: &types.MessageICASuccess{
+		Ica: &types.ICASuccess{
 			AccountRegistered: &types.AccountRegistered{
 				CounterpartyAddress: metadata.Address,
 			},
 		},
 	}
+
 	sudoPayload, err := json.Marshal(successMsg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
@@ -69,10 +70,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	var sudoMsgPayload []byte
 	if ack.GetError() == "" { // if no error from the counterparty chain
 		sudoMsg := types.SudoPayload{
-			ICA: &types.MessageICASuccess{
-				TxExecuted: &types.ICATxResponse{
+			Ica: &types.ICASuccess{
+				TxExecuted: &types.TxExecuted{
+					Packet: &packet,
 					Data:   ack.GetResult(),
-					Packet: packet,
 				},
 			},
 		}
@@ -86,12 +87,15 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			return fmt.Errorf("failed to marshal packet: %v", err)
 		}
 		sudoMsg := types.SudoPayload{
-			Error: types.NewSudoErrorMsg(types.SudoError{
-				ErrorCode:    types.ModuleErrors_ERR_EXEC_FAILURE,
-				InputPayload: string(packetMsg),
-				ErrorMsg:     ack.GetError(),
-			}),
+			Error: types.NewSudoError(
+				types.SudoError{
+					ErrorCode:    types.ModuleErrors_ERR_EXEC_FAILURE,
+					InputPayload: string(packetMsg),
+					ErrorMsg:     ack.GetError(),
+				},
+			),
 		}
+
 		sudoMsgPayload, err = json.Marshal(sudoMsg)
 		if err != nil {
 			return fmt.Errorf("failed to marshal MessageFailure: %v", err)
@@ -119,11 +123,15 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 	if err != nil {
 		return fmt.Errorf("failed to marshal packet: %v", err)
 	}
+
 	sudoMsg := types.SudoPayload{
-		Error: types.NewSudoErrorMsg(types.SudoError{
-			ErrorCode:    types.ModuleErrors_ERR_PACKET_TIMEOUT,
-			InputPayload: string(packetMsg),
-		}),
+		Error: types.NewSudoError(
+			types.SudoError{
+				ErrorCode:    types.ModuleErrors_ERR_PACKET_TIMEOUT,
+				InputPayload: string(packetMsg),
+				ErrorMsg:     "IBC packet timeout",
+			},
+		),
 	}
 	sudoMsgPayload, err := json.Marshal(sudoMsg)
 	if err != nil {
@@ -137,30 +145,31 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 	return nil
 }
 
-// HandleChanCloseConfirm passes the data about a successfully closed channel to the appropriate contract
-func (k *Keeper) HandleChanCloseConfirm(ctx sdk.Context, portID string, channelID string) error {
-	icaOwner := types.ICAOwnerFromPort(portID)
-	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
-	if err != nil {
-		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse contract address: %s", icaOwner)
-	}
+// // HandleChanCloseConfirm passes the data about a successfully closed channel to the appropriate contract
+// func (k *Keeper) HandleChanCloseConfirm(ctx sdk.Context, portID string, channelID string) error {
+// 	icaOwner := types.ICAOwnerFromPort(portID)
+// 	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
+// 	if err != nil {
+// 		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse contract address: %s", icaOwner)
+// 	}
 
-	msg := types.SudoPayload{
-		ICA: &types.MessageICASuccess{
-			AccountClosed: &types.ChannelClosed{
-				PortID:    portID,
-				ChannelID: channelID,
-			},
-		},
-	}
-	sudoPayload, err := json.Marshal(msg)
-	if err != nil {
-		return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
-	}
+// 	msg := types.SudoPayload{
+// 		Error: types.NewSudoError(
+// 			types.SudoError{
+// 				ErrorCode:    types.ModuleErrors_ERR_UNKNOWN, // This should be channel closed error
+// 				InputPayload: channelID,
+// 				ErrorMsg:     "Channel closed",
+// 			},
+// 		),
+// 	}
+// 	sudoPayload, err := json.Marshal(msg)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to marshal MessageSuccess: %v", err)
+// 	}
 
-	_, err = k.sudoKeeper.Sudo(ctx, contractAddress, sudoPayload)
-	if err != nil {
-		k.Logger(ctx).Debug("HandleChanCloseConfirm: failed to sudo contract on channel close confirmation", "error", err)
-	}
-	return nil
-}
+// 	_, err = k.sudoKeeper.Sudo(ctx, contractAddress, sudoPayload)
+// 	if err != nil {
+// 		k.Logger(ctx).Debug("HandleChanCloseConfirm: failed to sudo contract on channel close confirmation", "error", err)
+// 	}
+// 	return nil
+// }

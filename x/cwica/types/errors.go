@@ -15,19 +15,8 @@ var (
 	ErrInvalidTimeout                   = errors.Register(ModuleName, 1107, "invalid timeout")
 )
 
-type SudoErrorMsg struct {
-	ModuleName   string       `json:"module_name"`
-	ErrorCode    ModuleErrors `json:"error_code"`
-	InputPayload string       `json:"input_payload"`
-	ErrorMessage string       `json:"error_message"`
-}
-
 // SudoEssosMsg constructor
-func NewSudoErrorMsg(err SudoError) *SudoErrorMsg {
-	return &SudoErrorMsg{
-		ModuleName:   ModuleName,
-		ErrorCode:    err.GetErrorCode(),
-		InputPayload: err.GetInputPayload(),
-		ErrorMessage: err.GetErrorMsg(),
-	}
+func NewSudoError(err SudoError) *SudoError {
+	err.ModuleName = ModuleName
+	return &err
 }

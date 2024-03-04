@@ -1,0 +1,38 @@
+syntax = "proto3";
+package archway.cwica.v1;
+
+import "gogoproto/gogo.proto";
+import "ibc/core/channel/v1/channel.proto";
+import "archway/cwica/v1/errors.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwica/types";
+
+// Sudopayload is the payload for the sudo call sent by the cwica module on IBC actions
+message SudoPayload {
+    // ICA is the message which carries the success responses
+    ICASuccess ica = 1;
+    // SudoError is the message which carries the error responses
+    SudoError error = 2;
+}
+
+// ICASuccess is the success message after the ICA operation has taken place
+message ICASuccess {
+    // account_registered is the message which carries the success response after the ica account has been registered
+    AccountRegistered account_registered = 1;
+    // tx_executed is the message which carries the success response after the ica tx has been executed
+    TxExecuted tx_executed = 2;
+}
+
+// AccountRegistered is contains the address of the registered account on the counterparty chain
+message AccountRegistered {
+    // counterparty_address is the address of the account on the counterparty chain
+    string counterparty_address = 1;
+}
+
+// TxExecuted is the response message after the execute of the ICA tx
+message TxExecuted {
+    // packet is the ibc packet which was executed
+    ibc.core.channel.v1.Packet packet = 1;
+    // data is the response data after the tx has been executed
+    bytes data = 2;
+}
