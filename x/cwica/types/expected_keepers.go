@@ -38,6 +38,7 @@ type ChannelKeeper interface {
 	GetConnection(ctx sdk.Context, connectionID string) (ibcexported.ConnectionI, error)
 }
 
+// ConnectionKeeper defines the expected IBC connection keeper
 type ConnectionKeeper interface {
 	GetConnection(ctx sdk.Context, connectionID string) (connectiontypes.ConnectionEnd, bool)
 }

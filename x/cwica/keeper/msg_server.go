@@ -89,11 +89,11 @@ func (k Keeper) SendTx(goCtx context.Context, msg *types.MsgSendTx) (*types.MsgS
 	}
 
 	params := k.GetParams(ctx)
-	if uint64(len(msg.Msgs)) > params.GetMsgSubmitTxMaxMessages() {
+	if uint64(len(msg.Msgs)) > params.GetMsgSendTxMaxMessages() {
 		return nil, fmt.Errorf(
 			"MsgSubmitTx contains more messages than allowed, has=%d, max=%d",
 			len(msg.Msgs),
-			params.GetMsgSubmitTxMaxMessages(),
+			params.GetMsgSendTxMaxMessages(),
 		)
 	}
 

@@ -317,7 +317,7 @@ func NewArchwayApp(
 		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, cwicatypes.MemStoreKey)
+	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &ArchwayApp{
 		BaseApp:           bApp,
@@ -482,7 +482,7 @@ func NewArchwayApp(
 		appCodec,
 		keys[icacontrollertypes.StoreKey],
 		app.getSubspace(icacontrollertypes.SubModuleName),
-		app.Keepers.IBCFeeKeeper, // may be replaced with middleware such as ics29 feerefunder
+		app.Keepers.IBCKeeper.ChannelKeeper,
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		&app.Keepers.IBCKeeper.PortKeeper,
 		scopedICAControllerKeeper,
@@ -599,12 +599,10 @@ func NewArchwayApp(
 	app.Keepers.CWICAKeeper = *cwicakeeper.NewKeeper(
 		appCodec,
 		keys[cwicatypes.StoreKey],
-		memKeys[cwicatypes.MemStoreKey],
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		app.Keepers.IBCKeeper.ConnectionKeeper,
 		app.Keepers.ICAControllerKeeper,
 		app.Keepers.WASMKeeper,
-		authtypes.NewModuleAddress(authtypes.FeeCollectorName).String(),
 		govModuleAddr,
 	)
 

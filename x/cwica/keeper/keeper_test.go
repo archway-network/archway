@@ -19,6 +19,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.chain = e2eTesting.NewTestChain(s.T(), 1)
 }
 
-func TestCallbackKeeper(t *testing.T) {
+func TestCWIcaKeeper(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

@@ -24,7 +24,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Sudopayload is the payload for the sudo call sent by the cwica module on IBC actions
+// Sudopayload is the payload for the sudo call sent by the cwica module on IBC
+// actions
 type SudoPayload struct {
 	// ICA is the message which carries the success responses
 	Ica *ICASuccess `protobuf:"bytes,1,opt,name=ica,proto3" json:"ica,omitempty"`
@@ -81,9 +82,11 @@ func (m *SudoPayload) GetError() *SudoError {
 
 // ICASuccess is the success message after the ICA operation has taken place
 type ICASuccess struct {
-	// account_registered is the message which carries the success response after the ica account has been registered
+	// account_registered is the message which carries the success response after
+	// the ica account has been registered
 	AccountRegistered *AccountRegistered `protobuf:"bytes,1,opt,name=account_registered,json=accountRegistered,proto3" json:"account_registered,omitempty"`
-	// tx_executed is the message which carries the success response after the ica tx has been executed
+	// tx_executed is the message which carries the success response after the ica
+	// tx has been executed
 	TxExecuted *TxExecuted `protobuf:"bytes,2,opt,name=tx_executed,json=txExecuted,proto3" json:"tx_executed,omitempty"`
 }
 
@@ -134,9 +137,11 @@ func (m *ICASuccess) GetTxExecuted() *TxExecuted {
 	return nil
 }
 
-// AccountRegistered is contains the address of the registered account on the counterparty chain
+// AccountRegistered is contains the address of the registered account on the
+// counterparty chain
 type AccountRegistered struct {
-	// counterparty_address is the address of the account on the counterparty chain
+	// counterparty_address is the address of the account on the counterparty
+	// chain
 	CounterpartyAddress string `protobuf:"bytes,1,opt,name=counterparty_address,json=counterpartyAddress,proto3" json:"counterparty_address,omitempty"`
 }
 

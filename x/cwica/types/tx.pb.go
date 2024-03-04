@@ -37,8 +37,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgRegisterInterchainAccount defines the Msg/RegisterInterchainAccount
 // request type.
 type MsgRegisterInterchainAccount struct {
-	// contract_address is the address of the contrat who wants to register an ica account on
-	// the counterparty chain
+	// contract_address is the address of the contrat who wants to register an ica
+	// account on the counterparty chain
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
 	// connection_id is the connection id between the two chains
 	ConnectionId string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
@@ -117,8 +117,8 @@ var xxx_messageInfo_MsgRegisterInterchainAccountResponse proto.InternalMessageIn
 
 // MsgSendTx defines the Msg/SendTx request type.
 type MsgSendTx struct {
-	// contract_address is the address of the who wants to submit a transaction to the
-	// counterparty chain
+	// contract_address is the address of the who wants to submit a transaction to
+	// the counterparty chain
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
 	// connection_id is the connection id between the two chains
 	ConnectionId string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`

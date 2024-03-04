@@ -22,7 +22,7 @@ The contract can register an interchain account as is shown in the following sni
 
 ```rust
 let regsiter_msg = MsgRegisterInterchainAccount {
-    from_address: env.contract.address.to_string(), // the smart contract address
+    contract_address: env.contract.address.to_string(), // the smart contract address
     connection_id: connection_id, // the IBC connection id which will be used to create the interchain accounts
 };
 
@@ -51,7 +51,7 @@ let vote_msg_stargate_msg = prost_types::Any { // proto encoding the MsgVote
 };
 
 let sendtx_msg = MsgSendTx {
-    from_address: env.contract.address.to_string(), // the smart contract address
+    contract_address: env.contract.address.to_string(), // the smart contract address
     connection_id: connection_id, // the ibc connection used when creating the ica
     msgs: vec![vote_msg_stargate_msg], // all the msgs to execute on the counterparty chain
     memo: "sent from archway".to_string(), // tx memo

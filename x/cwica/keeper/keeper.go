@@ -15,36 +15,30 @@ type (
 	Keeper struct {
 		Codec               codec.BinaryCodec
 		storeKey            storetypes.StoreKey
-		memKey              storetypes.StoreKey
 		channelKeeper       types.ChannelKeeper
 		connectionKeeper    types.ConnectionKeeper
 		icaControllerKeeper types.ICAControllerKeeper
 		sudoKeeper          types.WasmKeeper
-		feeCollectorAddr    string
 		authority           string
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey,
-	memKey storetypes.StoreKey,
+	storeKey storetypes.StoreKey,
 	channelKeeper types.ChannelKeeper,
 	connectionKeeper types.ConnectionKeeper,
 	icaControllerKeeper types.ICAControllerKeeper,
 	sudoKeeper types.WasmKeeper,
-	feeCollectorAddr string,
 	authority string,
 ) *Keeper {
 	return &Keeper{
 		Codec:               cdc,
 		storeKey:            storeKey,
-		memKey:              memKey,
 		channelKeeper:       channelKeeper,
 		connectionKeeper:    connectionKeeper,
 		icaControllerKeeper: icaControllerKeeper,
 		sudoKeeper:          sudoKeeper,
-		feeCollectorAddr:    feeCollectorAddr,
 		authority:           authority,
 	}
 }

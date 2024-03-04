@@ -110,7 +110,6 @@ func TestMsgRegisterInterchainAccountGetSigners(t *testing.T) {
 		} else {
 			require.Panics(t, func() { msg.GetSigners() })
 		}
-
 	}
 }
 
