@@ -28,20 +28,20 @@ Example output:
 msg_submit_tx_max_messages: "5"
 ```
 
-#### interchain-account
+#### interchain account
 
-Gets the interchain account associated with given owner-address, connection-id and interchain-account-id
+To fetch the interchain-account addresses, use the interchain accounts module.
 
-Usage:
+Usage: 
 
-`archwayd q cwica interchain-account [owner-address] [connection-id] [interchain-account-id]`
+`archwayd query interchain-accounts controller interchain-account <smart_contract_address> <ibc_connection_id>`
 
-Example:
+Example input:
 
-`archwayd q cwica interchain-account archway1t0fchjcgpj9zr07guy6u42ph3p4e5ypzz4uhlv connection-1 test2`
+`archwayd query interchain-accounts controller interchain-account archway1zlc00gjw4ecan3tkk5g0lfd78gyfldh4hvkv2g8z5qnwlkz9vqmsdfvs7q connection-1`
 
 Example output:
 
 ```yaml
-interchain_account_address: "cosmos1c4k24jzduc365kywrsvf5ujz4ya6mwymy8vq4q"
+address: "cosmos1layxcsmyye0dc0har9sdfzwckaz8sjwlfsj8zs"
 ```

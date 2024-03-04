@@ -6,6 +6,8 @@ This module enables Cosmwasm based smart contracts to register ICA accounts and 
 
 Interchain Accounts is the Cosmos SDK implementation of the ICS-27 protocol, which enables cross-chain account management built upon IBC. Unlike regular accounts, interchain acocunts are contolled programatically by the smart contracts on archway via IBC packets.
 
+The module has been designed such that a single smart contract can have one account per ibc connection.
+
 You can find more docs about ICA [here](https://ibc.cosmos.network/main/apps/interchain-accounts/overview) and [here](https://github.com/cosmos/ibc/blob/main/spec/app/ics-027-interchain-accounts/README.md)
 
 ## How to use in CW contract
@@ -21,8 +23,7 @@ The contract can register an interchain account as is shown in the following sni
 ```rust
 let regsiter_msg = MsgRegisterInterchainAccount {
     from_address: env.contract.address.to_string(), // the smart contract address
-    connection_id: connection_id, // the IBC connection id which will be used to create the interchain account
-    interchain_account_id: interchain_account_id, // any custom account id given to differentiate accounts by the contract
+    connection_id: connection_id, // the IBC connection id which will be used to create the interchain accountzd
 };
 
 let register_stargate_msg = CosmosMsg::Stargate { 
@@ -39,8 +40,7 @@ Once the interchain account is generated on the counterparty chain, the contract
 #[cw_serde]
 pub enum SudoMsg  {
     Ica {
-        account_registered: Option<OpenAck>, // This endpoint is hit on the creation of the interchain account
-        tx_executed: Option<ICAResponse>,
+        account_registered: Option<AccountRegistered>, // This endpoint is hit on the creation of the interchain account. It will also include the address on the counterparty chain
     },
 }
 ```
@@ -63,7 +63,6 @@ let vote_msg_stargate_msg = prost_types::Any { // proto encoding the MsgVote
 
 let submittx_msg = MsgSubmitTx {
     from_address: env.contract.address.to_string(), // the smart contract address
-    interchain_account_id: interchain_account_id, // the interchain account id used during creation 
     connection_id: connection_id, // the ibc connection used when creating the ica
     msgs: vec![vote_msg_stargate_msg], // all the msgs to execute on the counterparty chain
     memo: "sent from contract".to_string(), // tx memo
@@ -78,28 +77,12 @@ let submittx_stargate_msg = CosmosMsg::Stargate {
 Ok(Response::new().add_message(submittx_stargate_msg))
 ```
 
-Once the txs have been submitted, the contract will receive a callback at the following Sudo endpoint. 
+Once the txs have been submitted, the contract will receive a callback at the Sudo entrypoints. [More info](../../../proto/archway/cwica/v1/sudo.proto)
 
-```rust
-#[cw_serde]
-pub enum SudoMsg  {
-    Error {
-        module_name: String, // the module which generated the error
-        error_code: u32, // the module specific error code
-        input_payload: String, // input which caused the error
-        error_message: String, // any error message
-    }
-}
-```
 
-For CWICA module, the `module_name` will be `cwica`. The error code will be one of the following
-```protobuf
-enum ModuleErrors {
-  ERR_UNKNOWN = 0;
-  ERR_PACKET_TIMEOUT = 1;
-  ERR_EXEC_FAILURE = 2;
-}
-```
+> **NOTE** 
+> 
+> Please note that packet timeouts cause the ibc channel to be closed. The channel can be reopened again by registering the ica account again.
 
 ## Contents
 
