@@ -78,15 +78,17 @@ func TestMsgRegisterInterchainAccountGetSigners(t *testing.T) {
 	tests := []struct {
 		name     string
 		malleate func() sdktypes.Msg
+		isValid  bool
 	}{
 		{
-			"valid_signer",
+			"invalid_signer",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
 					FromAddress:  "👻",
 					ConnectionId: "connection-id",
 				}
 			},
+			false,
 		},
 		{
 			"valid_signer",
@@ -96,13 +98,19 @@ func TestMsgRegisterInterchainAccountGetSigners(t *testing.T) {
 					ConnectionId: "connection-id",
 				}
 			},
+			true,
 		},
 	}
 
 	for _, tt := range tests {
 		msg := tt.malleate()
-		addr, _ := sdktypes.AccAddressFromBech32(TestAddress)
-		require.Equal(t, msg.GetSigners(), []sdktypes.AccAddress{addr})
+		if tt.isValid {
+			addr, _ := sdktypes.AccAddressFromBech32(TestAddress)
+			require.Equal(t, msg.GetSigners(), []sdktypes.AccAddress{addr})
+		} else {
+			require.Panics(t, func() { msg.GetSigners() })
+		}
+
 	}
 }
 

@@ -111,12 +111,22 @@ func (s *KeeperTestSuite) TestHandleChanOpenAck() {
 	err := cwicaKeeper.HandleChanOpenAck(ctx, "", channelID, counterpartyChannelID, "1")
 	s.Require().ErrorContains(err, "failed to parse contract address: : invalid address")
 
+	icaMetadata := icatypes.Metadata{
+		Version:                "ics27-1",
+		ControllerConnectionId: "connection-0",
+		HostConnectionId:       "connection-0",
+		Encoding:               icatypes.EncodingProtobuf,
+		TxType:                 icatypes.TxTypeSDKMultiMsg,
+	}
+	icaMetadataBytes, err := icatypes.ModuleCdc.MarshalJSON(&icaMetadata)
+	s.Require().NoError(err)
+
 	// TEST CASE 2: success contract SudoResponse
-	err = cwicaKeeper.HandleChanOpenAck(ctx, portID, channelID, counterpartyChannelID, "1")
+	err = cwicaKeeper.HandleChanOpenAck(ctx, portID, channelID, counterpartyChannelID, string(icaMetadataBytes))
 	s.Require().NoError(err)
 
 	// TEST CASE 3: contract callback fails - should not return error - because error is swallowed
 	wmKeeper.SetReturnSudoError(errors.New("SudoOnChanOpenAck error"))
-	err = cwicaKeeper.HandleChanOpenAck(ctx, portID, channelID, counterpartyChannelID, "1")
+	err = cwicaKeeper.HandleChanOpenAck(ctx, portID, channelID, counterpartyChannelID, string(icaMetadataBytes))
 	s.Require().NoError(err)
 }

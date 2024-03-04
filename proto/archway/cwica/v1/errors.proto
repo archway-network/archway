@@ -13,8 +13,8 @@ message SudoError {
   ModuleErrors error_code = 2;
   // payload is any input which caused the error
   string input_payload = 3;
-  // error_msg is the error message
-  string error_msg = 4;
+  // error_message is the error message
+  string error_message = 4;
 }
 
 // ModuleErrors defines the module level error codes

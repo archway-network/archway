@@ -27,8 +27,7 @@ func (msg *MsgRegisterInterchainAccount) ValidateBasic() error {
 }
 
 func (msg *MsgRegisterInterchainAccount) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{fromAddress}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.FromAddress)}
 }
 
 func (msg *MsgRegisterInterchainAccount) Route() string {
@@ -66,8 +65,7 @@ func (msg *MsgSendTx) ValidateBasic() error {
 }
 
 func (msg *MsgSendTx) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{fromAddress}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.FromAddress)}
 }
 
 func (msg *MsgSendTx) Route() string {
