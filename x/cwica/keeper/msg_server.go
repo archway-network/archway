@@ -33,13 +33,13 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 func (k Keeper) RegisterInterchainAccount(goCtx context.Context, msg *types.MsgRegisterInterchainAccount) (*types.MsgRegisterInterchainAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	senderAddr, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	senderAddr, err := sdk.AccAddressFromBech32(msg.ContractAddress)
 	if err != nil {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse address: %s", msg.FromAddress)
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse address: %s", msg.ContractAddress)
 	}
 
 	if !k.sudoKeeper.HasContractInfo(ctx, senderAddr) {
-		return nil, errors.Wrapf(types.ErrNotContract, "%s is not a contract address", msg.FromAddress)
+		return nil, errors.Wrapf(types.ErrNotContract, "%s is not a contract address", msg.ContractAddress)
 	}
 
 	// Getting counterparty connection
@@ -60,7 +60,7 @@ func (k Keeper) RegisterInterchainAccount(goCtx context.Context, msg *types.MsgR
 	}
 	version := string(icaMetadataBytes)
 
-	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.FromAddress, version); err != nil {
+	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.ContractAddress, version); err != nil {
 		return nil, errors.Wrap(err, "failed to RegisterInterchainAccount")
 	}
 
@@ -79,13 +79,13 @@ func (k Keeper) SendTx(goCtx context.Context, msg *types.MsgSendTx) (*types.MsgS
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	senderAddr, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	senderAddr, err := sdk.AccAddressFromBech32(msg.ContractAddress)
 	if err != nil {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse address: %s", msg.FromAddress)
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse address: %s", msg.ContractAddress)
 	}
 
 	if !k.sudoKeeper.HasContractInfo(ctx, senderAddr) {
-		return nil, errors.Wrapf(types.ErrNotContract, "%s is not a contract address", msg.FromAddress)
+		return nil, errors.Wrapf(types.ErrNotContract, "%s is not a contract address", msg.ContractAddress)
 	}
 
 	params := k.GetParams(ctx)
@@ -97,7 +97,7 @@ func (k Keeper) SendTx(goCtx context.Context, msg *types.MsgSendTx) (*types.MsgS
 		)
 	}
 
-	portID, err := icatypes.NewControllerPortID(msg.FromAddress)
+	portID, err := icatypes.NewControllerPortID(msg.ContractAddress)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create NewControllerPortID")
 	}

@@ -28,8 +28,8 @@ func (s *KeeperTestSuite) TestRegisterInterchainAccount() {
 
 	// TEST CASE 2: contract address is not a registered contract
 	msgRegAcc := types.MsgRegisterInterchainAccount{
-		FromAddress:  contractAddress.String(),
-		ConnectionId: "connection-0",
+		ContractAddress: contractAddress.String(),
+		ConnectionId:    "connection-0",
 	}
 	s.Require().False(wmKeeper.HasContractInfo(ctx, contractAddress))
 	resp, err = cwicaKeeper.RegisterInterchainAccount(goCtx, &msgRegAcc)
@@ -91,11 +91,11 @@ func (s *KeeperTestSuite) TestSendTx() {
 
 	// TEST CASE 4: contract address is not a registered contract
 	submitMsg := types.MsgSendTx{
-		FromAddress:  contractAddress.String(),
-		ConnectionId: "connection-0",
-		Msgs:         []*codectypes.Any{&cosmosMsg},
-		Memo:         "memo",
-		Timeout:      100,
+		ContractAddress: contractAddress.String(),
+		ConnectionId:    "connection-0",
+		Msgs:            []*codectypes.Any{&cosmosMsg},
+		Memo:            "memo",
+		Timeout:         100,
 	}
 	s.Require().False(wmKeeper.HasContractInfo(ctx, contractAddress))
 	resp, err = cwicaKeeper.SendTx(goCtx, &submitMsg)

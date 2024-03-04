@@ -24,28 +24,28 @@ func TestMsgRegisterInterchainAccountValidate(t *testing.T) {
 			"valid",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:  TestAddress,
-					ConnectionId: "connection-id",
+					ContractAddress: TestAddress,
+					ConnectionId:    "connection-id",
 				}
 			},
 			nil,
 		},
 		{
-			"empty fromAddress",
+			"empty ContractAddress",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:  "",
-					ConnectionId: "connection-id",
+					ContractAddress: "",
+					ConnectionId:    "connection-id",
 				}
 			},
 			sdkerrors.ErrInvalidAddress,
 		},
 		{
-			"invalid fromAddress",
+			"invalid ContractAddress",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:  "invalid address",
-					ConnectionId: "connection-id",
+					ContractAddress: "invalid address",
+					ConnectionId:    "connection-id",
 				}
 			},
 			sdkerrors.ErrInvalidAddress,
@@ -54,8 +54,8 @@ func TestMsgRegisterInterchainAccountValidate(t *testing.T) {
 			"empty connection id",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:  TestAddress,
-					ConnectionId: "",
+					ContractAddress: TestAddress,
+					ConnectionId:    "",
 				}
 			},
 			types.ErrEmptyConnectionID,
@@ -84,8 +84,8 @@ func TestMsgRegisterInterchainAccountGetSigners(t *testing.T) {
 			"invalid_signer",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:  "👻",
-					ConnectionId: "connection-id",
+					ContractAddress: "👻",
+					ConnectionId:    "connection-id",
 				}
 			},
 			false,
@@ -94,8 +94,8 @@ func TestMsgRegisterInterchainAccountGetSigners(t *testing.T) {
 			"valid_signer",
 			func() sdktypes.Msg {
 				return &types.MsgRegisterInterchainAccount{
-					FromAddress:  TestAddress,
-					ConnectionId: "connection-id",
+					ContractAddress: TestAddress,
+					ConnectionId:    "connection-id",
 				}
 			},
 			true,
@@ -125,8 +125,8 @@ func TestMsgSendTxValidate(t *testing.T) {
 			"valid",
 			func() sdktypes.Msg {
 				return &types.MsgSendTx{
-					FromAddress:  TestAddress,
-					ConnectionId: "connection-id",
+					ContractAddress: TestAddress,
+					ConnectionId:    "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil
@@ -140,8 +140,8 @@ func TestMsgSendTxValidate(t *testing.T) {
 			"invalid timeout",
 			func() sdktypes.Msg {
 				return &types.MsgSendTx{
-					FromAddress:  TestAddress,
-					ConnectionId: "connection-id",
+					ContractAddress: TestAddress,
+					ConnectionId:    "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil
@@ -155,8 +155,8 @@ func TestMsgSendTxValidate(t *testing.T) {
 			"empty connection id",
 			func() sdktypes.Msg {
 				return &types.MsgSendTx{
-					FromAddress:  TestAddress,
-					ConnectionId: "",
+					ContractAddress: TestAddress,
+					ConnectionId:    "",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil
@@ -170,20 +170,20 @@ func TestMsgSendTxValidate(t *testing.T) {
 			"no messages",
 			func() sdktypes.Msg {
 				return &types.MsgSendTx{
-					FromAddress:  TestAddress,
-					ConnectionId: "connection-id",
-					Msgs:         nil,
-					Timeout:      1,
+					ContractAddress: TestAddress,
+					ConnectionId:    "connection-id",
+					Msgs:            nil,
+					Timeout:         1,
 				}
 			},
 			types.ErrNoMessages,
 		},
 		{
-			"empty FromAddress",
+			"empty ContractAddress",
 			func() sdktypes.Msg {
 				return &types.MsgSendTx{
-					FromAddress:  "",
-					ConnectionId: "connection-id",
+					ContractAddress: "",
+					ConnectionId:    "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil
@@ -194,11 +194,11 @@ func TestMsgSendTxValidate(t *testing.T) {
 			sdkerrors.ErrInvalidAddress,
 		},
 		{
-			"invalid FromAddress",
+			"invalid ContractAddress",
 			func() sdktypes.Msg {
 				return &types.MsgSendTx{
-					FromAddress:  "👻",
-					ConnectionId: "connection-id",
+					ContractAddress: "👻",
+					ConnectionId:    "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil
@@ -232,8 +232,8 @@ func TestMsgSubmitTXGetSigners(t *testing.T) {
 			"valid_signer",
 			func() sdktypes.Msg {
 				return &types.MsgSendTx{
-					FromAddress:  TestAddress,
-					ConnectionId: "connection-id",
+					ContractAddress: TestAddress,
+					ConnectionId:    "connection-id",
 					Msgs: []*cosmosTypes.Any{{
 						TypeUrl: "msg",
 						Value:   []byte{100}, // just check that values are not nil

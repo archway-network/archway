@@ -19,15 +19,15 @@ func (msg *MsgRegisterInterchainAccount) ValidateBasic() error {
 		return ErrEmptyConnectionID
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse FromAddress: %s", msg.FromAddress)
+	if _, err := sdk.AccAddressFromBech32(msg.ContractAddress); err != nil {
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse ContractAddress: %s", msg.ContractAddress)
 	}
 
 	return nil
 }
 
 func (msg *MsgRegisterInterchainAccount) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.FromAddress)}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.ContractAddress)}
 }
 
 func (msg *MsgRegisterInterchainAccount) Route() string {
@@ -49,8 +49,8 @@ func (msg *MsgSendTx) ValidateBasic() error {
 		return ErrEmptyConnectionID
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse FromAddress: %s", msg.FromAddress)
+	if _, err := sdk.AccAddressFromBech32(msg.ContractAddress); err != nil {
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse ContractAddress: %s", msg.ContractAddress)
 	}
 
 	if len(msg.Msgs) == 0 {
@@ -65,7 +65,7 @@ func (msg *MsgSendTx) ValidateBasic() error {
 }
 
 func (msg *MsgSendTx) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.FromAddress)}
+	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.ContractAddress)}
 }
 
 func (msg *MsgSendTx) Route() string {
