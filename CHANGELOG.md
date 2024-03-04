@@ -40,6 +40,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#541](https://github.com/archway-network/archway/pull/541) - Update the interchaintest framework to v7
 - [#542](https://github.com/archway-network/archway/pull/542) - Adding x/cwica module
 - [#543](https://github.com/archway-network/archway/pull/543) - Bumping sdk to v0.47.9
+- [#544](https://github.com/archway-network/archway/pull/544) - Bumping sdk to v0.47.10
 
 ### Improvements
 
