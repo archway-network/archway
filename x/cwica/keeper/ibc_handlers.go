@@ -91,7 +91,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				types.SudoError{
 					ErrorCode:    types.ModuleErrors_ERR_EXEC_FAILURE,
 					InputPayload: string(packetMsg),
-					ErrorMsg:     ack.GetError(),
+					ErrorMessage: ack.GetError(),
 				},
 			),
 		}
@@ -129,7 +129,7 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, rela
 			types.SudoError{
 				ErrorCode:    types.ModuleErrors_ERR_PACKET_TIMEOUT,
 				InputPayload: string(packetMsg),
-				ErrorMsg:     "IBC packet timeout",
+				ErrorMessage: "IBC packet timeout",
 			},
 		),
 	}
