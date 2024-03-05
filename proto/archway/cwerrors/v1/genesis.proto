@@ -1,0 +1,14 @@
+syntax = "proto3";
+package archway.cwerrors.v1;
+
+import "gogoproto/gogo.proto";
+import "archway/cwerrors/v1/params.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwerrors/types";
+
+
+// GenesisState defines the cwerrors module's genesis state.
+message GenesisState {
+    // params defines all the module parameters.
+    Params params = 1 [ (gogoproto.nullable) = false ];  
+}

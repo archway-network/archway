@@ -1,0 +1,43 @@
+syntax = "proto3";
+package archway.cwerrors.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "archway/cwerrors/v1/cwerrors.proto";
+import "archway/cwerrors/v1/params.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwerrors/types";
+
+// Query service for the cwerrors module.
+service Query {
+    // Params queries all the module parameters.
+    rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+        option (google.api.http).get = "/archway/cwerrors/v1/params";
+    }
+
+    // Errors queries all the errors for a given contract.
+    rpc Errors(QueryErrorsRequest) returns (QueryErrorsResponse) {
+        option (google.api.http).get = "/archway/cwerrors/v1/errors";
+    }
+}
+
+// QueryParamsRequest is the request for Query.Params.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response for Query.Params.
+message QueryParamsResponse {
+  // params defines all the module parameters.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryErrorsRequest is the request for Query.Errors.
+message QueryErrorsRequest {
+    // contract_address is the address of the contract whose errors to query for
+    string contract_address = 1;
+}
+
+// QueryErrorsResponse is the response for Query.Errors.
+message QueryErrorsResponse {
+    // errors defines all the contract errors which will be returned
+  repeated SudoError errors = 1 [ (gogoproto.nullable) = false ];
+}

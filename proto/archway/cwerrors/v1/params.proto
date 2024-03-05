@@ -1,0 +1,14 @@
+syntax = "proto3";
+package archway.cwerrors.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwerrors/types";
+
+// Params defines the set of parameters for the cwerrors module.
+message Params {
+    // error_stored_time is the block height until which error is stored
+    int64 error_stored_time = 1;
+    // disable_error_callbacks is a flag to disable error callbacks functionality - circuitbreaker
+    bool disable_error_callbacks = 2;
+}

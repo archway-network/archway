@@ -1,0 +1,17 @@
+syntax = "proto3";
+package archway.cwerrors.v1;
+
+import "gogoproto/gogo.proto";
+import "archway/cwerrors/v1/params.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwerrors/types";
+
+// ParamsUpdatedEvent defines the event which is thrown when the module parameters are updated
+message ParamsUpdatedEvent {
+    // old_params are the old parameters for the module
+    Params old_params = 1 [(gogoproto.nullable) = false];
+    // new_params are the new parameters for the module
+    Params new_params = 2 [(gogoproto.nullable) = false];
+    // authority is the address of the authority that updated the parameters
+    string authority = 3;
+}

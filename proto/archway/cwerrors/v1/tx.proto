@@ -1,0 +1,29 @@
+syntax = "proto3";
+package archway.cwerrors.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/msg/v1/msg.proto";
+import "archway/cwerrors/v1/params.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwerrors/types";
+
+// Msg defines the cwerrors Msg service.
+service Msg {
+    // UpdateParams defines a governance operation for updating the x/cwerrors
+    // module parameters. The authority is defined in the keeper.
+    rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+    option (cosmos.msg.v1.signer) = "authority";
+    // authority is the address that controls the module (defaults to x/gov unless overwritten).
+    string authority = 1;
+    // params defines the x/cwerrors parameters to update.
+    //
+    // NOTE: All parameters must be supplied.
+    Params params = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "params,omitempty"];
+}
+  
+// MsgUpdateParamsResponse defines the response structure for executing a MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
