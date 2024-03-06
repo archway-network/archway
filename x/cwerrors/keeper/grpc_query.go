@@ -26,7 +26,18 @@ func NewQueryServer(keeper Keeper) *QueryServer {
 
 // Errors implements types.QueryServer.
 func (qs *QueryServer) Errors(c context.Context, request *types.QueryErrorsRequest) (*types.QueryErrorsResponse, error) {
-	panic("👻 unimplemented")
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	errors, err := qs.keeper.GetErrorsByContractAddress(sdk.UnwrapSDKContext(c), request.ContractAddress)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "could not fetch the errors: %s", err.Error())
+	}
+
+	return &types.QueryErrorsResponse{
+		Errors: errors,
+	}, nil
 }
 
 // Params implements types.QueryServer.
