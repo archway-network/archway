@@ -22,8 +22,14 @@ type Keeper struct {
 
 	// Params key: ParamsKeyPrefix | value: Params
 	Params collections.Item[types.Params]
-	// Errors key: CallbackKeyPrefix | value: []Callback
-	//Errors collections.Map[collections.Triple[int64, []byte, uint64], types.Callback]
+	// ErrorsCount key: ErrorsCountKey | value: ErrorsCount
+	ErrorsCount collections.Item[int64]
+	// ContractErrors key: ContractErrorsKeyPrefix + contractAddress + ErrorId | value: ErrorId
+	ContractErrors collections.Map[collections.Pair[string, int64], int64]
+	// ContractErrors key: ErrorsKeyPrefix + ErrorId | value: SudoError
+	Errors collections.Map[int64, types.SudoError]
+	// DeletionBlocks key: DeletionBlocksKeyPrefix + BlockHeight + ErrorId | value: ErrorId
+	DeletionBlocks collections.Map[collections.Pair[int64, int64], int64]
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -40,13 +46,33 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, wk types.WasmKeepe
 			"params",
 			collcompat.ProtoValue[types.Params](cdc),
 		),
-		// Errors: collections.NewMap(
-		// 	sb,
-		// 	types.CallbackKeyPrefix,
-		// 	"callbacks",
-		// 	collections.TripleKeyCodec(collections.Int64Key, collections.BytesKey, collections.Uint64Key),
-		// 	collcompat.ProtoValue[types.Callback](cdc),
-		// ),
+		ErrorsCount: collections.NewItem(
+			sb,
+			types.ErrorsCountKey,
+			"errorsCount",
+			collections.Int64Value,
+		),
+		ContractErrors: collections.NewMap(
+			sb,
+			types.ContractErrorsKeyPrefix,
+			"contractErrors",
+			collections.PairKeyCodec(collections.StringKey, collections.Int64Key),
+			collections.Int64Value,
+		),
+		Errors: collections.NewMap(
+			sb,
+			types.ErrorsKeyPrefix,
+			"errors",
+			collections.Int64Key,
+			collcompat.ProtoValue[types.SudoError](cdc),
+		),
+		DeletionBlocks: collections.NewMap(
+			sb,
+			types.DeletionBlocksKeyPrefix,
+			"deletionBlocks",
+			collections.PairKeyCodec(collections.Int64Key, collections.Int64Key),
+			collections.Int64Value,
+		),
 	}
 	schema, err := sb.Build()
 	if err != nil {
