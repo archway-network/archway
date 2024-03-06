@@ -1,4 +1,4 @@
-package callback
+package cwerrors
 
 import (
 	"github.com/archway-network/archway/x/cwerrors/keeper"
@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// EndBlocker fetches all the callbacks registered for the current block height and executes them
+// EndBlocker is called every block, and prunes errors that are older than the current block height.
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	err := k.PruneErrorsByBlockHeight(ctx, ctx.BlockHeight())
 	if err != nil {

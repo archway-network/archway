@@ -1,4 +1,4 @@
-package callback
+package cwerrors
 
 import (
 	"context"

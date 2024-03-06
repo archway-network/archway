@@ -1,4 +1,4 @@
-package callback
+package cwerrors
 
 import (
 	"github.com/archway-network/archway/x/cwerrors/keeper"
