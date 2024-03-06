@@ -9,6 +9,7 @@ import (
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
 	callbackTypes "github.com/archway-network/archway/x/callback/types"
+	cwerrorstypes "github.com/archway-network/archway/x/cwerrors/types"
 	"github.com/archway-network/archway/x/cwfees"
 )
 
@@ -34,6 +35,7 @@ var Upgrade = upgrades.Upgrade{
 		Added: []string{
 			callbackTypes.ModuleName,
 			cwfees.ModuleName,
+			cwerrorstypes.ModuleName,
 		},
 	},
 }
