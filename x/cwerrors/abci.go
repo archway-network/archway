@@ -8,7 +8,7 @@ import (
 
 // EndBlocker is called every block, and prunes errors that are older than the current block height.
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
-	err := k.PruneErrorsByBlockHeight(ctx, ctx.BlockHeight())
+	err := k.PruneErrorsCurrentBlock(ctx)
 	if err != nil {
 		panic(err)
 	}

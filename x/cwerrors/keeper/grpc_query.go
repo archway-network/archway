@@ -30,7 +30,12 @@ func (qs *QueryServer) Errors(c context.Context, request *types.QueryErrorsReque
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	errors, err := qs.keeper.GetErrorsByContractAddress(sdk.UnwrapSDKContext(c), request.ContractAddress)
+	addr, err := sdk.AccAddressFromBech32(request.ContractAddress)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid contract address: %s", err.Error())
+	}
+
+	errors, err := qs.keeper.GetErrorsByContractAddress(sdk.UnwrapSDKContext(c), addr)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "could not fetch the errors: %s", err.Error())
 	}

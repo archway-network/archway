@@ -12,8 +12,9 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 	if err := sudoErr.Validate(); err != nil {
 		return err
 	}
+	contractAddr := sdk.MustAccAddressFromBech32(sudoErr.ContractAddress)
 	// Ensure contract exists
-	if !k.wasmKeeper.HasContractInfo(ctx, sdk.MustAccAddressFromBech32(sudoErr.ContractAddress)) {
+	if !k.wasmKeeper.HasContractInfo(ctx, contractAddr) {
 		return types.ErrContractNotFound
 	}
 
@@ -28,7 +29,7 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 	}
 
 	// Store contract errors
-	if err = k.ContractErrors.Set(ctx, collections.Join(sudoErr.ContractAddress, errorID), errorID); err != nil {
+	if err = k.ContractErrors.Set(ctx, collections.Join(contractAddr.Bytes(), errorID), errorID); err != nil {
 		return err
 	}
 
@@ -47,9 +48,9 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 }
 
 // GetErrosByContractAddress returns all errors by a given contract address
-func (k Keeper) GetErrorsByContractAddress(ctx sdk.Context, contractAddress string) (sudoErrs []types.SudoError, err error) {
-	rng := collections.NewPrefixUntilPairRange[string, int64](contractAddress)
-	err = k.ContractErrors.Walk(ctx, rng, func(key collections.Pair[string, int64], errorID int64) (bool, error) {
+func (k Keeper) GetErrorsByContractAddress(ctx sdk.Context, contractAddress []byte) (sudoErrs []types.SudoError, err error) {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](contractAddress)
+	err = k.ContractErrors.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], errorID int64) (bool, error) {
 		sudoErr, err := k.Errors.Get(ctx, errorID)
 		if err != nil {
 			return true, err
@@ -63,10 +64,11 @@ func (k Keeper) GetErrorsByContractAddress(ctx sdk.Context, contractAddress stri
 	return sudoErrs, nil
 }
 
-// PruneErrorsByBlockHeight removes all errors that are queued to be deleted the given block height
-func (k Keeper) PruneErrorsByBlockHeight(ctx sdk.Context, height int64) (err error) {
+// PruneErrorsCurrentBlock removes all errors that are queued to be deleted the given block height
+func (k Keeper) PruneErrorsCurrentBlock(ctx sdk.Context) (err error) {
 	var errorIDs []int64
-	rng := collections.NewPrefixUntilPairRange[int64, int64](height)
+	height := ctx.BlockHeight()
+	rng := collections.NewPrefixedPairRange[int64, int64](height)
 	err = k.DeletionBlocks.Walk(ctx, rng, func(key collections.Pair[int64, int64], errorID int64) (bool, error) {
 		errorIDs = append(errorIDs, errorID)
 		return false, nil
@@ -84,8 +86,8 @@ func (k Keeper) PruneErrorsByBlockHeight(ctx sdk.Context, height int64) (err err
 			return err
 		}
 		// Removing the contract errors
-		contractAddress := sudoErr.ContractAddress
-		if err := k.ContractErrors.Remove(ctx, collections.Join(contractAddress, errorID)); err != nil {
+		contractAddress := sdk.MustAccAddressFromBech32(sudoErr.ContractAddress)
+		if err := k.ContractErrors.Remove(ctx, collections.Join(contractAddress.Bytes(), errorID)); err != nil {
 			return err
 		}
 		// Removing the deletion block

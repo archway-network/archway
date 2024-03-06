@@ -25,7 +25,7 @@ type Keeper struct {
 	// ErrorsCount key: ErrorsCountKey | value: ErrorsCount
 	ErrorsCount collections.Item[int64]
 	// ContractErrors key: ContractErrorsKeyPrefix + contractAddress + ErrorId | value: ErrorId
-	ContractErrors collections.Map[collections.Pair[string, int64], int64]
+	ContractErrors collections.Map[collections.Pair[[]byte, int64], int64]
 	// ContractErrors key: ErrorsKeyPrefix + ErrorId | value: SudoError
 	Errors collections.Map[int64, types.SudoError]
 	// DeletionBlocks key: DeletionBlocksKeyPrefix + BlockHeight + ErrorId | value: ErrorId
@@ -56,7 +56,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, wk types.WasmKeepe
 			sb,
 			types.ContractErrorsKeyPrefix,
 			"contractErrors",
-			collections.PairKeyCodec(collections.StringKey, collections.Int64Key),
+			collections.PairKeyCodec(collections.BytesKey, collections.Int64Key),
 			collections.Int64Value,
 		),
 		Errors: collections.NewMap(

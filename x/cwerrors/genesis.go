@@ -9,8 +9,10 @@ import (
 // InitGenesis initializes the module genesis state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	params := genState.Params
-	err := k.Params.Set(ctx, params)
-	if err != nil {
+	if err := k.Params.Set(ctx, params); err != nil {
+		panic(err)
+	}
+	if err := k.ErrorsCount.Set(ctx, 0); err != nil {
 		panic(err)
 	}
 }
