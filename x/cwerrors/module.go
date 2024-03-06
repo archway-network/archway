@@ -128,5 +128,5 @@ func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the module. It returns no validator updates.
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, a.keeper, a.wasmKeeper)
+	return EndBlocker(ctx, a.keeper)
 }
