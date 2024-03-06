@@ -30,8 +30,8 @@ func DefaultParams() Params {
 
 // Validate perform object fields validation.
 func (p Params) Validate() error {
-	if p.ErrorStoredTime > 0 {
-		return fmt.Errorf("CallbackGasLimit must be greater than 0")
+	if p.ErrorStoredTime <= 0 {
+		return fmt.Errorf("ErrorStoredTime must be greater than 0. Current value: %d", p.ErrorStoredTime)
 	}
 	return nil
 }
