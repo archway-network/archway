@@ -257,3 +257,30 @@ func (s *KeeperTestSuite) TestGetErrorCount() {
 	s.Require().NoError(err)
 	s.Require().Equal(int64(6), count)
 }
+
+func (s *KeeperTestSuite) TestSudoErrorCallback() {
+	// Setting up chain and contract in mock wasm keeper
+	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.CWErrorsKeeper
+
+	sudoErr := types.SudoError{
+		ContractAddress: e2eTesting.GenContractAddresses(1)[0].String(),
+		ModuleName:      "test",
+		ErrorCode:       1,
+		InputPayload:    "test",
+		ErrorMessage:    "test",
+	}
+
+	// Set error
+	keeper.SetSudoErrorCallback(ctx, 1, sudoErr)
+	keeper.SetSudoErrorCallback(ctx, 2, sudoErr)
+
+	// Get error
+	getErrs := keeper.GetAllSudoErrorCallbacks(ctx)
+	s.Require().Len(getErrs, 2)
+
+	// Go to next block and check if errors are 0 as this is a transient store
+	s.chain.NextBlock(1)
+
+	getErrs = keeper.GetAllSudoErrorCallbacks(s.chain.GetContext())
+	s.Require().Len(getErrs, 0)
+}

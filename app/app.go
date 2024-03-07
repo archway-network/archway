@@ -314,7 +314,7 @@ func NewArchwayApp(
 
 		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName, cwerrorsTypes.StoreKey,
 	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, cwerrorsTypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &ArchwayApp{
@@ -585,6 +585,7 @@ func NewArchwayApp(
 	app.Keepers.CWErrorsKeeper = cwerrorsKeeper.NewKeeper(
 		appCodec,
 		keys[cwerrorsTypes.StoreKey],
+		tkeys[cwerrorsTypes.TStoreKey],
 		app.Keepers.WASMKeeper,
 		govModuleAddr,
 	)

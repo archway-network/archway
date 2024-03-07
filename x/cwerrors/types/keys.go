@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/collections"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -11,8 +12,11 @@ const (
 	StoreKey = ModuleName
 	// QuerierRoute is the querier route for the module.
 	QuerierRoute = ModuleName
+	// TStoreKey defines the transient store key
+	TStoreKey = "t_" + ModuleName
 )
 
+// Collections
 var (
 	// ParamsKeyPrefix is the prefix for the module parameter store.
 	ParamsKeyPrefix = collections.NewPrefix(1)
@@ -29,3 +33,12 @@ var (
 	// SubscriptionEndBlockKeyPrefix is the prefix for the collection of all subscriptions which end at given blocks
 	SubscriptionEndBlockKeyPrefix = collections.NewPrefix(7)
 )
+
+// Transiet Store
+var (
+	ErrorsForSudoCallbackKey = []byte{0x00}
+)
+
+func GetErrorsForSudoCallStoreKey(errorID int64) []byte {
+	return append(ErrorsForSudoCallbackKey, sdk.Uint64ToBigEndian(uint64(errorID))...)
+}

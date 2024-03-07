@@ -28,6 +28,11 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 		return err
 	}
 
+	if k.HasSubscription(ctx, contractAddr) {
+		k.SetSudoErrorCallback(ctx, errorID, sudoErr)
+		return nil
+	}
+
 	// Store contract errors
 	if err = k.ContractErrors.Set(ctx, collections.Join(contractAddr.Bytes(), errorID), errorID); err != nil {
 		return err
@@ -102,4 +107,24 @@ func (k Keeper) PruneErrorsCurrentBlock(ctx sdk.Context) (err error) {
 // GetErrorCount returns the total number of errors - used for generating errorID
 func (k Keeper) GetErrorCount(ctx sdk.Context) (int64, error) {
 	return k.ErrorsCount.Get(ctx)
+}
+
+// SetSudoErrorCallback stores a sudo error callback in the transient store
+func (k Keeper) SetSudoErrorCallback(ctx sdk.Context, errorId int64, sudoErr types.SudoError) {
+	tStore := ctx.TransientStore(k.tStoreKey)
+	errToStore := k.cdc.MustMarshal(&sudoErr)
+	tStore.Set(types.GetErrorsForSudoCallStoreKey(errorId), errToStore)
+}
+
+// GetAllSudoErrorCallbacks returns all sudo error callbacks from the transient store
+func (k Keeper) GetAllSudoErrorCallbacks(ctx sdk.Context) (sudoErrs []types.SudoError) {
+	tStore := ctx.TransientStore(k.tStoreKey)
+	itr := sdk.KVStorePrefixIterator(tStore, types.ErrorsForSudoCallbackKey)
+	defer itr.Close()
+	for ; itr.Valid(); itr.Next() {
+		var sudoErr types.SudoError
+		k.cdc.MustUnmarshal(itr.Value(), &sudoErr)
+		sudoErrs = append(sudoErrs, sudoErr)
+	}
+	return sudoErrs
 }
