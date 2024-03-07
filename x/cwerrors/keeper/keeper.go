@@ -30,6 +30,10 @@ type Keeper struct {
 	Errors collections.Map[int64, types.SudoError]
 	// DeletionBlocks key: DeletionBlocksKeyPrefix + BlockHeight + ErrorId | value: ErrorId
 	DeletionBlocks collections.Map[collections.Pair[int64, int64], int64]
+	// ContractSubscriptions key: ContractSubscriptionsKeyPrefix + contractAddress | value: nil
+	ContractSubscriptions collections.Map[[]byte, int64]
+	// SubscriptionEndBlock key: SubscriptionEndBlockKeyPrefix + BlockHeight + contractAddress | value: contractAddress
+	SubscriptionEndBlock collections.Map[collections.Pair[int64, []byte], []byte]
 }
 
 // NewKeeper creates a new Keeper instance.
@@ -72,6 +76,20 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, wk types.WasmKeepe
 			"deletionBlocks",
 			collections.PairKeyCodec(collections.Int64Key, collections.Int64Key),
 			collections.Int64Value,
+		),
+		ContractSubscriptions: collections.NewMap(
+			sb,
+			types.ContractSubscriptionsKeyPrefix,
+			"contractSubscriptions",
+			collections.BytesKey,
+			collections.Int64Value,
+		),
+		SubscriptionEndBlock: collections.NewMap(
+			sb,
+			types.SubscriptionEndBlockKeyPrefix,
+			"subscriptionEndBlock",
+			collections.PairKeyCodec(collections.Int64Key, collections.BytesKey),
+			collections.BytesValue,
 		),
 	}
 	schema, err := sb.Build()

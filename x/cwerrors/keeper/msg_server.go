@@ -26,6 +26,24 @@ func NewMsgServer(keeper Keeper) *MsgServer {
 	}
 }
 
+// SubscribeToError implements types.MsgServer.
+func (s *MsgServer) SubscribeToError(c context.Context, request *types.MsgSubscribeToError) (*types.MsgSubscribeToErrorResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	contractAddr, err := sdk.AccAddressFromBech32(request.Contract)
+	if err != nil {
+		return nil, err
+	}
+
+	subscriptionEndHeight, err := s.keeper.SetSubscription(sdk.UnwrapSDKContext(c), contractAddr, request.Fee)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgSubscribeToErrorResponse{SubscriptionValidTill: subscriptionEndHeight}, nil
+}
+
 // UpdateParams implements types.MsgServer.
 func (s MsgServer) UpdateParams(c context.Context, request *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if request == nil {

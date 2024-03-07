@@ -3,6 +3,7 @@ package archway.cwerrors.v1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "archway/cwerrors/v1/cwerrors.proto";
 import "archway/cwerrors/v1/params.proto";
 
@@ -18,6 +19,16 @@ service Query {
     // Errors queries all the errors for a given contract.
     rpc Errors(QueryErrorsRequest) returns (QueryErrorsResponse) {
         option (google.api.http).get = "/archway/cwerrors/v1/errors";
+    }
+
+    // IsSubscribed queries if a contract is subscribed to sudo error callbacks.
+    rpc IsSubscribed(QueryIsSubscribedRequest) returns (QueryIsSubscribedResponse) {
+        option (google.api.http).get = "/archway/cwerrors/v1/is_subscribed";
+    }
+
+    // SubscriptionFee queries the subscription fee for the module.
+    rpc SubscriptionFee(QuerySubscriptionFeeRequest) returns (QuerySubscriptionFeeResponse) {
+        option (google.api.http).get = "/archway/cwerrors/v1/subscription_fee";
     }
 }
 
@@ -40,4 +51,29 @@ message QueryErrorsRequest {
 message QueryErrorsResponse {
     // errors defines all the contract errors which will be returned
   repeated SudoError errors = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryIsSubscribedRequest is the request for Query.IsSubscribed.
+message QueryIsSubscribedRequest {
+    // contract_address is the address of the contract to query if subscribed
+    string contract_address = 1;
+}
+
+// QueryIsSubscribedResponse is the response for Query.IsSubscribed.
+message QueryIsSubscribedResponse {
+    // subscribed defines if the contract is subscribed to sudo error callbacks
+    bool subscribed = 1;
+    // subscription_valid_till defines the block height till which the subscription is valid
+    int64 subscription_valid_till = 2;
+}
+
+// QuerySubscriptionFeeRequest is the request for Query.SubscriptionFees.
+message QuerySubscriptionFeeRequest {}
+
+// QuerySubscriptionFeeResponse is the response for Query.SubscriptionFees.
+message QuerySubscriptionFeeResponse {
+    // fee defines the subscription fee for the module
+    cosmos.base.v1beta1.Coin fee = 1 [ (gogoproto.nullable) = false ];
+    // period is the period for which the subscription is valid
+    int64 period = 2;
 }

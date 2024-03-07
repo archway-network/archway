@@ -38,7 +38,7 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 	if err != nil {
 		return err
 	}
-	deletionHeight := ctx.BlockHeight() + params.GetErrorStoredTime()
+	deletionHeight := ctx.BlockHeight() + params.ErrorStoredTime
 	if err = k.DeletionBlocks.Set(ctx, collections.Join(deletionHeight, errorID), errorID); err != nil {
 		return err
 	}

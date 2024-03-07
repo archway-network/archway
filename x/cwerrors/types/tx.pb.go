@@ -6,6 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
@@ -123,35 +124,147 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
+// MsgSubscribeToError is the Msg/SubscribeToError request type.
+type MsgSubscribeToError struct {
+	// contract is the address of the contract that will be called on error
+	Contract string `protobuf:"bytes,1,opt,name=contract,proto3" json:"contract,omitempty"`
+	// fee is the subscription fee for the feature (current no fee is charged for this feature)
+	Fee types.Coin `protobuf:"bytes,2,opt,name=fee,proto3" json:"fee"`
+}
+
+func (m *MsgSubscribeToError) Reset()         { *m = MsgSubscribeToError{} }
+func (m *MsgSubscribeToError) String() string { return proto.CompactTextString(m) }
+func (*MsgSubscribeToError) ProtoMessage()    {}
+func (*MsgSubscribeToError) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f833e7f9e8fbc63c, []int{2}
+}
+func (m *MsgSubscribeToError) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSubscribeToError) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSubscribeToError.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSubscribeToError) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSubscribeToError.Merge(m, src)
+}
+func (m *MsgSubscribeToError) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSubscribeToError) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSubscribeToError.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSubscribeToError proto.InternalMessageInfo
+
+func (m *MsgSubscribeToError) GetContract() string {
+	if m != nil {
+		return m.Contract
+	}
+	return ""
+}
+
+func (m *MsgSubscribeToError) GetFee() types.Coin {
+	if m != nil {
+		return m.Fee
+	}
+	return types.Coin{}
+}
+
+// MsgSubscribeToErrorResponse defines the response structure for executing a MsgSubscribeToError message.
+type MsgSubscribeToErrorResponse struct {
+	// subscription_valid_till is the block height till which the subscription is valid
+	SubscriptionValidTill int64 `protobuf:"varint,1,opt,name=subscription_valid_till,json=subscriptionValidTill,proto3" json:"subscription_valid_till,omitempty"`
+}
+
+func (m *MsgSubscribeToErrorResponse) Reset()         { *m = MsgSubscribeToErrorResponse{} }
+func (m *MsgSubscribeToErrorResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSubscribeToErrorResponse) ProtoMessage()    {}
+func (*MsgSubscribeToErrorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f833e7f9e8fbc63c, []int{3}
+}
+func (m *MsgSubscribeToErrorResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSubscribeToErrorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSubscribeToErrorResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSubscribeToErrorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSubscribeToErrorResponse.Merge(m, src)
+}
+func (m *MsgSubscribeToErrorResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSubscribeToErrorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSubscribeToErrorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSubscribeToErrorResponse proto.InternalMessageInfo
+
+func (m *MsgSubscribeToErrorResponse) GetSubscriptionValidTill() int64 {
+	if m != nil {
+		return m.SubscriptionValidTill
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "archway.cwerrors.v1.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "archway.cwerrors.v1.MsgUpdateParamsResponse")
+	proto.RegisterType((*MsgSubscribeToError)(nil), "archway.cwerrors.v1.MsgSubscribeToError")
+	proto.RegisterType((*MsgSubscribeToErrorResponse)(nil), "archway.cwerrors.v1.MsgSubscribeToErrorResponse")
 }
 
 func init() { proto.RegisterFile("archway/cwerrors/v1/tx.proto", fileDescriptor_f833e7f9e8fbc63c) }
 
 var fileDescriptor_f833e7f9e8fbc63c = []byte{
-	// 307 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x49, 0x2c, 0x4a, 0xce,
-	0x28, 0x4f, 0xac, 0xd4, 0x4f, 0x2e, 0x4f, 0x2d, 0x2a, 0xca, 0x2f, 0x2a, 0xd6, 0x2f, 0x33, 0xd4,
-	0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x86, 0xca, 0xea, 0xc1, 0x64, 0xf5,
-	0xca, 0x0c, 0xa5, 0x44, 0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0xf2, 0xfa, 0x20, 0x16, 0x44, 0xa9, 0x94,
-	0x78, 0x72, 0x7e, 0x71, 0x6e, 0x7e, 0xb1, 0x7e, 0x6e, 0x71, 0x3a, 0xc8, 0x88, 0xdc, 0xe2, 0x74,
-	0xa8, 0x84, 0x02, 0x36, 0x1b, 0x0a, 0x12, 0x8b, 0x12, 0x73, 0x8b, 0x21, 0x2a, 0x94, 0xfa, 0x18,
-	0xb9, 0xf8, 0x7d, 0x8b, 0xd3, 0x43, 0x0b, 0x52, 0x12, 0x4b, 0x52, 0x03, 0xc0, 0x32, 0x42, 0x32,
-	0x5c, 0x9c, 0x89, 0xa5, 0x25, 0x19, 0xf9, 0x45, 0x99, 0x25, 0x95, 0x12, 0x8c, 0x0a, 0x8c, 0x1a,
-	0x9c, 0x41, 0x08, 0x01, 0x21, 0x5f, 0x2e, 0x36, 0x88, 0x09, 0x12, 0x4c, 0x0a, 0x8c, 0x1a, 0xdc,
-	0x46, 0xd2, 0x7a, 0x58, 0x1c, 0xaa, 0x07, 0x31, 0xca, 0x49, 0xe2, 0xc4, 0x3d, 0x79, 0x86, 0x57,
-	0xf7, 0xe4, 0x05, 0x20, 0x5a, 0x74, 0xf2, 0x73, 0x33, 0x4b, 0x52, 0x73, 0x0b, 0x4a, 0x2a, 0x83,
-	0xa0, 0x86, 0x58, 0xf1, 0x35, 0x3d, 0xdf, 0xa0, 0x85, 0x30, 0x5e, 0x49, 0x92, 0x4b, 0x1c, 0xcd,
-	0x3d, 0x41, 0xa9, 0xc5, 0x05, 0xf9, 0x79, 0xc5, 0xa9, 0x46, 0x99, 0x5c, 0xcc, 0xbe, 0xc5, 0xe9,
-	0x42, 0x49, 0x5c, 0x3c, 0x28, 0xce, 0x55, 0xc1, 0xea, 0x00, 0x34, 0x43, 0xa4, 0x74, 0x88, 0x51,
-	0x05, 0xb3, 0xca, 0xc9, 0xf7, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92,
-	0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0x8c,
-	0xd3, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0xa1, 0x26, 0xea, 0xe6, 0xa5,
-	0x96, 0x94, 0xe7, 0x17, 0x65, 0xc3, 0xf8, 0xfa, 0x15, 0x88, 0xf0, 0x2e, 0xa9, 0x2c, 0x48, 0x2d,
-	0x4e, 0x62, 0x03, 0x07, 0xb6, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x2e, 0x1b, 0x8b, 0x9e, 0xf2,
-	0x01, 0x00, 0x00,
+	// 456 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0xcd, 0x6e, 0xd3, 0x40,
+	0x14, 0x85, 0x63, 0x82, 0x2a, 0x3a, 0xfc, 0x55, 0x2e, 0x28, 0xa9, 0x5b, 0xb9, 0x51, 0xc4, 0x22,
+	0x42, 0x65, 0x06, 0xb7, 0x12, 0x8b, 0x2e, 0x83, 0x58, 0x5a, 0x42, 0xa6, 0x65, 0xc1, 0xa6, 0x1a,
+	0xbb, 0x83, 0x33, 0xc2, 0xf6, 0xb5, 0xe6, 0x4e, 0x92, 0x66, 0xcb, 0x03, 0x20, 0x1e, 0x85, 0xc7,
+	0xe8, 0xb2, 0x4b, 0xd8, 0x54, 0x28, 0x59, 0x20, 0xf1, 0x14, 0x68, 0xe2, 0x49, 0x02, 0xc1, 0x95,
+	0xba, 0xf3, 0xf5, 0x77, 0x7c, 0xee, 0xf1, 0xd1, 0x25, 0x7b, 0x5c, 0x25, 0x83, 0x31, 0x9f, 0xb0,
+	0x64, 0x2c, 0x94, 0x02, 0x85, 0x6c, 0x14, 0x30, 0x7d, 0x41, 0x4b, 0x05, 0x1a, 0xdc, 0x6d, 0x4b,
+	0xe9, 0x82, 0xd2, 0x51, 0xe0, 0x3d, 0x49, 0x21, 0x85, 0x39, 0x67, 0xe6, 0xa9, 0x92, 0x7a, 0xad,
+	0x04, 0x30, 0x07, 0x64, 0x39, 0xa6, 0xc6, 0x22, 0xc7, 0xd4, 0x02, 0xdf, 0x82, 0x98, 0xa3, 0x60,
+	0xa3, 0x20, 0x16, 0x9a, 0x07, 0x2c, 0x01, 0x59, 0x58, 0xde, 0xa9, 0x4b, 0x50, 0x72, 0xc5, 0x73,
+	0xac, 0x14, 0xdd, 0x2f, 0x0e, 0x79, 0x1c, 0x62, 0x7a, 0x5a, 0x9e, 0x73, 0x2d, 0xde, 0xce, 0x89,
+	0xbb, 0x47, 0x36, 0xf9, 0x50, 0x0f, 0x40, 0x49, 0x3d, 0x69, 0x3b, 0x1d, 0xa7, 0xb7, 0x19, 0xad,
+	0x5e, 0xb8, 0x21, 0xd9, 0xa8, 0x1c, 0xda, 0x77, 0x3a, 0x4e, 0xef, 0xfe, 0xe1, 0x2e, 0xad, 0xf9,
+	0x11, 0x5a, 0x59, 0xf5, 0xdb, 0x97, 0xd7, 0xfb, 0x8d, 0xdf, 0xd7, 0xfb, 0x5b, 0xd5, 0x27, 0x07,
+	0x90, 0x4b, 0x2d, 0xf2, 0x52, 0x4f, 0x22, 0x6b, 0x72, 0xfc, 0xe8, 0xf3, 0xaf, 0x6f, 0xcf, 0x57,
+	0xf6, 0xdd, 0x1d, 0xd2, 0x5a, 0xcb, 0x13, 0x09, 0x2c, 0xa1, 0x40, 0xd1, 0x45, 0xb2, 0x1d, 0x62,
+	0xfa, 0x6e, 0x18, 0x63, 0xa2, 0x64, 0x2c, 0x4e, 0xe0, 0x8d, 0x59, 0xe7, 0x7a, 0xe4, 0x5e, 0x02,
+	0x85, 0x56, 0x3c, 0xd1, 0x36, 0xed, 0x72, 0x76, 0x03, 0xd2, 0xfc, 0x28, 0x84, 0x4d, 0xba, 0x43,
+	0xab, 0xba, 0xa8, 0xa9, 0x8b, 0xda, 0xba, 0xe8, 0x6b, 0x90, 0x45, 0xff, 0xae, 0xc9, 0x19, 0x19,
+	0xed, 0xf1, 0x43, 0x13, 0x68, 0xe9, 0xd0, 0x3d, 0x25, 0xbb, 0x35, 0x4b, 0x17, 0x99, 0xdc, 0x57,
+	0xa4, 0x85, 0x15, 0x2b, 0xb5, 0x84, 0xe2, 0x6c, 0xc4, 0x33, 0x79, 0x7e, 0xa6, 0x65, 0x96, 0xcd,
+	0xb3, 0x34, 0xa3, 0xa7, 0x7f, 0xe3, 0xf7, 0x86, 0x9e, 0xc8, 0x2c, 0x3b, 0xfc, 0xe1, 0x90, 0x66,
+	0x88, 0xa9, 0x1b, 0x93, 0x07, 0xff, 0x74, 0xff, 0xac, 0xb6, 0xcd, 0xb5, 0x46, 0xbc, 0x83, 0xdb,
+	0xa8, 0x96, 0x19, 0x0b, 0xb2, 0xf5, 0x5f, 0x69, 0xbd, 0x9b, 0x1c, 0xd6, 0x95, 0xde, 0xcb, 0xdb,
+	0x2a, 0x17, 0xfb, 0xfa, 0xe1, 0xe5, 0xd4, 0x77, 0xae, 0xa6, 0xbe, 0xf3, 0x73, 0xea, 0x3b, 0x5f,
+	0x67, 0x7e, 0xe3, 0x6a, 0xe6, 0x37, 0xbe, 0xcf, 0xfc, 0xc6, 0x87, 0xa3, 0x54, 0xea, 0xc1, 0x30,
+	0xa6, 0x09, 0xe4, 0xcc, 0xba, 0xbe, 0x28, 0x84, 0x1e, 0x83, 0xfa, 0xb4, 0x98, 0xd9, 0xc5, 0xea,
+	0x58, 0xf5, 0xa4, 0x14, 0x18, 0x6f, 0xcc, 0x2f, 0xf5, 0xe8, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0x17, 0xb0, 0x41, 0x9a, 0x4f, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -169,6 +282,8 @@ type MsgClient interface {
 	// UpdateParams defines a governance operation for updating the x/cwerrors
 	// module parameters. The authority is defined in the keeper.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// SubscribeToError defines an operation which will register a contract for a sudo callback on errors
+	SubscribeToError(ctx context.Context, in *MsgSubscribeToError, opts ...grpc.CallOption) (*MsgSubscribeToErrorResponse, error)
 }
 
 type msgClient struct {
@@ -188,11 +303,22 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) SubscribeToError(ctx context.Context, in *MsgSubscribeToError, opts ...grpc.CallOption) (*MsgSubscribeToErrorResponse, error) {
+	out := new(MsgSubscribeToErrorResponse)
+	err := c.cc.Invoke(ctx, "/archway.cwerrors.v1.Msg/SubscribeToError", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a governance operation for updating the x/cwerrors
 	// module parameters. The authority is defined in the keeper.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// SubscribeToError defines an operation which will register a contract for a sudo callback on errors
+	SubscribeToError(context.Context, *MsgSubscribeToError) (*MsgSubscribeToErrorResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -201,6 +327,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (*UnimplementedMsgServer) SubscribeToError(ctx context.Context, req *MsgSubscribeToError) (*MsgSubscribeToErrorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubscribeToError not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -225,6 +354,24 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SubscribeToError_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSubscribeToError)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SubscribeToError(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/archway.cwerrors.v1.Msg/SubscribeToError",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SubscribeToError(ctx, req.(*MsgSubscribeToError))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "archway.cwerrors.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -232,6 +379,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "SubscribeToError",
+			Handler:    _Msg_SubscribeToError_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -301,6 +452,74 @@ func (m *MsgUpdateParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSubscribeToError) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSubscribeToError) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSubscribeToError) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Fee.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Contract) > 0 {
+		i -= len(m.Contract)
+		copy(dAtA[i:], m.Contract)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Contract)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSubscribeToErrorResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSubscribeToErrorResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSubscribeToErrorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.SubscriptionValidTill != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.SubscriptionValidTill))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -333,6 +552,33 @@ func (m *MsgUpdateParamsResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *MsgSubscribeToError) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Contract)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Fee.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgSubscribeToErrorResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.SubscriptionValidTill != 0 {
+		n += 1 + sovTx(uint64(m.SubscriptionValidTill))
+	}
 	return n
 }
 
@@ -486,6 +732,190 @@ func (m *MsgUpdateParamsResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgUpdateParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSubscribeToError) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSubscribeToError: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSubscribeToError: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Contract", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Contract = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fee", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Fee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSubscribeToErrorResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSubscribeToErrorResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSubscribeToErrorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubscriptionValidTill", wireType)
+			}
+			m.SubscriptionValidTill = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SubscriptionValidTill |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

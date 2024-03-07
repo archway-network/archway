@@ -24,4 +24,8 @@ var (
 	ErrorsKeyPrefix = collections.NewPrefix(4)
 	// DeletionBlocksKeyPrefix is the prefix for the collection of all errors which need to be deleted in given block
 	DeletionBlocksKeyPrefix = collections.NewPrefix(5)
+	// ContractSubscriptionsKeyPrefix is the prefix for the collection of all contracts with subscriptions
+	ContractSubscriptionsKeyPrefix = collections.NewPrefix(6)
+	// SubscriptionEndBlockKeyPrefix is the prefix for the collection of all subscriptions which end at given blocks
+	SubscriptionEndBlockKeyPrefix = collections.NewPrefix(7)
 )

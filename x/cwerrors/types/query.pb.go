@@ -6,6 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -204,41 +205,251 @@ func (m *QueryErrorsResponse) GetErrors() []SudoError {
 	return nil
 }
 
+// QueryIsSubscribedRequest is the request for Query.IsSubscribed.
+type QueryIsSubscribedRequest struct {
+	// contract_address is the address of the contract to query if subscribed
+	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+}
+
+func (m *QueryIsSubscribedRequest) Reset()         { *m = QueryIsSubscribedRequest{} }
+func (m *QueryIsSubscribedRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryIsSubscribedRequest) ProtoMessage()    {}
+func (*QueryIsSubscribedRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a1be36abcb817ffd, []int{4}
+}
+func (m *QueryIsSubscribedRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryIsSubscribedRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryIsSubscribedRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryIsSubscribedRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryIsSubscribedRequest.Merge(m, src)
+}
+func (m *QueryIsSubscribedRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryIsSubscribedRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryIsSubscribedRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryIsSubscribedRequest proto.InternalMessageInfo
+
+func (m *QueryIsSubscribedRequest) GetContractAddress() string {
+	if m != nil {
+		return m.ContractAddress
+	}
+	return ""
+}
+
+// QueryIsSubscribedResponse is the response for Query.IsSubscribed.
+type QueryIsSubscribedResponse struct {
+	// subscribed defines if the contract is subscribed to sudo error callbacks
+	Subscribed bool `protobuf:"varint,1,opt,name=subscribed,proto3" json:"subscribed,omitempty"`
+	// subscription_valid_till defines the block height till which the subscription is valid
+	SubscriptionValidTill int64 `protobuf:"varint,2,opt,name=subscription_valid_till,json=subscriptionValidTill,proto3" json:"subscription_valid_till,omitempty"`
+}
+
+func (m *QueryIsSubscribedResponse) Reset()         { *m = QueryIsSubscribedResponse{} }
+func (m *QueryIsSubscribedResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryIsSubscribedResponse) ProtoMessage()    {}
+func (*QueryIsSubscribedResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a1be36abcb817ffd, []int{5}
+}
+func (m *QueryIsSubscribedResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryIsSubscribedResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryIsSubscribedResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryIsSubscribedResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryIsSubscribedResponse.Merge(m, src)
+}
+func (m *QueryIsSubscribedResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryIsSubscribedResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryIsSubscribedResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryIsSubscribedResponse proto.InternalMessageInfo
+
+func (m *QueryIsSubscribedResponse) GetSubscribed() bool {
+	if m != nil {
+		return m.Subscribed
+	}
+	return false
+}
+
+func (m *QueryIsSubscribedResponse) GetSubscriptionValidTill() int64 {
+	if m != nil {
+		return m.SubscriptionValidTill
+	}
+	return 0
+}
+
+// QuerySubscriptionFeeRequest is the request for Query.SubscriptionFees.
+type QuerySubscriptionFeeRequest struct {
+}
+
+func (m *QuerySubscriptionFeeRequest) Reset()         { *m = QuerySubscriptionFeeRequest{} }
+func (m *QuerySubscriptionFeeRequest) String() string { return proto.CompactTextString(m) }
+func (*QuerySubscriptionFeeRequest) ProtoMessage()    {}
+func (*QuerySubscriptionFeeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a1be36abcb817ffd, []int{6}
+}
+func (m *QuerySubscriptionFeeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySubscriptionFeeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySubscriptionFeeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySubscriptionFeeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySubscriptionFeeRequest.Merge(m, src)
+}
+func (m *QuerySubscriptionFeeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySubscriptionFeeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySubscriptionFeeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySubscriptionFeeRequest proto.InternalMessageInfo
+
+// QuerySubscriptionFeeResponse is the response for Query.SubscriptionFees.
+type QuerySubscriptionFeeResponse struct {
+	// fee defines the subscription fee for the module
+	Fee types.Coin `protobuf:"bytes,1,opt,name=fee,proto3" json:"fee"`
+	// period is the period for which the subscription is valid
+	Period int64 `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
+}
+
+func (m *QuerySubscriptionFeeResponse) Reset()         { *m = QuerySubscriptionFeeResponse{} }
+func (m *QuerySubscriptionFeeResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySubscriptionFeeResponse) ProtoMessage()    {}
+func (*QuerySubscriptionFeeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a1be36abcb817ffd, []int{7}
+}
+func (m *QuerySubscriptionFeeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySubscriptionFeeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySubscriptionFeeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySubscriptionFeeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySubscriptionFeeResponse.Merge(m, src)
+}
+func (m *QuerySubscriptionFeeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySubscriptionFeeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySubscriptionFeeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySubscriptionFeeResponse proto.InternalMessageInfo
+
+func (m *QuerySubscriptionFeeResponse) GetFee() types.Coin {
+	if m != nil {
+		return m.Fee
+	}
+	return types.Coin{}
+}
+
+func (m *QuerySubscriptionFeeResponse) GetPeriod() int64 {
+	if m != nil {
+		return m.Period
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "archway.cwerrors.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "archway.cwerrors.v1.QueryParamsResponse")
 	proto.RegisterType((*QueryErrorsRequest)(nil), "archway.cwerrors.v1.QueryErrorsRequest")
 	proto.RegisterType((*QueryErrorsResponse)(nil), "archway.cwerrors.v1.QueryErrorsResponse")
+	proto.RegisterType((*QueryIsSubscribedRequest)(nil), "archway.cwerrors.v1.QueryIsSubscribedRequest")
+	proto.RegisterType((*QueryIsSubscribedResponse)(nil), "archway.cwerrors.v1.QueryIsSubscribedResponse")
+	proto.RegisterType((*QuerySubscriptionFeeRequest)(nil), "archway.cwerrors.v1.QuerySubscriptionFeeRequest")
+	proto.RegisterType((*QuerySubscriptionFeeResponse)(nil), "archway.cwerrors.v1.QuerySubscriptionFeeResponse")
 }
 
 func init() { proto.RegisterFile("archway/cwerrors/v1/query.proto", fileDescriptor_a1be36abcb817ffd) }
 
 var fileDescriptor_a1be36abcb817ffd = []byte{
-	// 376 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0xc1, 0x4b, 0x02, 0x41,
-	0x14, 0xc6, 0x77, 0xad, 0x16, 0x1a, 0x0f, 0xc5, 0xea, 0x41, 0xb4, 0x56, 0xd9, 0x0e, 0xd9, 0xa1,
-	0x5d, 0xd4, 0x53, 0x10, 0x44, 0x42, 0xc7, 0xc0, 0xf4, 0xd6, 0x25, 0xc6, 0x75, 0x58, 0xa5, 0xdc,
-	0xb7, 0xce, 0xcc, 0x6a, 0xde, 0xa2, 0x7b, 0x10, 0xf4, 0x4f, 0x79, 0x14, 0xba, 0x74, 0x8a, 0xd0,
-	0xfe, 0x90, 0x70, 0x66, 0xd6, 0x90, 0x36, 0xbd, 0x0d, 0xef, 0x7d, 0xef, 0xfb, 0x7e, 0xef, 0xed,
-	0xa2, 0x22, 0xa6, 0x5e, 0x77, 0x84, 0xc7, 0xae, 0x37, 0x22, 0x94, 0x02, 0x65, 0xee, 0xb0, 0xe2,
-	0x0e, 0x22, 0x42, 0xc7, 0x4e, 0x48, 0x81, 0x83, 0x99, 0x51, 0x02, 0x27, 0x16, 0x38, 0xc3, 0x4a,
-	0x3e, 0xeb, 0x83, 0x0f, 0xa2, 0xef, 0x2e, 0x5e, 0x52, 0x9a, 0x3f, 0xf0, 0x01, 0xfc, 0x07, 0xe2,
-	0xe2, 0xb0, 0xe7, 0xe2, 0x20, 0x00, 0x8e, 0x79, 0x0f, 0x02, 0xa6, 0xba, 0x76, 0x52, 0xd2, 0xd2,
-	0x54, 0x6a, 0x4a, 0x49, 0x9a, 0x10, 0x53, 0xdc, 0x57, 0x0a, 0x3b, 0x8b, 0xcc, 0x9b, 0x05, 0x5d,
-	0x43, 0x14, 0x9b, 0x64, 0x10, 0x11, 0xc6, 0xed, 0x06, 0xca, 0xac, 0x54, 0x59, 0x08, 0x01, 0x23,
-	0xe6, 0x19, 0x32, 0xe4, 0x70, 0x4e, 0x2f, 0xe9, 0xe5, 0x74, 0xb5, 0xe0, 0x24, 0x2c, 0xe3, 0xc8,
-	0xa1, 0xfa, 0xf6, 0xe4, 0xb3, 0xa8, 0x35, 0xd5, 0x80, 0x7d, 0xa1, 0x72, 0xae, 0x84, 0x4c, 0xe5,
-	0x98, 0x27, 0x68, 0xdf, 0x83, 0x80, 0x53, 0xec, 0xf1, 0x3b, 0xdc, 0xe9, 0x50, 0xc2, 0xa4, 0xf5,
-	0x6e, 0x73, 0x2f, 0xae, 0x5f, 0xca, 0xb2, 0xdd, 0x52, 0x48, 0xb1, 0x81, 0x42, 0x3a, 0x47, 0x86,
-	0x4c, 0xce, 0xe9, 0xa5, 0xad, 0x72, 0xba, 0x6a, 0x25, 0x22, 0xb5, 0xa2, 0x0e, 0x88, 0xc1, 0x98,
-	0x4a, 0xb6, 0xaa, 0x2f, 0x29, 0xb4, 0x23, 0x5c, 0xcd, 0x27, 0x1d, 0x19, 0x12, 0xdc, 0x3c, 0x4e,
-	0xb4, 0xf8, 0x7b, 0xa5, 0x7c, 0x79, 0xb3, 0x50, 0x52, 0xda, 0x47, 0xcf, 0xef, 0xdf, 0x6f, 0xa9,
-	0x43, 0xb3, 0xe0, 0xfe, 0xff, 0x41, 0x04, 0x82, 0xdc, 0x6e, 0x1d, 0xc2, 0xca, 0x01, 0xd7, 0x21,
-	0xac, 0x1e, 0x6a, 0x03, 0x82, 0x7c, 0xd5, 0xaf, 0x27, 0x33, 0x4b, 0x9f, 0xce, 0x2c, 0xfd, 0x6b,
-	0x66, 0xe9, 0xaf, 0x73, 0x4b, 0x9b, 0xce, 0x2d, 0xed, 0x63, 0x6e, 0x69, 0xb7, 0x35, 0xbf, 0xc7,
-	0xbb, 0x51, 0xdb, 0xf1, 0xa0, 0x1f, 0x1b, 0x9c, 0x06, 0x84, 0x8f, 0x80, 0xde, 0x2f, 0x0d, 0x1f,
-	0x7f, 0x2d, 0xf9, 0x38, 0x24, 0xac, 0x6d, 0x88, 0x7f, 0xac, 0xf6, 0x13, 0x00, 0x00, 0xff, 0xff,
-	0xfe, 0x21, 0x28, 0x68, 0x15, 0x03, 0x00, 0x00,
+	// 592 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x41, 0x6b, 0x13, 0x41,
+	0x14, 0xc7, 0xb3, 0x4d, 0x0d, 0x3a, 0x15, 0x2a, 0xd3, 0xaa, 0x69, 0xd2, 0x6e, 0xc3, 0xaa, 0x34,
+	0x0a, 0xd9, 0x75, 0x53, 0x10, 0x04, 0x41, 0xac, 0x54, 0xf0, 0x20, 0xd4, 0x44, 0x3c, 0x78, 0x09,
+	0xb3, 0xbb, 0xd3, 0x74, 0x70, 0xb3, 0xb3, 0x9d, 0x99, 0x24, 0xe6, 0x26, 0x7e, 0x02, 0xc1, 0x93,
+	0x1f, 0xc0, 0xef, 0xd2, 0x63, 0xc5, 0x8b, 0x27, 0x91, 0xc4, 0x0f, 0x22, 0x3b, 0x33, 0x1b, 0x13,
+	0x9d, 0xb4, 0xea, 0x6d, 0xf7, 0xbd, 0xff, 0xfb, 0xbf, 0x5f, 0xf2, 0xfe, 0x09, 0xd8, 0x46, 0x2c,
+	0x3c, 0x1a, 0xa2, 0x91, 0x17, 0x0e, 0x31, 0x63, 0x94, 0x71, 0x6f, 0xe0, 0x7b, 0xc7, 0x7d, 0xcc,
+	0x46, 0x6e, 0xca, 0xa8, 0xa0, 0x70, 0x4d, 0x0b, 0xdc, 0x5c, 0xe0, 0x0e, 0xfc, 0xca, 0x7a, 0x97,
+	0x76, 0xa9, 0xec, 0x7b, 0xd9, 0x93, 0x92, 0x56, 0x36, 0xbb, 0x94, 0x76, 0x63, 0xec, 0xa1, 0x94,
+	0x78, 0x28, 0x49, 0xa8, 0x40, 0x82, 0xd0, 0x84, 0xeb, 0xae, 0x1d, 0x52, 0xde, 0xa3, 0xdc, 0x0b,
+	0x10, 0xc7, 0xde, 0xc0, 0x0f, 0xb0, 0x40, 0xbe, 0x17, 0x52, 0x92, 0xe8, 0xbe, 0x63, 0x22, 0x99,
+	0x2e, 0x55, 0x9a, 0x9a, 0x49, 0x93, 0x22, 0x86, 0x7a, 0x5a, 0xe1, 0xac, 0x03, 0xf8, 0x3c, 0xa3,
+	0x3f, 0x90, 0xc5, 0x16, 0x3e, 0xee, 0x63, 0x2e, 0x9c, 0x03, 0xb0, 0x36, 0x57, 0xe5, 0x29, 0x4d,
+	0x38, 0x86, 0xf7, 0x41, 0x49, 0x0d, 0x97, 0xad, 0x9a, 0x55, 0x5f, 0x69, 0x56, 0x5d, 0xc3, 0x87,
+	0x75, 0xd5, 0xd0, 0xde, 0xf2, 0xc9, 0xb7, 0xed, 0x42, 0x4b, 0x0f, 0x38, 0x0f, 0xf5, 0x9e, 0x7d,
+	0x29, 0xd3, 0x7b, 0xe0, 0x6d, 0x70, 0x25, 0xa4, 0x89, 0x60, 0x28, 0x14, 0x1d, 0x14, 0x45, 0x0c,
+	0x73, 0x65, 0x7d, 0xa9, 0xb5, 0x9a, 0xd7, 0x1f, 0xa9, 0xb2, 0xd3, 0xd6, 0x48, 0xb9, 0x81, 0x46,
+	0x7a, 0x00, 0x4a, 0x6a, 0x73, 0xd9, 0xaa, 0x15, 0xeb, 0x2b, 0x4d, 0xdb, 0x88, 0xd4, 0xee, 0x47,
+	0x54, 0x0e, 0xe6, 0x54, 0xaa, 0xe5, 0xec, 0x83, 0xb2, 0x34, 0x7d, 0xca, 0xdb, 0xfd, 0x80, 0x87,
+	0x8c, 0x04, 0x38, 0xfa, 0x0f, 0x36, 0x0e, 0x36, 0x0c, 0x36, 0x9a, 0xd0, 0x06, 0x80, 0x4f, 0xab,
+	0xd2, 0xe1, 0x62, 0x6b, 0xa6, 0x02, 0xef, 0x81, 0xeb, 0xfa, 0x2d, 0xcd, 0xce, 0xdf, 0x19, 0xa0,
+	0x98, 0x44, 0x1d, 0x41, 0xe2, 0xb8, 0xbc, 0x54, 0xb3, 0xea, 0xc5, 0xd6, 0xd5, 0xd9, 0xf6, 0xcb,
+	0xac, 0xfb, 0x82, 0xc4, 0xb1, 0xb3, 0x05, 0xaa, 0x72, 0x69, 0x7b, 0xa6, 0xfb, 0x04, 0xe3, 0xfc,
+	0x84, 0x04, 0x6c, 0x9a, 0xdb, 0x1a, 0xcb, 0x07, 0xc5, 0x43, 0x8c, 0xf5, 0x21, 0x37, 0x5c, 0x15,
+	0x36, 0x37, 0x0b, 0x9b, 0xab, 0xc3, 0xe6, 0x3e, 0xa6, 0x24, 0xd1, 0x5f, 0x58, 0xa6, 0x85, 0xd7,
+	0x40, 0x29, 0xc5, 0x8c, 0xd0, 0x48, 0x83, 0xe9, 0xb7, 0xe6, 0xe7, 0x65, 0x70, 0x41, 0xee, 0x82,
+	0x6f, 0x2d, 0x50, 0x52, 0xe7, 0x87, 0x3b, 0xc6, 0x43, 0xfc, 0x99, 0xb5, 0x4a, 0xfd, 0x7c, 0xa1,
+	0x42, 0x76, 0x6e, 0xbc, 0xfb, 0xf2, 0xe3, 0xc3, 0xd2, 0x16, 0xac, 0x7a, 0x8b, 0x63, 0x2d, 0x11,
+	0x54, 0x46, 0xce, 0x42, 0x98, 0x8b, 0xe1, 0x59, 0x08, 0xf3, 0x71, 0x3b, 0x07, 0x41, 0x3d, 0xc1,
+	0x8f, 0x16, 0xb8, 0x3c, 0x1b, 0x05, 0xd8, 0x58, 0xec, 0x6f, 0x48, 0x5e, 0xc5, 0xfd, 0x5b, 0xb9,
+	0x86, 0xba, 0x23, 0xa1, 0x6e, 0x42, 0xc7, 0x08, 0x45, 0x78, 0x67, 0x26, 0x6d, 0x9f, 0x2c, 0xb0,
+	0xfa, 0x5b, 0x24, 0xe0, 0xdd, 0xc5, 0xfb, 0xcc, 0xe1, 0xaa, 0xf8, 0xff, 0x30, 0xa1, 0x21, 0x1b,
+	0x12, 0x72, 0x07, 0xde, 0x32, 0x42, 0xce, 0xfd, 0x02, 0x0e, 0x31, 0xde, 0x7b, 0x76, 0x32, 0xb6,
+	0xad, 0xd3, 0xb1, 0x6d, 0x7d, 0x1f, 0xdb, 0xd6, 0xfb, 0x89, 0x5d, 0x38, 0x9d, 0xd8, 0x85, 0xaf,
+	0x13, 0xbb, 0xf0, 0x6a, 0xb7, 0x4b, 0xc4, 0x51, 0x3f, 0x70, 0x43, 0xda, 0xcb, 0xad, 0x1a, 0x09,
+	0x16, 0x43, 0xca, 0x5e, 0x4f, 0xad, 0xdf, 0xfc, 0x32, 0x17, 0xa3, 0x14, 0xf3, 0xa0, 0x24, 0xff,
+	0xed, 0x76, 0x7f, 0x06, 0x00, 0x00, 0xff, 0xff, 0xea, 0xf4, 0x54, 0x5b, 0xbf, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -257,6 +468,10 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Errors queries all the errors for a given contract.
 	Errors(ctx context.Context, in *QueryErrorsRequest, opts ...grpc.CallOption) (*QueryErrorsResponse, error)
+	// IsSubscribed queries if a contract is subscribed to sudo error callbacks.
+	IsSubscribed(ctx context.Context, in *QueryIsSubscribedRequest, opts ...grpc.CallOption) (*QueryIsSubscribedResponse, error)
+	// SubscriptionFee queries the subscription fee for the module.
+	SubscriptionFee(ctx context.Context, in *QuerySubscriptionFeeRequest, opts ...grpc.CallOption) (*QuerySubscriptionFeeResponse, error)
 }
 
 type queryClient struct {
@@ -285,12 +500,34 @@ func (c *queryClient) Errors(ctx context.Context, in *QueryErrorsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) IsSubscribed(ctx context.Context, in *QueryIsSubscribedRequest, opts ...grpc.CallOption) (*QueryIsSubscribedResponse, error) {
+	out := new(QueryIsSubscribedResponse)
+	err := c.cc.Invoke(ctx, "/archway.cwerrors.v1.Query/IsSubscribed", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SubscriptionFee(ctx context.Context, in *QuerySubscriptionFeeRequest, opts ...grpc.CallOption) (*QuerySubscriptionFeeResponse, error) {
+	out := new(QuerySubscriptionFeeResponse)
+	err := c.cc.Invoke(ctx, "/archway.cwerrors.v1.Query/SubscriptionFee", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params queries all the module parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Errors queries all the errors for a given contract.
 	Errors(context.Context, *QueryErrorsRequest) (*QueryErrorsResponse, error)
+	// IsSubscribed queries if a contract is subscribed to sudo error callbacks.
+	IsSubscribed(context.Context, *QueryIsSubscribedRequest) (*QueryIsSubscribedResponse, error)
+	// SubscriptionFee queries the subscription fee for the module.
+	SubscriptionFee(context.Context, *QuerySubscriptionFeeRequest) (*QuerySubscriptionFeeResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -302,6 +539,12 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 }
 func (*UnimplementedQueryServer) Errors(ctx context.Context, req *QueryErrorsRequest) (*QueryErrorsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Errors not implemented")
+}
+func (*UnimplementedQueryServer) IsSubscribed(ctx context.Context, req *QueryIsSubscribedRequest) (*QueryIsSubscribedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsSubscribed not implemented")
+}
+func (*UnimplementedQueryServer) SubscriptionFee(ctx context.Context, req *QuerySubscriptionFeeRequest) (*QuerySubscriptionFeeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubscriptionFee not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -344,6 +587,42 @@ func _Query_Errors_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_IsSubscribed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryIsSubscribedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).IsSubscribed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/archway.cwerrors.v1.Query/IsSubscribed",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).IsSubscribed(ctx, req.(*QueryIsSubscribedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SubscriptionFee_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySubscriptionFeeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SubscriptionFee(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/archway.cwerrors.v1.Query/SubscriptionFee",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SubscriptionFee(ctx, req.(*QuerySubscriptionFeeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "archway.cwerrors.v1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -355,6 +634,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Errors",
 			Handler:    _Query_Errors_Handler,
+		},
+		{
+			MethodName: "IsSubscribed",
+			Handler:    _Query_IsSubscribed_Handler,
+		},
+		{
+			MethodName: "SubscriptionFee",
+			Handler:    _Query_SubscriptionFee_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -484,6 +771,135 @@ func (m *QueryErrorsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryIsSubscribedRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryIsSubscribedRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryIsSubscribedRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ContractAddress) > 0 {
+		i -= len(m.ContractAddress)
+		copy(dAtA[i:], m.ContractAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ContractAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryIsSubscribedResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryIsSubscribedResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryIsSubscribedResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.SubscriptionValidTill != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.SubscriptionValidTill))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Subscribed {
+		i--
+		if m.Subscribed {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QuerySubscriptionFeeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySubscriptionFeeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySubscriptionFeeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QuerySubscriptionFeeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySubscriptionFeeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySubscriptionFeeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Period != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Period))
+		i--
+		dAtA[i] = 0x10
+	}
+	{
+		size, err := m.Fee.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -539,6 +955,57 @@ func (m *QueryErrorsResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *QueryIsSubscribedRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ContractAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryIsSubscribedResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Subscribed {
+		n += 2
+	}
+	if m.SubscriptionValidTill != 0 {
+		n += 1 + sovQuery(uint64(m.SubscriptionValidTill))
+	}
+	return n
+}
+
+func (m *QuerySubscriptionFeeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QuerySubscriptionFeeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Fee.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	if m.Period != 0 {
+		n += 1 + sovQuery(uint64(m.Period))
 	}
 	return n
 }
@@ -827,6 +1294,329 @@ func (m *QueryErrorsResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryIsSubscribedRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryIsSubscribedRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryIsSubscribedRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryIsSubscribedResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryIsSubscribedResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryIsSubscribedResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Subscribed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Subscribed = bool(v != 0)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubscriptionValidTill", wireType)
+			}
+			m.SubscriptionValidTill = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SubscriptionValidTill |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySubscriptionFeeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySubscriptionFeeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySubscriptionFeeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySubscriptionFeeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySubscriptionFeeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySubscriptionFeeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fee", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Fee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
+			}
+			m.Period = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Period |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

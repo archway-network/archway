@@ -9,7 +9,7 @@ import (
 var (
 	DefaultErrorStoredTime       = int64(302400) // roughly 21 days
 	DefaultDisableErrorCallbacks = false
-	DefaultSubsciptionFee        = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	DefaultSubscriptionFee       = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 	DefaultSubscriptionPeriod    = int64(302400) // roughly 21 days
 )
 
@@ -23,7 +23,7 @@ func NewParams(
 	return Params{
 		ErrorStoredTime:       errorStoredTime,
 		DisableErrorCallbacks: disableErrorCallbacks,
-		SubsciptionFee:        subscriptionFee,
+		SubscriptionFee:       subscriptionFee,
 		SubscriptionPeriod:    subscriptionPeriod,
 	}
 }
@@ -33,7 +33,7 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultErrorStoredTime,
 		DefaultDisableErrorCallbacks,
-		DefaultSubsciptionFee,
+		DefaultSubscriptionFee,
 		DefaultSubscriptionPeriod,
 	)
 }
@@ -43,8 +43,8 @@ func (p Params) Validate() error {
 	if p.ErrorStoredTime <= 0 {
 		return fmt.Errorf("ErrorStoredTime must be greater than 0. Current value: %d", p.ErrorStoredTime)
 	}
-	if !p.SubsciptionFee.IsValid() {
-		return fmt.Errorf("SubsciptionFee is not valid. Current value: %s", p.SubsciptionFee)
+	if !p.SubscriptionFee.IsValid() {
+		return fmt.Errorf("SubsciptionFee is not valid. Current value: %s", p.SubscriptionFee)
 	}
 	if p.SubscriptionPeriod <= 0 {
 		return fmt.Errorf("SubscriptionPeriod must be greater than 0. Current value: %d", p.SubscriptionPeriod)

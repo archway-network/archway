@@ -78,6 +78,57 @@ func (s *KeeperTestSuite) TestErrors() {
 	s.Require().Len(res.Errors, 2)
 }
 
+func (s *KeeperTestSuite) TestIsSubscribed() {
+	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.CWErrorsKeeper
+	contractViewer := testutils.NewMockContractViewer()
+	keeper.SetWasmKeeper(contractViewer)
+	contractAddr := e2eTesting.GenContractAddresses(2)[0]
+	contractAdminAcc := s.chain.GetAccount(2)
+	contractViewer.AddContractAdmin(
+		contractAddr.String(),
+		contractAdminAcc.Address.String(),
+	)
+	queryServer := cwerrorsKeeper.NewQueryServer(keeper)
+
+	// TEST CASE 1: empty request
+	_, err := queryServer.IsSubscribed(sdk.WrapSDKContext(ctx), nil)
+	s.Require().Error(err)
+
+	// TEST CASE 2: invalid contract address
+	_, err = queryServer.IsSubscribed(sdk.WrapSDKContext(ctx), &types.QueryIsSubscribedRequest{ContractAddress: "👻"})
+	s.Require().Error(err)
+
+	// TEST CASE 3: subscription not found
+	res, err := queryServer.IsSubscribed(sdk.WrapSDKContext(ctx), &types.QueryIsSubscribedRequest{ContractAddress: contractAddr.String()})
+	s.Require().NoError(err)
+	s.Require().False(res.Subscribed)
+
+	// TEST CASE 4: subscription found
+	expectedEndHeight, err := keeper.SetSubscription(ctx, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
+	s.Require().NoError(err)
+	res, err = queryServer.IsSubscribed(sdk.WrapSDKContext(ctx), &types.QueryIsSubscribedRequest{ContractAddress: contractAddr.String()})
+	s.Require().NoError(err)
+	s.Require().True(res.Subscribed)
+	s.Require().Equal(expectedEndHeight, res.SubscriptionValidTill)
+}
+
+func (s *KeeperTestSuite) TestSubscriptionFee() {
+	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.CWErrorsKeeper
+	queryServer := cwerrorsKeeper.NewQueryServer(keeper)
+	params, err := keeper.GetParams(ctx)
+	s.Require().NoError(err)
+
+	// Sending nil query
+	_, err = queryServer.SubscriptionFee(sdk.WrapSDKContext(ctx), nil)
+	s.Require().Error(err)
+
+	// Get subscription fee
+	fee, err := queryServer.SubscriptionFee(sdk.WrapSDKContext(ctx), &types.QuerySubscriptionFeeRequest{})
+	s.Require().NoError(err)
+	s.Require().Equal(params.SubscriptionFee, fee.Fee)
+	s.Require().Equal(params.SubscriptionPeriod, fee.Period)
+}
+
 func (s *KeeperTestSuite) TestParams() {
 	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.CWErrorsKeeper
 	queryServer := cwerrorsKeeper.NewQueryServer(keeper)
@@ -88,7 +139,9 @@ func (s *KeeperTestSuite) TestParams() {
 
 	// Set params
 	params := types.Params{
-		ErrorStoredTime: 100,
+		ErrorStoredTime:    100,
+		SubscriptionFee:    sdk.NewInt64Coin(sdk.DefaultBondDenom, 2),
+		SubscriptionPeriod: 100,
 	}
 	keeper.SetParams(ctx, params)
 

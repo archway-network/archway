@@ -13,7 +13,7 @@ message Params {
     // disable_error_callbacks is a flag to disable error callbacks functionality - circuitbreaker
     bool disable_error_callbacks = 2;
     // subsciption_fee is the fee required to subscribe to error callbacks
-    cosmos.base.v1beta1.Coin subsciption_fee = 3 [ (gogoproto.nullable) = false ];
+    cosmos.base.v1beta1.Coin subscription_fee = 3 [ (gogoproto.nullable) = false ];
     // subscription_period is the period for which the subscription is valid
     int64 subscription_period = 4;
 }
