@@ -2,6 +2,7 @@ syntax = "proto3";
 package archway.cwerrors.v1;
 
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/archway-network/archway/x/cwerrors/types";
 
@@ -11,4 +12,8 @@ message Params {
     int64 error_stored_time = 1;
     // disable_error_callbacks is a flag to disable error callbacks functionality - circuitbreaker
     bool disable_error_callbacks = 2;
+    // subsciption_fee is the fee required to subscribe to error callbacks
+    cosmos.base.v1beta1.Coin subsciption_fee = 3 [ (gogoproto.nullable) = false ];
+    // subscription_period is the period for which the subscription is valid
+    int64 subscription_period = 4;
 }

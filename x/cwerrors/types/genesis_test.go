@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/archway-network/archway/x/cwerrors/types"
@@ -27,6 +28,8 @@ func TestGenesisValidate(t *testing.T) {
 				Params: types.NewParams(
 					0,
 					true,
+					sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+					100,
 				),
 			},
 			errExpected: true,

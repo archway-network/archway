@@ -2,21 +2,29 @@ package types
 
 import (
 	fmt "fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
-	DefaultErrorStoredTime       = int64(1000000)
+	DefaultErrorStoredTime       = int64(302400) // roughly 21 days
 	DefaultDisableErrorCallbacks = false
+	DefaultSubsciptionFee        = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	DefaultSubscriptionPeriod    = int64(302400) // roughly 21 days
 )
 
 // NewParams creates a new Params instance.
 func NewParams(
 	errorStoredTime int64,
 	disableErrorCallbacks bool,
+	subscriptionFee sdk.Coin,
+	subscriptionPeriod int64,
 ) Params {
 	return Params{
 		ErrorStoredTime:       errorStoredTime,
 		DisableErrorCallbacks: disableErrorCallbacks,
+		SubsciptionFee:        subscriptionFee,
+		SubscriptionPeriod:    subscriptionPeriod,
 	}
 }
 
@@ -25,6 +33,8 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultErrorStoredTime,
 		DefaultDisableErrorCallbacks,
+		DefaultSubsciptionFee,
+		DefaultSubscriptionPeriod,
 	)
 }
 
@@ -32,6 +42,12 @@ func DefaultParams() Params {
 func (p Params) Validate() error {
 	if p.ErrorStoredTime <= 0 {
 		return fmt.Errorf("ErrorStoredTime must be greater than 0. Current value: %d", p.ErrorStoredTime)
+	}
+	if !p.SubsciptionFee.IsValid() {
+		return fmt.Errorf("SubsciptionFee is not valid. Current value: %s", p.SubsciptionFee)
+	}
+	if p.SubscriptionPeriod <= 0 {
+		return fmt.Errorf("SubscriptionPeriod must be greater than 0. Current value: %d", p.SubscriptionPeriod)
 	}
 	return nil
 }

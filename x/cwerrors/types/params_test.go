@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/archway-network/archway/x/cwerrors/types"
@@ -26,6 +27,8 @@ func TestParamsValidate(t *testing.T) {
 			params: types.NewParams(
 				100,
 				true,
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+				100,
 			),
 			errExpected: false,
 		},
@@ -34,6 +37,8 @@ func TestParamsValidate(t *testing.T) {
 			params: types.NewParams(
 				0,
 				true,
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+				100,
 			),
 			errExpected: true,
 		},
@@ -42,6 +47,28 @@ func TestParamsValidate(t *testing.T) {
 			params: types.NewParams(
 				-2,
 				true,
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+				100,
+			),
+			errExpected: true,
+		},
+		{
+			name: "Fail: SubsciptionFee: invalid",
+			params: types.NewParams(
+				100,
+				true,
+				sdk.Coin{Denom: "", Amount: sdk.NewInt(100)},
+				100,
+			),
+			errExpected: true,
+		},
+		{
+			name: "Fail: SubscriptionPeriod: zero",
+			params: types.NewParams(
+				100,
+				true,
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+				-2,
 			),
 			errExpected: true,
 		},
