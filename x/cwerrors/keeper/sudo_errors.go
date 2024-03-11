@@ -18,19 +18,22 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 		return types.ErrContractNotFound
 	}
 
-	// Get the error id
-	errorID, err := k.GetErrorCount(ctx)
-	if err != nil {
-		return err
-	}
-	errorID += 1
-	if err = k.ErrorsCount.Set(ctx, errorID); err != nil {
-		return err
+	if k.HasSubscription(ctx, contractAddr) {
+		err := k.storeErrorCallback(ctx, contractAddr, sudoErr)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
-	if k.HasSubscription(ctx, contractAddr) {
-		k.SetSudoErrorCallback(ctx, errorID, sudoErr)
-		return nil
+	// for contracts which dont have an error subscription, store the error in state to be deleted after a set height
+	return k.StoreErrorInState(ctx, contractAddr, sudoErr)
+}
+
+func (k Keeper) StoreErrorInState(ctx sdk.Context, contractAddr sdk.AccAddress, sudoErr types.SudoError) error {
+	errorID, err := k.getNextErrorID(ctx)
+	if err != nil {
+		return err
 	}
 
 	// Store contract errors
@@ -50,6 +53,31 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 
 	// Store the error
 	return k.Errors.Set(ctx, errorID, sudoErr)
+}
+
+func (k Keeper) storeErrorCallback(ctx sdk.Context, contractAddr sdk.AccAddress, sudoErr types.SudoError) error {
+	errorID, err := k.getNextErrorID(ctx)
+	if err != nil {
+		return err
+	}
+
+	if k.HasSubscription(ctx, contractAddr) {
+		k.SetSudoErrorCallback(ctx, errorID, sudoErr)
+		return nil
+	}
+	return err
+}
+
+func (k Keeper) getNextErrorID(ctx sdk.Context) (int64, error) {
+	errorID, err := k.GetErrorCount(ctx)
+	if err != nil {
+		return 0, err
+	}
+	errorID += 1
+	if err = k.ErrorsCount.Set(ctx, errorID); err != nil {
+		return 0, err
+	}
+	return errorID, nil
 }
 
 // GetErrosByContractAddress returns all errors by a given contract address
@@ -127,4 +155,17 @@ func (k Keeper) GetAllSudoErrorCallbacks(ctx sdk.Context) (sudoErrs []types.Sudo
 		sudoErrs = append(sudoErrs, sudoErr)
 	}
 	return sudoErrs
+}
+
+func (k Keeper) IterateSudoErrorCallbacks(ctx sdk.Context, exec func(types.SudoError) bool) {
+	tStore := ctx.TransientStore(k.tStoreKey)
+	itr := sdk.KVStorePrefixIterator(tStore, types.ErrorsForSudoCallbackKey)
+	defer itr.Close()
+	for ; itr.Valid(); itr.Next() {
+		var sudoErr types.SudoError
+		k.cdc.MustUnmarshal(itr.Value(), &sudoErr)
+		if exec(sudoErr) {
+			break
+		}
+	}
 }

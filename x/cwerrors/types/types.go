@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,3 +17,15 @@ func (s SudoError) Validate() error {
 	}
 	return nil
 }
+
+func (s SudoError) Bytes() []byte {
+	msgBz, err := json.Marshal(s)
+	if err != nil {
+		panic(err)
+	}
+	return msgBz
+}
+
+// func (s SudoError) String() string {
+// 	return string(s.Bytes())
+// }

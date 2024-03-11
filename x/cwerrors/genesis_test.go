@@ -8,6 +8,7 @@ import (
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/cwerrors"
 	"github.com/archway-network/archway/x/cwerrors/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestExportGenesis(t *testing.T) {
@@ -20,12 +21,17 @@ func TestExportGenesis(t *testing.T) {
 	newParams := types.Params{
 		ErrorStoredTime:       99999,
 		DisableErrorCallbacks: true,
+		SubscriptionFee:       sdk.NewCoin("stake", sdk.NewInt(100)),
+		SubscriptionPeriod:    1,
 	}
 	err := keeper.SetParams(ctx, newParams)
 	require.NoError(t, err)
 
 	exportedState = cwerrors.ExportGenesis(ctx, keeper)
-	require.Equal(t, newParams, exportedState.Params)
+	require.Equal(t, newParams.DisableErrorCallbacks, exportedState.Params.DisableErrorCallbacks)
+	require.Equal(t, newParams.ErrorStoredTime, exportedState.Params.ErrorStoredTime)
+	require.Equal(t, newParams.SubscriptionFee, exportedState.Params.SubscriptionFee)
+	require.Equal(t, newParams.SubscriptionPeriod, exportedState.Params.SubscriptionPeriod)
 }
 
 func TestInitGenesis(t *testing.T) {
@@ -45,11 +51,16 @@ func TestInitGenesis(t *testing.T) {
 		Params: types.Params{
 			ErrorStoredTime:       99999,
 			DisableErrorCallbacks: true,
+			SubscriptionFee:       sdk.NewCoin("stake", sdk.NewInt(100)),
+			SubscriptionPeriod:    1,
 		},
 	}
 	cwerrors.InitGenesis(ctx, keeper, genstate)
 
 	params, err = keeper.GetParams(ctx)
 	require.NoError(t, err)
-	require.Equal(t, genstate.Params, params)
+	require.Equal(t, genstate.Params.DisableErrorCallbacks, params.DisableErrorCallbacks)
+	require.Equal(t, genstate.Params.ErrorStoredTime, params.ErrorStoredTime)
+	require.Equal(t, genstate.Params.SubscriptionFee, params.SubscriptionFee)
+	require.Equal(t, genstate.Params.SubscriptionPeriod, params.SubscriptionPeriod)
 }

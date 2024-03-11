@@ -7,6 +7,7 @@ import (
 	"github.com/archway-network/archway/pkg/testutils"
 	cwerrorsabci "github.com/archway-network/archway/x/cwerrors"
 	"github.com/archway-network/archway/x/cwerrors/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,6 +31,8 @@ func TestEndBlocker(t *testing.T) {
 	params := types.Params{
 		ErrorStoredTime:       5,
 		DisableErrorCallbacks: true,
+		SubscriptionFee:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+		SubscriptionPeriod:    5,
 	}
 	err := keeper.SetParams(ctx, params)
 	require.NoError(t, err)
@@ -74,7 +77,7 @@ func TestEndBlocker(t *testing.T) {
 	// Go to prune height
 	ctx = ctx.WithBlockHeight(pruneHeight)
 
-	_ = cwerrorsabci.EndBlocker(ctx, keeper)
+	_ = cwerrorsabci.EndBlocker(ctx, keeper, contractViewer)
 
 	// Check number of errors match
 	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr.Bytes())
@@ -87,7 +90,7 @@ func TestEndBlocker(t *testing.T) {
 	// Go to next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
-	_ = cwerrorsabci.EndBlocker(ctx, keeper)
+	_ = cwerrorsabci.EndBlocker(ctx, keeper, contractViewer)
 
 	// Check number of errors match
 	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr.Bytes())
@@ -96,4 +99,25 @@ func TestEndBlocker(t *testing.T) {
 	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr2.Bytes())
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 0)
+
+	// Setup subscription
+	expiryTime, err := keeper.SetSubscription(ctx, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
+	require.NoError(t, err)
+	require.Equal(t, ctx.BlockHeight()+params.SubscriptionPeriod, expiryTime)
+
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	err = keeper.SetError(ctx, contract1Err)
+	require.NoError(t, err)
+
+	// Should be empty as the is stored for error callback
+	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr.Bytes())
+	require.NoError(t, err)
+	require.Len(t, sudoErrs, 0)
+
+	// Should be queued for callback
+	sudoErrs = keeper.GetAllSudoErrorCallbacks(ctx)
+	require.Len(t, sudoErrs, 1)
+
+	// Execute endblocker
+	_ = cwerrorsabci.EndBlocker(ctx, keeper, contractViewer)
 }
