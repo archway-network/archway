@@ -29,6 +29,9 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 
 	params, err := keeper.GetParams(ctx)
 	s.Require().NoError(err)
+	err = s.chain.GetApp().Keepers.BankKeeper.SendCoins(ctx, contractAdminAcc.Address, contractAddr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)))
+	s.Require().NoError(err)
+
 	expectedEndHeight := ctx.BlockHeight() + params.SubscriptionPeriod
 
 	msgServer := cwerrorsKeeper.NewMsgServer(keeper)

@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/collections"
 	"github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // SetError stores a sudo error and queues it for deletion after a certain block height
@@ -25,7 +26,10 @@ func (k Keeper) SetSubscription(ctx sdk.Context, contractAddress sdk.AccAddress,
 	if fee.IsLT(params.SubscriptionFee) {
 		return -1, types.ErrInsufficientSubscriptionFee
 	}
-	// todo transfer fee to module account
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, contractAddress, authtypes.FeeCollectorName, sdk.NewCoins(fee))
+	if err != nil {
+		return -1, err
+	}
 
 	subscriptionEndHeight := ctx.BlockHeight() + params.SubscriptionPeriod
 	if err = k.SubscriptionEndBlock.Set(ctx, collections.Join(subscriptionEndHeight, contractAddress.Bytes()), contractAddress.Bytes()); err != nil {

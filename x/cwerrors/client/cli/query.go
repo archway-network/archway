@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 
-	"github.com/archway-network/archway/x/callback/types"
+	"github.com/archway-network/archway/x/cwerrors/types"
 )
 
 // GetQueryCmd builds query command group for the module.
@@ -18,8 +18,62 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	cmd.AddCommand(
+		getQueryErrorsCmd(),
+		getQueryIsSubscribedCmd(),
 		getQueryParamsCmd(),
 	)
+	return cmd
+}
+
+func getQueryErrorsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "errors [contract_address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query errors for a contract address",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.Errors(cmd.Context(), &types.QueryErrorsRequest{
+				ContractAddress: args[0],
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func getQueryIsSubscribedCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "is-subscribed [contract_address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query if a contract address is subscribed to errors",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.IsSubscribed(cmd.Context(), &types.QueryIsSubscribedRequest{
+				ContractAddress: args[0],
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 

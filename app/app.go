@@ -587,6 +587,7 @@ func NewArchwayApp(
 		keys[cwerrorsTypes.StoreKey],
 		tkeys[cwerrorsTypes.TStoreKey],
 		app.Keepers.WASMKeeper,
+		app.Keepers.BankKeeper,
 		govModuleAddr,
 	)
 

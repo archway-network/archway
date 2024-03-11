@@ -17,6 +17,7 @@ type Keeper struct {
 	storeKey   storetypes.StoreKey
 	tStoreKey  storetypes.StoreKey
 	wasmKeeper types.WasmKeeperExpected
+	bankKeeper types.BankKeeperExpected
 	authority  string // this should be the x/gov module account
 
 	Schema collections.Schema
@@ -38,13 +39,14 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, tStoreKey storetypes.StoreKey, wk types.WasmKeeperExpected, authority string) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, tStoreKey storetypes.StoreKey, wk types.WasmKeeperExpected, bk types.BankKeeperExpected, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
 	k := Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
 		tStoreKey:  tStoreKey,
 		wasmKeeper: wk,
+		bankKeeper: bk,
 		authority:  authority,
 		Params: collections.NewItem(
 			sb,

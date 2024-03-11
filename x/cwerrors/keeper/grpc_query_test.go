@@ -112,23 +112,6 @@ func (s *KeeperTestSuite) TestIsSubscribed() {
 	s.Require().Equal(expectedEndHeight, res.SubscriptionValidTill)
 }
 
-func (s *KeeperTestSuite) TestSubscriptionFee() {
-	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.CWErrorsKeeper
-	queryServer := cwerrorsKeeper.NewQueryServer(keeper)
-	params, err := keeper.GetParams(ctx)
-	s.Require().NoError(err)
-
-	// Sending nil query
-	_, err = queryServer.SubscriptionFee(sdk.WrapSDKContext(ctx), nil)
-	s.Require().Error(err)
-
-	// Get subscription fee
-	fee, err := queryServer.SubscriptionFee(sdk.WrapSDKContext(ctx), &types.QuerySubscriptionFeeRequest{})
-	s.Require().NoError(err)
-	s.Require().Equal(params.SubscriptionFee, fee.Fee)
-	s.Require().Equal(params.SubscriptionPeriod, fee.Period)
-}
-
 func (s *KeeperTestSuite) TestParams() {
 	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.CWErrorsKeeper
 	queryServer := cwerrorsKeeper.NewQueryServer(keeper)

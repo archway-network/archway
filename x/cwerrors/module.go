@@ -67,7 +67,7 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, serv
 
 // GetTxCmd returns the root tx command for the module.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil //cli.GetTxCmd()
+	return cli.GetTxCmd()
 }
 
 // GetQueryCmd returns no root query command for the module.

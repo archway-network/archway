@@ -58,21 +58,6 @@ func (qs *QueryServer) IsSubscribed(c context.Context, request *types.QueryIsSub
 	return &types.QueryIsSubscribedResponse{Subscribed: hasSub, SubscriptionValidTill: validtill}, nil
 }
 
-// SubscriptionFee implements types.QueryServer.
-func (qs *QueryServer) SubscriptionFee(c context.Context, request *types.QuerySubscriptionFeeRequest) (*types.QuerySubscriptionFeeResponse, error) {
-	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	params, err := qs.keeper.GetParams(sdk.UnwrapSDKContext(c))
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "could not fetch the module params: %s", err.Error())
-	}
-	return &types.QuerySubscriptionFeeResponse{
-		Fee:    params.SubscriptionFee,
-		Period: params.SubscriptionPeriod,
-	}, nil
-}
-
 // Params implements types.QueryServer.
 func (qs *QueryServer) Params(c context.Context, request *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if request == nil {

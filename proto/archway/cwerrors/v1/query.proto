@@ -25,11 +25,6 @@ service Query {
     rpc IsSubscribed(QueryIsSubscribedRequest) returns (QueryIsSubscribedResponse) {
         option (google.api.http).get = "/archway/cwerrors/v1/is_subscribed";
     }
-
-    // SubscriptionFee queries the subscription fee for the module.
-    rpc SubscriptionFee(QuerySubscriptionFeeRequest) returns (QuerySubscriptionFeeResponse) {
-        option (google.api.http).get = "/archway/cwerrors/v1/subscription_fee";
-    }
 }
 
 // QueryParamsRequest is the request for Query.Params.
@@ -65,15 +60,4 @@ message QueryIsSubscribedResponse {
     bool subscribed = 1;
     // subscription_valid_till defines the block height till which the subscription is valid
     int64 subscription_valid_till = 2;
-}
-
-// QuerySubscriptionFeeRequest is the request for Query.SubscriptionFees.
-message QuerySubscriptionFeeRequest {}
-
-// QuerySubscriptionFeeResponse is the response for Query.SubscriptionFees.
-message QuerySubscriptionFeeResponse {
-    // fee defines the subscription fee for the module
-    cosmos.base.v1beta1.Coin fee = 1 [ (gogoproto.nullable) = false ];
-    // period is the period for which the subscription is valid
-    int64 period = 2;
 }
