@@ -1,0 +1,26 @@
+syntax = "proto3";
+package archway.cwica.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "archway/cwica/v1/params.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwica/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params queries the module parameters
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/archway/cwica/params";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters for the module
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
