@@ -6,6 +6,7 @@ func NewGenesisState(
 ) *GenesisState {
 	return &GenesisState{
 		Params: params,
+		Errors: nil,
 	}
 }
 

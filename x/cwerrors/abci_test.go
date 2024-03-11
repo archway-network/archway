@@ -2,10 +2,10 @@ package cwerrors_test
 
 import (
 	"testing"
+	"time"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
-	cwerrorsabci "github.com/archway-network/archway/x/cwerrors"
 	"github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -37,6 +37,8 @@ func TestEndBlocker(t *testing.T) {
 	err := keeper.SetParams(ctx, params)
 	require.NoError(t, err)
 
+	chain.NextBlock(1)
+
 	// Set errors for block 1
 	contract1Err := types.SudoError{
 		ContractAddress: contractAddr.String(),
@@ -46,78 +48,81 @@ func TestEndBlocker(t *testing.T) {
 		ContractAddress: contractAddr2.String(),
 		ModuleName:      "test",
 	}
-	err = keeper.SetError(ctx, contract1Err)
+	err = keeper.SetError(chain.GetContext(), contract1Err)
 	require.NoError(t, err)
-	err = keeper.SetError(ctx, contract1Err)
+	err = keeper.SetError(chain.GetContext(), contract1Err)
 	require.NoError(t, err)
-	err = keeper.SetError(ctx, contract2Err)
+	err = keeper.SetError(chain.GetContext(), contract2Err)
 	require.NoError(t, err)
 
-	pruneHeight := ctx.BlockHeight() + params.ErrorStoredTime
+	pruneHeight := chain.GetContext().BlockHeight() + params.ErrorStoredTime
 
 	// Increment block height
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	chain.NextBlock(1)
 
 	// Set errors for block 2
-	err = keeper.SetError(ctx, contract1Err)
+	err = keeper.SetError(chain.GetContext(), contract1Err)
 	require.NoError(t, err)
-	err = keeper.SetError(ctx, contract2Err)
+	err = keeper.SetError(chain.GetContext(), contract2Err)
 	require.NoError(t, err)
-	err = keeper.SetError(ctx, contract2Err)
+	err = keeper.SetError(chain.GetContext(), contract2Err)
 	require.NoError(t, err)
 
 	// Check number of errors match
-	sudoErrs, err := keeper.GetErrorsByContractAddress(ctx, contractAddr.Bytes())
+	sudoErrs, err := keeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr.Bytes())
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 3)
-	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr2.Bytes())
+	sudoErrs, err = keeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr2.Bytes())
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 3)
 
-	// Go to prune height
-	ctx = ctx.WithBlockHeight(pruneHeight)
-
-	_ = cwerrorsabci.EndBlocker(ctx, keeper, contractViewer)
+	// Go to prune height & execute being&endblockers
+	chain.GoToHeight(pruneHeight, time.Duration(pruneHeight))
 
 	// Check number of errors match
-	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr.Bytes())
+	sudoErrs, err = keeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr.Bytes())
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 1)
-	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr2.Bytes())
+	sudoErrs, err = keeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr2.Bytes())
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 2)
 
-	// Go to next block
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-
-	_ = cwerrorsabci.EndBlocker(ctx, keeper, contractViewer)
+	// Go to next block & execute being&endblockers
+	chain.NextBlock(1)
 
 	// Check number of errors match
-	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr.Bytes())
+	sudoErrs, err = keeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr.Bytes())
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 0)
-	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr2.Bytes())
+	sudoErrs, err = keeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr2.Bytes())
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 0)
 
 	// Setup subscription
-	expiryTime, err := keeper.SetSubscription(ctx, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
+	expiryTime, err := keeper.SetSubscription(chain.GetContext(), contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
 	require.NoError(t, err)
-	require.Equal(t, ctx.BlockHeight()+params.SubscriptionPeriod, expiryTime)
+	require.Equal(t, chain.GetContext().BlockHeight()+params.SubscriptionPeriod, expiryTime)
 
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	err = keeper.SetError(ctx, contract1Err)
+	// Go to next block
+	chain.NextBlock(1)
+
+	// Set an error which should be called as callback
+	err = keeper.SetError(chain.GetContext(), contract1Err)
 	require.NoError(t, err)
 
 	// Should be empty as the is stored for error callback
-	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr.Bytes())
+	sudoErrs, err = keeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr.Bytes())
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 0)
 
 	// Should be queued for callback
-	sudoErrs = keeper.GetAllSudoErrorCallbacks(ctx)
+	sudoErrs = keeper.GetAllSudoErrorCallbacks(chain.GetContext())
 	require.Len(t, sudoErrs, 1)
 
-	// Execute endblocker
-	_ = cwerrorsabci.EndBlocker(ctx, keeper, contractViewer)
+	// Execute endblocker & execute being&endblockers
+	chain.NextBlock(1)
+
+	// Check number of errors match
+	sudoErrs = keeper.GetAllSudoErrorCallbacks(chain.GetContext())
+	require.Len(t, sudoErrs, 0)
 }

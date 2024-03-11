@@ -97,6 +97,18 @@ func (k Keeper) GetErrorsByContractAddress(ctx sdk.Context, contractAddress []by
 	return sudoErrs, nil
 }
 
+func (k Keeper) ExportErrors(ctx sdk.Context) (sudoErrs []types.SudoError, err error) {
+	iter, err := k.Errors.Iterate(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	sudoErrs, err = iter.Values()
+	if err != nil {
+		return nil, err
+	}
+	return sudoErrs, nil
+}
+
 // PruneErrorsCurrentBlock removes all errors that are queued to be deleted the given block height
 func (k Keeper) PruneErrorsCurrentBlock(ctx sdk.Context) (err error) {
 	var errorIDs []int64

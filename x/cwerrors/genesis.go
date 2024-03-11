@@ -23,5 +23,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if err != nil {
 		panic(err)
 	}
-	return types.NewGenesisState(params)
+	sudoErrs, err := k.ExportErrors(ctx)
+	if err != nil {
+		panic(err)
+	}
+	genesis := types.NewGenesisState(params)
+	genesis.Errors = sudoErrs
+	return genesis
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/cwerrors"
 	"github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,9 +15,22 @@ import (
 func TestExportGenesis(t *testing.T) {
 	chain := e2eTesting.NewTestChain(t, 1)
 	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.CWErrorsKeeper
+	contractViewer := testutils.NewMockContractViewer()
+	keeper.SetWasmKeeper(contractViewer)
+	contractAddresses := e2eTesting.GenContractAddresses(3)
+	contractAddr := contractAddresses[0]
+	contractViewer.AddContractAdmin(
+		contractAddr.String(),
+		contractAddr.String(),
+	)
+	err := keeper.SetError(ctx, types.SudoError{ContractAddress: contractAddr.String(), ModuleName: "test"})
+	require.NoError(t, err)
+	err = keeper.SetError(ctx, types.SudoError{ContractAddress: contractAddr.String(), ModuleName: "test"})
+	require.NoError(t, err)
 
 	exportedState := cwerrors.ExportGenesis(ctx, keeper)
 	require.Equal(t, types.DefaultParams(), exportedState.Params)
+	require.Len(t, exportedState.Errors, 2)
 
 	newParams := types.Params{
 		ErrorStoredTime:       99999,
@@ -24,7 +38,7 @@ func TestExportGenesis(t *testing.T) {
 		SubscriptionFee:       sdk.NewCoin("stake", sdk.NewInt(100)),
 		SubscriptionPeriod:    1,
 	}
-	err := keeper.SetParams(ctx, newParams)
+	err = keeper.SetParams(ctx, newParams)
 	require.NoError(t, err)
 
 	exportedState = cwerrors.ExportGenesis(ctx, keeper)
@@ -54,6 +68,9 @@ func TestInitGenesis(t *testing.T) {
 			SubscriptionFee:       sdk.NewCoin("stake", sdk.NewInt(100)),
 			SubscriptionPeriod:    1,
 		},
+		Errors: []types.SudoError{
+			{ContractAddress: "addr1", ModuleName: "test"},
+		},
 	}
 	cwerrors.InitGenesis(ctx, keeper, genstate)
 
@@ -63,4 +80,8 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, genstate.Params.ErrorStoredTime, params.ErrorStoredTime)
 	require.Equal(t, genstate.Params.SubscriptionFee, params.SubscriptionFee)
 	require.Equal(t, genstate.Params.SubscriptionPeriod, params.SubscriptionPeriod)
+
+	sudoErrs, err := keeper.ExportErrors(ctx)
+	require.NoError(t, err)
+	require.Len(t, sudoErrs, 0)
 }
