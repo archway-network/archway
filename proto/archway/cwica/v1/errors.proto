@@ -1,0 +1,28 @@
+syntax = "proto3";
+package archway.cwica.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwica/types";
+
+// Sudo defines the sudo message for the error callback
+message SudoError {
+  // module_name is the name of the module throwing the error
+  string module_name = 1;
+  // error_code is the module level error code
+  ModuleErrors error_code = 2;
+  // payload is any input which caused the error
+  string input_payload = 3;
+  // error_message is the error message
+  string error_message = 4;
+}
+
+// ModuleErrors defines the module level error codes
+enum ModuleErrors {
+  // ERR_UNKNOWN is the default error code
+  ERR_UNKNOWN = 0;
+  // ERR_PACKET_TIMEOUT is the error code for packet timeout
+  ERR_PACKET_TIMEOUT = 1;
+  // ERR_EXEC_FAILURE is the error code for tx execution failure
+  ERR_EXEC_FAILURE = 2;
+}

@@ -22,6 +22,7 @@ import (
 
 	"github.com/archway-network/archway/x/cwfees"
 
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icahostkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/keeper"
 	ibcfeekeeper "github.com/cosmos/ibc-go/v7/modules/apps/29-fee/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
@@ -29,6 +30,7 @@ import (
 
 	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
 	cwerrorsKeeper "github.com/archway-network/archway/x/cwerrors/keeper"
+	cwicaKeeper "github.com/archway-network/archway/x/cwica/keeper"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 )
@@ -50,6 +52,7 @@ type ArchwayKeepers struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	IBCKeeper             *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCFeeKeeper          ibcfeekeeper.Keeper
+	ICAControllerKeeper   icacontrollerkeeper.Keeper
 	ICAHostKeeper         icahostkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
@@ -63,4 +66,5 @@ type ArchwayKeepers struct {
 	CWFeesKeeper   cwfees.Keeper
 	CallbackKeeper callbackKeeper.Keeper
 	CWErrorsKeeper cwerrorsKeeper.Keeper
+	CWICAKeeper    cwicaKeeper.Keeper
 }

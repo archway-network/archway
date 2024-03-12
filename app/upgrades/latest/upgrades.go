@@ -6,11 +6,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
 	callbackTypes "github.com/archway-network/archway/x/callback/types"
 	cwerrorstypes "github.com/archway-network/archway/x/cwerrors/types"
 	"github.com/archway-network/archway/x/cwfees"
+	cwicatypes "github.com/archway-network/archway/x/cwica/types"
 )
 
 // This upgrade handler is used for all the current changes to the protocol
@@ -36,6 +39,8 @@ var Upgrade = upgrades.Upgrade{
 			callbackTypes.ModuleName,
 			cwfees.ModuleName,
 			cwerrorstypes.ModuleName,
+			icacontrollertypes.StoreKey,
+			cwicatypes.ModuleName,
 		},
 	},
 }

@@ -1,0 +1,13 @@
+syntax = "proto3";
+package archway.cwica.v1;
+
+import "gogoproto/gogo.proto";
+import "archway/cwica/v1/params.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwica/types";
+
+// GenesisState defines the cwica module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}

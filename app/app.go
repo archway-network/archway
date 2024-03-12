@@ -101,6 +101,9 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
+	icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icahost "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
@@ -139,6 +142,10 @@ import (
 	"github.com/archway-network/archway/x/tracking"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 	trackingTypes "github.com/archway-network/archway/x/tracking/types"
+
+	cwica "github.com/archway-network/archway/x/cwica"
+	cwicakeeper "github.com/archway-network/archway/x/cwica/keeper"
+	cwicatypes "github.com/archway-network/archway/x/cwica/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
@@ -213,6 +220,7 @@ var (
 		genmsg.AppModule{},
 		callback.AppModuleBasic{},
 		cwfees.AppModule{},
+		cwica.AppModuleBasic{},
 		cwerrors.AppModuleBasic{},
 	)
 
@@ -310,7 +318,7 @@ func NewArchwayApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
-		icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey,
+		icacontrollertypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey, cwicatypes.StoreKey,
 
 		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName, cwerrorsTypes.StoreKey,
 	)
@@ -348,6 +356,7 @@ func NewArchwayApp(
 	)
 
 	scopedIBCKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
+	scopedICAControllerKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedTransferKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(wasmdTypes.ModuleName)
@@ -475,6 +484,17 @@ func NewArchwayApp(
 
 	transferModule := transfer.NewAppModule(app.Keepers.TransferKeeper)
 
+	app.Keepers.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
+		appCodec,
+		keys[icacontrollertypes.StoreKey],
+		app.getSubspace(icacontrollertypes.SubModuleName),
+		app.Keepers.IBCKeeper.ChannelKeeper,
+		app.Keepers.IBCKeeper.ChannelKeeper,
+		&app.Keepers.IBCKeeper.PortKeeper,
+		scopedICAControllerKeeper,
+		app.MsgServiceRouter(),
+	)
+
 	app.Keepers.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec,
 		keys[icahosttypes.StoreKey],
@@ -582,6 +602,16 @@ func NewArchwayApp(
 
 	app.Keepers.CWFeesKeeper = cwfees.NewKeeper(appCodec, keys[cwfees.ModuleName], app.Keepers.WASMKeeper)
 
+	app.Keepers.CWICAKeeper = *cwicakeeper.NewKeeper(
+		appCodec,
+		keys[cwicatypes.StoreKey],
+		app.Keepers.IBCKeeper.ChannelKeeper,
+		app.Keepers.IBCKeeper.ConnectionKeeper,
+		app.Keepers.ICAControllerKeeper,
+		app.Keepers.WASMKeeper,
+		govModuleAddr,
+	)
+
 	app.Keepers.CWErrorsKeeper = cwerrorsKeeper.NewKeeper(
 		appCodec,
 		keys[cwerrorsTypes.StoreKey],
@@ -597,6 +627,12 @@ func NewArchwayApp(
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.Keepers.IBCFeeKeeper)
 
 	// Create Interchain Accounts Stack
+
+	var icaControllerStack porttypes.IBCModule
+	icaControllerStack = cwica.NewIBCModule(app.Keepers.CWICAKeeper)
+	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.Keepers.ICAControllerKeeper)
+	//icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.Keepers.IBCFeeKeeper)
+
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
 	// channel.RecvPacket -> fee.OnRecvPacket -> icaHost.OnRecvPacket
 	var icaHostStack porttypes.IBCModule
@@ -611,6 +647,8 @@ func NewArchwayApp(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 	ibcRouter.AddRoute(wasmdTypes.ModuleName, wasmStack)
+	ibcRouter.AddRoute(cwicatypes.ModuleName, icaControllerStack)
+	ibcRouter.AddRoute(icacontrollertypes.SubModuleName, icaControllerStack)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
 	app.Keepers.IBCKeeper.SetRouter(ibcRouter)
 
@@ -660,13 +698,14 @@ func NewArchwayApp(
 		params.NewAppModule(app.Keepers.ParamsKeeper),
 		transferModule,
 		ibcfee.NewAppModule(app.Keepers.IBCFeeKeeper),
-		ica.NewAppModule(nil, &app.Keepers.ICAHostKeeper),
+		ica.NewAppModule(&app.Keepers.ICAControllerKeeper, &app.Keepers.ICAHostKeeper),
 		consensus.NewAppModule(appCodec, app.Keepers.ConsensusParamsKeeper),
 		tracking.NewAppModule(app.appCodec, app.Keepers.TrackingKeeper),
 		rewards.NewAppModule(app.appCodec, app.Keepers.RewardsKeeper),
 		cwfees.NewAppModule(app.Keepers.CWFeesKeeper),
 		genmsg.NewAppModule(app.MsgServiceRouter()),
 		callback.NewAppModule(app.appCodec, app.Keepers.CallbackKeeper, app.Keepers.WASMKeeper),
+		cwica.NewAppModule(appCodec, app.Keepers.CWICAKeeper, app.Keepers.AccountKeeper),
 		cwerrors.NewAppModule(app.appCodec, app.Keepers.CWErrorsKeeper, app.Keepers.WASMKeeper),
 		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	)
@@ -707,8 +746,9 @@ func NewArchwayApp(
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
 		callbackTypes.ModuleName,
+		cwfees.ModuleName, // does not have being blocker.
+		cwicatypes.ModuleName,
 		cwerrorsTypes.ModuleName, // does not have begin blocker
-		cwfees.ModuleName,        // does not have begin blocker.
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -746,6 +786,7 @@ func NewArchwayApp(
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
 		cwfees.ModuleName, // does not have end blocker
+		cwicatypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -790,6 +831,7 @@ func NewArchwayApp(
 		cwerrorsTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
+		cwicatypes.ModuleName,
 	)
 
 	// Uncomment if you want to set a custom migration order here.
@@ -1053,6 +1095,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
+	paramsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable())
 	paramsKeeper.Subspace(wasmdTypes.ModuleName)
 	paramsKeeper.Subspace(rewardsTypes.ModuleName)
 
