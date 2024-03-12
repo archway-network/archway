@@ -27,7 +27,6 @@ func TestGenesisValidate(t *testing.T) {
 			genesis: types.GenesisState{
 				Params: types.NewParams(
 					0,
-					true,
 					sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
 					100,
 				),

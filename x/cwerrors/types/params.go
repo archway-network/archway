@@ -7,24 +7,21 @@ import (
 )
 
 var (
-	DefaultErrorStoredTime       = int64(302400) // roughly 21 days
-	DefaultDisableErrorCallbacks = false
-	DefaultSubscriptionFee       = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
-	DefaultSubscriptionPeriod    = int64(302400) // roughly 21 days
+	DefaultErrorStoredTime    = int64(302400) // roughly 21 days
+	DefaultSubscriptionFee    = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
+	DefaultSubscriptionPeriod = int64(302400) // roughly 21 days
 )
 
 // NewParams creates a new Params instance.
 func NewParams(
 	errorStoredTime int64,
-	disableErrorCallbacks bool,
 	subscriptionFee sdk.Coin,
 	subscriptionPeriod int64,
 ) Params {
 	return Params{
-		ErrorStoredTime:       errorStoredTime,
-		DisableErrorCallbacks: disableErrorCallbacks,
-		SubscriptionFee:       subscriptionFee,
-		SubscriptionPeriod:    subscriptionPeriod,
+		ErrorStoredTime:    errorStoredTime,
+		SubscriptionFee:    subscriptionFee,
+		SubscriptionPeriod: subscriptionPeriod,
 	}
 }
 
@@ -32,7 +29,6 @@ func NewParams(
 func DefaultParams() Params {
 	return NewParams(
 		DefaultErrorStoredTime,
-		DefaultDisableErrorCallbacks,
 		DefaultSubscriptionFee,
 		DefaultSubscriptionPeriod,
 	)

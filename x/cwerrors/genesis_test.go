@@ -33,16 +33,14 @@ func TestExportGenesis(t *testing.T) {
 	require.Len(t, exportedState.Errors, 2)
 
 	newParams := types.Params{
-		ErrorStoredTime:       99999,
-		DisableErrorCallbacks: true,
-		SubscriptionFee:       sdk.NewCoin("stake", sdk.NewInt(100)),
-		SubscriptionPeriod:    1,
+		ErrorStoredTime:    99999,
+		SubscriptionFee:    sdk.NewCoin("stake", sdk.NewInt(100)),
+		SubscriptionPeriod: 1,
 	}
 	err = keeper.SetParams(ctx, newParams)
 	require.NoError(t, err)
 
 	exportedState = cwerrors.ExportGenesis(ctx, keeper)
-	require.Equal(t, newParams.DisableErrorCallbacks, exportedState.Params.DisableErrorCallbacks)
 	require.Equal(t, newParams.ErrorStoredTime, exportedState.Params.ErrorStoredTime)
 	require.Equal(t, newParams.SubscriptionFee, exportedState.Params.SubscriptionFee)
 	require.Equal(t, newParams.SubscriptionPeriod, exportedState.Params.SubscriptionPeriod)
@@ -63,10 +61,9 @@ func TestInitGenesis(t *testing.T) {
 
 	genstate = types.GenesisState{
 		Params: types.Params{
-			ErrorStoredTime:       99999,
-			DisableErrorCallbacks: true,
-			SubscriptionFee:       sdk.NewCoin("stake", sdk.NewInt(100)),
-			SubscriptionPeriod:    1,
+			ErrorStoredTime:    99999,
+			SubscriptionFee:    sdk.NewCoin("stake", sdk.NewInt(100)),
+			SubscriptionPeriod: 1,
 		},
 		Errors: []types.SudoError{
 			{ContractAddress: "addr1", ModuleName: "test"},
@@ -76,7 +73,6 @@ func TestInitGenesis(t *testing.T) {
 
 	params, err = keeper.GetParams(ctx)
 	require.NoError(t, err)
-	require.Equal(t, genstate.Params.DisableErrorCallbacks, params.DisableErrorCallbacks)
 	require.Equal(t, genstate.Params.ErrorStoredTime, params.ErrorStoredTime)
 	require.Equal(t, genstate.Params.SubscriptionFee, params.SubscriptionFee)
 	require.Equal(t, genstate.Params.SubscriptionPeriod, params.SubscriptionPeriod)

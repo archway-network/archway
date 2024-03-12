@@ -29,10 +29,9 @@ func TestEndBlocker(t *testing.T) {
 		contractAdminAcc.Address.String(),
 	)
 	params := types.Params{
-		ErrorStoredTime:       5,
-		DisableErrorCallbacks: true,
-		SubscriptionFee:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
-		SubscriptionPeriod:    5,
+		ErrorStoredTime:    5,
+		SubscriptionFee:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+		SubscriptionPeriod: 5,
 	}
 	err := keeper.SetParams(ctx, params)
 	require.NoError(t, err)

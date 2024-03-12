@@ -171,7 +171,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 					Authority: govAddr.String(),
 					Params: types.NewParams(
 						0,
-						true,
 						sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
 						100,
 					),

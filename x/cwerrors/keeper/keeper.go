@@ -33,7 +33,7 @@ type Keeper struct {
 	Errors collections.Map[int64, types.SudoError]
 	// DeletionBlocks key: DeletionBlocksKeyPrefix + BlockHeight + ErrorId | value: ErrorId
 	DeletionBlocks collections.Map[collections.Pair[int64, int64], int64]
-	// ContractSubscriptions key: ContractSubscriptionsKeyPrefix + contractAddress | value: nil
+	// ContractSubscriptions key: ContractSubscriptionsKeyPrefix + contractAddress | value: deletionHeight
 	ContractSubscriptions collections.Map[[]byte, int64]
 	// SubscriptionEndBlock key: SubscriptionEndBlockKeyPrefix + BlockHeight + contractAddress | value: contractAddress
 	SubscriptionEndBlock collections.Map[collections.Pair[int64, []byte], []byte]

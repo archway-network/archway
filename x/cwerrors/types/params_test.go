@@ -26,7 +26,6 @@ func TestParamsValidate(t *testing.T) {
 			name: "OK: All valid values",
 			params: types.NewParams(
 				100,
-				true,
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
 				100,
 			),
@@ -36,7 +35,6 @@ func TestParamsValidate(t *testing.T) {
 			name: "Fail: ErrorStoredTime: zero",
 			params: types.NewParams(
 				0,
-				true,
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
 				100,
 			),
@@ -46,7 +44,6 @@ func TestParamsValidate(t *testing.T) {
 			name: "Fail: ErrorStoredTime: negative",
 			params: types.NewParams(
 				-2,
-				true,
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
 				100,
 			),
@@ -56,7 +53,6 @@ func TestParamsValidate(t *testing.T) {
 			name: "Fail: SubsciptionFee: invalid",
 			params: types.NewParams(
 				100,
-				true,
 				sdk.Coin{Denom: "", Amount: sdk.NewInt(100)},
 				100,
 			),
@@ -66,7 +62,6 @@ func TestParamsValidate(t *testing.T) {
 			name: "Fail: SubscriptionPeriod: zero",
 			params: types.NewParams(
 				100,
-				true,
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
 				-2,
 			),

@@ -35,10 +35,9 @@ func (s *KeeperTestSuite) TestSetSubscription() {
 	params, err := keeper.GetParams(ctx)
 	s.Require().NoError(err)
 	err = keeper.SetParams(ctx, types.Params{
-		ErrorStoredTime:       params.ErrorStoredTime,
-		DisableErrorCallbacks: params.DisableErrorCallbacks,
-		SubscriptionFee:       sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
-		SubscriptionPeriod:    params.SubscriptionPeriod,
+		ErrorStoredTime:    params.ErrorStoredTime,
+		SubscriptionFee:    sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+		SubscriptionPeriod: params.SubscriptionPeriod,
 	})
 	s.Require().NoError(err)
 	_, err = keeper.SetSubscription(ctx, contractAdminAcc.Address, contractAddr, fees)
