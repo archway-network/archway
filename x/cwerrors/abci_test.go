@@ -99,7 +99,7 @@ func TestEndBlocker(t *testing.T) {
 	require.Len(t, sudoErrs, 0)
 
 	// Setup subscription
-	expiryTime, err := keeper.SetSubscription(chain.GetContext(), contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
+	expiryTime, err := keeper.SetSubscription(chain.GetContext(), contractAdminAcc.Address, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
 	require.NoError(t, err)
 	require.Equal(t, chain.GetContext().BlockHeight()+params.SubscriptionPeriod, expiryTime)
 

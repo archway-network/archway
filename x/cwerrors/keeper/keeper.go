@@ -13,12 +13,13 @@ import (
 
 // Keeper provides module state operations.
 type Keeper struct {
-	cdc        codec.Codec
-	storeKey   storetypes.StoreKey
-	tStoreKey  storetypes.StoreKey
-	wasmKeeper types.WasmKeeperExpected
-	bankKeeper types.BankKeeperExpected
-	authority  string // this should be the x/gov module account
+	cdc           codec.Codec
+	storeKey      storetypes.StoreKey
+	tStoreKey     storetypes.StoreKey
+	wasmKeeper    types.WasmKeeperExpected
+	bankKeeper    types.BankKeeperExpected
+	rewardsKeeper types.RewardsKeeperExpected
+	authority     string // this should be the x/gov module account
 
 	Schema collections.Schema
 
@@ -39,15 +40,16 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, tStoreKey storetypes.StoreKey, wk types.WasmKeeperExpected, bk types.BankKeeperExpected, authority string) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, tStoreKey storetypes.StoreKey, wk types.WasmKeeperExpected, bk types.BankKeeperExpected, rk types.RewardsKeeperExpected, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
 	k := Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		tStoreKey:  tStoreKey,
-		wasmKeeper: wk,
-		bankKeeper: bk,
-		authority:  authority,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		tStoreKey:     tStoreKey,
+		wasmKeeper:    wk,
+		bankKeeper:    bk,
+		rewardsKeeper: rk,
+		authority:     authority,
 		Params: collections.NewItem(
 			sb,
 			types.ParamsKeyPrefix,

@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestIsSubscribed() {
 	s.Require().False(res.Subscribed)
 
 	// TEST CASE 4: subscription found
-	expectedEndHeight, err := keeper.SetSubscription(ctx, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
+	expectedEndHeight, err := keeper.SetSubscription(ctx, contractAdminAcc.Address, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
 	s.Require().NoError(err)
 	res, err = queryServer.IsSubscribed(sdk.WrapSDKContext(ctx), &types.QueryIsSubscribedRequest{ContractAddress: contractAddr.String()})
 	s.Require().NoError(err)

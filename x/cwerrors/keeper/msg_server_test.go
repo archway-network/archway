@@ -51,11 +51,24 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 			errorType:   status.Error(codes.InvalidArgument, "empty request"),
 		},
 		{
+			testCase: "FAIL: invalid sender address",
+			input: func() *types.MsgSubscribeToError {
+				return &types.MsgSubscribeToError{
+					Sender:          "👻",
+					ContractAddress: contractAddr.String(),
+					Fee:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+				}
+			},
+			expectError: true,
+			errorType:   errors.New("invalid bech32 string length 4"),
+		},
+		{
 			testCase: "FAIL: invalid contract address",
 			input: func() *types.MsgSubscribeToError {
 				return &types.MsgSubscribeToError{
-					Contract: "👻",
-					Fee:      sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+					Sender:          contractAdminAcc.Address.String(),
+					ContractAddress: "👻",
+					Fee:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
 				}
 			},
 			expectError: true,
@@ -65,8 +78,9 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 			testCase: "FAIL: contract not found",
 			input: func() *types.MsgSubscribeToError {
 				return &types.MsgSubscribeToError{
-					Contract: contractAddr2.String(),
-					Fee:      sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+					Sender:          contractAdminAcc.Address.String(),
+					ContractAddress: contractAddr2.String(),
+					Fee:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
 				}
 			},
 			expectError: true,
@@ -76,8 +90,9 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 			testCase: "OK: valid request",
 			input: func() *types.MsgSubscribeToError {
 				return &types.MsgSubscribeToError{
-					Contract: contractAddr.String(),
-					Fee:      sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+					Sender:          contractAdminAcc.Address.String(),
+					ContractAddress: contractAddr.String(),
+					Fee:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
 				}
 			},
 			expectError: false,

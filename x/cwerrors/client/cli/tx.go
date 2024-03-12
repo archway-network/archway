@@ -28,7 +28,7 @@ func GetTxCmd() *cobra.Command {
 
 func getTxSubscribeToErrorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "subscribe-to-error [contract-address]  [fee-amount]",
+		Use:     "subscribe-to-error [contract-address] [fee-amount]",
 		Args:    cobra.ExactArgs(2),
 		Short:   "Subscribe to error callbacks for a contract address",
 		Aliases: []string{"subscribe"},
@@ -38,14 +38,17 @@ func getTxSubscribeToErrorCmd() *cobra.Command {
 				return err
 			}
 
+			senderAddr := clientCtx.GetFromAddress()
+
 			fees, err := pkg.ParseCoinArg("fee-amount", args[1])
 			if err != nil {
 				return err
 			}
 
 			msg := types.MsgSubscribeToError{ // Pass a pointer to the MsgSubscribeToError struct
-				Contract: args[0],
-				Fee:      fees,
+				Sender:          senderAddr.String(),
+				ContractAddress: args[0],
+				Fee:             fees,
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},

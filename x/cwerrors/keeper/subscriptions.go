@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	"cosmossdk.io/collections"
 	"github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,10 +10,14 @@ import (
 )
 
 // SetError stores a sudo error and queues it for deletion after a certain block height
-func (k Keeper) SetSubscription(ctx sdk.Context, contractAddress sdk.AccAddress, fee sdk.Coin) (int64, error) {
+func (k Keeper) SetSubscription(ctx sdk.Context, sender, contractAddress sdk.AccAddress, fee sdk.Coin) (int64, error) {
 	if !k.wasmKeeper.HasContractInfo(ctx, contractAddress) {
 		return -1, types.ErrContractNotFound
 	}
+	if !isAuthorizedToSubscribe(ctx, k, contractAddress, sender.String()) {
+		return -1, types.ErrUnauthorized
+	}
+
 	existingSubFound, endHeight := k.GetSubscription(ctx, contractAddress)
 	if existingSubFound {
 		if err := k.SubscriptionEndBlock.Remove(ctx, collections.Join(endHeight, contractAddress.Bytes())); err != nil {
@@ -68,4 +74,18 @@ func (k Keeper) PruneSubscriptionsEndBlock(ctx sdk.Context) (err error) {
 	}
 	err = k.SubscriptionEndBlock.Clear(ctx, rng)
 	return err
+}
+
+func isAuthorizedToSubscribe(ctx sdk.Context, k Keeper, contractAddress sdk.AccAddress, sender string) bool {
+	if strings.EqualFold(sender, contractAddress.String()) { // A contract can modify its own callbacks
+		return true
+	}
+
+	contractInfo := k.wasmKeeper.GetContractInfo(ctx, contractAddress)
+	if strings.EqualFold(sender, contractInfo.Admin) { // Admin of the contract can modify its callbacks
+		return true
+	}
+
+	contractMetadata := k.rewardsKeeper.GetContractMetadata(ctx, contractAddress)
+	return contractMetadata != nil && strings.EqualFold(sender, contractMetadata.OwnerAddress) // Owner of the contract can modify its callbacks
 }

@@ -32,12 +32,17 @@ func (s *MsgServer) SubscribeToError(c context.Context, request *types.MsgSubscr
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	contractAddr, err := sdk.AccAddressFromBech32(request.Contract)
+	sender, err := sdk.AccAddressFromBech32(request.Sender)
 	if err != nil {
 		return nil, err
 	}
 
-	subscriptionEndHeight, err := s.keeper.SetSubscription(sdk.UnwrapSDKContext(c), contractAddr, request.Fee)
+	contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	subscriptionEndHeight, err := s.keeper.SetSubscription(sdk.UnwrapSDKContext(c), sender, contractAddr, request.Fee)
 	if err != nil {
 		return nil, err
 	}
