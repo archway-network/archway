@@ -3,10 +3,11 @@ package keeper_test
 import (
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/cwerrors/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestSetError() {
@@ -241,7 +242,6 @@ func (s *KeeperTestSuite) TestPruneErrorsByBlockHeight() {
 	getErrors, err = keeper.GetErrorsByContractAddress(ctx, contractAddr2.Bytes())
 	s.Require().NoError(err)
 	s.Require().Len(getErrors, 1)
-
 }
 
 func (s *KeeperTestSuite) TestGetErrorCount() {

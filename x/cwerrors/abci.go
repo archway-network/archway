@@ -1,11 +1,12 @@
 package cwerrors
 
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/cwerrors/keeper"
 	"github.com/archway-network/archway/x/cwerrors/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const ErrorCallbackGasLimit = 150_000

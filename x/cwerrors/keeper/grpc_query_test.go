@@ -126,7 +126,8 @@ func (s *KeeperTestSuite) TestParams() {
 		SubscriptionFee:    sdk.NewInt64Coin(sdk.DefaultBondDenom, 2),
 		SubscriptionPeriod: 100,
 	}
-	keeper.SetParams(ctx, params)
+	err = keeper.SetParams(ctx, params)
+	s.Require().NoError(err)
 
 	// Query params
 	res, err := queryServer.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})

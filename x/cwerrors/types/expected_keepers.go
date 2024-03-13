@@ -2,8 +2,9 @@ package types
 
 import (
 	wasmdtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	rewardstypes "github.com/archway-network/archway/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	rewardstypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // WasmKeeperExpected is a subset of the expected wasm keeper

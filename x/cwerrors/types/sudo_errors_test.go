@@ -3,9 +3,10 @@ package types_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/cwerrors/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSudoErrorMsgString(t *testing.T) {

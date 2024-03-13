@@ -34,7 +34,7 @@ var (
 	SubscriptionEndBlockKeyPrefix = collections.NewPrefix(7)
 )
 
-// Transiet Store
+// Transient Store
 var (
 	ErrorsForSudoCallbackKey = []byte{0x00}
 )

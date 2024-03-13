@@ -4,9 +4,10 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections"
-	"github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/archway-network/archway/x/cwerrors/types"
 )
 
 // SetError stores a sudo error and queues it for deletion after a certain block height

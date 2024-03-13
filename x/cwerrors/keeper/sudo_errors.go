@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"cosmossdk.io/collections"
-	"github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/cwerrors/types"
 )
 
 // SetError stores a sudo error and queues it for deletion after a certain block height
@@ -144,7 +145,6 @@ func (k Keeper) PruneErrorsCurrentBlock(ctx sdk.Context) (err error) {
 		if err := k.DeletionBlocks.Remove(ctx, collections.Join(height, errorID)); err != nil {
 			return err
 		}
-
 	}
 	return nil
 }
