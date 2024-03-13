@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// EmitParamsUpdatedEvent emits an event when the params are updated
 func EmitParamsUpdatedEvent(ctx sdk.Context, authority string, newParams Params) {
 	err := ctx.EventManager().EmitTypedEvent(&ParamsUpdatedEvent{
 		Authority: authority,
@@ -16,6 +17,7 @@ func EmitParamsUpdatedEvent(ctx sdk.Context, authority string, newParams Params)
 	}
 }
 
+// EmitSubscribedToErrorsEvent emits an event when a contract is subscribed to errors
 func EmitSubscribedToErrorsEvent(ctx sdk.Context, sender, contractAddress string, fees sdk.Coin, subValidTill int64) {
 	err := ctx.EventManager().EmitTypedEvent(&SubscribedToErrorsEvent{
 		Sender:                sender,
@@ -28,6 +30,7 @@ func EmitSubscribedToErrorsEvent(ctx sdk.Context, sender, contractAddress string
 	}
 }
 
+// EmitStoringErrorEvent emits an event when an error is stored
 func EmitStoringErrorEvent(ctx sdk.Context, sudoError SudoError, deletionBlockHeight int64) {
 	err := ctx.EventManager().EmitTypedEvent(&StoringErrorEvent{
 		Error:               sudoError,
@@ -38,6 +41,7 @@ func EmitStoringErrorEvent(ctx sdk.Context, sudoError SudoError, deletionBlockHe
 	}
 }
 
+// EmitSudoErrorCallbackFailedEvent emits an event when a callback for a sudo error fails
 func EmitSudoErrorCallbackFailedEvent(ctx sdk.Context, sudoError SudoError, callbackErr string) {
 	err := ctx.EventManager().EmitTypedEvent(&SudoErrorCallbackFailedEvent{
 		Error:                sudoError,

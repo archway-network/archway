@@ -52,15 +52,13 @@ func (s *KeeperTestSuite) TestSetSubscription() {
 	expectedEndDate := ctx.BlockHeight() + types.DefaultParams().SubscriptionPeriod
 	s.Require().Equal(subscriptionEndHeight, expectedEndDate)
 
-	// TEST CASE 5: Subscription already exists - subscription end height gets updated
-	// Go to next block
+	// TEST CASE 5: Subscription already exists - subscription end height gets updated to new height
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	subscriptionEndHeight, err = keeper.SetSubscription(ctx, contractAdminAcc.Address, contractAddr, fees)
 	s.Require().NoError(err)
 	s.Require().Equal(subscriptionEndHeight, expectedEndDate+1)
 
-	// TEST CASE 6: Subscription being updated by the contract itself
-	// Go to next block
+	// TEST CASE 6: Subscription being updated by the contract itself (instead of admin)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	subscriptionEndHeight, err = keeper.SetSubscription(ctx, contractAddr, contractAddr, fees)
 	s.Require().NoError(err)
@@ -144,7 +142,7 @@ func (s *KeeperTestSuite) TestPruneSubscriptionsEndBlock() {
 	err := keeper.PruneSubscriptionsEndBlock(ctx)
 	s.Require().NoError(err)
 
-	// TEST CASE 2: Prune subscriptions
+	// TEST CASE 2: Set subscription. Go to expire time. Prune subscriptions
 	endHeight, err := keeper.SetSubscription(ctx, contractAdminAcc.Address, contractAddr, fees)
 	s.Require().NoError(err)
 	ctx = ctx.WithBlockHeight(endHeight)
@@ -153,7 +151,7 @@ func (s *KeeperTestSuite) TestPruneSubscriptionsEndBlock() {
 	hasSub := keeper.HasSubscription(ctx, contractAddr)
 	s.Require().False(hasSub)
 
-	// TEST CASE 3: Prune subscriptions with multiple subscriptions
+	// TEST CASE 3: Prune subscriptions when many contracts have subscriptions
 	endHeight, err = keeper.SetSubscription(ctx, contractAdminAcc.Address, contractAddr, fees)
 	s.Require().NoError(err)
 	_, err = keeper.SetSubscription(ctx, contractAdminAcc.Address, contractAddr2, fees)
@@ -161,9 +159,8 @@ func (s *KeeperTestSuite) TestPruneSubscriptionsEndBlock() {
 	_, err = keeper.SetSubscription(ctx, contractAdminAcc.Address, contractAddr3, fees)
 	s.Require().NoError(err)
 
-	//increment block height
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	// enxtend the subscription for contractAddr3
+	// extend the subscription for contractAddr3
 	_, err = keeper.SetSubscription(ctx, contractAdminAcc.Address, contractAddr3, fees)
 	s.Require().NoError(err)
 
@@ -177,7 +174,6 @@ func (s *KeeperTestSuite) TestPruneSubscriptionsEndBlock() {
 	hasSub = keeper.HasSubscription(ctx, contractAddr3)
 	s.Require().True(hasSub)
 
-	//increment block height
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	err = keeper.PruneSubscriptionsEndBlock(ctx)
 	s.Require().NoError(err)

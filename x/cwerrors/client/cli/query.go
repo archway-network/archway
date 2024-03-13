@@ -25,6 +25,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
+// getQueryErrorsCmd returns the command to query errors for a contract address.
 func getQueryErrorsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "errors [contract_address]",
@@ -51,6 +52,7 @@ func getQueryErrorsCmd() *cobra.Command {
 	return cmd
 }
 
+// getQueryIsSubscribedCmd returns the command to query if a contract address is subscribed to errors.
 func getQueryIsSubscribedCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "is-subscribed [contract_address]",
@@ -77,6 +79,7 @@ func getQueryIsSubscribedCmd() *cobra.Command {
 	return cmd
 }
 
+// getQueryParamsCmd returns the command to query module parameters.
 func getQueryParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",

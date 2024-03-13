@@ -30,12 +30,12 @@ func (qs *QueryServer) Errors(c context.Context, request *types.QueryErrorsReque
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := sdk.AccAddressFromBech32(request.ContractAddress)
+	contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid contract address: %s", err.Error())
 	}
 
-	errors, err := qs.keeper.GetErrorsByContractAddress(sdk.UnwrapSDKContext(c), addr)
+	errors, err := qs.keeper.GetErrorsByContractAddress(sdk.UnwrapSDKContext(c), contractAddr)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "could not fetch the errors: %s", err.Error())
 	}
@@ -50,12 +50,17 @@ func (qs *QueryServer) IsSubscribed(c context.Context, request *types.QueryIsSub
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+
 	contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid contract address: %s", err.Error())
 	}
+
 	hasSub, validtill := qs.keeper.GetSubscription(sdk.UnwrapSDKContext(c), contractAddr)
-	return &types.QueryIsSubscribedResponse{Subscribed: hasSub, SubscriptionValidTill: validtill}, nil
+	return &types.QueryIsSubscribedResponse{
+		Subscribed:            hasSub,
+		SubscriptionValidTill: validtill,
+	}, nil
 }
 
 // Params implements types.QueryServer.

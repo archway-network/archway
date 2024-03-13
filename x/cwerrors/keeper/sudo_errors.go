@@ -19,8 +19,9 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 		return types.ErrContractNotFound
 	}
 
+	// If contract has subscription, store the error in the transient store to be executed as error callback
 	if k.HasSubscription(ctx, contractAddr) {
-		err := k.storeErrorCallback(ctx, contractAddr, sudoErr)
+		err := k.storeErrorCallback(ctx, sudoErr)
 		if err != nil {
 			return err
 		}
@@ -31,18 +32,20 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 	return k.StoreErrorInState(ctx, contractAddr, sudoErr)
 }
 
+// StoreErrorInState stores the error in the state and queues it for deletion after a certain block height
 func (k Keeper) StoreErrorInState(ctx sdk.Context, contractAddr sdk.AccAddress, sudoErr types.SudoError) error {
+	// just a unique identifier for the error
 	errorID, err := k.getNextErrorID(ctx)
 	if err != nil {
 		return err
 	}
 
-	// Store contract errors
+	// Associate the error with the contract
 	if err = k.ContractErrors.Set(ctx, collections.Join(contractAddr.Bytes(), errorID), errorID); err != nil {
 		return err
 	}
 
-	// Store the deletion block
+	// Store when the error should be deleted
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		return err
@@ -52,26 +55,28 @@ func (k Keeper) StoreErrorInState(ctx sdk.Context, contractAddr sdk.AccAddress, 
 		return err
 	}
 
+	// Store the actual sudo error
+	err = k.Errors.Set(ctx, errorID, sudoErr)
+	if err != nil {
+		return err
+	}
+
 	types.EmitStoringErrorEvent(
 		ctx,
 		sudoErr,
 		deletionHeight,
 	)
-	// Store the error
-	return k.Errors.Set(ctx, errorID, sudoErr)
+	return nil
 }
 
-func (k Keeper) storeErrorCallback(ctx sdk.Context, contractAddr sdk.AccAddress, sudoErr types.SudoError) error {
+func (k Keeper) storeErrorCallback(ctx sdk.Context, sudoErr types.SudoError) error {
 	errorID, err := k.getNextErrorID(ctx)
 	if err != nil {
 		return err
 	}
 
-	if k.HasSubscription(ctx, contractAddr) {
-		k.SetSudoErrorCallback(ctx, errorID, sudoErr)
-		return nil
-	}
-	return err
+	k.SetSudoErrorCallback(ctx, errorID, sudoErr)
+	return nil
 }
 
 func (k Keeper) getNextErrorID(ctx sdk.Context) (int64, error) {
@@ -86,7 +91,7 @@ func (k Keeper) getNextErrorID(ctx sdk.Context) (int64, error) {
 	return errorID, nil
 }
 
-// GetErrosByContractAddress returns all errors by a given contract address
+// GetErrosByContractAddress returns all errors (in state) for a given contract address
 func (k Keeper) GetErrorsByContractAddress(ctx sdk.Context, contractAddress []byte) (sudoErrs []types.SudoError, err error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](contractAddress)
 	err = k.ContractErrors.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], errorID int64) (bool, error) {
@@ -103,6 +108,7 @@ func (k Keeper) GetErrorsByContractAddress(ctx sdk.Context, contractAddress []by
 	return sudoErrs, nil
 }
 
+// ExportErrors returns all errors in state. Used for genesis export
 func (k Keeper) ExportErrors(ctx sdk.Context) (sudoErrs []types.SudoError, err error) {
 	iter, err := k.Errors.Iterate(ctx, nil)
 	if err != nil {
@@ -174,6 +180,7 @@ func (k Keeper) GetAllSudoErrorCallbacks(ctx sdk.Context) (sudoErrs []types.Sudo
 	return sudoErrs
 }
 
+// IterateSudoErrorCallbacks iterates over all sudo error callbacks from the transient store
 func (k Keeper) IterateSudoErrorCallbacks(ctx sdk.Context, exec func(types.SudoError) bool) {
 	tStore := ctx.TransientStore(k.tStoreKey)
 	itr := sdk.KVStorePrefixIterator(tStore, types.ErrorsForSudoCallbackKey)

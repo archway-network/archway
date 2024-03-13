@@ -240,7 +240,6 @@ var (
 		wasmdTypes.ModuleName:                {authtypes.Burner},
 		rewardsTypes.TreasuryCollector:       {authtypes.Burner},
 		callbackTypes.ModuleName:             nil,
-		cwerrorsTypes.ModuleName:             nil,
 	}
 )
 

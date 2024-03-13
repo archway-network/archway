@@ -10,7 +10,7 @@ import (
 	"github.com/archway-network/archway/x/cwerrors/types"
 )
 
-// SetError stores a sudo error and queues it for deletion after a certain block height
+// SetSubscription sets a subscription for a contract so the contract can receive error callbacks
 func (k Keeper) SetSubscription(ctx sdk.Context, sender, contractAddress sdk.AccAddress, fee sdk.Coin) (int64, error) {
 	if !k.wasmKeeper.HasContractInfo(ctx, contractAddress) {
 		return -1, types.ErrContractNotFound
@@ -45,6 +45,7 @@ func (k Keeper) SetSubscription(ctx sdk.Context, sender, contractAddress sdk.Acc
 	return subscriptionEndHeight, k.ContractSubscriptions.Set(ctx, contractAddress, subscriptionEndHeight)
 }
 
+// HasSubscription checks if a contract has a subscription
 func (k Keeper) HasSubscription(ctx sdk.Context, contractAddress sdk.AccAddress) bool {
 	has, err := k.ContractSubscriptions.Has(ctx, contractAddress)
 	if err != nil {
@@ -53,6 +54,7 @@ func (k Keeper) HasSubscription(ctx sdk.Context, contractAddress sdk.AccAddress)
 	return has
 }
 
+// GetSubscription returns the subscription end height for a contract
 func (k Keeper) GetSubscription(ctx sdk.Context, contractAddress sdk.AccAddress) (bool, int64) {
 	has, err := k.ContractSubscriptions.Get(ctx, contractAddress)
 	if err != nil {
@@ -61,6 +63,7 @@ func (k Keeper) GetSubscription(ctx sdk.Context, contractAddress sdk.AccAddress)
 	return true, has
 }
 
+// PruneSubscriptionsEndBlock prunes subscriptions that have ended at the given block. This is executed at the module endblocker
 func (k Keeper) PruneSubscriptionsEndBlock(ctx sdk.Context) (err error) {
 	height := ctx.BlockHeight()
 	rng := collections.NewPrefixedPairRange[int64, []byte](height)
@@ -73,20 +76,20 @@ func (k Keeper) PruneSubscriptionsEndBlock(ctx sdk.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	err = k.SubscriptionEndBlock.Clear(ctx, rng)
-	return err
+	return k.SubscriptionEndBlock.Clear(ctx, rng)
 }
 
+// isAuthorizedToSubscribe checks if the sender is authorized to subscribe to the contract
 func isAuthorizedToSubscribe(ctx sdk.Context, k Keeper, contractAddress sdk.AccAddress, sender string) bool {
-	if strings.EqualFold(sender, contractAddress.String()) { // A contract can modify its own callbacks
+	if strings.EqualFold(sender, contractAddress.String()) { // A contract can set subscriptions for itself
 		return true
 	}
 
 	contractInfo := k.wasmKeeper.GetContractInfo(ctx, contractAddress)
-	if strings.EqualFold(sender, contractInfo.Admin) { // Admin of the contract can modify its callbacks
+	if strings.EqualFold(sender, contractInfo.Admin) { // Admin of the contract can set subscriptions
 		return true
 	}
 
 	contractMetadata := k.rewardsKeeper.GetContractMetadata(ctx, contractAddress)
-	return contractMetadata != nil && strings.EqualFold(sender, contractMetadata.OwnerAddress) // Owner of the contract can modify its callbacks
+	return contractMetadata != nil && strings.EqualFold(sender, contractMetadata.OwnerAddress) // Owner of the contract can set subscriptions
 }

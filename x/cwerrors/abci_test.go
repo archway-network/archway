@@ -109,11 +109,18 @@ func TestEndBlocker(t *testing.T) {
 	// Set an error which should be called as callback
 	err = keeper.SetError(chain.GetContext(), contract1Err)
 	require.NoError(t, err)
+	// Set an error for a contract which has no subscription
+	err = keeper.SetError(chain.GetContext(), contract2Err)
+	require.NoError(t, err)
 
 	// Should be empty as the is stored for error callback
 	sudoErrs, err = keeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr.Bytes())
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 0)
+	// Second error should still be stored in state
+	sudoErrs, err = keeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr2.Bytes())
+	require.NoError(t, err)
+	require.Len(t, sudoErrs, 1)
 
 	// Should be queued for callback
 	sudoErrs = keeper.GetAllSudoErrorCallbacks(chain.GetContext())
@@ -125,4 +132,9 @@ func TestEndBlocker(t *testing.T) {
 	// Check number of errors match
 	sudoErrs = keeper.GetAllSudoErrorCallbacks(chain.GetContext())
 	require.Len(t, sudoErrs, 0)
+
+	// Ensure errors in state persist and are not purged
+	sudoErrs, err = keeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr2.Bytes())
+	require.NoError(t, err)
+	require.Len(t, sudoErrs, 1)
 }

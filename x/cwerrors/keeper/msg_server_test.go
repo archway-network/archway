@@ -4,14 +4,14 @@ import (
 	"errors"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	cwerrorsKeeper "github.com/archway-network/archway/x/cwerrors/keeper"
 	"github.com/archway-network/archway/x/cwerrors/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *KeeperTestSuite) TestSubscribeToError() {
@@ -26,7 +26,6 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 		contractAddr.String(),
 		contractAdminAcc.Address.String(),
 	)
-
 	params, err := keeper.GetParams(ctx)
 	s.Require().NoError(err)
 	err = s.chain.GetApp().Keepers.BankKeeper.SendCoins(ctx, contractAdminAcc.Address, contractAddr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)))
@@ -85,6 +84,18 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 			},
 			expectError: true,
 			errorType:   types.ErrContractNotFound,
+		},
+		{
+			testCase: "FAIL: account doesnt have enough balance",
+			input: func() *types.MsgSubscribeToError {
+				return &types.MsgSubscribeToError{
+					Sender:          contractAdminAcc.Address.String(),
+					ContractAddress: contractAddr.String(),
+					Fee:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 101),
+				}
+			},
+			expectError: true,
+			errorType:   sdkerrors.ErrInsufficientFunds,
 		},
 		{
 			testCase: "OK: valid request",

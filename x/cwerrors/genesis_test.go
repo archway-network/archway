@@ -80,5 +80,5 @@ func TestInitGenesis(t *testing.T) {
 
 	sudoErrs, err := keeper.ExportErrors(ctx)
 	require.NoError(t, err)
-	require.Len(t, sudoErrs, 0)
+	require.Len(t, sudoErrs, 0) // We only export errors and dont import them as they wont be relevant
 }

@@ -55,7 +55,9 @@ func (s *MsgServer) SubscribeToError(c context.Context, request *types.MsgSubscr
 		request.Fee,
 		subscriptionEndHeight,
 	)
-	return &types.MsgSubscribeToErrorResponse{SubscriptionValidTill: subscriptionEndHeight}, nil
+	return &types.MsgSubscribeToErrorResponse{
+		SubscriptionValidTill: subscriptionEndHeight,
+	}, nil
 }
 
 // UpdateParams implements types.MsgServer.

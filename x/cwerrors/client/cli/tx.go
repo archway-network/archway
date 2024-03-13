@@ -26,6 +26,7 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
+// getTxSubscribeToErrorCmd returns the command to subscribe to error callbacks for a contract address.
 func getTxSubscribeToErrorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "subscribe-to-error [contract-address] [fee-amount]",
@@ -45,7 +46,7 @@ func getTxSubscribeToErrorCmd() *cobra.Command {
 				return err
 			}
 
-			msg := types.MsgSubscribeToError{ // Pass a pointer to the MsgSubscribeToError struct
+			msg := types.MsgSubscribeToError{
 				Sender:          senderAddr.String(),
 				ContractAddress: args[0],
 				Fee:             fees,

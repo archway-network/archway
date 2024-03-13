@@ -40,7 +40,10 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, tStoreKey storetypes.StoreKey, wk types.WasmKeeperExpected, bk types.BankKeeperExpected, rk types.RewardsKeeperExpected, authority string) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, tStoreKey storetypes.StoreKey,
+	wk types.WasmKeeperExpected, bk types.BankKeeperExpected, rk types.RewardsKeeperExpected,
+	authority string,
+) Keeper {
 	sb := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
 	k := Keeper{
 		cdc:           cdc,
@@ -111,7 +114,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// GetAuthority returns the x/callback module's authority.
+// GetAuthority returns the x/cwerrors module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }

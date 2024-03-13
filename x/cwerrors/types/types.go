@@ -18,6 +18,7 @@ func (s SudoError) Validate() error {
 	return nil
 }
 
+// Bytes returns the json encoding of the sudo callback which is sent to the contract
 func (s SudoError) Bytes() []byte {
 	msgBz, err := json.Marshal(s)
 	if err != nil {
@@ -25,7 +26,3 @@ func (s SudoError) Bytes() []byte {
 	}
 	return msgBz
 }
-
-// func (s SudoError) String() string {
-// 	return string(s.Bytes())
-// }
