@@ -45,7 +45,10 @@ func sudoErrorCallbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeper
 				"error_msg", sudoErrorMsg,
 				"err", err,
 			)
-			k.StoreErrorInState(ctx, contractAddr, sudoError)
+			err = k.StoreErrorInState(ctx, contractAddr, sudoError)
+			if err != nil {
+				panic(err)
+			}
 		}
 		return false
 	}
