@@ -42,10 +42,19 @@ func (s *MsgServer) SubscribeToError(c context.Context, request *types.MsgSubscr
 		return nil, err
 	}
 
-	subscriptionEndHeight, err := s.keeper.SetSubscription(sdk.UnwrapSDKContext(c), sender, contractAddr, request.Fee)
+	ctx := sdk.UnwrapSDKContext(c)
+	subscriptionEndHeight, err := s.keeper.SetSubscription(ctx, sender, contractAddr, request.Fee)
 	if err != nil {
 		return nil, err
 	}
+
+	types.EmitSubscribedToErrorsEvent(
+		ctx,
+		request.Sender,
+		request.ContractAddress,
+		request.Fee,
+		subscriptionEndHeight,
+	)
 	return &types.MsgSubscribeToErrorResponse{SubscriptionValidTill: subscriptionEndHeight}, nil
 }
 
@@ -69,10 +78,16 @@ func (s MsgServer) UpdateParams(c context.Context, request *types.MsgUpdateParam
 		return nil, err
 	}
 
-	err = s.keeper.Params.Set(sdk.UnwrapSDKContext(c), request.GetParams())
+	ctx := sdk.UnwrapSDKContext(c)
+	err = s.keeper.Params.Set(ctx, request.GetParams())
 	if err != nil {
 		return nil, err
 	}
 
+	types.EmitParamsUpdatedEvent(
+		ctx,
+		request.Authority,
+		request.Params,
+	)
 	return &types.MsgUpdateParamsResponse{}, nil
 }

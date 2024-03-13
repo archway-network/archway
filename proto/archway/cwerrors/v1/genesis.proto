@@ -7,11 +7,10 @@ import "archway/cwerrors/v1/cwerrors.proto";
 
 option go_package = "github.com/archway-network/archway/x/cwerrors/types";
 
-
 // GenesisState defines the cwerrors module's genesis state.
 message GenesisState {
-    // params defines all the module parameters.
-    Params params = 1 [ (gogoproto.nullable) = false ];
-    // errors defines all the sudo errors currently registered.
-    repeated SudoError errors = 2 [ (gogoproto.nullable) = false ]; 
+  // params defines all the module parameters.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  // errors defines all the sudo errors currently registered.
+  repeated SudoError errors = 2 [ (gogoproto.nullable) = false ];
 }

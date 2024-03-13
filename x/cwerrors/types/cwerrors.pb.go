@@ -29,7 +29,8 @@ type SudoError struct {
 	ModuleName string `protobuf:"bytes,1,opt,name=module_name,json=moduleName,proto3" json:"module_name,omitempty"`
 	// error_code is the module level error code
 	ErrorCode uint32 `protobuf:"varint,2,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
-	// contract_address is the address of the contract which will receive the error callback
+	// contract_address is the address of the contract which will receive the
+	// error callback
 	ContractAddress string `protobuf:"bytes,3,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
 	// input_payload is any input which caused the error
 	InputPayload string `protobuf:"bytes,4,opt,name=input_payload,json=inputPayload,proto3" json:"input_payload,omitempty"`

@@ -32,7 +32,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 type MsgUpdateParams struct {
-	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	// authority is the address that controls the module (defaults to x/gov unless
+	// overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// params defines the x/cwerrors parameters to update.
 	//
@@ -87,7 +88,8 @@ func (m *MsgUpdateParams) GetParams() Params {
 	return Params{}
 }
 
-// MsgUpdateParamsResponse defines the response structure for executing a MsgUpdateParams message.
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
 type MsgUpdateParamsResponse struct {
 }
 
@@ -126,11 +128,13 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 // MsgSubscribeToError is the Msg/SubscribeToError request type.
 type MsgSubscribeToError struct {
-	// sender is the address of who is registering the contarcts for callback on error
+	// sender is the address of who is registering the contarcts for callback on
+	// error
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	// contract is the address of the contract that will be called on error
 	ContractAddress string `protobuf:"bytes,2,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	// fee is the subscription fee for the feature (current no fee is charged for this feature)
+	// fee is the subscription fee for the feature (current no fee is charged for
+	// this feature)
 	Fee types.Coin `protobuf:"bytes,3,opt,name=fee,proto3" json:"fee"`
 }
 
@@ -188,9 +192,11 @@ func (m *MsgSubscribeToError) GetFee() types.Coin {
 	return types.Coin{}
 }
 
-// MsgSubscribeToErrorResponse defines the response structure for executing a MsgSubscribeToError message.
+// MsgSubscribeToErrorResponse defines the response structure for executing a
+// MsgSubscribeToError message.
 type MsgSubscribeToErrorResponse struct {
-	// subscription_valid_till is the block height till which the subscription is valid
+	// subscription_valid_till is the block height till which the subscription is
+	// valid
 	SubscriptionValidTill int64 `protobuf:"varint,1,opt,name=subscription_valid_till,json=subscriptionValidTill,proto3" json:"subscription_valid_till,omitempty"`
 }
 
@@ -293,7 +299,8 @@ type MsgClient interface {
 	// UpdateParams defines a governance operation for updating the x/cwerrors
 	// module parameters. The authority is defined in the keeper.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	// SubscribeToError defines an operation which will register a contract for a sudo callback on errors
+	// SubscribeToError defines an operation which will register a contract for a
+	// sudo callback on errors
 	SubscribeToError(ctx context.Context, in *MsgSubscribeToError, opts ...grpc.CallOption) (*MsgSubscribeToErrorResponse, error)
 }
 
@@ -328,7 +335,8 @@ type MsgServer interface {
 	// UpdateParams defines a governance operation for updating the x/cwerrors
 	// module parameters. The authority is defined in the keeper.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
-	// SubscribeToError defines an operation which will register a contract for a sudo callback on errors
+	// SubscribeToError defines an operation which will register a contract for a
+	// sudo callback on errors
 	SubscribeToError(context.Context, *MsgSubscribeToError) (*MsgSubscribeToErrorResponse, error)
 }
 

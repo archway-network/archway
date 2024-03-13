@@ -255,7 +255,8 @@ func (m *QueryIsSubscribedRequest) GetContractAddress() string {
 type QueryIsSubscribedResponse struct {
 	// subscribed defines if the contract is subscribed to sudo error callbacks
 	Subscribed bool `protobuf:"varint,1,opt,name=subscribed,proto3" json:"subscribed,omitempty"`
-	// subscription_valid_till defines the block height till which the subscription is valid
+	// subscription_valid_till defines the block height till which the
+	// subscription is valid
 	SubscriptionValidTill int64 `protobuf:"varint,2,opt,name=subscription_valid_till,json=subscriptionValidTill,proto3" json:"subscription_valid_till,omitempty"`
 }
 

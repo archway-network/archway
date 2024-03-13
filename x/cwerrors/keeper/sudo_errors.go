@@ -51,6 +51,11 @@ func (k Keeper) StoreErrorInState(ctx sdk.Context, contractAddr sdk.AccAddress, 
 		return err
 	}
 
+	types.EmitStoringErrorEvent(
+		ctx,
+		sudoErr,
+		deletionHeight,
+	)
 	// Store the error
 	return k.Errors.Set(ctx, errorID, sudoErr)
 }
