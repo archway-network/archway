@@ -4,14 +4,15 @@ import (
 	"errors"
 	"fmt"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/pkg/testutils"
-	cwerrorsKeeper "github.com/archway-network/archway/x/cwerrors/keeper"
-	"github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg/testutils"
+	cwerrorsKeeper "github.com/archway-network/archway/x/cwerrors/keeper"
+	"github.com/archway-network/archway/x/cwerrors/types"
 )
 
 func (s *KeeperTestSuite) TestSubscribeToError() {
