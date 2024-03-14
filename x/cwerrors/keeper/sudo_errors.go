@@ -35,7 +35,7 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 // StoreErrorInState stores the error in the state and queues it for deletion after a certain block height
 func (k Keeper) StoreErrorInState(ctx sdk.Context, contractAddr sdk.AccAddress, sudoErr types.SudoError) error {
 	// just a unique identifier for the error
-	errorID, err := k.getNextErrorID(ctx)
+	errorID, err := k.ErrorID.Next(ctx)
 	if err != nil {
 		return err
 	}
@@ -70,24 +70,13 @@ func (k Keeper) StoreErrorInState(ctx sdk.Context, contractAddr sdk.AccAddress, 
 }
 
 func (k Keeper) storeErrorCallback(ctx sdk.Context, sudoErr types.SudoError) error {
-	errorID, err := k.getNextErrorID(ctx)
+	errorID, err := k.ErrorID.Next(ctx)
 	if err != nil {
 		return err
 	}
 
 	k.SetSudoErrorCallback(ctx, errorID, sudoErr)
 	return nil
-}
-
-func (k Keeper) getNextErrorID(ctx sdk.Context) (uint64, error) {
-	errorID, err := k.ErrorID.Next(ctx)
-	if err != nil {
-		return 0, err
-	}
-	if err = k.ErrorID.Set(ctx, errorID); err != nil {
-		return 0, err
-	}
-	return errorID, nil
 }
 
 // GetErrosByContractAddress returns all errors (in state) for a given contract address

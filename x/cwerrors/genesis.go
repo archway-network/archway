@@ -13,9 +13,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.Params.Set(ctx, params); err != nil {
 		panic(err)
 	}
-	if err := k.ErrorID.Set(ctx, 0); err != nil {
-		panic(err)
-	}
 }
 
 // ExportGenesis exports the module genesis for the current block.
