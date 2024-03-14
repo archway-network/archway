@@ -22,12 +22,12 @@ message Params {
 }
 ```
 
-## Errors Count
+## ErrorID
 
-Errors Count is a single value which keeps track of the number of errors. Its used to generate error id when storing the errors.
+ErrorID is a sequence number used to increment error ID.
 
 Storage keys:
-* ErrorsCount: `ErrorsCountKey -> int64`
+* ErrorID: `ErrorIDKey -> uint64`
 
 ## Contract Errors
 

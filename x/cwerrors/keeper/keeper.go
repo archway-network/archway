@@ -25,14 +25,14 @@ type Keeper struct {
 
 	// Params key: ParamsKeyPrefix | value: Params
 	Params collections.Item[types.Params]
-	// ErrorsCount key: ErrorsCountKey | value: ErrorsCount
-	ErrorsCount collections.Item[int64]
+	// ErrorID key: ErrorsCountKey | value: ErrorID
+	ErrorID collections.Sequence
 	// ContractErrors key: ContractErrorsKeyPrefix + contractAddress + ErrorId | value: ErrorId
-	ContractErrors collections.Map[collections.Pair[[]byte, int64], int64]
+	ContractErrors collections.Map[collections.Pair[[]byte, uint64], uint64]
 	// ContractErrors key: ErrorsKeyPrefix + ErrorId | value: SudoError
-	Errors collections.Map[int64, types.SudoError]
+	Errors collections.Map[uint64, types.SudoError]
 	// DeletionBlocks key: DeletionBlocksKeyPrefix + BlockHeight + ErrorId | value: ErrorId
-	DeletionBlocks collections.Map[collections.Pair[int64, int64], int64]
+	DeletionBlocks collections.Map[collections.Pair[int64, uint64], uint64]
 	// ContractSubscriptions key: ContractSubscriptionsKeyPrefix + contractAddress | value: deletionHeight
 	ContractSubscriptions collections.Map[[]byte, int64]
 	// SubscriptionEndBlock key: SubscriptionEndBlockKeyPrefix + BlockHeight + contractAddress | value: contractAddress
@@ -59,32 +59,31 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, tStoreKey storetyp
 			"params",
 			collcompat.ProtoValue[types.Params](cdc),
 		),
-		ErrorsCount: collections.NewItem(
+		ErrorID: collections.NewSequence(
 			sb,
-			types.ErrorsCountKey,
-			"errorsCount",
-			collections.Int64Value,
+			types.ErrorIDKey,
+			"errorID",
 		),
 		ContractErrors: collections.NewMap(
 			sb,
 			types.ContractErrorsKeyPrefix,
 			"contractErrors",
-			collections.PairKeyCodec(collections.BytesKey, collections.Int64Key),
-			collections.Int64Value,
+			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			collections.Uint64Value,
 		),
 		Errors: collections.NewMap(
 			sb,
 			types.ErrorsKeyPrefix,
 			"errors",
-			collections.Int64Key,
+			collections.Uint64Key,
 			collcompat.ProtoValue[types.SudoError](cdc),
 		),
 		DeletionBlocks: collections.NewMap(
 			sb,
 			types.DeletionBlocksKeyPrefix,
 			"deletionBlocks",
-			collections.PairKeyCodec(collections.Int64Key, collections.Int64Key),
-			collections.Int64Value,
+			collections.PairKeyCodec(collections.Int64Key, collections.Uint64Key),
+			collections.Uint64Value,
 		),
 		ContractSubscriptions: collections.NewMap(
 			sb,

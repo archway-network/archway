@@ -20,8 +20,8 @@ const (
 var (
 	// ParamsKeyPrefix is the prefix for the module parameter store.
 	ParamsKeyPrefix = collections.NewPrefix(1)
-	// ErrorsCountKey is the prefix for the count of errors
-	ErrorsCountKey = collections.NewPrefix(2)
+	// ErrorIDKey is the prefix for the count of errors
+	ErrorIDKey = collections.NewPrefix(2)
 	// ContractErrorsKeyPrefix is the prefix for the collection of all error ids for a given contractzs
 	ContractErrorsKeyPrefix = collections.NewPrefix(3)
 	// ErrorsKeyPrefix is the prefix for the collection of all errors
@@ -39,6 +39,6 @@ var (
 	ErrorsForSudoCallbackKey = []byte{0x00}
 )
 
-func GetErrorsForSudoCallStoreKey(errorID int64) []byte {
-	return append(ErrorsForSudoCallbackKey, sdk.Uint64ToBigEndian(uint64(errorID))...)
+func GetErrorsForSudoCallStoreKey(errorID uint64) []byte {
+	return append(ErrorsForSudoCallbackKey, sdk.Uint64ToBigEndian(errorID)...)
 }

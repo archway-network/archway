@@ -79,13 +79,12 @@ func (k Keeper) storeErrorCallback(ctx sdk.Context, sudoErr types.SudoError) err
 	return nil
 }
 
-func (k Keeper) getNextErrorID(ctx sdk.Context) (int64, error) {
-	errorID, err := k.GetErrorCount(ctx)
+func (k Keeper) getNextErrorID(ctx sdk.Context) (uint64, error) {
+	errorID, err := k.ErrorID.Next(ctx)
 	if err != nil {
 		return 0, err
 	}
-	errorID += 1
-	if err = k.ErrorsCount.Set(ctx, errorID); err != nil {
+	if err = k.ErrorID.Set(ctx, errorID); err != nil {
 		return 0, err
 	}
 	return errorID, nil
@@ -93,8 +92,8 @@ func (k Keeper) getNextErrorID(ctx sdk.Context) (int64, error) {
 
 // GetErrosByContractAddress returns all errors (in state) for a given contract address
 func (k Keeper) GetErrorsByContractAddress(ctx sdk.Context, contractAddress []byte) (sudoErrs []types.SudoError, err error) {
-	rng := collections.NewPrefixedPairRange[[]byte, int64](contractAddress)
-	err = k.ContractErrors.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], errorID int64) (bool, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](contractAddress)
+	err = k.ContractErrors.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], errorID uint64) (bool, error) {
 		sudoErr, err := k.Errors.Get(ctx, errorID)
 		if err != nil {
 			return true, err
@@ -123,10 +122,10 @@ func (k Keeper) ExportErrors(ctx sdk.Context) (sudoErrs []types.SudoError, err e
 
 // PruneErrorsCurrentBlock removes all errors that are queued to be deleted the given block height
 func (k Keeper) PruneErrorsCurrentBlock(ctx sdk.Context) (err error) {
-	var errorIDs []int64
+	var errorIDs []uint64
 	height := ctx.BlockHeight()
-	rng := collections.NewPrefixedPairRange[int64, int64](height)
-	err = k.DeletionBlocks.Walk(ctx, rng, func(key collections.Pair[int64, int64], errorID int64) (bool, error) {
+	rng := collections.NewPrefixedPairRange[int64, uint64](height)
+	err = k.DeletionBlocks.Walk(ctx, rng, func(key collections.Pair[int64, uint64], errorID uint64) (bool, error) {
 		errorIDs = append(errorIDs, errorID)
 		return false, nil
 	})
@@ -155,13 +154,8 @@ func (k Keeper) PruneErrorsCurrentBlock(ctx sdk.Context) (err error) {
 	return nil
 }
 
-// GetErrorCount returns the total number of errors - used for generating errorID
-func (k Keeper) GetErrorCount(ctx sdk.Context) (int64, error) {
-	return k.ErrorsCount.Get(ctx)
-}
-
 // SetSudoErrorCallback stores a sudo error callback in the transient store
-func (k Keeper) SetSudoErrorCallback(ctx sdk.Context, errorId int64, sudoErr types.SudoError) {
+func (k Keeper) SetSudoErrorCallback(ctx sdk.Context, errorId uint64, sudoErr types.SudoError) {
 	tStore := ctx.TransientStore(k.tStoreKey)
 	errToStore := k.cdc.MustMarshal(&sudoErr)
 	tStore.Set(types.GetErrorsForSudoCallStoreKey(errorId), errToStore)
