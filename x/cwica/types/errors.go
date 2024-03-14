@@ -14,9 +14,3 @@ var (
 	ErrNoMessages                       = errors.Register(ModuleName, 1106, "no messages provided")
 	ErrInvalidTimeout                   = errors.Register(ModuleName, 1107, "invalid timeout")
 )
-
-// SudoEssosMsg constructor
-func NewSudoError(err SudoError) *SudoError {
-	err.ModuleName = ModuleName
-	return &err
-}

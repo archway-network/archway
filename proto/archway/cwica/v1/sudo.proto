@@ -3,7 +3,6 @@ package archway.cwica.v1;
 
 import "gogoproto/gogo.proto";
 import "ibc/core/channel/v1/channel.proto";
-import "archway/cwica/v1/errors.proto";
 
 option go_package = "github.com/archway-network/archway/x/cwica/types";
 
@@ -12,8 +11,6 @@ option go_package = "github.com/archway-network/archway/x/cwica/types";
 message SudoPayload {
   // ICA is the message which carries the success responses
   ICASuccess ica = 1;
-  // SudoError is the message which carries the error responses
-  SudoError error = 2;
 }
 
 // ICASuccess is the success message after the ICA operation has taken place
