@@ -32,11 +32,11 @@ A contract can be subscribed to errors by using the [MsgSubscribeToError](../../
 ```protobuf
 message MsgSubscribeToError {
     option (cosmos.msg.v1.signer) = "sender";
-    // sender is the address of who is registering the contarcts for callback on error
+    // sender is the address of who is registering the contracts for callback on error
     string sender = 1;
-    // contract is the address of the contract that will be called on error
+    // contract_address is the contarct subscribing to the error
     string contract_address = 2;
-    // fee is the subscription fee for the feature (current no fee is charged for this feature)
+    // fee is the subscription fee for the feature
     cosmos.base.v1beta1.Coin fee = 3 [ (gogoproto.nullable) = false ];
 }
 ```

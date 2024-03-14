@@ -28,7 +28,7 @@ Example output:
 error_stored_time: "302400"
 subscription_fee:
   amount: "0"
-  denom: stake
+  denom: aarch
 subscription_period: "302400"
 ```
 

@@ -8,6 +8,10 @@ All the errors encountered in the current block are fetched from the transient s
 
 In case, the execution fails, the error is stored in state such that the contract can query it.
 
+## Prune expiring subscription
+
+All the contract subscriptions which end in the current block are pruned from state
+
 ## Prune old errors
 
 All errors which are marked for deletion for the current block height are pruned from the state.

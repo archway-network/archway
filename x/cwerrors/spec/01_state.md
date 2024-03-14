@@ -13,7 +13,7 @@ Storage keys:
 
 ```protobuf
 message Params {
-    // error_stored_time is the block height until which error is stored
+    // error_stored_time is the relative block height until which error is stored
     int64 error_stored_time = 1; 
     // subsciption_fee is the fee required to subscribe to error callbacks
     cosmos.base.v1beta1.Coin subscription_fee = 2 [ (gogoproto.nullable) = false ];
@@ -60,7 +60,7 @@ message SudoError {
 
 ## Deletion Blocks
 
-Deletion Blocks is a collection of all the error ids which need to be pruned in a goven block height
+Deletion Blocks is a collection of all the error ids which need to be pruned in a given block height
 
 Storage keys:
 * DeletionBlocks: `DeletionBlocksKeyPrefix | blockHeight | errorID -> errorID`
