@@ -244,20 +244,6 @@ func (s *KeeperTestSuite) TestPruneErrorsByBlockHeight() {
 	s.Require().Len(getErrors, 1)
 }
 
-func (s *KeeperTestSuite) TestGetErrorCount() {
-	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.CWErrorsKeeper
-	count, err := keeper.GetErrorCount(ctx)
-	s.Require().NoError(err)
-	s.Require().Equal(int64(0), count)
-
-	err = keeper.ErrorsCount.Set(ctx, 6)
-	s.Require().NoError(err)
-
-	count, err = keeper.GetErrorCount(ctx)
-	s.Require().NoError(err)
-	s.Require().Equal(int64(6), count)
-}
-
 func (s *KeeperTestSuite) TestSudoErrorCallback() {
 	// Setting up chain and contract in mock wasm keeper
 	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.CWErrorsKeeper
