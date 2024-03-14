@@ -541,6 +541,10 @@ func NewArchwayApp(
 	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
 
 	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
+	// Include the x/cwerrors query to stargate queries
+	wasmOpts = append(wasmOpts, wasmdKeeper.WithQueryPlugins(&wasmdKeeper.QueryPlugins{
+		Stargate: wasmdKeeper.AcceptListStargateQuerier(getAcceptedStargateQueries(), app.GRPCQueryRouter(), appCodec),
+	}))
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
 	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.Keepers.RewardsKeeper, &app.Keepers.GovKeeper)...)
 
@@ -1099,4 +1103,10 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(rewardsTypes.ModuleName)
 
 	return paramsKeeper
+}
+
+func getAcceptedStargateQueries() wasmdKeeper.AcceptedStargateQueries {
+	return wasmdKeeper.AcceptedStargateQueries{
+		"/archway.cwerrors.v1.Query/Errors": &cwerrorsTypes.QueryErrorsRequest{},
+	}
 }
