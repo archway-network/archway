@@ -11,9 +11,13 @@
 7. [ADR-007: Introduction of fee burning](adr/ADR-007-fee-burning.md) - **Implemented**
 8. [ADR-008: Refined Withdrawal User Experience](adr/ADR-008-withdrawal-ux-improvements.md) - **Implemented**
 9. [ADR-009: Callback module](adr/ADR-009-callback-module.md) - **Implemented**
+10. [ADR-010: CW Fees](adr/ADR-010-cw-fees.md) - **Implemented**
+11. [ADR-011: CW ICA](adr/ADR-011-cw-ica.md) - **Implemented**
 
 ## Module Specifications
 
 1. [x/rewards](../x/rewards/spec/README.md)
 2. [x/tracking](../x/tracking/spec/README.md)
 3. [x/callback](../x/callback/spec/README.md)
+4. [x/cwfees]()
+5. [x/cwica](../x/cwica/spec/README.md)
