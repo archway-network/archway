@@ -6,7 +6,7 @@ Section describes the processing of the module messages
 
 The module params can be updated via a governance proposal using the x/gov module. The proposal needs to include [MsgUpdateParams](../../../proto/archway/cwica/v1/tx.proto#L70) message. All the parameters need to be provided when creating the msg.
 
-```proto
+```protobuf
 message MsgUpdateParams {
   option (amino.name) = "cwica/MsgUpdateParams";
   option (cosmos.msg.v1.signer) = "authority";

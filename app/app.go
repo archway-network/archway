@@ -130,6 +130,10 @@ import (
 	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
 	callbackTypes "github.com/archway-network/archway/x/callback/types"
 
+	"github.com/archway-network/archway/x/cwerrors"
+	cwerrorsKeeper "github.com/archway-network/archway/x/cwerrors/keeper"
+	cwerrorsTypes "github.com/archway-network/archway/x/cwerrors/types"
+
 	"github.com/archway-network/archway/x/rewards"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/mintbankkeeper"
@@ -217,6 +221,7 @@ var (
 		callback.AppModuleBasic{},
 		cwfees.AppModule{},
 		cwica.AppModuleBasic{},
+		cwerrors.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -314,9 +319,9 @@ func NewArchwayApp(
 		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
 		icacontrollertypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey, cwicatypes.StoreKey,
 
-		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName,
+		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName, cwerrorsTypes.StoreKey,
 	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, cwerrorsTypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	app := &ArchwayApp{
@@ -536,6 +541,10 @@ func NewArchwayApp(
 	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
 
 	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
+	// Include the x/cwerrors query to stargate queries
+	wasmOpts = append(wasmOpts, wasmdKeeper.WithQueryPlugins(&wasmdKeeper.QueryPlugins{
+		Stargate: wasmdKeeper.AcceptListStargateQuerier(getAcceptedStargateQueries(), app.GRPCQueryRouter(), appCodec),
+	}))
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
 	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.Keepers.RewardsKeeper, &app.Keepers.GovKeeper)...)
 
@@ -603,6 +612,16 @@ func NewArchwayApp(
 		app.Keepers.IBCKeeper.ConnectionKeeper,
 		app.Keepers.ICAControllerKeeper,
 		app.Keepers.WASMKeeper,
+		govModuleAddr,
+	)
+
+	app.Keepers.CWErrorsKeeper = cwerrorsKeeper.NewKeeper(
+		appCodec,
+		keys[cwerrorsTypes.StoreKey],
+		tkeys[cwerrorsTypes.TStoreKey],
+		app.Keepers.WASMKeeper,
+		app.Keepers.BankKeeper,
+		app.Keepers.RewardsKeeper,
 		govModuleAddr,
 	)
 
@@ -690,6 +709,7 @@ func NewArchwayApp(
 		genmsg.NewAppModule(app.MsgServiceRouter()),
 		callback.NewAppModule(app.appCodec, app.Keepers.CallbackKeeper, app.Keepers.WASMKeeper),
 		cwica.NewAppModule(appCodec, app.Keepers.CWICAKeeper, app.Keepers.AccountKeeper),
+		cwerrors.NewAppModule(app.appCodec, app.Keepers.CWErrorsKeeper, app.Keepers.WASMKeeper),
 		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -731,6 +751,7 @@ func NewArchwayApp(
 		callbackTypes.ModuleName,
 		cwfees.ModuleName, // does not have being blocker.
 		cwicatypes.ModuleName,
+		cwerrorsTypes.ModuleName, // does not have begin blocker
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -764,6 +785,7 @@ func NewArchwayApp(
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
 		callbackTypes.ModuleName,
+		cwerrorsTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
 		cwfees.ModuleName, // does not have end blocker
@@ -809,6 +831,7 @@ func NewArchwayApp(
 		trackingTypes.ModuleName,
 		genmsg.ModuleName,
 		callbackTypes.ModuleName,
+		cwerrorsTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
 		cwicatypes.ModuleName,
@@ -1080,4 +1103,10 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(rewardsTypes.ModuleName)
 
 	return paramsKeeper
+}
+
+func getAcceptedStargateQueries() wasmdKeeper.AcceptedStargateQueries {
+	return wasmdKeeper.AcceptedStargateQueries{
+		"/archway.cwerrors.v1.Query/Errors": &cwerrorsTypes.QueryErrorsRequest{},
+	}
 }

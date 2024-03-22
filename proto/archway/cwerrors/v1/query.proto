@@ -1,0 +1,65 @@
+syntax = "proto3";
+package archway.cwerrors.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "archway/cwerrors/v1/cwerrors.proto";
+import "archway/cwerrors/v1/params.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwerrors/types";
+
+// Query service for the cwerrors module.
+service Query {
+  // Params queries all the module parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/archway/cwerrors/v1/params";
+  }
+
+  // Errors queries all the errors for a given contract.
+  rpc Errors(QueryErrorsRequest) returns (QueryErrorsResponse) {
+    option (google.api.http).get = "/archway/cwerrors/v1/errors";
+  }
+
+  // IsSubscribed queries if a contract is subscribed to sudo error callbacks.
+  rpc IsSubscribed(QueryIsSubscribedRequest)
+      returns (QueryIsSubscribedResponse) {
+    option (google.api.http).get = "/archway/cwerrors/v1/is_subscribed";
+  }
+}
+
+// QueryParamsRequest is the request for Query.Params.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response for Query.Params.
+message QueryParamsResponse {
+  // params defines all the module parameters.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryErrorsRequest is the request for Query.Errors.
+message QueryErrorsRequest {
+  // contract_address is the address of the contract whose errors to query for
+  string contract_address = 1;
+}
+
+// QueryErrorsResponse is the response for Query.Errors.
+message QueryErrorsResponse {
+  // errors defines all the contract errors which will be returned
+  repeated SudoError errors = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryIsSubscribedRequest is the request for Query.IsSubscribed.
+message QueryIsSubscribedRequest {
+  // contract_address is the address of the contract to query if subscribed
+  string contract_address = 1;
+}
+
+// QueryIsSubscribedResponse is the response for Query.IsSubscribed.
+message QueryIsSubscribedResponse {
+  // subscribed defines if the contract is subscribed to sudo error callbacks
+  bool subscribed = 1;
+  // subscription_valid_till defines the block height till which the
+  // subscription is valid
+  int64 subscription_valid_till = 2;
+}
