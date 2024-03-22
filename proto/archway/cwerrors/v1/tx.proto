@@ -1,0 +1,60 @@
+syntax = "proto3";
+package archway.cwerrors.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "archway/cwerrors/v1/params.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwerrors/types";
+
+// Msg defines the cwerrors Msg service.
+service Msg {
+  // UpdateParams defines a governance operation for updating the x/cwerrors
+  // module parameters. The authority is defined in the keeper.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  // SubscribeToError defines an operation which will register a contract for a
+  // sudo callback on errors
+  rpc SubscribeToError(MsgSubscribeToError)
+      returns (MsgSubscribeToErrorResponse);
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  // authority is the address that controls the module (defaults to x/gov unless
+  // overwritten).
+  string authority = 1;
+  // params defines the x/cwerrors parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag) = "params,omitempty"
+  ];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+// MsgSubscribeToError is the Msg/SubscribeToError request type.
+message MsgSubscribeToError {
+  option (cosmos.msg.v1.signer) = "sender";
+  // sender is the address of who is registering the contarcts for callback on
+  // error
+  string sender = 1;
+  // contract is the address of the contract that will be called on error
+  string contract_address = 2;
+  // fee is the subscription fee for the feature (current no fee is charged for
+  // this feature)
+  cosmos.base.v1beta1.Coin fee = 3 [ (gogoproto.nullable) = false ];
+}
+
+// MsgSubscribeToErrorResponse defines the response structure for executing a
+// MsgSubscribeToError message.
+message MsgSubscribeToErrorResponse {
+  // subscription_valid_till is the block height till which the subscription is
+  // valid
+  int64 subscription_valid_till = 1;
+}

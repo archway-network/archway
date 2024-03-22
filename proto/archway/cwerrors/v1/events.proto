@@ -1,0 +1,51 @@
+syntax = "proto3";
+package archway.cwerrors.v1;
+
+import "gogoproto/gogo.proto";
+import "archway/cwerrors/v1/params.proto";
+import "archway/cwerrors/v1/cwerrors.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwerrors/types";
+
+// ParamsUpdatedEvent defines the event which is thrown when the module
+// parameters are updated
+message ParamsUpdatedEvent {
+  // new_params are the new parameters for the module
+  Params new_params = 1 [ (gogoproto.nullable) = false ];
+  // authority is the address of the authority that updated the parameters
+  string authority = 2;
+}
+
+// SubscribedToErrorsEvent defines the event which is thrown when a contract
+// subscribes to errors
+message SubscribedToErrorsEvent {
+  // sender is the address which initiated the subscription
+  string sender = 1;
+  // contract_address is the address of the contract which is subscribed to
+  // errors
+  string contract_address = 2;
+  // fees_paid is the fees paid for the subscription
+  cosmos.base.v1beta1.Coin fees_paid = 3 [ (gogoproto.nullable) = false ];
+  // subscription_valid_till is the block height till which the subscription is
+  // valid
+  int64 subscription_valid_till = 4;
+}
+
+// StoringErrorEvent defines the event which is thrown when an error is stored
+message StoringErrorEvent {
+  // error is the error which is stored
+  SudoError error = 1 [ (gogoproto.nullable) = false ];
+  // deletion_block_height is the block height at which the error will be pruned
+  // from the state
+  int64 deletion_block_height = 2;
+}
+
+// SudoErrorCallbackFailedEvent defines the event which is thrown when a sudo
+// error callback fails
+message SudoErrorCallbackFailedEvent {
+  // error is the error for which the callback is executed
+  SudoError error = 1 [ (gogoproto.nullable) = false ];
+  // callback_error_message is the error message of why the callback failed
+  string callback_error_message = 2;
+}
