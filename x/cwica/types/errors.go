@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/errors"
+	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
 )
 
 // x/cwica module sentinel errors
@@ -14,3 +15,14 @@ var (
 	ErrNoMessages                       = errors.Register(ModuleName, 1106, "no messages provided")
 	ErrInvalidTimeout                   = errors.Register(ModuleName, 1107, "invalid timeout")
 )
+
+// NewSudoError creates a new sudo error instance to pass on to the errors module
+func NewSudoError(errorCode ModuleErrors, contractAddr string, inputPayload string, errMsg string) cwerrortypes.SudoError {
+	return cwerrortypes.SudoError{
+		ModuleName:      ModuleName,
+		ErrorCode:       int32(errorCode),
+		ContractAddress: contractAddr,
+		InputPayload:    inputPayload,
+		ErrorMessage:    errMsg,
+	}
+}

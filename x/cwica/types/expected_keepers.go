@@ -2,6 +2,7 @@ package types
 
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -41,4 +42,10 @@ type ChannelKeeper interface {
 // ConnectionKeeper defines the expected IBC connection keeper
 type ConnectionKeeper interface {
 	GetConnection(ctx sdk.Context, connectionID string) (connectiontypes.ConnectionEnd, bool)
+}
+
+// ErrorsKeeper defines the expected interface needed to interact with the cwerrors module.
+type ErrorsKeeper interface {
+	// SetError records a sudo error for a contract
+	SetError(ctx sdk.Context, sudoErr cwerrortypes.SudoError) error
 }

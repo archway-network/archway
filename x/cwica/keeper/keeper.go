@@ -17,6 +17,7 @@ type (
 		storeKey            storetypes.StoreKey
 		channelKeeper       types.ChannelKeeper
 		connectionKeeper    types.ConnectionKeeper
+		errorsKeeper        types.ErrorsKeeper
 		icaControllerKeeper types.ICAControllerKeeper
 		sudoKeeper          types.WasmKeeper
 		authority           string
@@ -28,6 +29,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	channelKeeper types.ChannelKeeper,
 	connectionKeeper types.ConnectionKeeper,
+	errorsKeeper types.ErrorsKeeper,
 	icaControllerKeeper types.ICAControllerKeeper,
 	sudoKeeper types.WasmKeeper,
 	authority string,
@@ -37,6 +39,7 @@ func NewKeeper(
 		storeKey:            storeKey,
 		channelKeeper:       channelKeeper,
 		connectionKeeper:    connectionKeeper,
+		errorsKeeper:        errorsKeeper,
 		icaControllerKeeper: icaControllerKeeper,
 		sudoKeeper:          sudoKeeper,
 		authority:           authority,
