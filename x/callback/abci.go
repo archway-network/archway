@@ -1,9 +1,12 @@
 package callback
 
 import (
+	"errors"
+
 	"cosmossdk.io/collections"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/callback/keeper"
@@ -11,13 +14,13 @@ import (
 )
 
 // EndBlocker fetches all the callbacks registered for the current block height and executes them
-func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) []abci.ValidatorUpdate {
-	k.IterateCallbacksByHeight(ctx, ctx.BlockHeight(), callbackExec(ctx, k, wk))
+func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected, ek types.ErrorsKeeperExpected) []abci.ValidatorUpdate {
+	k.IterateCallbacksByHeight(ctx, ctx.BlockHeight(), callbackExec(ctx, k, wk, ek))
 	return nil
 }
 
 // callbackExec returns a function which executes the callback and deletes it from state after execution
-func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) func(types.Callback) bool {
+func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected, ek types.ErrorsKeeperExpected) func(types.Callback) bool {
 	logger := k.Logger(ctx)
 	return func(callback types.Callback) bool {
 		// creating CallbackMsg which is encoded to json and passed as input to contract execution
@@ -53,12 +56,32 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected)
 				err.Error(),
 			)
 
+			errorCode := types.ModuleErrors_ERR_UNKNOWN
+			// check if out of gas error
+			var outOfGasError sdkerrors.Error
+			if errors.As(err, &outOfGasError) && outOfGasError.Is(sdkerrors.ErrOutOfGas) {
+				errorCode = types.ModuleErrors_ERR_OUT_OF_GAS
+			}
+
+			// Save error in the errors keeper
+			sudoErr := types.NewSudoError(
+				errorCode,
+				callback.ContractAddress,
+				callbackMsgString,
+				err.Error(),
+			)
+			err := ek.SetError(ctx, sudoErr)
+			if err != nil {
+				panic(err)
+			}
+
 			// This is because gasUsed amount returned is greater than the gas limit. cuz ofc.
 			// so we set it to callback.MaxGasLimit so when we do txFee refund, we arent trying to refund more than we should
 			// e.g if callback.MaxGasLimit is 10, but gasUsed is 100, we need to use 10 to calculate txFeeRefund.
 			// else the module will pay back more than it took from the user 💀
 			// TLDR; this ensures in case of "out of gas error", we keep all txFees and refund nothing.
 			gasUsed = callback.MaxGasLimit
+
 		} else {
 			logger.Info(
 				"callback executed successfully",

@@ -87,7 +87,7 @@ func TestEndBlocker(t *testing.T) {
 			// Increment block height and run end blocker
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 			require.Equal(t, ctx.BlockHeight(), reqMsg.CallbackHeight)
-			_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper)
+			_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper, chain.GetApp().Keepers.CWErrorsKeeper)
 
 			// Checking if the count value is as expected
 			count := getCount(t, chain, ctx, contractAddr)
@@ -118,7 +118,7 @@ func TestEndBlocker(t *testing.T) {
 
 	// Increment block height and run end blocker
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper)
+	_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper, chain.GetApp().Keepers.CWErrorsKeeper)
 
 	// Checking if the count value has incremented.
 	// Should have incremented as the callback should have access to higher gas limit as it was registered before the gas limit was reduced
@@ -140,7 +140,7 @@ func TestEndBlocker(t *testing.T) {
 
 	// Increment block height and run end blocker
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper)
+	_ = callbackabci.EndBlocker(ctx, keeper, chain.GetApp().Keepers.WASMKeeper, chain.GetApp().Keepers.CWErrorsKeeper)
 
 	// Checking if the count value has incremented. Should not have incremented as the callback failed due to out of gas error
 	count = getCount(t, chain, ctx, contractAddr)
