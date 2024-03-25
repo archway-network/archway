@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/errors"
+
 	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
 )
 

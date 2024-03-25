@@ -2,7 +2,6 @@ package types
 
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -10,6 +9,8 @@ import (
 	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+
+	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
 )
 
 // AccountKeeper defines the expected account keeper
