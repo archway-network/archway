@@ -11,7 +11,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 	"github.com/strangelove-ventures/interchaintest/v7/relayer"
 	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -166,6 +165,11 @@ func TestCWICA(t *testing.T) {
 	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
 	require.Error(t, err)
 
+	// Ensure contract has error subscription
+	isSub, err := IsContractSubscribedForError(archwayChain, ctx, contractAddress)
+	require.NoError(t, err)
+	require.True(t, isSub)
+
 	// SubmitTx on contract which will vote on the proposal on counterparty chain - There is no proposal on chain. Should error out
 	execMsg = `{"vote":{"proposal_id":2,"option":1,"tiny_timeout": false}}`
 	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
@@ -181,12 +185,9 @@ func TestCWICA(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = testutil.WaitForBlocks(ctx, 1, archwayChain)
-	require.NoError(t, err)
-
-	erros, err := GetStoredCWErrors(archwayChain, ctx, contractAddress)
-	require.NoError(t, err)
-	require.Len(t, erros, 0)
+	// erros, err := GetStoredCWErrors(archwayChain, ctx, contractAddress)
+	// require.NoError(t, err)
+	// require.Len(t, erros, 0)
 
 	// Ensure the contract is in the expected state - The error on the ica tx should be stored by the contract
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)

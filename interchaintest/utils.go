@@ -3,7 +3,6 @@ package interchaintest
 import (
 	"context"
 	"encoding/json"
-	"errors"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
@@ -134,6 +133,11 @@ func RegisterContractForError(chain *cosmos.CosmosChain, user ibc.Wallet, ctx co
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func IsContractSubscribedForError(chain *cosmos.CosmosChain, ctx context.Context, contractAddress string) (bool, error) {
 	checkSubscriptionCmd := []string{
 		chain.Config().Bin, "q",
 		"cwerrors", "is-subscribed", contractAddress,
@@ -142,18 +146,15 @@ func RegisterContractForError(chain *cosmos.CosmosChain, user ibc.Wallet, ctx co
 		"--chain-id", chain.Config().ChainID,
 		"--output", "json",
 	}
-	stdout, _, err = chain.Exec(ctx, checkSubscriptionCmd, nil)
+	stdout, _, err := chain.Exec(ctx, checkSubscriptionCmd, nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 	var isSubscribedResp CwErrorIsSubscribed
 	if err = json.Unmarshal(stdout, &isSubscribedResp); err != nil {
-		return err
+		return false, err
 	}
-	if isSubscribedResp.Subscribed {
-		return nil
-	}
-	return errors.New("contract is not subscribed")
+	return isSubscribedResp.Subscribed, nil
 }
 
 func GetStoredCWErrors(chain *cosmos.CosmosChain, ctx context.Context, contractAddress string) ([]CWError, error) {
