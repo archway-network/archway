@@ -185,10 +185,6 @@ func TestCWICA(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// erros, err := GetStoredCWErrors(archwayChain, ctx, contractAddress)
-	// require.NoError(t, err)
-	// require.Len(t, erros, 0)
-
 	// Ensure the contract is in the expected state - The error on the ica tx should be stored by the contract
 	err = archwayChain.QueryContract(ctx, contractAddress, QueryMsg{DumpState: &struct{}{}}, &contractRes)
 	require.NoError(t, err)
