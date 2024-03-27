@@ -3,6 +3,7 @@ package interchaintest
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
@@ -97,4 +98,77 @@ func GetUserVote(chain *cosmos.CosmosChain, ctx context.Context, proposalId stri
 	var propResponse QueryVoteResponse
 	err = json.Unmarshal(stdout, &propResponse)
 	return propResponse, err
+}
+
+func RegisterContractForError(chain *cosmos.CosmosChain, user ibc.Wallet, ctx context.Context, contractAddress string) error {
+	getSubscriptionFeesCmd := []string{
+		chain.Config().Bin, "q",
+		"cwerrors", "params",
+		"--node", chain.GetRPCAddress(),
+		"--home", chain.HomeDir(),
+		"--chain-id", chain.Config().ChainID,
+		"--output", "json",
+	}
+	stdout, _, err := chain.Exec(ctx, getSubscriptionFeesCmd, nil)
+	if err != nil {
+		return err
+	}
+
+	var params CwErrorParams
+	if err = json.Unmarshal(stdout, &params); err != nil {
+		return err
+	}
+
+	errorRegistrationCmd := []string{
+		chain.Config().Bin, "tx",
+		"cwerrors", "subscribe", contractAddress, params.SubscriptionFee.String(),
+		"--from", user.KeyName(), "--keyring-backend", keyring.BackendTest,
+		"--gas", "auto", "--gas-prices", "0aarch", "--gas-adjustment", "2",
+		"--node", chain.GetRPCAddress(),
+		"--home", chain.HomeDir(),
+		"--chain-id", chain.Config().ChainID,
+		"--output", "json",
+		"-y",
+	}
+	_, _, err = chain.Exec(ctx, errorRegistrationCmd, nil)
+	if err != nil {
+		return err
+	}
+	checkSubscriptionCmd := []string{
+		chain.Config().Bin, "q",
+		"cwerrors", "is-subscribed", contractAddress,
+		"--node", chain.GetRPCAddress(),
+		"--home", chain.HomeDir(),
+		"--chain-id", chain.Config().ChainID,
+		"--output", "json",
+	}
+	stdout, _, err = chain.Exec(ctx, checkSubscriptionCmd, nil)
+	if err != nil {
+		return err
+	}
+	var isSubscribedResp CwErrorIsSubscribed
+	if err = json.Unmarshal(stdout, &isSubscribedResp); err != nil {
+		return err
+	}
+	if isSubscribedResp.Subscribed {
+		return nil
+	}
+	return errors.New("contract is not subscribed")
+}
+
+func GetStoredCWErrors(chain *cosmos.CosmosChain, ctx context.Context, contractAddress string) ([]CWError, error) {
+	cmd := []string{
+		chain.Config().Bin, "q", "cwerrors", "errors", contractAddress,
+		"--node", chain.GetRPCAddress(),
+		"--home", chain.HomeDir(),
+		"--chain-id", chain.Config().ChainID,
+		"--output", "json",
+	}
+	stdout, _, err := chain.Exec(ctx, cmd, nil)
+	if err != nil {
+		return nil, err
+	}
+	var errorsResp CWErrorResponse
+	err = json.Unmarshal(stdout, &errorsResp)
+	return errorsResp.Errors, err
 }
