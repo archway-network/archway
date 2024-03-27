@@ -80,16 +80,18 @@ func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper     keeper.Keeper
-	wasmKeeper types.WasmKeeperExpected
+	keeper       keeper.Keeper
+	wasmKeeper   types.WasmKeeperExpected
+	errorsKeeper types.ErrorsKeeperExpected
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, wk types.WasmKeeperExpected) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, wk types.WasmKeeperExpected, ek types.ErrorsKeeperExpected) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		wasmKeeper:     wk,
+		errorsKeeper:   ek,
 	}
 }
 
@@ -129,5 +131,5 @@ func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the module. It returns no validator updates.
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, a.keeper, a.wasmKeeper)
+	return EndBlocker(ctx, a.keeper, a.wasmKeeper, a.errorsKeeper)
 }

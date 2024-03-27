@@ -43,6 +43,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#544](https://github.com/archway-network/archway/pull/544) - Bumping sdk to v0.47.10
 - [#546](https://github.com/archway-network/archway/pull/546) - Adding x/cwerrors module
 - [#549](https://github.com/archway-network/archway/pull/549) - Integrating x/cwerrors into x/cwica
+- [#550](https://github.com/archway-network/archway/pull/550) - Integrating x/cwerrors into x/callback module
 
 ### Improvements
 

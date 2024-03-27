@@ -1,6 +1,10 @@
 package types
 
-import errorsmod "cosmossdk.io/errors"
+import (
+	errorsmod "cosmossdk.io/errors"
+
+	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
+)
 
 var (
 	DefaultCodespace                = ModuleName
@@ -14,3 +18,14 @@ var (
 	ErrCallbackHeightTooFarInFuture = errorsmod.Register(DefaultCodespace, 9, "callback request height is too far in the future")
 	ErrBlockFilled                  = errorsmod.Register(DefaultCodespace, 10, "block filled with max capacity of callbacks")
 )
+
+// NewSudoError creates a new sudo error instance to pass on to the errors module
+func NewSudoError(errorCode ModuleErrors, contractAddr string, inputPayload string, errMsg string) cwerrortypes.SudoError {
+	return cwerrortypes.SudoError{
+		ModuleName:      ModuleName,
+		ErrorCode:       uint32(errorCode),
+		ContractAddress: contractAddr,
+		InputPayload:    inputPayload,
+		ErrorMessage:    errMsg,
+	}
+}
