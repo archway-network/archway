@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/callback/keeper"
 	"github.com/archway-network/archway/x/callback/types"
@@ -58,7 +60,7 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 
 			errorCode := types.ModuleErrors_ERR_UNKNOWN
 			// check if out of gas error
-			var outOfGasError sdkerrors.Error
+			var outOfGasError errorsmod.Error
 			if errors.As(err, &outOfGasError) && outOfGasError.Is(sdkerrors.ErrOutOfGas) {
 				errorCode = types.ModuleErrors_ERR_OUT_OF_GAS
 			}
@@ -81,7 +83,6 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 			// else the module will pay back more than it took from the user 💀
 			// TLDR; this ensures in case of "out of gas error", we keep all txFees and refund nothing.
 			gasUsed = callback.MaxGasLimit
-
 		} else {
 			logger.Info(
 				"callback executed successfully",
