@@ -708,7 +708,7 @@ func NewArchwayApp(
 		rewards.NewAppModule(app.appCodec, app.Keepers.RewardsKeeper),
 		cwfees.NewAppModule(app.Keepers.CWFeesKeeper),
 		genmsg.NewAppModule(app.MsgServiceRouter()),
-		callback.NewAppModule(app.appCodec, app.Keepers.CallbackKeeper, app.Keepers.WASMKeeper),
+		callback.NewAppModule(app.appCodec, app.Keepers.CallbackKeeper, app.Keepers.WASMKeeper, app.Keepers.CWErrorsKeeper),
 		cwica.NewAppModule(appCodec, app.Keepers.CWICAKeeper, app.Keepers.AccountKeeper),
 		cwerrors.NewAppModule(app.appCodec, app.Keepers.CWErrorsKeeper, app.Keepers.WASMKeeper),
 		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
