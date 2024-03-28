@@ -13,7 +13,15 @@ pub enum ExecuteMsg {
 
 #[cw_serde]
 pub enum SudoMsg {
-    Callback { job_id: u64 },
+    Callback { 
+        job_id: u64 
+    },
+    Error {
+        module_name: String,
+        error_code: u32,
+        input_payload: String,
+        error_message: String,
+    }
 }
 
 #[cw_serde]
@@ -27,4 +35,5 @@ pub enum QueryMsg {
 #[cw_serde]
 pub struct GetCountResponse {
     pub count: i32,
+    pub error_encountered: bool,
 }
