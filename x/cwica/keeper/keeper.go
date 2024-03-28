@@ -78,3 +78,9 @@ func (k *Keeper) SetChannelKeeper(ck types.ChannelKeeper) {
 func (k *Keeper) SetConnectionKeeper(ck types.ConnectionKeeper) {
 	k.connectionKeeper = ck
 }
+
+// SetErrorsKeeper sets the given errors keeper.
+// NOTE: Only for testing purposes
+func (k *Keeper) SetErrorsKeeper(ek types.ErrorsKeeper) {
+	k.errorsKeeper = ek
+}
