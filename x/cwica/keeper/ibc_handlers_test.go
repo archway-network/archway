@@ -59,9 +59,12 @@ func (s *KeeperTestSuite) TestHandleAcknowledgement() {
 func (s *KeeperTestSuite) TestHandleTimeout() {
 	ctx, cwicaKeeper := s.chain.GetContext().WithBlockHeight(100).WithGasMeter(sdk.NewGasMeter(1_000_000_000_000)), s.chain.GetApp().Keepers.CWICAKeeper
 	wmKeeper, icaCtrlKeeper, channelKeeper := testutils.NewMockContractViewer(), testutils.NewMockICAControllerKeeper(), testutils.NewMockChannelKeeper()
+	errorsKeeper := s.chain.GetApp().Keepers.CWErrorsKeeper
+	errorsKeeper.SetWasmKeeper(wmKeeper)
 	cwicaKeeper.SetWasmKeeper(wmKeeper)
 	cwicaKeeper.SetICAControllerKeeper(icaCtrlKeeper)
 	cwicaKeeper.SetChannelKeeper(channelKeeper)
+	cwicaKeeper.SetErrorsKeeper(errorsKeeper)
 	contractAddress := e2eTesting.GenContractAddresses(1)[0]
 	contractAdminAcc := s.chain.GetAccount(0)
 	wmKeeper.AddContractAdmin(

@@ -31,8 +31,9 @@ func sudoErrorCallbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeper
 	return func(sudoError types.SudoError) bool {
 		contractAddr := sdk.MustAccAddressFromBech32(sudoError.ContractAddress)
 
+		sudoMsg := types.NewSudoMsg(sudoError)
 		_, err := pkg.ExecuteWithGasLimit(ctx, ErrorCallbackGasLimit, func(ctx sdk.Context) error {
-			_, err := wk.Sudo(ctx, contractAddr, sudoError.Bytes())
+			_, err := wk.Sudo(ctx, contractAddr, sudoMsg.Bytes())
 			return err
 		})
 		if err != nil {
@@ -42,7 +43,14 @@ func sudoErrorCallbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeper
 				sudoError,
 				err.Error(),
 			)
-			err = k.StoreErrorInState(ctx, contractAddr, sudoError)
+			newSudoErr := types.SudoError{
+				ModuleName:      types.ModuleName,
+				ContractAddress: sudoError.ContractAddress,
+				ErrorCode:       int32(types.ModuleErrors_ERR_CALLBACK_EXECUTION_FAILED),
+				InputPayload:    string(sudoError.Bytes()),
+				ErrorMessage:    err.Error(),
+			}
+			err = k.StoreErrorInState(ctx, contractAddr, newSudoErr)
 			if err != nil {
 				panic(err)
 			}

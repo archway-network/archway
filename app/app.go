@@ -594,6 +594,16 @@ func NewArchwayApp(
 		govModuleAddr,
 	)
 
+	app.Keepers.CWErrorsKeeper = cwerrorsKeeper.NewKeeper(
+		appCodec,
+		keys[cwerrorsTypes.StoreKey],
+		tkeys[cwerrorsTypes.TStoreKey],
+		app.Keepers.WASMKeeper,
+		app.Keepers.BankKeeper,
+		app.Keepers.RewardsKeeper,
+		govModuleAddr,
+	)
+
 	app.Keepers.CallbackKeeper = callbackKeeper.NewKeeper(
 		appCodec,
 		keys[callbackTypes.StoreKey],
@@ -610,18 +620,9 @@ func NewArchwayApp(
 		keys[cwicatypes.StoreKey],
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		app.Keepers.IBCKeeper.ConnectionKeeper,
+		app.Keepers.CWErrorsKeeper,
 		app.Keepers.ICAControllerKeeper,
 		app.Keepers.WASMKeeper,
-		govModuleAddr,
-	)
-
-	app.Keepers.CWErrorsKeeper = cwerrorsKeeper.NewKeeper(
-		appCodec,
-		keys[cwerrorsTypes.StoreKey],
-		tkeys[cwerrorsTypes.TStoreKey],
-		app.Keepers.WASMKeeper,
-		app.Keepers.BankKeeper,
-		app.Keepers.RewardsKeeper,
 		govModuleAddr,
 	)
 
