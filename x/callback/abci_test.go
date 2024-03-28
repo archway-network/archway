@@ -26,6 +26,7 @@ const (
 func TestEndBlocker(t *testing.T) {
 	chain := e2eTesting.NewTestChain(t, 1)
 	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.CallbackKeeper
+	errorsKeeper := chain.GetApp().Keepers.CWErrorsKeeper
 	msgServer := callbackKeeper.NewMsgServer(keeper)
 	contractAdminAcc := chain.GetAccount(0)
 
@@ -95,6 +96,16 @@ func TestEndBlocker(t *testing.T) {
 		})
 	}
 
+	// Ensure error is captured by the cwerrors module - the case is when job id = 2
+	sudoErrs, err := errorsKeeper.GetErrorsByContractAddress(ctx, contractAddr)
+	require.NoError(t, err)
+	require.Len(t, sudoErrs, 1)
+	require.Equal(t, "SomeError: execute wasm contract failed", sudoErrs[0].ErrorMessage)
+
+	// Registering the contract for error subscription
+	// _, err := errorsKeeper.SetSubscription(ctx, contractAddr, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
+	// require.NoError(t, err)
+
 	params, err := keeper.GetParams(ctx)
 	require.NoError(t, err)
 
@@ -145,6 +156,8 @@ func TestEndBlocker(t *testing.T) {
 	// Checking if the count value has incremented. Should not have incremented as the callback failed due to out of gas error
 	count = getCount(t, chain, ctx, contractAddr)
 	require.Equal(t, initMsg.Count+1, count)
+
+	
 }
 
 // getCount is a helper function to get the contract's count value
@@ -171,5 +184,6 @@ func (msg CallbackContractInstantiateMsg) MarshalJSON() ([]byte, error) {
 }
 
 type CallbackContractQueryMsg struct {
-	Count int32 `json:"count"`
+	Count            int32 `json:"count"`
+	ErrorEncountered bool  `json:"error_encountered"`
 }
