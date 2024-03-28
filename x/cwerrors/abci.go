@@ -43,7 +43,14 @@ func sudoErrorCallbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeper
 				sudoError,
 				err.Error(),
 			)
-			err = k.StoreErrorInState(ctx, contractAddr, sudoError)
+			newSudoErr := types.SudoError{
+				ModuleName:      types.ModuleName,
+				ContractAddress: sudoError.ContractAddress,
+				ErrorCode:       int32(1),
+				InputPayload:    string(sudoError.Bytes()),
+				ErrorMessage:    err.Error() + "---" + sudoMsg.String(),
+			}
+			err = k.StoreErrorInState(ctx, contractAddr, newSudoErr)
 			if err != nil {
 				panic(err)
 			}
