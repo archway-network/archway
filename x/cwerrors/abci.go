@@ -36,13 +36,24 @@ func sudoErrorCallbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeper
 			return err
 		})
 		if err != nil {
-			// In case Sudo error, such as out of gas, emit an event and store the error in state (so that the error is not lost)
+			// In case Sudo error, such as out of gas, emit an event and wrap the error in a newsudo error and save it in state
+			// This is likely to happen when
+			// 1. the contract does not implement SudoMsg::Error
+			// 2. Gas exceeded
+			// 3. Contract sudo exec returns error
 			types.EmitSudoErrorCallbackFailedEvent(
 				ctx,
 				sudoError,
 				err.Error(),
 			)
-			err = k.StoreErrorInState(ctx, contractAddr, sudoError)
+			newSudoErr := types.SudoError{
+				ModuleName:      types.ModuleName,
+				ContractAddress: sudoError.ContractAddress,
+				ErrorCode:       int32(types.ModuleErrors_ERR_CALLBACK_EXECUTION_FAILED),
+				InputPayload:    sudoError.String(),
+				ErrorMessage:    err.Error(),
+			}
+			err = k.StoreErrorInState(ctx, contractAddr, newSudoErr)
 			if err != nil {
 				panic(err)
 			}
