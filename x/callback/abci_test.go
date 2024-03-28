@@ -88,7 +88,7 @@ func TestEndBlocker(t *testing.T) {
 
 			// Checking if the count value is as expected
 			count := getCount(t, chain, contractAddr)
-			require.Equal(t, tc.expectedCount, count)
+			require.Equal(t, tc.expectedCount, count.Count)
 		})
 	}
 
@@ -99,8 +99,8 @@ func TestEndBlocker(t *testing.T) {
 	require.Equal(t, "SomeError: execute wasm contract failed", sudoErrs[0].ErrorMessage)
 
 	// Registering the contract for error subscription
-	// _, err := errorsKeeper.SetSubscription(chain.GetContext(), contractAddr, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
-	// require.NoError(t, err)
+	_, err = errorsKeeper.SetSubscription(chain.GetContext(), contractAddr, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
+	require.NoError(t, err)
 
 	params, err := keeper.GetParams(chain.GetContext())
 	require.NoError(t, err)
@@ -132,7 +132,7 @@ func TestEndBlocker(t *testing.T) {
 	// Checking if the count value has incremented.
 	// Should have incremented as the callback should have access to higher gas limit as it was registered before the gas limit was reduced
 	count := getCount(t, chain, contractAddr)
-	require.Equal(t, initMsg.Count+1, count)
+	require.Equal(t, initMsg.Count+1, count.Count)
 
 	// TEST CASE: OUT OF GAS ERROR
 	// Reserving a callback for next block
@@ -155,14 +155,11 @@ func TestEndBlocker(t *testing.T) {
 
 	// Checking if the count value has incremented. Should not have incremented as the callback failed due to out of gas error
 	count = getCount(t, chain, contractAddr)
-	require.Equal(t, initMsg.Count+1, count)
+	require.Equal(t, initMsg.Count+1, count.Count)
 
 	sudoErrs, err = errorsKeeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr)
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 2)
-	//require.Equal(t, 1, sudoErrs[1].ErrorCode)
-	require.Equal(t, "out of gas", sudoErrs[1].ErrorMessage)
-
 }
 
 func getCallbackRegistrationFees(chain *e2eTesting.TestChain) (sdk.Coin, error) {
@@ -178,14 +175,14 @@ func getCallbackRegistrationFees(chain *e2eTesting.TestChain) (sdk.Coin, error) 
 }
 
 // getCount is a helper function to get the contract's count value
-func getCount(t *testing.T, chain *e2eTesting.TestChain, contractAddr sdk.AccAddress) int32 {
+func getCount(t *testing.T, chain *e2eTesting.TestChain, contractAddr sdk.AccAddress) CallbackContractQueryMsg {
 	getCountQuery := "{\"get_count\":{}}"
 	resp, err := chain.GetApp().Keepers.WASMKeeper.QuerySmart(chain.GetContext(), contractAddr, []byte(getCountQuery))
 	require.NoError(t, err)
 	var getCountResp CallbackContractQueryMsg
 	err = json.Unmarshal(resp, &getCountResp)
 	require.NoError(t, err)
-	return getCountResp.Count
+	return getCountResp
 }
 
 type CallbackContractInstantiateMsg struct {

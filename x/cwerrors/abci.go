@@ -50,7 +50,7 @@ func sudoErrorCallbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeper
 				ModuleName:      types.ModuleName,
 				ContractAddress: sudoError.ContractAddress,
 				ErrorCode:       int32(types.ModuleErrors_ERR_CALLBACK_EXECUTION_FAILED),
-				InputPayload:    sudoError.String(),
+				InputPayload:    string(sudoError.Bytes()),
 				ErrorMessage:    err.Error(),
 			}
 			err = k.StoreErrorInState(ctx, contractAddr, newSudoErr)
