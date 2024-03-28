@@ -31,8 +31,9 @@ func sudoErrorCallbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeper
 	return func(sudoError types.SudoError) bool {
 		contractAddr := sdk.MustAccAddressFromBech32(sudoError.ContractAddress)
 
+		sudoMsg := types.NewSudoMsg(sudoError)
 		_, err := pkg.ExecuteWithGasLimit(ctx, ErrorCallbackGasLimit, func(ctx sdk.Context) error {
-			_, err := wk.Sudo(ctx, contractAddr, sudoError.Bytes())
+			_, err := wk.Sudo(ctx, contractAddr, sudoMsg.Bytes())
 			return err
 		})
 		if err != nil {
