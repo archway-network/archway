@@ -19,3 +19,11 @@ message SudoError {
   // error_message is the error message
   string error_message = 5;
 }
+
+// ModuleErrors defines the module level error codes
+enum ModuleErrors {
+  // ERR_UNKNOWN is the default error code
+  ERR_UNKNOWN = 0;
+  // ERR_CALLBACK_EXECUTION_FAILED is the error code for when the error callback fails
+  ERR_CALLBACK_EXECUTION_FAILED = 1;
+}

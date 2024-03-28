@@ -46,9 +46,9 @@ func sudoErrorCallbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeper
 			newSudoErr := types.SudoError{
 				ModuleName:      types.ModuleName,
 				ContractAddress: sudoError.ContractAddress,
-				ErrorCode:       int32(1),
+				ErrorCode:       int32(types.ModuleErrors_ERR_CALLBACK_EXECUTION_FAILED),
 				InputPayload:    string(sudoError.Bytes()),
-				ErrorMessage:    err.Error() + "---" + sudoMsg.String(),
+				ErrorMessage:    err.Error(),
 			}
 			err = k.StoreErrorInState(ctx, contractAddr, newSudoErr)
 			if err != nil {
