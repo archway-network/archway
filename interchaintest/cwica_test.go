@@ -157,13 +157,13 @@ func TestCWICA(t *testing.T) {
 		}
 	}
 
-	// Register the contract for errors
-	err = RegisterContractForError(archwayChain, archwayChainUser, ctx, contractAddress)
-	require.NoError(t, err)
-
 	// Trying to register the same interchain account again should error out as channel already exists
 	err = ExecuteContract(archwayChain, archwayChainUser, ctx, contractAddress, execMsg)
 	require.Error(t, err)
+
+	// Register the contract for errors
+	err = RegisterContractForError(archwayChain, archwayChainUser, ctx, contractAddress)
+	require.NoError(t, err)
 
 	// SubmitTx on contract which will vote on the proposal on counterparty chain - There is no proposal on chain. Should error out
 	execMsg = `{"vote":{"proposal_id":2,"option":1,"tiny_timeout": false}}`
