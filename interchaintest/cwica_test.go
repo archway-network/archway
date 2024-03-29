@@ -11,6 +11,7 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 	"github.com/strangelove-ventures/interchaintest/v7/relayer"
 	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -163,6 +164,9 @@ func TestCWICA(t *testing.T) {
 
 	// Register the contract for errors
 	err = RegisterContractForError(archwayChain, archwayChainUser, ctx, contractAddress)
+	require.NoError(t, err)
+
+	err = testutil.WaitForBlocks(ctx, 1, archwayChain)
 	require.NoError(t, err)
 
 	// SubmitTx on contract which will vote on the proposal on counterparty chain - There is no proposal on chain. Should error out
