@@ -3,6 +3,7 @@ package types
 import (
 	wasmdtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
 	rewardstypes "github.com/archway-network/archway/x/rewards/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,4 +25,8 @@ type BankKeeperExpected interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	BlockedAddr(addr sdk.AccAddress) bool
+}
+
+type ErrorsKeeperExpected interface {
+	SetError(ctx sdk.Context, sudoErr cwerrortypes.SudoError) error
 }
