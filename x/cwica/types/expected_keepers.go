@@ -9,6 +9,8 @@ import (
 	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+
+	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
 )
 
 // AccountKeeper defines the expected account keeper
@@ -41,4 +43,10 @@ type ChannelKeeper interface {
 // ConnectionKeeper defines the expected IBC connection keeper
 type ConnectionKeeper interface {
 	GetConnection(ctx sdk.Context, connectionID string) (connectiontypes.ConnectionEnd, bool)
+}
+
+// ErrorsKeeper defines the expected interface needed to interact with the cwerrors module.
+type ErrorsKeeper interface {
+	// SetError records a sudo error for a contract
+	SetError(ctx sdk.Context, sudoErr cwerrortypes.SudoError) error
 }

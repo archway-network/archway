@@ -23,7 +23,7 @@ var (
 func NewSudoError(errorCode ModuleErrors, contractAddr string, inputPayload string, errMsg string) cwerrortypes.SudoError {
 	return cwerrortypes.SudoError{
 		ModuleName:      ModuleName,
-		ErrorCode:       uint32(errorCode),
+		ErrorCode:       int32(errorCode),
 		ContractAddress: contractAddr,
 		InputPayload:    inputPayload,
 		ErrorMessage:    errMsg,
