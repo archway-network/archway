@@ -165,7 +165,6 @@ func TestEndBlocker(t *testing.T) {
 	require.Len(t, sudoErrs, 2)
 	require.Equal(t, "cwerrors", sudoErrs[1].ModuleName) // because Sudo::Error entrypoint does not exist on the contract
 	require.Equal(t, int32(cwerrortypes.ModuleErrors_ERR_CALLBACK_EXECUTION_FAILED), sudoErrs[1].ErrorCode)
-
 }
 
 func getCallbackRegistrationFees(chain *e2eTesting.TestChain) (sdk.Coin, error) {
