@@ -13,6 +13,7 @@ import (
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
 	"github.com/archway-network/archway/x/callback/types"
+	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
 )
 
 const (
@@ -97,6 +98,8 @@ func TestEndBlocker(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 1)
 	require.Equal(t, "SomeError: execute wasm contract failed", sudoErrs[0].ErrorMessage)
+	require.Equal(t, "callback", sudoErrs[0].ModuleName)
+	require.Equal(t, int32(types.ModuleErrors_ERR_CONTRACT_EXECUTION_FAILED), sudoErrs[0].ErrorCode)
 
 	// Registering the contract for error subscription
 	_, err = errorsKeeper.SetSubscription(chain.GetContext(), contractAddr, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
@@ -160,6 +163,9 @@ func TestEndBlocker(t *testing.T) {
 	sudoErrs, err = errorsKeeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr)
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 2)
+	require.Equal(t, "cwerrors", sudoErrs[1].ModuleName) // because Sudo::Error entrypoint does not exist on the contract
+	require.Equal(t, int32(cwerrortypes.ModuleErrors_ERR_CALLBACK_EXECUTION_FAILED), sudoErrs[1].ErrorCode)
+
 }
 
 func getCallbackRegistrationFees(chain *e2eTesting.TestChain) (sdk.Coin, error) {
