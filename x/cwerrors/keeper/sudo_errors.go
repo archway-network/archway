@@ -19,17 +19,13 @@ func (k Keeper) SetError(ctx sdk.Context, sudoErr types.SudoError) error {
 		return types.ErrContractNotFound
 	}
 
-	// If contract has subscription, store the error in the transient store to be executed as error callback
 	if k.HasSubscription(ctx, contractAddr) {
-		err := k.storeErrorCallback(ctx, sudoErr)
-		if err != nil {
-			return err
-		}
-		return nil
+		// If contract has subscription, store the error in the transient store to be executed as error callback
+		return k.storeErrorCallback(ctx, sudoErr)
+	} else {
+		// for contracts which dont have an error subscription, store the error in state to be deleted after a set height
+		return k.StoreErrorInState(ctx, contractAddr, sudoErr)
 	}
-
-	// for contracts which dont have an error subscription, store the error in state to be deleted after a set height
-	return k.StoreErrorInState(ctx, contractAddr, sudoErr)
 }
 
 // StoreErrorInState stores the error in the state and queues it for deletion after a certain block height
