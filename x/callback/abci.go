@@ -1,14 +1,12 @@
 package callback
 
 import (
-	"errors"
-
 	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	errorsmod "cosmossdk.io/errors"
 
 	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/callback/keeper"
@@ -60,9 +58,12 @@ func callbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected,
 
 			errorCode := types.ModuleErrors_ERR_UNKNOWN
 			// check if out of gas error
-			var outOfGasError errorsmod.Error
-			if errors.As(err, &outOfGasError) && outOfGasError.Is(sdkerrors.ErrOutOfGas) {
+			if errorsmod.IsOf(err, sdkerrors.ErrOutOfGas) {
 				errorCode = types.ModuleErrors_ERR_OUT_OF_GAS
+			}
+			// check if the error was due to contract execution failure
+			if errorsmod.IsOf(err, wasmtypes.ErrExecuteFailed) {
+				errorCode = types.ModuleErrors_ERR_CONTRACT_EXECUTION_FAILED
 			}
 
 			// Save error in the errors keeper
