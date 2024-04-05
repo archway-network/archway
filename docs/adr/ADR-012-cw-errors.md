@@ -14,7 +14,7 @@ This is useful for contracts who use the features provided by x/callback anc x/c
 
 ## Context
 
-With the introduction of x/callback and x/cwica modules, there are multiple mechanisms where the protocol executes a smart contract. When a user executes a contract and there is an error, the user receives the error and can act on it. However, when the protocol executes a contract and there is an error, the error could get lost in the node logs and there is no way for the contract or the developer to become aware of the error neing thrown at all.
+With the introduction of x/callback and x/cwica modules, there are multiple mechanisms where the protocol executes a smart contract. When a user executes a contract and there is an error, the user receives the error and can act on it. However, when the protocol executes a contract and there is an error, the error could get lost in the node logs and there is no way for the contract or the developer to become aware of the error being thrown at all.
 
 ### x/callback
 
