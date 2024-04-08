@@ -1,4 +1,4 @@
-package upgradelatest
+package upgrade7_0_0
 
 import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -18,8 +18,15 @@ import (
 
 // This upgrade handler is used for all the current changes to the protocol
 
-const Name = "latest"
-const NameAsciiArt = ""
+const Name = "v7.0.0"
+const NameAsciiArt = `                          
+             ###     ###     ### 
+     # #       #     # #     # #    
+     # #       #     # #     # #   
+      #        #     # #     # # 
+               #  #  ###  #  ### 
+
+`
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
