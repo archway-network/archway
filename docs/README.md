@@ -13,6 +13,7 @@
 9. [ADR-009: Callback module](adr/ADR-009-callback-module.md) - **Implemented**
 10. [ADR-010: CW Fees](adr/ADR-010-cw-fees.md) - **Implemented**
 11. [ADR-011: CW ICA](adr/ADR-011-cw-ica.md) - **Implemented**
+12. [ADR-012: CW Errors](adr/ADR-012-cw-errors.md) - **Implemented**
 
 ## Module Specifications
 
@@ -21,3 +22,4 @@
 3. [x/callback](../x/callback/spec/README.md)
 4. [x/cwfees]()
 5. [x/cwica](../x/cwica/spec/README.md)
+6. [x/cwerrors](../x/cwerrors/spec/README.md)
