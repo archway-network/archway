@@ -45,6 +45,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#549](https://github.com/archway-network/archway/pull/549) - Integrating x/cwerrors into x/cwica
 - [#550](https://github.com/archway-network/archway/pull/550) - Integrating x/cwerrors into x/callback module
 = [#551](https://github.com/archway-network/archway/pull/550) - Adding ADR-012 for x/cwerrors
+= [#554](https://github.com/archway-network/archway/pull/554) - Bumping ibc-go to v7.4.0
 
 ### Improvements
 
