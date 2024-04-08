@@ -44,6 +44,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#546](https://github.com/archway-network/archway/pull/546) - Adding x/cwerrors module
 - [#549](https://github.com/archway-network/archway/pull/549) - Integrating x/cwerrors into x/cwica
 - [#550](https://github.com/archway-network/archway/pull/550) - Integrating x/cwerrors into x/callback module
+- [#551](https://github.com/archway-network/archway/pull/550) - Adding ADR-012 for x/cwerrors
 - [#553](https://github.com/archway-network/archway/pull/553) - Add explicit module licenses
 
 ### Improvements
