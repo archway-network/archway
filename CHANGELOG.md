@@ -28,7 +28,7 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviors.
 -->
 
-## [Unreleased]
+## [v7.0.0](https://github.com/archway-network/archway/releases/tag/v7.0.0)
 
 ### Added
 
@@ -53,10 +53,6 @@ Contains all the PRs that improved the code without changing the behaviors.
 ### Changed
 
 - [#505](https://github.com/archway-network/archway/pull/505) - Update release process to account for release candidates on Titus
-
-### Deprecated
-
-### Removed
 
 ### Fixed
 - [#537](https://github.com/archway-network/archway/pull/537) - Fix issue with callback failing when module param is changed
