@@ -38,44 +38,10 @@ After successful interchain account transaction execution on the counterparty ch
 
 ## Transaction Execution - Failed 
 
-If the interachain account transaction failed on the counterparty chain, the sudo entrypoint will be called with the following json
-
-```jsonc
-{
-	"error": {
-		"module_name": "cwica",
-		"error_code": 2, // More details, look at archway/cwica/v1/errors.proto
-		"input_payload": "", // ibc packet info, serialized into a string
-		"error_message": "" // any relevant error message sent by the counterparty chain
-	}
-}
-```
+This is handeled by the [x/cwerrors](../../cwerrors/spec/README.md) module.
 
 ## Transaction Exectuion - Timeout
 
-In case the ibc packet timed out ([more info on packet timeouts](https://ibc.cosmos.network/v7/ibc/overview?_highlight=timeout#receipts-and-timeouts)),  the sudo entrypoint will be called with the following json
-
-```jsonc
-{
-	"error": {
-		"module_name": "cwica",
-		"error_code": 1, // More details, look at archway/cwica/v1/errors.proto
-		"input_payload": "", // ibc packet info, serialized into a string
-		"error_message": "IBC packet timeout" 
-	}
-}
-```
+This is handeled by the [x/cwerrors](../../cwerrors/spec/README.md) module.
 
 Please note that packet timeouts cause the ibc channel to be closed. The channel can be reopened again by registering the ica account again using [MsgRegisterInterchainAccount](../../../proto/archway/cwica/v1/tx.proto)
-
-## Error Codes
-
-The error codes used by the module are
-
-```protobuf
-enum ModuleErrors {
-  ERR_UNKNOWN = 0;
-  ERR_PACKET_TIMEOUT = 1; // When the ibc packet timesout
-  ERR_EXEC_FAILURE = 2; // When tx execution fails on counterparty chain
-}
-```

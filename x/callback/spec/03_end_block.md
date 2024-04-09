@@ -16,7 +16,7 @@ Every end block we iterate over all the callbacks registered at that height. For
 
 3. Handle error
 
-   If there was any error during the execution of the callback, whether from the contract returning an error, or an out of gas error, throw a failure event with the detailed error message.
+   If there was any error during the execution of the callback, whether from the contract returning an error, or an out of gas error, set the error with the [x/cwerrors](../../cwerrors/spec/README.md) module with the appropriate error code.
 
    If the callback was successfull, throw a success event.
 

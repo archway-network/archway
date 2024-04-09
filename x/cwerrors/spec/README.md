@@ -38,6 +38,7 @@ The subscriptions are an opt-in feature where the contractadmin/owner has to sub
 3. [End Block](./03_end_block.md)
 4. [Events](./04_events.md)
 5. [Client](./05_client.md)
+6. [Module Errors](./06_errors.md)
 
 ## References
 
