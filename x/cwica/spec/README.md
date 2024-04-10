@@ -79,3 +79,4 @@ Once the txs have been submitted, the contract will receive a callback at the Su
 2. [Messages](./02_messages.md)
 3. [Client](./03_client.md)
 4. [Wasm Bindings](./04_wasm_bindings.md)
+5. [Module Errors](./05_errors.md)

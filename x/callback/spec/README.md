@@ -91,10 +91,7 @@ A sample contract which shows how the feature can be used can be found [here](..
 
 ## Error Handling
 
-As the contracts are executed during the protocol end blocker, it is not possible to return any execution errors to the user. 
-We highly recommend that user do not return any errors for the `SudoMsg::Callback` endpoint. Instead, handle it within the contract logic. 
-
-However, any error encountered during the execution of the contract will be thrown as an explicit event. Users can subscribe to [CallbackExecutedFailedEvent](../../../proto/archway/callback/v1/events.proto#L45) to be notified of any issues with the callback.
+As the contracts are executed during the protocol end blocker, it is not possible to return any execution errors to the user. However, the contract can use [x/cwerrors](../../cwerrors/spec/README.md) to get the errors when they happen.
 
 ## Contents
 
@@ -104,6 +101,7 @@ However, any error encountered during the execution of the contract will be thro
 4. [Events](./04_events.md)
 5. [Client](./05_client.md)
 6. [Wasm bindings](./06_wasm_bindings.md)
+7. [Module Errors](./07_errors.md)
 
 ## References
 
