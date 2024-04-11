@@ -37,6 +37,46 @@ var Upgrade = upgrades.Upgrade{
 				return nil, err
 			}
 
+			ctx.Logger().Info("Setting default params for the new modules")
+			// Setting callback params
+			callbackParams, err := keepers.CallbackKeeper.GetParams(ctx)
+			if err != nil {
+				return nil, err
+			}
+			callbackParams.CallbackGasLimit = 150000
+			callbackParams.MaxBlockReservationLimit = 10
+			callbackParams.MaxFutureReservationLimit = 432000 // roughly 30 days
+			callbackParams.BlockReservationFeeMultiplier = sdk.MustNewDecFromStr("0.0")
+			callbackParams.FutureReservationFeeMultiplier = sdk.MustNewDecFromStr("1000000000000.0")
+			err = keepers.CallbackKeeper.SetParams(ctx, callbackParams)
+			if err != nil {
+				return nil, err
+			}
+
+			// Setting cwerrors params
+			cwerrorsParams, err := keepers.CWErrorsKeeper.GetParams(ctx)
+			if err != nil {
+				return nil, err
+			}
+			cwerrorsParams.ErrorStoredTime = 302400                                                      // roughly 21 days
+			cwerrorsParams.SubscriptionFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000000000000000) // 1 ARCH (1e18 attoarch)
+			cwerrorsParams.SubscriptionPeriod = 302400                                                   // roughly 21 days
+			err = keepers.CWErrorsKeeper.SetParams(ctx, cwerrorsParams)
+			if err != nil {
+				return nil, err
+			}
+
+			// Setting cwica params
+			cwicaParams, err := keepers.CWICAKeeper.GetParams(ctx)
+			if err != nil {
+				return nil, err
+			}
+			cwicaParams.MsgSendTxMaxMessages = 5
+			err = keepers.CWICAKeeper.SetParams(ctx, cwicaParams)
+			if err != nil {
+				return nil, err
+			}
+
 			ctx.Logger().Info(upgrades.ArchwayLogo + NameAsciiArt)
 			return migrations, nil
 		}
