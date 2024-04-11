@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+
 	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/archway-network/archway/x/cwica/types"
 

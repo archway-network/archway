@@ -84,7 +84,6 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		if err != nil {
 			k.Logger(ctx).Debug("HandleAcknowledgement: failed to Sudo contract on packet acknowledgement", "error", err)
 		}
-
 	} else { // if error from the counterparty chain
 		packetMsg, err := json.Marshal(packet)
 		if err != nil {
