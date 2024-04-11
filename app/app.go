@@ -615,7 +615,7 @@ func NewArchwayApp(
 
 	app.Keepers.CWFeesKeeper = cwfees.NewKeeper(appCodec, keys[cwfees.ModuleName], app.Keepers.WASMKeeper)
 
-	app.Keepers.CWICAKeeper = *cwicakeeper.NewKeeper(
+	app.Keepers.CWICAKeeper = cwicakeeper.NewKeeper(
 		appCodec,
 		keys[cwicatypes.StoreKey],
 		app.Keepers.IBCKeeper.ChannelKeeper,

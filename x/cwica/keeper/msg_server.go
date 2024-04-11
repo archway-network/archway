@@ -88,7 +88,10 @@ func (k Keeper) SendTx(goCtx context.Context, msg *types.MsgSendTx) (*types.MsgS
 		return nil, errors.Wrapf(types.ErrNotContract, "%s is not a contract address", msg.ContractAddress)
 	}
 
-	params := k.GetParams(ctx)
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to GetParams")
+	}
 	if uint64(len(msg.Msgs)) > params.GetMsgSendTxMaxMessages() {
 		return nil, fmt.Errorf(
 			"MsgSubmitTx contains more messages than allowed, has=%d, max=%d",
