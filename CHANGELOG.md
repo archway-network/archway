@@ -56,6 +56,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 ### Changed
 
 - [#505](https://github.com/archway-network/archway/pull/505) - Update release process to account for release candidates on Titus
+- [#558](https://github.com/archway-network/archway/pull/558) - Updated the new modules default params in upgrade handler
 
 ### Fixed
 - [#537](https://github.com/archway-network/archway/pull/537) - Fix issue with callback failing when module param is changed

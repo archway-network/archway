@@ -107,7 +107,8 @@ func (s *KeeperTestSuite) TestSendTx() {
 		contractAddress.String(),
 		contractAdminAcc.Address.String(),
 	)
-	params := cwicaKeeper.GetParams(ctx)
+	params, err := cwicaKeeper.GetParams(ctx)
+	s.Require().NoError(err)
 	maxMsgs := params.GetMsgSendTxMaxMessages()
 	submitMsg.Msgs = make([]*codectypes.Any, maxMsgs+1)
 	s.Require().True(wmKeeper.HasContractInfo(ctx, contractAddress))

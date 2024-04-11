@@ -1,5 +1,7 @@
 package types
 
+import "cosmossdk.io/collections"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "cwica"
@@ -14,12 +16,6 @@ const (
 	QuerierRoute = ModuleName
 )
 
-const (
-	// params key
-	prefixParamsKey = iota + 1
-)
-
 var (
-	// params store key
-	ParamsKey = []byte{prefixParamsKey}
+	ParamsKeyPrefix = collections.NewPrefix(1)
 )

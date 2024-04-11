@@ -10,14 +10,30 @@ import (
 	"github.com/archway-network/archway/x/cwica/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = &QueryServer{}
+
+type QueryServer struct {
+	keeper Keeper
+}
+
+// NewQueryServer creates a new gRPC query server.
+func NewQueryServer(keeper Keeper) *QueryServer {
+	return &QueryServer{
+		keeper: keeper,
+	}
+}
 
 // Params implements the Query/Params gRPC method
-func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (qs *QueryServer) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+	params, err := qs.keeper.GetParams(sdk.UnwrapSDKContext(c))
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "could not fetch the module params: %s", err.Error())
+	}
 
-	return &types.QueryParamsResponse{Params: k.GetParams(ctx)}, nil
+	return &types.QueryParamsResponse{
+		Params: params,
+	}, nil
 }

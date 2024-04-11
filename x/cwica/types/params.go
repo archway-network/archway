@@ -3,15 +3,10 @@ package types
 import (
 	"fmt"
 
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
 	"gopkg.in/yaml.v2"
 )
 
-var _ paramtypes.ParamSet = (*Params)(nil)
-
 var (
-	KeyMsgSendTxMaxMessages     = []byte("MsgSendTxMaxMessages")
 	DefaultMsgSendTxMaxMessages = uint64(5)
 )
 
@@ -25,17 +20,6 @@ func NewParams(msgSendTxMaxMessages uint64) Params {
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
 	return NewParams(DefaultMsgSendTxMaxMessages)
-}
-
-// ParamSetPairs get the params.ParamSet
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(
-			KeyMsgSendTxMaxMessages,
-			&p.MsgSendTxMaxMessages,
-			validateMsgSendTxMaxMessages,
-		),
-	}
 }
 
 // Validate validates the set of params

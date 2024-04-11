@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cwicaKeeper "github.com/archway-network/archway/x/cwica/keeper"
 	"github.com/archway-network/archway/x/cwica/types"
 )
 
@@ -14,13 +15,15 @@ func (s *KeeperTestSuite) TestParamsQuery() {
 	err := keeper.SetParams(ctx, params)
 	s.Require().NoError(err)
 
+	queryServer := cwicaKeeper.NewQueryServer(keeper)
+
 	// TEST CASE 1: invalid request
-	response, err := keeper.Params(wctx, nil)
+	response, err := queryServer.Params(wctx, nil)
 	s.Require().Error(err)
 	s.Require().Nil(response)
 
 	// TEST CASE 2: successfully fetched the params
-	response, err = keeper.Params(wctx, &types.QueryParamsRequest{})
+	response, err = queryServer.Params(wctx, &types.QueryParamsRequest{})
 	s.Require().NoError(err)
 	s.Require().Equal(&types.QueryParamsResponse{Params: params}, response)
 }

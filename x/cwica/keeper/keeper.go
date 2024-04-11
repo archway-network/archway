@@ -3,6 +3,9 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/collections"
+
+	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/archway-network/archway/x/cwica/types"
 
 	"github.com/cometbft/cometbft/libs/log"
@@ -21,6 +24,11 @@ type (
 		icaControllerKeeper types.ICAControllerKeeper
 		sudoKeeper          types.WasmKeeper
 		authority           string
+
+		Schema collections.Schema
+
+		// Params key: ParamsKeyPrefix | value: Params
+		Params collections.Item[types.Params]
 	}
 )
 
@@ -33,8 +41,10 @@ func NewKeeper(
 	icaControllerKeeper types.ICAControllerKeeper,
 	sudoKeeper types.WasmKeeper,
 	authority string,
-) *Keeper {
-	return &Keeper{
+) Keeper {
+	sb := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
+
+	k := Keeper{
 		Codec:               cdc,
 		storeKey:            storeKey,
 		channelKeeper:       channelKeeper,
@@ -43,7 +53,20 @@ func NewKeeper(
 		icaControllerKeeper: icaControllerKeeper,
 		sudoKeeper:          sudoKeeper,
 		authority:           authority,
+		Params: collections.NewItem(
+			sb,
+			types.ParamsKeyPrefix,
+			"params",
+			collcompat.ProtoValue[types.Params](cdc),
+		),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 func (k *Keeper) Logger(ctx sdk.Context) log.Logger {

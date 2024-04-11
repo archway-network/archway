@@ -12,5 +12,7 @@ func (s *KeeperTestSuite) TestGetParams() {
 	err := k.SetParams(ctx, params)
 	s.Require().NoError(err)
 
-	s.Require().EqualValues(params, k.GetParams(ctx))
+	p, err := k.GetParams(ctx)
+	s.Require().NoError(err)
+	s.Require().EqualValues(params, p)
 }
