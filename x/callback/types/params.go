@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	DefaultCallbackGasLimit               = uint64(1500000)
-	DefaultMaxBlockReservationLimit       = uint64(10)
-	DefaultMaxFutureReservationLimit      = uint64(302400)
-	DefaultBlockReservationFeeMultiplier  = sdk.MustNewDecFromStr("0.0")
-	DefaultFutureReservationFeeMultiplier = sdk.MustNewDecFromStr("1000000000000.0")
+	DefaultCallbackGasLimit               = uint64(1000000)
+	DefaultMaxBlockReservationLimit       = uint64(3)
+	DefaultMaxFutureReservationLimit      = uint64(10000)
+	DefaultBlockReservationFeeMultiplier  = sdk.MustNewDecFromStr("1.0")
+	DefaultFutureReservationFeeMultiplier = sdk.MustNewDecFromStr("1.0")
 )
 
 // NewParams creates a new Params instance.

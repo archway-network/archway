@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	DefaultErrorStoredTime    = int64(302400)                                               // roughly 21 days
-	DefaultSubscriptionFee    = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000000000000000) // 1 ARCH (1e18 attoarch)
-	DefaultSubscriptionPeriod = int64(302400)                                               // roughly 21 days
+	DefaultErrorStoredTime    = int64(302400)                             // roughly 21 days
+	DefaultSubscriptionFee    = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0) // 1 ARCH (1e18 attoarch)
+	DefaultSubscriptionPeriod = int64(302400)                             // roughly 21 days
 )
 
 // NewParams creates a new Params instance.
