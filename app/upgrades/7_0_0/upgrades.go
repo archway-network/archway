@@ -38,6 +38,7 @@ var Upgrade = upgrades.Upgrade{
 			}
 
 			ctx.Logger().Info("Setting default params for the new modules")
+			bondDenom := keepers.StakingKeeper.BondDenom(ctx)
 			// Setting callback params
 			callbackParams, err := keepers.CallbackKeeper.GetParams(ctx)
 			if err != nil {
@@ -58,9 +59,9 @@ var Upgrade = upgrades.Upgrade{
 			if err != nil {
 				return nil, err
 			}
-			cwerrorsParams.ErrorStoredTime = 302400                                                      // roughly 21 days
-			cwerrorsParams.SubscriptionFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000000000000000) // 1 ARCH (1e18 attoarch)
-			cwerrorsParams.SubscriptionPeriod = 302400                                                   // roughly 21 days
+			cwerrorsParams.ErrorStoredTime = 302400                                           // roughly 21 days
+			cwerrorsParams.SubscriptionFee = sdk.NewInt64Coin(bondDenom, 1000000000000000000) // 1 ARCH (1e18 attoarch)
+			cwerrorsParams.SubscriptionPeriod = 302400                                        // roughly 21 days
 			err = keepers.CWErrorsKeeper.SetParams(ctx, cwerrorsParams)
 			if err != nil {
 				return nil, err
