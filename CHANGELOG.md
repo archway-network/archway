@@ -63,6 +63,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#538](https://github.com/archway-network/archway/pull/538) - Fixing the interchain test gh workflow failing cuz rc tags were not recognized 
 - [#539](https://github.com/archway-network/archway/pull/539) - Remediations for x/callback audit
 - [#552](https://github.com/archway-network/archway/pull/552) - Fix issue with x/callback callback error code was not identified correctly when setting cwerrors
+- [#559](https://github.com/archway-network/archway/pull/559) - Fixing wrong bond denom being considered for x/callback and x/cwerrors fees
 
 
 ## [v6.0.0](https://github.com/archway-network/archway/releases/tag/v6.0.0)
