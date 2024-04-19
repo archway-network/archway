@@ -33,7 +33,7 @@ func (k Keeper) SetSubscription(ctx sdk.Context, sender, contractAddress sdk.Acc
 	if fee.IsLT(params.SubscriptionFee) {
 		return -1, types.ErrInsufficientSubscriptionFee
 	}
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, contractAddress, authtypes.FeeCollectorName, sdk.NewCoins(fee))
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, authtypes.FeeCollectorName, sdk.NewCoins(fee))
 	if err != nil {
 		return -1, err
 	}

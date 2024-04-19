@@ -90,7 +90,7 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 			testCase: "FAIL: account doesnt have enough balance",
 			input: func() *types.MsgSubscribeToError {
 				return &types.MsgSubscribeToError{
-					Sender:          contractAdminAcc.Address.String(),
+					Sender:          contractAddr.String(),
 					ContractAddress: contractAddr.String(),
 					Fee:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 101),
 				}
