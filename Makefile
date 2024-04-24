@@ -7,8 +7,8 @@ LEDGER_ENABLED ?= true
 # SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
-GORELEASER_CROSS_VERSION = v1.20.6
-GORELEASER_VERSION = v1.20.0
+GORELEASER_CROSS_VERSION = v1.21.9
+GORELEASER_VERSION = v1.21.0
 
 # for dockerized protobuf tools
 DOCKER := $(shell which docker)
