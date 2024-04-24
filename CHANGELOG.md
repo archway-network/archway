@@ -48,6 +48,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#554](https://github.com/archway-network/archway/pull/554) - Bumping ibc-go to v7.4.0
 - [#553](https://github.com/archway-network/archway/pull/553) - Add explicit module licenses
 - [#557](https://github.com/archway-network/archway/pull/557) - Updating the module specs to include module error codes
+- [#563](https://github.com/archway-network/archway/pull/563) - Bumping cosmos-sdk to v0.47.11
 
 ### Improvements
 
