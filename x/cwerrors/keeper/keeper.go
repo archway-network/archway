@@ -27,12 +27,12 @@ type Keeper struct {
 	Params collections.Item[types.Params]
 	// ErrorID key: ErrorsCountKey | value: ErrorID
 	ErrorID collections.Sequence
-	// ContractErrors key: ContractErrorsKeyPrefix + contractAddress + ErrorId | value: ErrorId
-	ContractErrors collections.Map[collections.Pair[[]byte, uint64], uint64]
+	// ContractErrors key: ContractErrorsKeyPrefix + contractAddress + ErrorId | value: nil
+	ContractErrors collections.Map[collections.Pair[[]byte, uint64], []byte]
 	// ContractErrors key: ErrorsKeyPrefix + ErrorId | value: SudoError
 	Errors collections.Map[uint64, types.SudoError]
-	// DeletionBlocks key: DeletionBlocksKeyPrefix + BlockHeight + ErrorId | value: ErrorId
-	DeletionBlocks collections.Map[collections.Pair[int64, uint64], uint64]
+	// DeletionBlocks key: DeletionBlocksKeyPrefix + BlockHeight + ErrorId | value: nil
+	DeletionBlocks collections.Map[collections.Pair[int64, uint64], []byte]
 	// ContractSubscriptions key: ContractSubscriptionsKeyPrefix + contractAddress | value: deletionHeight
 	ContractSubscriptions collections.Map[[]byte, int64]
 	// SubscriptionEndBlock key: SubscriptionEndBlockKeyPrefix + BlockHeight + contractAddress | value: nil
@@ -69,7 +69,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, tStoreKey storetyp
 			types.ContractErrorsKeyPrefix,
 			"contractErrors",
 			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
-			collections.Uint64Value,
+			collections.BytesValue,
 		),
 		Errors: collections.NewMap(
 			sb,
@@ -83,7 +83,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, tStoreKey storetyp
 			types.DeletionBlocksKeyPrefix,
 			"deletionBlocks",
 			collections.PairKeyCodec(collections.Int64Key, collections.Uint64Key),
-			collections.Uint64Value,
+			collections.BytesValue,
 		),
 		ContractSubscriptions: collections.NewMap(
 			sb,
