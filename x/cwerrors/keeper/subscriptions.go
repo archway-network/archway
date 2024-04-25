@@ -39,7 +39,7 @@ func (k Keeper) SetSubscription(ctx sdk.Context, sender, contractAddress sdk.Acc
 	}
 
 	subscriptionEndHeight := max(ctx.BlockHeight(), existingEndHeight) + params.SubscriptionPeriod
-	if err = k.SubscriptionEndBlock.Set(ctx, collections.Join(subscriptionEndHeight, contractAddress.Bytes()), contractAddress.Bytes()); err != nil {
+	if err = k.SubscriptionEndBlock.Set(ctx, collections.Join(subscriptionEndHeight, contractAddress.Bytes()), nil); err != nil {
 		return -1, err
 	}
 	return subscriptionEndHeight, k.ContractSubscriptions.Set(ctx, contractAddress, subscriptionEndHeight)
@@ -67,8 +67,8 @@ func (k Keeper) GetSubscription(ctx sdk.Context, contractAddress sdk.AccAddress)
 func (k Keeper) PruneSubscriptionsEndBlock(ctx sdk.Context) (err error) {
 	height := ctx.BlockHeight()
 	rng := collections.NewPrefixedPairRange[int64, []byte](height)
-	err = k.SubscriptionEndBlock.Walk(ctx, rng, func(key collections.Pair[int64, []byte], contractAddress []byte) (bool, error) {
-		if err := k.ContractSubscriptions.Remove(ctx, contractAddress); err != nil {
+	err = k.SubscriptionEndBlock.Walk(ctx, rng, func(key collections.Pair[int64, []byte], _ []byte) (bool, error) {
+		if err := k.ContractSubscriptions.Remove(ctx, key.K2()); err != nil {
 			return true, err
 		}
 		return false, nil

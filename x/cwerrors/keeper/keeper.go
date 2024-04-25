@@ -35,7 +35,7 @@ type Keeper struct {
 	DeletionBlocks collections.Map[collections.Pair[int64, uint64], uint64]
 	// ContractSubscriptions key: ContractSubscriptionsKeyPrefix + contractAddress | value: deletionHeight
 	ContractSubscriptions collections.Map[[]byte, int64]
-	// SubscriptionEndBlock key: SubscriptionEndBlockKeyPrefix + BlockHeight + contractAddress | value: contractAddress
+	// SubscriptionEndBlock key: SubscriptionEndBlockKeyPrefix + BlockHeight + contractAddress | value: nil
 	SubscriptionEndBlock collections.Map[collections.Pair[int64, []byte], []byte]
 }
 
