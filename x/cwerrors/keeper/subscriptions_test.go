@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) TestSetSubscription() {
 	})
 	s.Require().NoError(err)
 	_, err = keeper.SetSubscription(ctx, contractAdminAcc.Address, contractAddr, fees)
-	s.Require().ErrorIs(err, types.ErrInsufficientSubscriptionFee)
+	s.Require().ErrorIs(err, types.ErrIncorrectSubscriptionFee)
 	err = keeper.SetParams(ctx, types.DefaultParams())
 	s.Require().NoError(err)
 
