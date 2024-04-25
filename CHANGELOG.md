@@ -58,6 +58,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 
 - [#505](https://github.com/archway-network/archway/pull/505) - Update release process to account for release candidates on Titus
 - [#558](https://github.com/archway-network/archway/pull/558) - Updated the new modules default params in upgrade handler
+- [#561](https://github.com/archway-network/archway/pull/561) - Updated swagger file for latest release
 - [#560](https://github.com/archway-network/archway/pull/560) - Update go-releaser to use go v1.21.x
 
 ### Fixed
