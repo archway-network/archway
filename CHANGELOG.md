@@ -67,6 +67,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#552](https://github.com/archway-network/archway/pull/552) - Fix issue with x/callback callback error code was not identified correctly when setting cwerrors
 - [#559](https://github.com/archway-network/archway/pull/559) - Fixing wrong bond denom being considered for x/callback and x/cwerrors fees
 - [#562](https://github.com/archway-network/archway/pull/562) - Fixing the account from which x/cwerrors subscription fees are deducted
+- [#564](https://github.com/archway-network/archway/pull/564) - Remediations for x/cwerrors audit
 
 
 ## [v6.0.0](https://github.com/archway-network/archway/releases/tag/v6.0.0)

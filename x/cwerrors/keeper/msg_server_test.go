@@ -29,7 +29,8 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 	)
 	params, err := keeper.GetParams(ctx)
 	s.Require().NoError(err)
-	err = s.chain.GetApp().Keepers.BankKeeper.SendCoins(ctx, contractAdminAcc.Address, contractAddr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)))
+	params.SubscriptionFee = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)
+	err = keeper.SetParams(ctx, params)
 	s.Require().NoError(err)
 
 	expectedEndHeight := ctx.BlockHeight() + params.SubscriptionPeriod
@@ -92,7 +93,7 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 				return &types.MsgSubscribeToError{
 					Sender:          contractAddr.String(),
 					ContractAddress: contractAddr.String(),
-					Fee:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 101),
+					Fee:             params.SubscriptionFee,
 				}
 			},
 			expectError: true,
@@ -104,7 +105,7 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 				return &types.MsgSubscribeToError{
 					Sender:          contractAdminAcc.Address.String(),
 					ContractAddress: contractAddr.String(),
-					Fee:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 100),
+					Fee:             params.SubscriptionFee,
 				}
 			},
 			expectError: false,
