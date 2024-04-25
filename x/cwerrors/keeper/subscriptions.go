@@ -19,9 +19,9 @@ func (k Keeper) SetSubscription(ctx sdk.Context, sender, contractAddress sdk.Acc
 		return -1, types.ErrUnauthorized
 	}
 
-	existingSubFound, endHeight := k.GetSubscription(ctx, contractAddress)
+	existingSubFound, existingEndHeight := k.GetSubscription(ctx, contractAddress)
 	if existingSubFound {
-		if err := k.SubscriptionEndBlock.Remove(ctx, collections.Join(endHeight, contractAddress.Bytes())); err != nil {
+		if err := k.SubscriptionEndBlock.Remove(ctx, collections.Join(existingEndHeight, contractAddress.Bytes())); err != nil {
 			return -1, err
 		}
 	}
@@ -30,16 +30,16 @@ func (k Keeper) SetSubscription(ctx sdk.Context, sender, contractAddress sdk.Acc
 		return -1, err
 	}
 
-	if fee.IsLT(params.SubscriptionFee) {
-		return -1, types.ErrInsufficientSubscriptionFee
+	if !fee.IsEqual(params.SubscriptionFee) {
+		return -1, types.ErrIncorrectSubscriptionFee
 	}
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, authtypes.FeeCollectorName, sdk.NewCoins(fee))
 	if err != nil {
 		return -1, err
 	}
 
-	subscriptionEndHeight := ctx.BlockHeight() + params.SubscriptionPeriod
-	if err = k.SubscriptionEndBlock.Set(ctx, collections.Join(subscriptionEndHeight, contractAddress.Bytes()), contractAddress.Bytes()); err != nil {
+	subscriptionEndHeight := max(ctx.BlockHeight(), existingEndHeight) + params.SubscriptionPeriod
+	if err = k.SubscriptionEndBlock.Set(ctx, collections.Join(subscriptionEndHeight, contractAddress.Bytes()), nil); err != nil {
 		return -1, err
 	}
 	return subscriptionEndHeight, k.ContractSubscriptions.Set(ctx, contractAddress, subscriptionEndHeight)
@@ -67,8 +67,8 @@ func (k Keeper) GetSubscription(ctx sdk.Context, contractAddress sdk.AccAddress)
 func (k Keeper) PruneSubscriptionsEndBlock(ctx sdk.Context) (err error) {
 	height := ctx.BlockHeight()
 	rng := collections.NewPrefixedPairRange[int64, []byte](height)
-	err = k.SubscriptionEndBlock.Walk(ctx, rng, func(key collections.Pair[int64, []byte], contractAddress []byte) (bool, error) {
-		if err := k.ContractSubscriptions.Remove(ctx, contractAddress); err != nil {
+	err = k.SubscriptionEndBlock.Walk(ctx, rng, func(key collections.Pair[int64, []byte], _ []byte) (bool, error) {
+		if err := k.ContractSubscriptions.Remove(ctx, key.K2()); err != nil {
 			return true, err
 		}
 		return false, nil

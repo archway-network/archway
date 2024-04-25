@@ -37,7 +37,7 @@ func (k Keeper) StoreErrorInState(ctx sdk.Context, contractAddr sdk.AccAddress, 
 	}
 
 	// Associate the error with the contract
-	if err = k.ContractErrors.Set(ctx, collections.Join(contractAddr.Bytes(), errorID), errorID); err != nil {
+	if err = k.ContractErrors.Set(ctx, collections.Join(contractAddr.Bytes(), errorID), nil); err != nil {
 		return err
 	}
 
@@ -47,7 +47,7 @@ func (k Keeper) StoreErrorInState(ctx sdk.Context, contractAddr sdk.AccAddress, 
 		return err
 	}
 	deletionHeight := ctx.BlockHeight() + params.ErrorStoredTime
-	if err = k.DeletionBlocks.Set(ctx, collections.Join(deletionHeight, errorID), errorID); err != nil {
+	if err = k.DeletionBlocks.Set(ctx, collections.Join(deletionHeight, errorID), nil); err != nil {
 		return err
 	}
 
@@ -78,8 +78,8 @@ func (k Keeper) storeErrorCallback(ctx sdk.Context, sudoErr types.SudoError) err
 // GetErrosByContractAddress returns all errors (in state) for a given contract address
 func (k Keeper) GetErrorsByContractAddress(ctx sdk.Context, contractAddress []byte) (sudoErrs []types.SudoError, err error) {
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](contractAddress)
-	err = k.ContractErrors.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], errorID uint64) (bool, error) {
-		sudoErr, err := k.Errors.Get(ctx, errorID)
+	err = k.ContractErrors.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], _ []byte) (bool, error) {
+		sudoErr, err := k.Errors.Get(ctx, key.K2())
 		if err != nil {
 			return true, err
 		}
@@ -110,8 +110,8 @@ func (k Keeper) PruneErrorsCurrentBlock(ctx sdk.Context) (err error) {
 	var errorIDs []uint64
 	height := ctx.BlockHeight()
 	rng := collections.NewPrefixedPairRange[int64, uint64](height)
-	err = k.DeletionBlocks.Walk(ctx, rng, func(key collections.Pair[int64, uint64], errorID uint64) (bool, error) {
-		errorIDs = append(errorIDs, errorID)
+	err = k.DeletionBlocks.Walk(ctx, rng, func(key collections.Pair[int64, uint64], _ []byte) (bool, error) {
+		errorIDs = append(errorIDs, key.K2())
 		return false, nil
 	})
 	if err != nil {
