@@ -19,9 +19,9 @@ func (k Keeper) SetSubscription(ctx sdk.Context, sender, contractAddress sdk.Acc
 		return -1, types.ErrUnauthorized
 	}
 
-	existingSubFound, endHeight := k.GetSubscription(ctx, contractAddress)
+	existingSubFound, existingEndHeight := k.GetSubscription(ctx, contractAddress)
 	if existingSubFound {
-		if err := k.SubscriptionEndBlock.Remove(ctx, collections.Join(endHeight, contractAddress.Bytes())); err != nil {
+		if err := k.SubscriptionEndBlock.Remove(ctx, collections.Join(existingEndHeight, contractAddress.Bytes())); err != nil {
 			return -1, err
 		}
 	}
@@ -38,7 +38,7 @@ func (k Keeper) SetSubscription(ctx sdk.Context, sender, contractAddress sdk.Acc
 		return -1, err
 	}
 
-	subscriptionEndHeight := ctx.BlockHeight() + params.SubscriptionPeriod
+	subscriptionEndHeight := max(ctx.BlockHeight(), existingEndHeight) + params.SubscriptionPeriod
 	if err = k.SubscriptionEndBlock.Set(ctx, collections.Join(subscriptionEndHeight, contractAddress.Bytes()), contractAddress.Bytes()); err != nil {
 		return -1, err
 	}
