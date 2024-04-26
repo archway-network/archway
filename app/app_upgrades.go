@@ -14,6 +14,7 @@ import (
 	upgrade4_0_2 "github.com/archway-network/archway/app/upgrades/4_0_2"
 	upgrade6_0_0 "github.com/archway-network/archway/app/upgrades/6_0_0"
 	upgrade7_0_0 "github.com/archway-network/archway/app/upgrades/7_0_0"
+	upgradelatest "github.com/archway-network/archway/app/upgrades/latest"
 )
 
 // UPGRADES
@@ -27,6 +28,8 @@ var Upgrades = []upgrades.Upgrade{
 	upgrade4_0_2.Upgrade,      // v4.0.2
 	upgrade6_0_0.Upgrade,      // v6.0.0
 	upgrade7_0_0.Upgrade,      // v7.0.0
+
+	upgradelatest.Upgrade, // latest - This upgrade handler is used for all the current changes to the protocol
 }
 
 func (app *ArchwayApp) setupUpgrades() {
