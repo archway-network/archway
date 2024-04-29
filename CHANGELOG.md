@@ -28,6 +28,20 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviors.
 -->
 
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Improvements
+
 ## [v7.0.0](https://github.com/archway-network/archway/releases/tag/v7.0.0)
 
 ### Added
