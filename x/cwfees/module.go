@@ -77,3 +77,9 @@ func (a AppModule) GetTxCmd() *cobra.Command { return &cobra.Command{Use: Module
 func (a AppModule) GetQueryCmd() *cobra.Command { return &cobra.Command{Use: ModuleName} }
 
 func (a AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}

@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"sigs.k8s.io/yaml"
@@ -26,10 +27,10 @@ var (
 )
 
 var (
-	DefaultInflationRatio     = sdk.MustNewDecFromStr("0.20") // 20%
-	DefaultTxFeeRebateRatio   = sdk.MustNewDecFromStr("0.50") // 50%
+	DefaultInflationRatio     = math.LegacyMustNewDecFromStr("0.20") // 20%
+	DefaultTxFeeRebateRatio   = math.LegacyMustNewDecFromStr("0.50") // 50%
 	DefaultMaxWithdrawRecords = MaxWithdrawRecordsParamLimit
-	DefaultMinPriceOfGas      = sdk.NewDecCoin("stake", sdk.ZeroInt())
+	DefaultMinPriceOfGas      = sdk.NewDecCoin("stake", math.ZeroInt())
 )
 
 var _ paramTypes.ParamSet = (*Params)(nil)
@@ -40,7 +41,7 @@ func ParamKeyTable() paramTypes.KeyTable {
 }
 
 // NewParams creates a new Params instance.
-func NewParams(inflationRewardsRatio, txFeeRebateRatio sdk.Dec, maxwithdrawRecords uint64, minPriceOfGas sdk.DecCoin) Params {
+func NewParams(inflationRewardsRatio, txFeeRebateRatio math.LegacyDec, maxwithdrawRecords uint64, minPriceOfGas sdk.DecCoin) Params {
 	return Params{
 		InflationRewardsRatio: inflationRewardsRatio,
 		TxFeeRebateRatio:      txFeeRebateRatio,
@@ -99,7 +100,7 @@ func validateInflationRewardsRatio(v interface{}) (retErr error) {
 		}
 	}()
 
-	p, ok := v.(sdk.Dec)
+	p, ok := v.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
@@ -114,7 +115,7 @@ func validateTxFeeRebateRatio(v interface{}) (retErr error) {
 		}
 	}()
 
-	p, ok := v.(sdk.Dec)
+	p, ok := v.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
@@ -123,11 +124,11 @@ func validateTxFeeRebateRatio(v interface{}) (retErr error) {
 }
 
 // validateRatio is a generic ratio coefficient validator.
-func validateRatio(v sdk.Dec) error {
+func validateRatio(v math.LegacyDec) error {
 	if v.IsNegative() {
 		return fmt.Errorf("must be GTE 0.0")
 	}
-	if v.GTE(sdk.OneDec()) {
+	if v.GTE(math.LegacyOneDec()) {
 		return fmt.Errorf("must be LT 1.0")
 	}
 

@@ -1,6 +1,7 @@
 package app_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -46,7 +47,7 @@ func TestUpgrades(t *testing.T) {
 	fauxUpgrade := upgrades.Upgrade{
 		UpgradeName: "test-upgrade",
 		CreateUpgradeHandler: func(manager *module.Manager, configurator module.Configurator, _ keepers.ArchwayKeepers) upgradetypes.UpgradeHandler {
-			return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 				proposalExecuted = true
 				return manager.RunMigrations(ctx, configurator, fromVM)
 			}

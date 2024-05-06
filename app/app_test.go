@@ -2,15 +2,14 @@ package app
 
 import (
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
-	db "github.com/cometbft/cometbft-db"
-	tmdb "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
+	math "cosmossdk.io/math"
 	tmjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
 	tmtypes "github.com/cometbft/cometbft/types"
+	tmdb "github.com/cosmos/cosmos-db"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -49,7 +48,7 @@ func TestArchwaydExport(t *testing.T) {
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
 	}
 
 	genesisState := NewDefaultGenesisState(gapp.AppCodec())
@@ -59,7 +58,7 @@ func TestArchwaydExport(t *testing.T) {
 	require.NoError(t, err)
 
 	gapp.InitChain(
-		abci.RequestInitChain{
+		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simapp.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -74,8 +73,8 @@ func TestArchwaydExport(t *testing.T) {
 
 // ensure that blocked addresses are properly set in bank keeper
 func TestBlockedAddrs(t *testing.T) {
-	db := db.NewMemDB()
-	gapp := NewArchwayApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), EmptyBaseAppOptions{}, emptyWasmOpts)
+	db := tmdb.NewMemDB()
+	gapp := NewArchwayApp(log.NewTestLogger(t), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), EmptyBaseAppOptions{}, emptyWasmOpts)
 
 	for acc := range BlockedAddresses() {
 		var addr sdk.AccAddress
@@ -124,15 +123,15 @@ func genesisStateWithValSet(t *testing.T,
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
+			DelegatorShares:   math.LegacyOneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			MinSelfDelegation: sdk.ZeroInt(),
+			Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+			MinSelfDelegation: math.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), val.Address.String(), math.LegacyOneDec()))
 	}
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)

@@ -19,7 +19,7 @@ var _ sdk.AnteDecorator = DeductFeeDecorator{}
 
 type BankKeeper interface {
 	authTypes.BankKeeper
-	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	BurnCoins(context.Context, string, sdk.Coins) error
 }
 
 type CWFeesKeeper interface {
@@ -132,7 +132,7 @@ func (dfd DeductFeeDecorator) getFeePayer(ctx sdk.Context, tx sdk.FeeTx) (payer 
 // deductFees deducts fees from the given account if rewards calculation and distribution is enabled.
 // If rewards module is disabled, all the fees are sent to the fee collector account.
 // NOTE: this is the only logic being changed.
-func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc authTypes.AccountI, fees sdk.Coins) error {
+func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc sdk.AccountI, fees sdk.Coins) error {
 	if !fees.IsValid() {
 		return errorsmod.Wrapf(sdkErrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}

@@ -1,6 +1,8 @@
 package types
 
 import (
+	context "context"
+
 	wasmdtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
@@ -21,9 +23,9 @@ type RewardsKeeperExpected interface {
 }
 
 type BankKeeperExpected interface {
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	BlockedAddr(addr sdk.AccAddress) bool
 }
 

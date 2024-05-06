@@ -1,17 +1,13 @@
 package keeper
 
 import (
-	"fmt"
-
 	"cosmossdk.io/collections"
 
 	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/archway-network/archway/x/cwica/types"
 
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (
@@ -67,10 +63,6 @@ func NewKeeper(
 	}
 	k.Schema = schema
 	return k
-}
-
-func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // GetAuthority returns the authority of the keeper. Should be the governance module address.

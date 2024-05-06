@@ -3,6 +3,7 @@ package ante_test
 import (
 	"testing"
 
+	math "cosmossdk.io/math"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -35,13 +36,13 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 	}
 
 	newStakeCoin := func(amt uint64) sdk.Coin {
-		return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(amt))
+		return sdk.NewCoin(sdk.DefaultBondDenom, math.NewIntFromUint64(amt))
 	}
 	newArchCoin := func(amt uint64) sdk.Coin {
-		return sdk.NewCoin("uarch", sdk.NewIntFromUint64(amt))
+		return sdk.NewCoin("uarch", math.NewIntFromUint64(amt))
 	}
 	newInvalidCoin := func() sdk.Coin {
-		return sdk.Coin{Denom: "", Amount: sdk.OneInt()}
+		return sdk.Coin{Denom: "", Amount: math.OneInt()}
 	}
 
 	testCases := []testCase{
@@ -107,7 +108,7 @@ func TestRewardsFeeDeductionAnteHandler(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create chain
-			feeRewardsRatio, err := sdk.NewDecFromStr(tc.feeRebateRatio)
+			feeRewardsRatio, err := math.LegacyNewDecFromStr(tc.feeRebateRatio)
 			require.NoError(t, err)
 
 			chain := e2eTesting.NewTestChain(t, 1,

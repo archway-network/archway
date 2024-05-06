@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	math "cosmossdk.io/math"
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/rewards/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TestGenesisImportExport check genesis import/export.
@@ -34,8 +34,8 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 	})
 
 	newParams := types.NewParams(
-		sdk.NewDecWithPrec(99, 2),
-		sdk.NewDecWithPrec(98, 2),
+		math.LegacyNewDecWithPrec(99, 2),
+		math.LegacyNewDecWithPrec(98, 2),
 		1001,
 		types.DefaultMinPriceOfGas,
 	)
@@ -55,12 +55,12 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 	newBlockRewards := []types.BlockRewards{
 		{
 			Height:           100,
-			InflationRewards: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(100)},
+			InflationRewards: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(100)},
 			MaxGas:           1000,
 		},
 		{
 			Height:           200,
-			InflationRewards: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(200)},
+			InflationRewards: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(200)},
 			MaxGas:           2000,
 		},
 	}
@@ -70,32 +70,32 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 			TxId:   110,
 			Height: 100,
 			FeeRewards: []sdk.Coin{
-				{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(150)},
+				{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(150)},
 			},
 		},
 		{
 			TxId:   210,
 			Height: 200,
 			FeeRewards: []sdk.Coin{
-				{Denom: "uarch", Amount: sdk.NewInt(250)},
+				{Denom: "uarch", Amount: math.NewInt(250)},
 			},
 		},
 	}
 
-	newMinConsFee := sdk.NewDecCoin("uarch", sdk.NewInt(100))
+	newMinConsFee := sdk.NewDecCoin("uarch", math.NewInt(100))
 
 	newRewardsRecords := []types.RewardsRecord{
 		{
 			Id:               1,
 			RewardsAddress:   accAddrs[0].String(),
-			Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+			Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 			CalculatedHeight: ctx.BlockHeight(),
 			CalculatedTime:   ctx.BlockTime(),
 		},
 		{
 			Id:               2,
 			RewardsAddress:   accAddrs[1].String(),
-			Rewards:          sdk.NewCoins(sdk.NewCoin("uarch", sdk.NewInt(1))),
+			Rewards:          sdk.NewCoins(sdk.NewCoin("uarch", math.NewInt(1))),
 			CalculatedHeight: ctx.BlockHeight() + 1,
 			CalculatedTime:   ctx.BlockTime().Add(5 * time.Second),
 		},
@@ -104,11 +104,11 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 	newFlatFees := []types.FlatFee{
 		{
 			ContractAddress: contractAddrs[0].String(),
-			FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
 		},
 		{
 			ContractAddress: contractAddrs[1].String(),
-			FlatFee:         sdk.NewCoin("uarch", sdk.NewInt(1)),
+			FlatFee:         sdk.NewCoin("uarch", math.NewInt(1)),
 		},
 	}
 

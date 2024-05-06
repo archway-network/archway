@@ -1,18 +1,18 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	math "cosmossdk.io/math"
 	"github.com/archway-network/archway/x/rewards/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InflationRewardsRatio return inflation rewards params ratio.
-func (k Keeper) InflationRewardsRatio(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) InflationRewardsRatio(ctx sdk.Context) (res math.LegacyDec) {
 	return k.GetParams(ctx).InflationRewardsRatio
 }
 
 // TxFeeRebateRatio return tx fee rebate rewards params ratio.
-func (k Keeper) TxFeeRebateRatio(ctx sdk.Context) (res sdk.Dec) {
+func (k Keeper) TxFeeRebateRatio(ctx sdk.Context) (res math.LegacyDec) {
 	return k.GetParams(ctx).TxFeeRebateRatio
 }
 

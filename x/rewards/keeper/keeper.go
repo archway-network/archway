@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/archway-network/archway/internal/collcompat"
@@ -38,15 +37,15 @@ type TrackingKeeperExpected interface {
 
 // AuthKeeperExpected defines the interface for the x/auth module dependency.
 type AuthKeeperExpected interface {
-	GetModuleAccount(ctx sdk.Context, name string) authTypes.ModuleAccountI
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authTypes.AccountI
+	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 // BankKeeperExpected defines the interface for the x/bank module dependency.
 type BankKeeperExpected interface {
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 }
 
 func NewTxRewardsIndex(sb *collections.SchemaBuilder) TxRewardsIndex {

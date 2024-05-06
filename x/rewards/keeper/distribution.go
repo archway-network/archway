@@ -3,11 +3,11 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	math "cosmossdk.io/math"
 	"github.com/archway-network/archway/dmap"
 	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/rewards/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (
@@ -77,7 +77,7 @@ func (k Keeper) estimateBlockGasUsage(ctx sdk.Context, height int64) *blockRewar
 				contractDistrState = &contractRewardsDistributionState{
 					ContractAddress:     contractOp.MustGetContractAddress(),
 					TxGasUsed:           make(map[uint64]uint64, 0),
-					InflationaryRewards: sdk.Coin{Amount: sdk.ZeroInt()}, // necessary to avoid nil pointer panic on Coins.Add call
+					InflationaryRewards: sdk.Coin{Amount: math.ZeroInt()}, // necessary to avoid nil pointer panic on Coins.Add call
 				}
 				// we only add it to the contract distribution state only if a metadata is found for the provided contract.
 				if metadata, err := k.ContractMetadata.Get(ctx, contractDistrState.ContractAddress); err == nil {
@@ -136,7 +136,7 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 
 			inflationRewards := sdk.NewCoin(
 				blockRewards.InflationRewards.Denom,
-				sdk.NewDecFromInt(blockRewards.InflationRewards.Amount).Mul(rewardsShare).TruncateInt(),
+				math.LegacyNewDecFromInt(blockRewards.InflationRewards.Amount).Mul(rewardsShare).TruncateInt(),
 			)
 			contractDistrState.InflationaryRewards = inflationRewards
 		}
@@ -155,7 +155,7 @@ func (k Keeper) estimateBlockRewards(ctx sdk.Context, blockDistrState *blockRewa
 			for _, feeCoin := range txFees {
 				feeRewards := sdk.NewCoin(
 					feeCoin.Denom,
-					sdk.NewDecFromInt(feeCoin.Amount).Mul(rewardsShare).TruncateInt(),
+					math.LegacyNewDecFromInt(feeCoin.Amount).Mul(rewardsShare).TruncateInt(),
 				)
 				contractDistrState.FeeRewards = contractDistrState.FeeRewards.Add(feeRewards)
 			}

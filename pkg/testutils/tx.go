@@ -11,8 +11,8 @@ type MockFeeTx struct {
 	fees       sdk.Coins
 	gas        uint64
 	msgs       []sdk.Msg
-	feePayer   sdk.AccAddress
-	feeGranter sdk.AccAddress
+	feePayer   []byte
+	feeGranter []byte
 }
 
 type MockFeeTxOption func(tx *MockFeeTx)
@@ -77,11 +77,11 @@ func (tx MockFeeTx) GetFee() sdk.Coins {
 }
 
 // FeePayer implements the sdk.FeeTx interface.
-func (tx MockFeeTx) FeePayer() sdk.AccAddress {
+func (tx MockFeeTx) FeePayer() []byte {
 	return tx.feePayer
 }
 
 // FeeGranter implements the sdk.FeeTx interface.
-func (tx MockFeeTx) FeeGranter() sdk.AccAddress {
+func (tx MockFeeTx) FeeGranter() []byte {
 	return tx.feeGranter
 }

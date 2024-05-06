@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
-	storeTypes "cosmossdk.io/store/types"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -13,7 +13,7 @@ import (
 
 // ContractOpInfoState provides access to the types.ContractOperationInfo objects storage operations.
 type ContractOpInfoState struct {
-	stateStore storeTypes.KVStore
+	stateStore storetypes.KVStore
 	cdc        codec.Codec
 	ctx        sdk.Context
 }
@@ -50,7 +50,7 @@ func (s ContractOpInfoState) GetContractOpInfo(id uint64) (types.ContractOperati
 func (s ContractOpInfoState) GetContractOpInfoByTxID(txID uint64) (objs []types.ContractOperationInfo) {
 	store := prefix.NewStore(s.stateStore, types.ContractOpInfoTxIndexPrefix)
 
-	iterator := sdk.KVStorePrefixIterator(store, s.buildTxIndexPrefix(txID))
+	iterator := storetypes.KVStorePrefixIterator(store, s.buildTxIndexPrefix(txID))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -71,7 +71,7 @@ func (s ContractOpInfoState) GetContractOpInfoByTxID(txID uint64) (objs []types.
 func (s ContractOpInfoState) DeleteContractOpsByTxID(txID uint64) []uint64 {
 	store := prefix.NewStore(s.stateStore, types.ContractOpInfoTxIndexPrefix)
 
-	iterator := sdk.KVStorePrefixIterator(store, s.buildTxIndexPrefix(txID))
+	iterator := storetypes.KVStorePrefixIterator(store, s.buildTxIndexPrefix(txID))
 	defer iterator.Close()
 
 	var txIndexKeys [][]byte

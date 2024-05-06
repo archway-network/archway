@@ -1,8 +1,10 @@
 package pkg
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	math "cosmossdk.io/math"
+)
 
 // NewDecFromUint64 converts a uint64 value to the sdk.Dec.
-func NewDecFromUint64(v uint64) sdk.Dec {
-	return sdk.NewDecFromInt(sdk.NewIntFromUint64(v))
+func NewDecFromUint64(v uint64) math.LegacyDec {
+	return math.LegacyNewDecFromInt(math.NewIntFromUint64(v))
 }

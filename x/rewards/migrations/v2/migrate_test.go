@@ -3,11 +3,11 @@ package v2_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/stretchr/testify/require"
 
 	"github.com/archway-network/archway/x/rewards"
 	"github.com/archway-network/archway/x/rewards/exported"
@@ -31,8 +31,8 @@ func TestMigrateStore(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(rewards.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(types.ModuleName)
-	tKey := sdk.NewTransientStoreKey("transient_test")
+	storeKey := storetypes.NewKVStoreKey(types.ModuleName)
+	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 

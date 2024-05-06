@@ -82,3 +82,9 @@ func (a AppModule) ConsensusVersion() uint64 { return 0 }
 func (a AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 func (a AppModule) RegisterInterfaces(_ codectypes.InterfaceRegistry) {}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}

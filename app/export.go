@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 
+	storetypes "cosmossdk.io/store/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -19,7 +19,7 @@ func (app *ArchwayApp) ExportAppStateAndValidators(
 	forZeroHeight bool, jailAllowedAddrs []string, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	// as if they could withdraw from the start of the next block
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	ctx := app.NewContextLegacy(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	// We export at last height + 1, because that's the height at which
 	// Tendermint will start InitChain.
@@ -29,7 +29,10 @@ func (app *ArchwayApp) ExportAppStateAndValidators(
 		app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
 	}
 
-	genState := app.mm.ExportGenesisForModules(ctx, app.appCodec, modulesToExport)
+	genState, err := app.mm.ExportGenesisForModules(ctx, app.appCodec, modulesToExport)
+	if err != nil {
+		return servertypes.ExportedApp{}, err
+	}
 	appState, err := json.MarshalIndent(genState, "", "  ")
 	if err != nil {
 		return servertypes.ExportedApp{}, err
@@ -73,12 +76,19 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 
 	// withdraw all validator commission
 	app.Keepers.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, _ = app.Keepers.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator()) //nolint:errcheck
+		valBz, err := app.Keepers.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+		if err != nil {
+			panic(err)
+		}
+		_, _ = app.Keepers.DistrKeeper.WithdrawValidatorCommission(ctx, valBz) //nolint:errcheck
 		return false
 	})
 
 	// withdraw all delegator rewards
-	dels := app.Keepers.StakingKeeper.GetAllDelegations(ctx)
+	dels, err := app.Keepers.StakingKeeper.GetAllDelegations(ctx)
+	if err != nil {
+		panic(err)
+	}
 	for _, delegation := range dels {
 		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		if err != nil {
@@ -104,13 +114,26 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 
 	// reinitialize all validators
 	app.Keepers.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+		valBz, err := app.Keepers.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+		if err != nil {
+			panic(err)
+		}
 		// donate any unwithdrawn outstanding reward fraction tokens to the community pool
-		scraps := app.Keepers.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
-		feePool := app.Keepers.DistrKeeper.GetFeePool(ctx)
+		scraps, err := app.Keepers.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, valBz)
+		if err != nil {
+			panic(err)
+		}
+		feePool, err := app.Keepers.DistrKeeper.FeePool.Get(ctx)
+		if err != nil {
+			panic(err)
+		}
 		feePool.CommunityPool = feePool.CommunityPool.Add(scraps...)
-		app.Keepers.DistrKeeper.SetFeePool(ctx, feePool)
+		err = app.Keepers.DistrKeeper.FeePool.Set(ctx, feePool)
+		if err != nil {
+			panic(err)
+		}
 
-		err := app.Keepers.DistrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+		err = app.Keepers.DistrKeeper.Hooks().AfterValidatorCreated(ctx, valBz)
 		if err != nil {
 			panic(err)
 		}
@@ -163,13 +186,13 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 	// Iterate through validators by power descending, reset bond heights, and
 	// update bond intra-tx counters.
 	store := ctx.KVStore(app.keys[stakingtypes.StoreKey])
-	iter := sdk.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
+	iter := storetypes.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
 	counter := int16(0)
 
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(iter.Key()[1:])
-		validator, found := app.Keepers.StakingKeeper.GetValidator(ctx, addr)
-		if !found {
+		validator, err := app.Keepers.StakingKeeper.GetValidator(ctx, addr)
+		if err != nil {
 			panic("expected validator, not found")
 		}
 
@@ -184,7 +207,7 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 
 	iter.Close()
 
-	_, err := app.Keepers.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	_, err = app.Keepers.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}

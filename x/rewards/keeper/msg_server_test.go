@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
+	math "cosmossdk.io/math"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -360,7 +361,7 @@ func (s *KeeperTestSuite) TestMsgServer_UpdateParams() {
 			testCase: "fail: invalid params",
 			prepare: func() *rewardstypes.MsgUpdateParams {
 				params := rewardstypes.DefaultParams()
-				params.InflationRewardsRatio = sdk.NewDecWithPrec(-2, 2)
+				params.InflationRewardsRatio = math.LegacyNewDecWithPrec(-2, 2)
 				return &rewardstypes.MsgUpdateParams{
 					Authority: govAddress.String(),
 					Params:    params,

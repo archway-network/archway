@@ -3,13 +3,14 @@ package pkg
 import (
 	"fmt"
 
+	math "cosmossdk.io/math"
 	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // WasmCoinToSDK converts wasmVmTypes.Coin to sdk.Coin.
 func WasmCoinToSDK(coin wasmVmTypes.Coin) (sdk.Coin, error) {
-	amount, ok := sdk.NewIntFromString(coin.Amount)
+	amount, ok := math.NewIntFromString(coin.Amount)
 	if !ok {
 		return sdk.Coin{}, fmt.Errorf("invalid amount: %s", coin.Amount)
 	}

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -31,7 +32,7 @@ func TestEndBlocker(t *testing.T) {
 	)
 	params := types.Params{
 		ErrorStoredTime:    5,
-		SubscriptionFee:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+		SubscriptionFee:    sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)),
 		SubscriptionPeriod: 5,
 	}
 	err := keeper.SetParams(ctx, params)

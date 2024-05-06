@@ -3,6 +3,7 @@ package mintbankkeeper_test
 import (
 	"testing"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -116,7 +117,7 @@ func TestMintBankKeeper(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create chain
-			inflationRewardsRatio, err := sdk.NewDecFromStr(tc.inflationRewardsRatio)
+			inflationRewardsRatio, err := math.LegacyNewDecFromStr(tc.inflationRewardsRatio)
 			require.NoError(t, err)
 
 			chain := e2eTesting.NewTestChain(t, 1,
@@ -196,7 +197,7 @@ func TestMintBankKeeper(t *testing.T) {
 					Denom: sdk.DefaultBondDenom,
 					Amount: sdk.NewDecCoinFromCoin(rewardsDiffExpected[0]).Amount.Quo(
 						pkg.NewDecFromUint64(maxGasExpected).Mul(
-							keepers.RewardsKeeper.TxFeeRebateRatio(ctx).Sub(sdk.OneDec()),
+							keepers.RewardsKeeper.TxFeeRebateRatio(ctx).Sub(math.LegacyOneDec()),
 						),
 					).Neg(),
 				}

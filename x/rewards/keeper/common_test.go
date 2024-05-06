@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/collections"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
@@ -43,7 +44,7 @@ func (s *KeeperTestSuite) SetupWithdrawTest(testData []withdrawTestRecordData) {
 
 		err = keepers.RewardsKeeper.BlockRewards.Set(ctx, uint64(ctx.BlockHeight()), rewardsTypes.BlockRewards{
 			Height:           ctx.BlockHeight(),
-			InflationRewards: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+			InflationRewards: sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
 			MaxGas:           0,
 		})
 		s.Require().NoError(err)

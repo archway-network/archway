@@ -133,3 +133,9 @@ func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {}
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, a.keeper, a.wasmKeeper, a.errorsKeeper)
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}

@@ -1,6 +1,8 @@
 package types
 
 import (
+	context "context"
+
 	wasmdtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -20,7 +22,7 @@ type WasmKeeperExpected interface {
 // BankKeeperExpected is a subset of the expected bank keeper
 type BankKeeperExpected interface {
 	// SendCoinsFromAccountToModule sends coins from an account to a module
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
 // RewardsKeeperExpected is a subset of the expected rewards keeper

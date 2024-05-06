@@ -5,21 +5,21 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	math "cosmossdk.io/math"
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestGRPC_Params() {
 	ctx, k := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
 	querySrvr := keeper.NewQueryServer(k)
 	params := rewardsTypes.Params{
-		InflationRewardsRatio: sdk.MustNewDecFromStr("0.1"),
-		TxFeeRebateRatio:      sdk.MustNewDecFromStr("0.1"),
+		InflationRewardsRatio: math.LegacyMustNewDecFromStr("0.1"),
+		TxFeeRebateRatio:      math.LegacyMustNewDecFromStr("0.1"),
 		MaxWithdrawRecords:    uint64(2),
 		MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 	}

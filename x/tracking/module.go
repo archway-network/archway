@@ -146,3 +146,9 @@ func (a AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 func (a AppModule) WeightedOperations(_ module.SimulationState) []simTypes.WeightedOperation {
 	return []simTypes.WeightedOperation{}
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
