@@ -7,14 +7,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clientTypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	connectionTypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
-	channelTypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	commitmentTypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
-	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
-	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	clientTypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	connectionTypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	channelTypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	commitmentTypes "github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
-	ibcTmTypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	ibcTmTypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	"github.com/stretchr/testify/require"
 )
 

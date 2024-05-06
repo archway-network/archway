@@ -14,7 +14,7 @@ import (
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	channelTypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	channelTypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
 	voterCustomTypes "github.com/archway-network/voter/src/pkg/archway/custom"
 	voterState "github.com/archway-network/voter/src/state"

@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 )
 
 // ICAOwnerFromPort returns the owner address from the port
