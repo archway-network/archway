@@ -1,6 +1,8 @@
 package upgrade2_0_0
 
 import (
+	"context"
+
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -25,7 +27,7 @@ const Name = "v2.0.0"
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
 	CreateUpgradeHandler: func(mm *module.Manager, cfg module.Configurator, _ keepers.ArchwayKeepers) upgradetypes.UpgradeHandler {
-		return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 
 			// Set Initial Consensus Version
 			icaModule := mm.Modules[icatypes.ModuleName]

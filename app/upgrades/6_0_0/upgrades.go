@@ -1,11 +1,12 @@
 package upgrade6_0_0
 
 import (
+	"context"
+
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -46,7 +47,7 @@ const NameAsciiArt = `
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
 	CreateUpgradeHandler: func(mm *module.Manager, cfg module.Configurator, keepers keepers.ArchwayKeepers) upgradetypes.UpgradeHandler {
-		baseAppLegacySS := keepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
+		//baseAppLegacySS := keepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 		// Set param key table for params module migration
 		for _, subspace := range keepers.ParamsKeeper.GetSubspaces() {
 			subspace := subspace
@@ -93,16 +94,17 @@ var Upgrade = upgrades.Upgrade{
 			}
 		}
 
-		return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			unwrappedCtx := sdk.UnwrapSDKContext(ctx)
 			// Migrate Tendermint consensus parameters from x/params module to a dedicated x/consensus module.
-			baseapp.MigrateParams(ctx, baseAppLegacySS, &keepers.ConsensusParamsKeeper)
+			//baseapp.MigrateParams(unwrappedCtx, baseAppLegacySS, &keepers.ConsensusParamsKeeper)
 
 			migrations, err := mm.RunMigrations(ctx, cfg, fromVM)
 			if err != nil {
 				return nil, err
 			}
 
-			ctx.Logger().Info(upgrades.ArchwayLogo + NameAsciiArt)
+			unwrappedCtx.Logger().Info(upgrades.ArchwayLogo + NameAsciiArt)
 			return migrations, nil
 		}
 	},

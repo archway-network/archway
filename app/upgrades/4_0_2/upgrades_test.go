@@ -82,8 +82,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 			upgradekeeper := suite.archway.GetApp().Keepers.UpgradeKeeper
 			err := upgradekeeper.ScheduleUpgrade(ctx, plan)
 			suite.Require().NoError(err)
-			_, exists := upgradekeeper.GetUpgradePlan(ctx)
-			suite.Require().True(exists)
+			_, err = upgradekeeper.GetUpgradePlan(ctx)
+			suite.Require().NoError(err)
 			ctx = ctx.WithBlockHeight(dummyUpgradeHeight)
 			suite.Require().NotPanics(func() {
 				suite.archway.GetApp().BeginBlocker(ctx, abci.RequestBeginBlock{})
