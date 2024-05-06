@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/pkg"

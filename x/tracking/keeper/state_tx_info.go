@@ -3,9 +3,9 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/store/prefix"
+	storeTypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/x/tracking/types"

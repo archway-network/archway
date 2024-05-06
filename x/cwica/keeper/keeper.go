@@ -8,9 +8,9 @@ import (
 	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/archway-network/archway/x/cwica/types"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
