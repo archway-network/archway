@@ -1,6 +1,10 @@
 package keepers
 
 import (
+	evidencekeeper "cosmossdk.io/x/evidence/keeper"
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
+	nftkeeper "cosmossdk.io/x/nft/keeper"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -9,16 +13,12 @@ import (
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 
 	"github.com/archway-network/archway/x/cwfees"
 

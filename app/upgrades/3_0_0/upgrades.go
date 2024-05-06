@@ -2,9 +2,9 @@ package upgrade3_0_0
 
 import (
 	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"

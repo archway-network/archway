@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
