@@ -13,8 +13,8 @@ require (
 	github.com/CosmWasm/wasmd v0.50.0
 	github.com/CosmWasm/wasmvm v1.5.2
 	github.com/archway-network/voter v0.0.0-00010101000000-000000000000
-	github.com/cometbft/cometbft v0.37.5
-	github.com/cometbft/cometbft-db v0.8.0
+	github.com/cometbft/cometbft v0.38.5
+	github.com/cometbft/cometbft-db v0.9.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.47.11
 	github.com/cosmos/gogoproto v1.4.10
