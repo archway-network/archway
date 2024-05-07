@@ -41,6 +41,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 ### Fixed
 
 ### Improvements
+- [#567](https://github.com/archway-network/archway/pull/567) - Remove redundant params fetching in SaveCallback 
 
 ## [v7.0.0](https://github.com/archway-network/archway/releases/tag/v7.0.0)
 
