@@ -1,12 +1,11 @@
 package e2eTesting
 
 import (
+	math "cosmossdk.io/math"
+	archway "github.com/archway-network/archway/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-
-	archway "github.com/archway-network/archway/types"
 
 	"github.com/archway-network/archway/app"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
@@ -98,7 +97,7 @@ func WithBlockGasLimit(gasLimit int64) TestChainConsensusParamsOption {
 }
 
 // WithInflationRewardsRatio sets x/rewards inflation rewards ratio parameter.
-func WithInflationRewardsRatio(ratio sdk.Dec) TestChainGenesisOption {
+func WithInflationRewardsRatio(ratio math.LegacyDec) TestChainGenesisOption {
 	return func(cdc codec.Codec, genesis app.GenesisState) {
 		var rewardsGenesis rewardsTypes.GenesisState
 		cdc.MustUnmarshalJSON(genesis[rewardsTypes.ModuleName], &rewardsGenesis)
@@ -122,7 +121,7 @@ func WithMaxWithdrawRecords(num uint64) TestChainGenesisOption {
 }
 
 // WithTxFeeRebatesRewardsRatio sets x/rewards tx fee rebates rewards ratio parameter.
-func WithTxFeeRebatesRewardsRatio(ratio sdk.Dec) TestChainGenesisOption {
+func WithTxFeeRebatesRewardsRatio(ratio math.LegacyDec) TestChainGenesisOption {
 	return func(cdc codec.Codec, genesis app.GenesisState) {
 		var rewardsGenesis rewardsTypes.GenesisState
 		cdc.MustUnmarshalJSON(genesis[rewardsTypes.ModuleName], &rewardsGenesis)
@@ -134,7 +133,7 @@ func WithTxFeeRebatesRewardsRatio(ratio sdk.Dec) TestChainGenesisOption {
 }
 
 // WithMintParams sets x/mint inflation calculation parameters.
-func WithMintParams(inflationMin, inflationMax sdk.Dec, blocksPerYear uint64) TestChainGenesisOption {
+func WithMintParams(inflationMin, inflationMax math.LegacyDec, blocksPerYear uint64) TestChainGenesisOption {
 	return func(cdc codec.Codec, genesis app.GenesisState) {
 		var mintGenesis mintTypes.GenesisState
 		cdc.MustUnmarshalJSON(genesis[mintTypes.ModuleName], &mintGenesis)

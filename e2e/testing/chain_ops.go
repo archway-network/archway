@@ -12,12 +12,13 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 
 	// Get params
 	k := chain.app.Keepers.GovKeeper
-	govParams := k.GetParams(chain.GetContext())
+	govParams, err := k.Params.Get(chain.GetContext())
+	require.NoError(t, err)
 	depositCoin := govParams.MinDeposit
 	votingDur := govParams.VotingPeriod
 
 	// Submit proposal with min deposit to start the voting
-	msg, err := govTypes.NewMsgSubmitProposal(proposals, depositCoin, proposerAcc.Address.String(), metadata, title, summary)
+	msg, err := govTypes.NewMsgSubmitProposal(proposals, depositCoin, proposerAcc.Address.String(), metadata, title, summary, false)
 	require.NoError(t, err)
 
 	_, res, _, err := chain.SendMsgs(proposerAcc, true, []sdk.Msg{msg})
@@ -43,8 +44,8 @@ func (chain *TestChain) ExecuteGovProposal(proposerAcc Account, expPass bool, pr
 	chain.NextBlock(0) // for the Gov EndBlocker to work
 
 	// Check if proposal was passed
-	proposal, ok := k.GetProposal(chain.GetContext(), proposalID)
-	require.True(t, ok)
+	proposal, err := k.Proposals.Get(chain.GetContext(), proposalID)
+	require.NoError(t, err)
 
 	if expPass {
 		require.Equal(t, govTypes.StatusPassed.String(), proposal.Status.String())

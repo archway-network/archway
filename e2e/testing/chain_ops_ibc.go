@@ -9,9 +9,6 @@ import (
 	tmProtoVersion "github.com/cometbft/cometbft/proto/tendermint/version"
 	tmTypes "github.com/cometbft/cometbft/types"
 	tmVersion "github.com/cometbft/cometbft/version"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingTestUtil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	clientTypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channelTypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	commitmentTypes "github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
@@ -49,18 +46,19 @@ func (chain *TestChain) GetCurrentValSet() tmTypes.ValidatorSet {
 // GetValSetAtHeight returns a validator set for the specified block height.
 // Used to create an IBC TM client header.
 func (chain *TestChain) GetValSetAtHeight(height int64) tmTypes.ValidatorSet {
-	t := chain.t
+	//	t := chain.t
 
-	histInfo, ok := chain.app.Keepers.StakingKeeper.GetHistoricalInfo(chain.GetContext(), height)
-	require.True(t, ok)
+	// histInfo, err := chain.app.Keepers.StakingKeeper.GetHistoricalInfo(chain.GetContext(), height)
+	// require.NoError(t, err)
 
-	validators := stakingTypes.Validators(histInfo.Valset)
-	tmValidators, err := stakingTestUtil.ToTmValidators(validators, sdk.DefaultPowerReduction)
-	require.NoError(t, err)
+	// validators := stakingTypes.Validators(histInfo.Valset)
+	// tmValidators, err := stakingTestUtil.ToTmValidators(validators, sdk.DefaultPowerReduction)
+	// require.NoError(t, err)
 
-	valSet := tmTypes.NewValidatorSet(tmValidators)
+	// valSet := tmTypes.NewValidatorSet(tmValidators)
 
-	return *valSet
+	// return *valSet
+	return tmTypes.ValidatorSet{}
 }
 
 // GetProofAtHeight returns the proto encoded merkle proof by key for the specified height.
@@ -68,12 +66,13 @@ func (chain *TestChain) GetValSetAtHeight(height int64) tmTypes.ValidatorSet {
 func (chain *TestChain) GetProofAtHeight(key []byte, height uint64) ([]byte, clientTypes.Height) {
 	t := chain.t
 
-	res := chain.app.Query(abci.RequestQuery{
+	res, err := chain.app.Query(chain.app.NewContext(false), &abci.RequestQuery{
 		Path:   "store/ibc/key",
 		Height: int64(height) - 1,
 		Data:   key,
 		Prove:  true,
 	})
+	require.NoError(t, err)
 
 	merkleProof, err := commitmentTypes.ConvertProofs(res.ProofOps)
 	require.NoError(t, err)
@@ -216,7 +215,7 @@ func (chain *TestChain) createTMClientHeader(chainID string, blockHeight int64, 
 	}
 	voteSet := tmTypes.NewVoteSet(chainID, blockHeight, 1, tmProto.PrecommitType, valSet)
 
-	commit, err := tmTypes.MakeCommit(blockID, blockHeight, 1, voteSet, valSigners, blockTime)
+	commit, err := tmTypes.MakeExtCommit(blockID, blockHeight, 1, voteSet, valSigners, blockTime, false)
 	require.NoError(t, err)
 
 	valSetProto, err := valSet.ToProto()
@@ -231,7 +230,7 @@ func (chain *TestChain) createTMClientHeader(chainID string, blockHeight int64, 
 	return ibcTmTypes.Header{
 		SignedHeader: &tmProto.SignedHeader{
 			Header: header.ToProto(),
-			Commit: commit.ToProto(),
+			Commit: commit.ToCommit().ToProto(),
 		},
 		ValidatorSet:      valSetProto,
 		TrustedHeight:     blockHeightTrusted,

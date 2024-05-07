@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	math "cosmossdk.io/math"
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -66,11 +67,11 @@ func GenContractAddresses(num uint) []sdk.AccAddress {
 // HumanizeCoins returns the sdk.Coins string representation with a number of decimals specified.
 // 1123000stake -> 1.123stake with 6 decimals (3 numbers after the dot is hardcoded).
 func HumanizeCoins(decimals uint8, coins ...sdk.Coin) string {
-	baseDec := sdk.NewDecWithPrec(1, int64(decimals))
+	baseDec := math.LegacyNewDecWithPrec(1, int64(decimals))
 
 	strs := make([]string, 0, len(coins))
 	for _, coin := range coins {
-		amtDec := sdk.NewDecFromInt(coin.Amount).Mul(baseDec)
+		amtDec := math.LegacyNewDecFromInt(coin.Amount).Mul(baseDec)
 		amtFloat, _ := amtDec.Float64()
 
 		strs = append(strs, fmt.Sprintf("%.03f%s", amtFloat, coin.Denom))
@@ -82,7 +83,7 @@ func HumanizeCoins(decimals uint8, coins ...sdk.Coin) string {
 // HumanizeDecCoins returns the sdk.DecCoins string representation.
 // 1000.123456789stake -> 1.123456stake with 3 decimals (6 numbers after the dot is hardcoded).
 func HumanizeDecCoins(decimals uint8, coins ...sdk.DecCoin) string {
-	baseDec := sdk.NewDecWithPrec(1, int64(decimals))
+	baseDec := math.LegacyNewDecWithPrec(1, int64(decimals))
 
 	strs := make([]string, 0, len(coins))
 	for _, coin := range coins {

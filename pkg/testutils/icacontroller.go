@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	types0 "github.com/cosmos/cosmos-sdk/types"
-	types2 "github.com/cosmos/cosmos-sdk/x/capability/types"
+	types2 "github.com/cosmos/ibc-go/modules/capability/types"
 	types3 "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 )
 

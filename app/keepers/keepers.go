@@ -9,7 +9,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -19,6 +18,7 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 
 	"github.com/archway-network/archway/x/cwfees"
 

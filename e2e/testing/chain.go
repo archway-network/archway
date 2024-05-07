@@ -8,23 +8,24 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
+	"cosmossdk.io/log"
+	math "cosmossdk.io/math"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	dbm "github.com/cometbft/cometbft-db"
+	"github.com/archway-network/archway/app"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	tmProto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmTypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptoCodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptoTypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -33,8 +34,6 @@ import (
 	"github.com/cosmos/ibc-go/v8/testing/mock"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/stretchr/testify/require"
-
-	"github.com/archway-network/archway/app"
 )
 
 var TestAccountAddr = sdk.AccAddress("test")
@@ -89,7 +88,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	// Pick your poison here =)
 	logger := log.NewNopLogger()
 	if chainCfg.LoggerEnabled {
-		logger = log.TestingLogger()
+		logger = log.NewTestLogger(t)
 	}
 
 	archApp := app.NewArchwayApp(
@@ -133,11 +132,11 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		genAccs = append(genAccs, authTypes.NewBaseAccount(TestAccountAddr, nil, uint64(len(genAccs))-1, 0)) // deterministic account for testing purposes
 	}
 
-	genAmt, ok := sdk.NewIntFromString(chainCfg.GenBalanceAmount)
+	genAmt, ok := math.NewIntFromString(chainCfg.GenBalanceAmount)
 	require.True(t, ok)
 	genCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, genAmt))
 
-	bondAmt, ok := sdk.NewIntFromString(chainCfg.BondAmount)
+	bondAmt, ok := math.NewIntFromString(chainCfg.BondAmount)
 	require.True(t, ok)
 	bondCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))
 
@@ -161,16 +160,16 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 			Jailed:            false,
 			Status:            stakingTypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
+			DelegatorShares:   math.LegacyOneDec(),
 			Description:       stakingTypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingTypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			MinSelfDelegation: sdk.ZeroInt(),
+			Commission:        stakingTypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+			MinSelfDelegation: math.ZeroInt(),
 		}
 
 		stakingValidators = append(stakingValidators, validator)
-		stakingDelegations = append(stakingDelegations, stakingTypes.NewDelegation(genAccs[i].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		stakingDelegations = append(stakingDelegations, stakingTypes.NewDelegation(genAccs[i].GetAddress().String(), val.Address.String(), math.LegacyOneDec()))
 	}
 
 	stakingGenesis := stakingTypes.NewGenesisState(stakingTypes.DefaultParams(), stakingValidators, stakingDelegations)
@@ -238,7 +237,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	require.NoError(t, err)
 
 	archApp.InitChain(
-		abci.RequestInitChain{
+		&abci.RequestInitChain{
 			ChainId:         chainid,
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: consensusParams,
@@ -296,7 +295,7 @@ func (chain *TestChain) GetModuleBalance(moduleName string) sdk.Coins {
 
 // GetContext returns a context for the current block.
 func (chain *TestChain) GetContext() sdk.Context {
-	ctx := chain.app.BaseApp.NewContext(false, chain.curHeader)
+	ctx := chain.app.BaseApp.NewContext(false)
 
 	blockGasMeter := sdk.NewInfiniteGasMeter()
 	blockMaxGas := chain.app.GetConsensusParams(ctx).Block.MaxGas
@@ -329,7 +328,11 @@ func (chain *TestChain) GetBlockHeight() int64 {
 
 // GetUnbondingTime returns x/staking validator unbonding time.
 func (chain *TestChain) GetUnbondingTime() time.Duration {
-	return chain.app.Keepers.StakingKeeper.UnbondingTime(chain.GetContext())
+	unbondingTime, err := chain.app.Keepers.StakingKeeper.UnbondingTime(chain.GetContext())
+	if err != nil {
+		panic(err)
+	}
+	return unbondingTime
 }
 
 // GetApp returns the application.
@@ -376,7 +379,6 @@ func (chain *TestChain) BeginBlock() []abci.Event {
 				Address: v.Address,
 				Power:   v.VotingPower,
 			},
-			SignedLastBlock: true,
 		}
 	}
 
@@ -527,7 +529,7 @@ func (chain *TestChain) ParseSDKResultData(r *sdk.Result) sdk.TxMsgData {
 func (chain *TestChain) GetDefaultTxFee() sdk.Coins {
 	t := chain.t
 
-	feeAmt, ok := sdk.NewIntFromString(chain.cfg.DefaultFeeAmt)
+	feeAmt, ok := math.NewIntFromString(chain.cfg.DefaultFeeAmt)
 	require.True(t, ok)
 
 	return sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, feeAmt))
