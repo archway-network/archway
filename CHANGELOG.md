@@ -39,6 +39,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 ### Removed
 
 ### Fixed
+- [#568](https://github.com/archway-network/archway/pull/568) - Update Swagger doc and config to include CWICA and CWErrors modules
 
 ### Improvements
 - [#567](https://github.com/archway-network/archway/pull/567) - Remove redundant params fetching in SaveCallback 
