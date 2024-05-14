@@ -75,7 +75,7 @@ message MsgSendTx {
 ```
 
 On Success
-* An ibc packet is created which will be executed on the counterparty chain
+* An ibc packet is created will need to be picked up by the relayer
 
 This mesasge is expected to fail if:
 * There are no msgs to be executed
