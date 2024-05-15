@@ -7,10 +7,10 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -92,6 +92,7 @@ type Keeper struct {
 	authKeeper       AuthKeeperExpected
 	bankKeeper       BankKeeperExpected
 	authority        string // this should be the x/gov module account
+	logger           log.Logger
 
 	Schema collections.Schema
 
@@ -106,7 +107,17 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace, authority string) Keeper {
+func NewKeeper(
+	cdc codec.Codec,
+	key storetypes.StoreKey,
+	contractInfoReader ContractInfoReaderExpected,
+	trackingKeeper TrackingKeeperExpected,
+	ak AuthKeeperExpected,
+	bk BankKeeperExpected,
+	ps paramTypes.Subspace,
+	authority string,
+	logger log.Logger,
+) Keeper {
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
@@ -122,6 +133,7 @@ func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader Cont
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		authority:        authority,
+		logger:           logger.With("module", "x/"+types.ModuleName),
 		Params: collections.NewItem(
 			schemaBuilder,
 			types.ParamsPrefix,
@@ -191,7 +203,7 @@ func (k *Keeper) SetContractInfoViewer(viewer ContractInfoReaderExpected) {
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+	return k.logger
 }
 
 // UndistributedRewardsPool returns the current undistributed rewards (yet to be withdrawn).

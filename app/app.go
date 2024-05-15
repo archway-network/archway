@@ -532,6 +532,7 @@ func NewArchwayApp(
 		appCodec,
 		keys[trackingTypes.StoreKey],
 		defaultGasRegister,
+		logger,
 	)
 
 	wasmDir := filepath.Join(homePath, "wasm")
@@ -592,6 +593,7 @@ func NewArchwayApp(
 		app.Keepers.BankKeeper,
 		app.getSubspace(rewardsTypes.ModuleName),
 		govModuleAddr,
+		logger,
 	)
 
 	// Note we set up mint keeper after the x/rewards keeper
@@ -622,6 +624,7 @@ func NewArchwayApp(
 		app.Keepers.RewardsKeeper,
 		app.Keepers.BankKeeper,
 		govModuleAddr,
+		logger,
 	)
 
 	app.Keepers.CWFeesKeeper = cwfees.NewKeeper(
@@ -639,6 +642,7 @@ func NewArchwayApp(
 		app.Keepers.ICAControllerKeeper,
 		app.Keepers.WASMKeeper,
 		govModuleAddr,
+		logger,
 	)
 
 	var transferStack porttypes.IBCModule

@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"cosmossdk.io/collections"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -20,6 +20,7 @@ type Keeper struct {
 	rewardsKeeper types.RewardsKeeperExpected
 	bankKeeper    types.BankKeeperExpected
 	authority     string // this should be the x/gov module account
+	logger        log.Logger
 
 	Schema collections.Schema
 
@@ -30,7 +31,15 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, wk types.WasmKeeperExpected, rk types.RewardsKeeperExpected, bk types.BankKeeperExpected, authority string) Keeper {
+func NewKeeper(
+	cdc codec.Codec,
+	storeKey storetypes.StoreKey,
+	wk types.WasmKeeperExpected,
+	rk types.RewardsKeeperExpected,
+	bk types.BankKeeperExpected,
+	authority string,
+	logger log.Logger,
+) Keeper {
 	sb := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
 	k := Keeper{
 		cdc:           cdc,
@@ -39,6 +48,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, wk types.WasmKeepe
 		rewardsKeeper: rk,
 		bankKeeper:    bk,
 		authority:     authority,
+		logger:        logger.With("module", "x/"+types.ModuleName),
 		Params: collections.NewItem(
 			sb,
 			types.ParamsKeyPrefix,
@@ -63,7 +73,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, wk types.WasmKeepe
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+	return k.logger
 }
 
 // GetAuthority returns the x/callback module's authority.

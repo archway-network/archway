@@ -2,12 +2,14 @@ package keeper
 
 import (
 	"cosmossdk.io/collections"
+	"cosmossdk.io/log"
 
 	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/archway-network/archway/x/cwica/types"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (
@@ -20,8 +22,8 @@ type (
 		icaControllerKeeper types.ICAControllerKeeper
 		sudoKeeper          types.WasmKeeper
 		authority           string
-
-		Schema collections.Schema
+		logger              log.Logger
+		Schema              collections.Schema
 
 		// Params key: ParamsKeyPrefix | value: Params
 		Params collections.Item[types.Params]
@@ -37,6 +39,7 @@ func NewKeeper(
 	icaControllerKeeper types.ICAControllerKeeper,
 	sudoKeeper types.WasmKeeper,
 	authority string,
+	logger log.Logger,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
 
@@ -49,6 +52,7 @@ func NewKeeper(
 		icaControllerKeeper: icaControllerKeeper,
 		sudoKeeper:          sudoKeeper,
 		authority:           authority,
+		logger:              logger.With("module", "x/"+types.ModuleName),
 		Params: collections.NewItem(
 			sb,
 			types.ParamsKeyPrefix,
@@ -68,6 +72,11 @@ func NewKeeper(
 // GetAuthority returns the authority of the keeper. Should be the governance module address.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return k.logger
 }
 
 // SetWasmKeeper sets the given wasm keeper.
