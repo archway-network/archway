@@ -61,7 +61,7 @@ var Upgrade = upgrades.Upgrade{
 				panic("module is not of type ica.AppModule")
 			}
 			// initialize ICS27 module
-			icamodule.InitModule(ctx, controllerParams, hostParams)
+			icamodule.InitModule(sdk.UnwrapSDKContext(ctx), controllerParams, hostParams)
 
 			return mm.RunMigrations(ctx, cfg, fromVM)
 		}

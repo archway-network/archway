@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "cosmossdk.io/store/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
@@ -13,7 +13,7 @@ import (
 
 // TestKeeper_HandleChanOpenAck tests the HandleChanOpenAck method
 func (s *KeeperTestSuite) TestHandleAcknowledgement() {
-	ctx, cwicaKeeper := s.chain.GetContext().WithBlockHeight(100).WithGasMeter(sdk.NewGasMeter(1_000_000_000_000)), s.chain.GetApp().Keepers.CWICAKeeper
+	ctx, cwicaKeeper := s.chain.GetContext().WithBlockHeight(100).WithGasMeter(storetypes.NewGasMeter(1_000_000_000_000)), s.chain.GetApp().Keepers.CWICAKeeper
 	wmKeeper, icaCtrlKeeper, channelKeeper := testutils.NewMockContractViewer(), testutils.NewMockICAControllerKeeper(), testutils.NewMockChannelKeeper()
 	cwicaKeeper.SetWasmKeeper(wmKeeper)
 	cwicaKeeper.SetICAControllerKeeper(icaCtrlKeeper)
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestHandleAcknowledgement() {
 
 // TestKeeper_HandleChanOpenAck tests the HandleChanOpenAck method
 func (s *KeeperTestSuite) TestHandleTimeout() {
-	ctx, cwicaKeeper := s.chain.GetContext().WithBlockHeight(100).WithGasMeter(sdk.NewGasMeter(1_000_000_000_000)), s.chain.GetApp().Keepers.CWICAKeeper
+	ctx, cwicaKeeper := s.chain.GetContext().WithBlockHeight(100).WithGasMeter(storetypes.NewGasMeter(1_000_000_000_000)), s.chain.GetApp().Keepers.CWICAKeeper
 	wmKeeper, icaCtrlKeeper, channelKeeper := testutils.NewMockContractViewer(), testutils.NewMockICAControllerKeeper(), testutils.NewMockChannelKeeper()
 	errorsKeeper := s.chain.GetApp().Keepers.CWErrorsKeeper
 	errorsKeeper.SetWasmKeeper(wmKeeper)
@@ -95,7 +95,7 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 
 // TestKeeper_HandleChanOpenAck tests the HandleChanOpenAck method
 func (s *KeeperTestSuite) TestHandleChanOpenAck() {
-	ctx, cwicaKeeper := s.chain.GetContext().WithBlockHeight(100).WithGasMeter(sdk.NewGasMeter(1_000_000_000_000)), s.chain.GetApp().Keepers.CWICAKeeper
+	ctx, cwicaKeeper := s.chain.GetContext().WithBlockHeight(100).WithGasMeter(storetypes.NewGasMeter(1_000_000_000_000)), s.chain.GetApp().Keepers.CWICAKeeper
 	wmKeeper, icaCtrlKeeper, channelKeeper := testutils.NewMockContractViewer(), testutils.NewMockICAControllerKeeper(), testutils.NewMockChannelKeeper()
 	cwicaKeeper.SetWasmKeeper(wmKeeper)
 	cwicaKeeper.SetICAControllerKeeper(icaCtrlKeeper)

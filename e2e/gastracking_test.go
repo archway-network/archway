@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"cosmossdk.io/math"
 	archway "github.com/archway-network/archway/types"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -27,8 +28,8 @@ import (
 //   - checks x/rewards events emitted;
 //   - checks rewards address receives distributed rewards;
 func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
-	txFeeRebateRewardsRatio := sdk.NewDecWithPrec(5, 1)
-	inflationRewardsRatio := sdk.NewDecWithPrec(5, 1)
+	txFeeRebateRewardsRatio := math.LegacyNewDecWithPrec(5, 1)
+	inflationRewardsRatio := math.LegacyNewDecWithPrec(5, 1)
 	blockGasLimit := int64(10_000_000)
 
 	// Setup (create new chain here with custom params)
@@ -38,8 +39,8 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		e2eTesting.WithBlockGasLimit(blockGasLimit),
 		// Artificially increase the minted inflation coin to get some rewards for the contract (otherwise contractOp gas / blockGasLimit ratio will be 0)
 		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(8, 1),
-			sdk.NewDecWithPrec(8, 1),
+			math.LegacyNewDecWithPrec(8, 1),
+			math.LegacyNewDecWithPrec(8, 1),
 			1000000,
 		),
 		// Set default Tx fee for non-manual transaction like Upload / Instantiate
@@ -53,7 +54,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	accAddrs, accPrivKeys := e2eTesting.GenAccounts(1) // an empty account
 
 	// Inputs
-	txFees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500_000_000_000_000)))
+	txFees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(500_000_000_000_000)))
 	rewardsAcc := e2eTesting.Account{
 		Address: accAddrs[0],
 		PrivKey: accPrivKeys[0],
@@ -84,7 +85,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 	}
 
 	// Send some coins to the rewardsAcc to pay withdraw Tx fees
-	rewardsAccInitialBalance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1).Mul(archway.DefaultPowerReduction)))
+	rewardsAccInitialBalance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1).Mul(archway.DefaultPowerReduction)))
 	{
 		s.Require().NoError(
 			keepers.BankKeeper.SendCoins(
@@ -120,9 +121,13 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		ctx := chain.GetContext()
 
 		mintKeeper := keepers.MintKeeper
-		mintParams := mintKeeper.GetParams(ctx)
+		mintParams, err := mintKeeper.Params.Get(ctx)
+		s.Require().NoError(err)
 
-		mintedCoin := keepers.MintKeeper.GetMinter(ctx).BlockProvision(mintParams)
+		minter, err := mintKeeper.Minter.Get(ctx)
+		s.Require().NoError(err)
+
+		mintedCoin := minter.BlockProvision(mintParams)
 		inflationRewards, _ := pkg.SplitCoins(sdk.NewCoins(mintedCoin), inflationRewardsRatio)
 		s.Require().Len(inflationRewards, 1)
 		blockInflationRewardsExpected = inflationRewards[0]
@@ -146,7 +151,7 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 			Msg:      reqBz,
 			Funds: sdk.NewCoins(sdk.Coin{
 				Denom:  sdk.DefaultBondDenom,
-				Amount: sdk.NewIntFromUint64(DefNewVotingCostAmt),
+				Amount: math.NewIntFromUint64(DefNewVotingCostAmt),
 			}),
 		}
 		gasInfo, _, events, _ := chain.SendMsgs(senderAcc, true, []sdk.Msg{&msg},
@@ -198,10 +203,10 @@ func (s *E2ETestSuite) TestGasTrackingAndRewardsDistribution() {
 		contractTxRewardsExpected = txFeeRewards
 
 		// Contract inflation rewards
-		contractToBlockGasRatio := sdk.NewDec(int64(txGasTracked)).Quo(sdk.NewDec(blockGasLimit))
+		contractToBlockGasRatio := math.LegacyNewDec(int64(txGasTracked)).Quo(math.LegacyNewDec(blockGasLimit))
 		contractInflationRewardsExpected = sdk.Coin{
 			Denom:  blockInflationRewardsExpected.Denom,
-			Amount: sdk.NewDecFromInt(blockInflationRewardsExpected.Amount).Mul(contractToBlockGasRatio).TruncateInt(),
+			Amount: math.LegacyNewDecFromInt(blockInflationRewardsExpected.Amount).Mul(contractToBlockGasRatio).TruncateInt(),
 		}
 
 		// Total

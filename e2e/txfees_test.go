@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,13 +48,13 @@ func (s *E2ETestSuite) TestTxFees() {
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)), // 50 % (Archway mainnet param)
-		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),    // 20 % (Archway mainnet param)
+		e2eTesting.WithTxFeeRebatesRewardsRatio(math.LegacyNewDecWithPrec(5, 1)), // 50 % (Archway mainnet param)
+		e2eTesting.WithInflationRewardsRatio(math.LegacyNewDecWithPrec(2, 1)),    // 20 % (Archway mainnet param)
 		// Set constant inflation rate
 		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)
-			sdk.NewDecWithPrec(10, 2), // 10% (Archway mainnet param)
-			uint64(60*60*8766/1),      // 1 seconds block time (Archway mainnet param)
+			math.LegacyNewDecWithPrec(10, 2), // 10% (Archway mainnet param)
+			math.LegacyNewDecWithPrec(10, 2), // 10% (Archway mainnet param)
+			uint64(60*60*8766/1),             // 1 seconds block time (Archway mainnet param)
 		),
 	)
 	keepers := chain.GetApp().Keepers
@@ -62,7 +63,7 @@ func (s *E2ETestSuite) TestTxFees() {
 	{
 		ctx := chain.GetContext()
 
-		totalSupplyMaxAmtExpected, ok := sdk.NewIntFromString("10000000500000000000") // small gap for minted coins for 2 blocks
+		totalSupplyMaxAmtExpected, ok := math.NewIntFromString("10000000500000000000") // small gap for minted coins for 2 blocks
 		s.Require().True(ok)
 
 		totalSupplyReceived := keepers.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
@@ -85,7 +86,7 @@ func (s *E2ETestSuite) TestTxFees() {
 				chain.GetContext(),
 				senderAcc.Address,
 				rewardsAcc.Address,
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000))), // 100.0
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000))), // 100.0
 			),
 		)
 	}
@@ -100,13 +101,16 @@ func (s *E2ETestSuite) TestTxFees() {
 	{
 		ctx := chain.GetContext()
 
-		mintParams := keepers.MintKeeper.GetParams(ctx)
-		mintedCoin := keepers.MintKeeper.GetMinter(ctx).BlockProvision(mintParams)
+		mintParams, err := keepers.MintKeeper.Params.Get(ctx)
+		s.Require().NoError(err)
+		minter, err := keepers.MintKeeper.Minter.Get(ctx)
+		s.Require().NoError(err)
+		mintedCoin := minter.BlockProvision(mintParams)
 		s.T().Logf("x/mint minted amount per block: %s", coinsToStr(mintedCoin))
 	}
 
 	var abciEvents []abci.Event
-	txFee := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(0)} // this one gonna increase
+	txFee := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(0)} // this one gonna increase
 	rewardsAccPrevBalance := chain.GetBalance(rewardsAcc.Address)
 
 	// Generate transactions and check fees (some txs might fail with InsufficientFee error)
@@ -115,7 +119,7 @@ func (s *E2ETestSuite) TestTxFees() {
 		txFee.Amount = txFee.Amount.AddRaw(txFeeAmtIncrement)
 
 		// Get min consensus fee for the current block and check the update event
-		minConsensusFee := sdk.DecCoin{Amount: sdk.ZeroDec()}
+		minConsensusFee := sdk.DecCoin{Amount: math.LegacyZeroDec()}
 		{
 			ctx := chain.GetContext()
 
@@ -154,7 +158,7 @@ func (s *E2ETestSuite) TestTxFees() {
 				Sender:   senderAcc.Address.String(),
 				Contract: contractAddr.String(),
 				Msg:      reqBz,
-				Funds:    sdk.NewCoins(sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewIntFromUint64(DefNewVotingCostAmt)}),
+				Funds:    sdk.NewCoins(sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: math.NewIntFromUint64(DefNewVotingCostAmt)}),
 			}
 
 			gasUsed, res, err := chain.SendMsgsRaw(senderAcc, []sdk.Msg{&msg},
@@ -220,7 +224,7 @@ func (s *E2ETestSuite) TestTxFees() {
 		}
 
 		// Withdraw rewards
-		withdrawTxFees := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.ZeroInt()}
+		withdrawTxFees := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: math.ZeroInt()}
 		{
 			const withdrawGas = 100_000
 

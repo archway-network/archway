@@ -456,6 +456,7 @@ func NewArchwayApp(
 		app.Keepers.StakingKeeper,
 		app.Keepers.UpgradeKeeper,
 		scopedIBCKeeper,
+		govModuleAddr,
 	)
 
 	// register the proposal types
@@ -470,7 +471,7 @@ func NewArchwayApp(
 		appCodec, keys[ibcfeetypes.StoreKey],
 		app.Keepers.IBCKeeper.ChannelKeeper, // may be replaced with IBC middleware
 		app.Keepers.IBCKeeper.ChannelKeeper,
-		&app.Keepers.IBCKeeper.PortKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper,
+		app.Keepers.IBCKeeper.PortKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper,
 	)
 
 	// Create Transfer Keepers
@@ -480,10 +481,12 @@ func NewArchwayApp(
 		app.getSubspace(ibctransfertypes.ModuleName),
 		app.Keepers.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
 		app.Keepers.IBCKeeper.ChannelKeeper,
-		&app.Keepers.IBCKeeper.PortKeeper,
+		app.Keepers.IBCKeeper.PortKeeper,
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
-		scopedTransferKeeper)
+		scopedTransferKeeper,
+		govModuleAddr,
+	)
 
 	transferModule := transfer.NewAppModule(app.Keepers.TransferKeeper)
 
@@ -493,9 +496,10 @@ func NewArchwayApp(
 		app.getSubspace(icacontrollertypes.SubModuleName),
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		app.Keepers.IBCKeeper.ChannelKeeper,
-		&app.Keepers.IBCKeeper.PortKeeper,
+		app.Keepers.IBCKeeper.PortKeeper,
 		scopedICAControllerKeeper,
 		app.MsgServiceRouter(),
+		govModuleAddr,
 	)
 
 	app.Keepers.ICAHostKeeper = icahostkeeper.NewKeeper(
@@ -504,10 +508,11 @@ func NewArchwayApp(
 		app.getSubspace(icahosttypes.SubModuleName),
 		app.Keepers.IBCFeeKeeper,
 		app.Keepers.IBCKeeper.ChannelKeeper,
-		&app.Keepers.IBCKeeper.PortKeeper,
+		app.Keepers.IBCKeeper.PortKeeper,
 		app.Keepers.AccountKeeper,
 		scopedICAHostKeeper,
 		app.MsgServiceRouter(),
+		govModuleAddr,
 	)
 
 	// create evidence keeper with router
@@ -551,20 +556,19 @@ func NewArchwayApp(
 	wasmOpts = append(wasmOpts, wasmdKeeper.WithQueryPlugins(&wasmdKeeper.QueryPlugins{
 		Stargate: wasmdKeeper.AcceptListStargateQuerier(getAcceptedStargateQueries(), app.GRPCQueryRouter(), appCodec),
 	}))
-	app.Keepers.GovKeeper.Votes.Get()
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
 	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.Keepers.RewardsKeeper, &app.Keepers.GovKeeper)...)
 
 	app.Keepers.WASMKeeper = wasmdKeeper.NewKeeper(
 		appCodec,
-		keys[wasmdTypes.StoreKey],
+		runtime.NewKVStoreService(keys[wasmdTypes.StoreKey]),
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
 		app.Keepers.StakingKeeper,
 		distrkeeper.NewQuerier(app.Keepers.DistrKeeper),
 		app.Keepers.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
 		app.Keepers.IBCKeeper.ChannelKeeper,
-		&app.Keepers.IBCKeeper.PortKeeper,
+		app.Keepers.IBCKeeper.PortKeeper,
 		scopedWasmKeeper,
 		app.Keepers.TransferKeeper,
 		app.MsgServiceRouter(),
@@ -620,7 +624,11 @@ func NewArchwayApp(
 		govModuleAddr,
 	)
 
-	app.Keepers.CWFeesKeeper = cwfees.NewKeeper(appCodec, keys[cwfees.ModuleName], app.Keepers.WASMKeeper)
+	app.Keepers.CWFeesKeeper = cwfees.NewKeeper(
+		appCodec,
+		keys[cwfees.ModuleName],
+		app.Keepers.WASMKeeper,
+	)
 
 	app.Keepers.CWICAKeeper = cwicakeeper.NewKeeper(
 		appCodec,
@@ -896,7 +904,7 @@ func NewArchwayApp(
 			IBCKeeper:             app.Keepers.IBCKeeper,
 			WasmConfig:            &wasmConfig,
 			RewardsAnteBankKeeper: app.Keepers.BankKeeper,
-			TXCounterStoreKey:     keys[wasmdTypes.StoreKey],
+			TXCounterStoreService: runtime.NewKVStoreService(keys[wasmdTypes.StoreKey]),
 			TrackingKeeper:        app.Keepers.TrackingKeeper,
 			RewardsKeeper:         app.Keepers.RewardsKeeper,
 			CWFeesKeeper:          app.Keepers.CWFeesKeeper,

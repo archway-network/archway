@@ -2,6 +2,7 @@ package testutils
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	proto "google.golang.org/protobuf/proto"
 )
 
 var _ sdk.FeeTx = MockFeeTx{}
@@ -59,6 +60,11 @@ func NewMockFeeTx(opts ...MockFeeTxOption) MockFeeTx {
 // GetMsgs implemets the sdk.Tx interface.
 func (tx MockFeeTx) GetMsgs() []sdk.Msg {
 	return tx.msgs
+}
+
+// GetMsgsV2 implemets the sdk.Tx interface.
+func (tx MockFeeTx) GetMsgsV2() ([]proto.Message, error) {
+	return nil, nil
 }
 
 // ValidateBasic implemets the sdk.Tx interface.

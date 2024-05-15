@@ -140,10 +140,10 @@ func (a AppModule) ConsensusVersion() uint64 {
 }
 
 // BeginBlock returns the begin blocker for the module.
-func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {}
+func (a AppModule) BeginBlock(ctx sdk.Context) {}
 
 // EndBlock returns the end blocker for the module. It returns no validator updates.
-func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (a AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, a.keeper)
 }
 
@@ -152,9 +152,9 @@ func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Vali
 // GenerateGenesisState creates a randomized GenState of the module.
 func (a AppModule) GenerateGenesisState(input *module.SimulationState) {}
 
-// RegisterStoreDecoder registers a decoder for the module's types.
-func (a AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-}
+// // RegisterStoreDecoder registers a decoder for the module's types.
+// func (a AppModule) RegisterStoreDecoder(_ storetypes.StoreDecoderRegistry) {
+// }
 
 // WeightedOperations returns all the module operations with their respective weights.
 func (a AppModule) WeightedOperations(_ module.SimulationState) []simTypes.WeightedOperation {

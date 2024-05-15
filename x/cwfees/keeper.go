@@ -17,8 +17,8 @@ import (
 )
 
 type WasmdKeeper interface {
-	HasContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) bool
-	Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
+	HasContractInfo(ctx context.Context, contractAddress sdk.AccAddress) bool
+	Sudo(ctx context.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
 }
 
 type Keeper struct {

@@ -25,7 +25,7 @@ import (
 
 // ContractInfoReaderExpected defines the interface for the x/wasmd module dependency.
 type ContractInfoReaderExpected interface {
-	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
+	GetContractInfo(ctx context.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
 }
 
 // TrackingKeeperExpected defines the interface for the x/tracking module dependency.

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	cwMath "github.com/CosmWasm/cosmwasm-go/std/math"
@@ -76,7 +77,7 @@ func (s *E2ETestSuite) VoterNewVoting(chain *e2eTesting.TestChain, contractAddr 
 		Msg:      reqBz,
 		Funds: sdk.NewCoins(sdk.Coin{
 			Denom:  sdk.DefaultBondDenom,
-			Amount: sdk.NewIntFromUint64(DefNewVotingCostAmt),
+			Amount: math.NewIntFromUint64(DefNewVotingCostAmt),
 		}),
 	}
 
@@ -119,7 +120,7 @@ func (s *E2ETestSuite) VoterVote(chain *e2eTesting.TestChain, contractAddr sdk.A
 		Msg:      reqBz,
 		Funds: sdk.NewCoins(sdk.Coin{
 			Denom:  sdk.DefaultBondDenom,
-			Amount: sdk.NewIntFromUint64(DefNewVoteCostAmt),
+			Amount: math.NewIntFromUint64(DefNewVoteCostAmt),
 		}),
 	}
 
@@ -153,7 +154,7 @@ func (s *E2ETestSuite) VoterIBCVote(chain *e2eTesting.TestChain, contractAddr sd
 		Msg:      reqBz,
 		Funds: sdk.NewCoins(sdk.Coin{
 			Denom:  sdk.DefaultBondDenom,
-			Amount: sdk.NewIntFromUint64(DefNewVoteCostAmt),
+			Amount: math.NewIntFromUint64(DefNewVoteCostAmt),
 		}),
 	}
 

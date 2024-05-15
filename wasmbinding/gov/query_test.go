@@ -28,12 +28,13 @@ func TestGovWASMBindings(t *testing.T) {
 	voter := accAddrs[1]
 
 	//govAccount := keeper.GetGovernanceAccount(ctx)
-	params := keeper.GetParams(ctx)
+	params, err := keeper.Params.Get(ctx)
+	require.NoError(t, err)
 
 	// Store a proposal
 	proposalId := govTypes.DefaultStartingProposalID
 
-	proposal, err := govTypes.NewProposal([]sdk.Msg{}, proposalId, ctx.BlockHeader().Time, ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod), "", "Text Proposal", "Description", depositor)
+	proposal, err := govTypes.NewProposal([]sdk.Msg{}, proposalId, ctx.BlockHeader().Time, ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod), "", "Text Proposal", "Description", depositor, false)
 	require.NoError(t, err)
 	keeper.SetProposal(ctx, proposal)
 
@@ -43,8 +44,8 @@ func TestGovWASMBindings(t *testing.T) {
 
 	// Vote
 	keeper.ActivateVotingPeriod(ctx, proposal)
-	vote := govTypes.NewVote(proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes), "")
-	keeper.SetVote(ctx, vote)
+	err = keeper.AddVote(ctx, proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes), "")
+	require.NoError(t, err)
 
 	t.Run("Query vote on proposal", func(t *testing.T) {
 		query := govWbTypes.VoteRequest{

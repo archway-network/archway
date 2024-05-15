@@ -6,7 +6,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -78,10 +77,10 @@ var Upgrade = upgrades.Upgrade{
 			case icacontrollertypes.SubModuleName:
 				keyTable = icacontrollertypes.ParamKeyTable()
 				// wasm
-			case wasmtypes.ModuleName:
-				keyTable = wasmtypes.ParamKeyTable() //nolint:staticcheck
+			// case wasmtypes.ModuleName:
+			// 	keyTable = wasmtypes.ParamKeyTable() //nolint:staticcheck
 
-				// archway modules
+			// archway modules
 			case rewardstypes.ModuleName:
 				keyTable = rewardstypes.ParamKeyTable()
 

@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/log"
 	math "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/archway-network/archway/app"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -297,10 +298,10 @@ func (chain *TestChain) GetModuleBalance(moduleName string) sdk.Coins {
 func (chain *TestChain) GetContext() sdk.Context {
 	ctx := chain.app.BaseApp.NewContext(false)
 
-	blockGasMeter := sdk.NewInfiniteGasMeter()
+	blockGasMeter := storetypes.NewInfiniteGasMeter()
 	blockMaxGas := chain.app.GetConsensusParams(ctx).Block.MaxGas
 	if blockMaxGas >= 0 {
-		blockGasMeter = sdk.NewGasMeter(sdk.Gas(blockMaxGas))
+		blockGasMeter = storetypes.NewGasMeter(uint64(blockMaxGas))
 	}
 
 	return ctx.WithBlockGasMeter(blockGasMeter)

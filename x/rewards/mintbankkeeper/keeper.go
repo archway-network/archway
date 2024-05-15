@@ -38,7 +38,8 @@ func NewKeeper(bk mintTypes.BankKeeper, rk RewardsKeeperExpected) Keeper {
 }
 
 // SendCoinsFromModuleToModule implements the mintTypes.BankKeeper interface.
-func (k Keeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error {
+func (k Keeper) SendCoinsFromModuleToModule(goCtx context.Context, senderModule, recipientModule string, amt sdk.Coins) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Perform the split only if the recipient is fee collector (which for instance is always the case) and
 	// inflation rewards are enabled.
 	ratio := k.rewardsKeeper.InflationRewardsRatio(ctx)

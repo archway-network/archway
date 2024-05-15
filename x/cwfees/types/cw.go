@@ -66,7 +66,7 @@ func NewCWGrantMessage(cdc codec.BinaryCodec, msg sdk.Msg) (CWGrantMessage, erro
 	if len(sender) != 1 {
 		return CWGrantMessage{}, fmt.Errorf("cw grants on multi signer messages are disallowed, got number of signers: %d", len(sender))
 	}
-	protoMarshaler, ok := msg.(codec.ProtoMarshaler)
+	protoMarshaler, ok := msg.(proto.Message)
 	if !ok {
 		return CWGrantMessage{}, fmt.Errorf("not a codec.ProtoMarshaler")
 	}

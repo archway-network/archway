@@ -9,7 +9,6 @@ import (
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	voterTypes "github.com/archway-network/voter/src/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkGov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
@@ -19,12 +18,9 @@ func TestGovQuerier(t *testing.T) {
 	// we create a vote which only contains the address of account 1
 	// and we check if the contract can see the vote and match the result
 	chain := e2eTesting.NewTestChain(t, 1)
-	chain.GetApp().Keepers.GovKeeper.SetVote(chain.GetContext(), sdkGov.Vote{
-		ProposalId: 1,
-		Voter:      chain.GetAccount(1).Address.String(),
-		Options:    nil,
-		Metadata:   "",
-	})
+	err := chain.GetApp().Keepers.GovKeeper.AddVote(chain.GetContext(), 1, sdk.AccAddress(chain.GetAccount(1).Address.String()), nil, "")
+	require.NoError(t, err)
+
 	acc := chain.GetAccount(0)
 	codeID := chain.UploadContract(acc, "../contracts/go/voter/code.wasm", wasmdTypes.DefaultUploadAccess)
 	init := voterTypes.Params{

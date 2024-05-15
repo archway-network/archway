@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
 
@@ -86,7 +85,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 			suite.Require().NoError(err)
 			ctx = ctx.WithBlockHeight(dummyUpgradeHeight)
 			suite.Require().NotPanics(func() {
-				suite.archway.GetApp().BeginBlocker(ctx, abci.RequestBeginBlock{})
+				suite.archway.GetApp().BeginBlocker(ctx)
 			})
 
 			tc.post_upgrade()

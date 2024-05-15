@@ -3,6 +3,7 @@ package e2e
 import (
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -40,13 +41,13 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
-		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
+		e2eTesting.WithTxFeeRebatesRewardsRatio(math.LegacyNewDecWithPrec(5, 1)),
+		e2eTesting.WithInflationRewardsRatio(math.LegacyNewDecWithPrec(2, 1)),
 		// Set constant inflation rate
 		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(10, 2), // 10%
-			sdk.NewDecWithPrec(10, 2), // 10%
-			uint64(60*60*8766/1),      // 1 seconds block time
+			math.LegacyNewDecWithPrec(10, 2), // 10%
+			math.LegacyNewDecWithPrec(10, 2), // 10%
+			uint64(60*60*8766/1),             // 1 seconds block time
 		),
 	)
 	keepers := chain.GetApp().Keepers
@@ -112,7 +113,7 @@ func (s *E2ETestSuite) TestRewardsWithdrawProfitAndFees() {
 			Msg:      reqBz,
 			Funds: sdk.NewCoins(sdk.Coin{
 				Denom:  sdk.DefaultBondDenom,
-				Amount: sdk.NewIntFromUint64(DefNewVotingCostAmt),
+				Amount: math.NewIntFromUint64(DefNewVotingCostAmt),
 			}),
 		}
 
@@ -260,7 +261,7 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 	recordIDs := make([]uint64, 0, rewardsTypes.MaxWithdrawRecordsParamLimit)
 	{
 		ctx := chain.GetContext()
-		recordRewards := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
+		recordRewards := sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())
 		for i := uint64(0); i < rewardsTypes.MaxWithdrawRecordsParamLimit; i++ {
 			record, err := rewardsKeeper.CreateRewardsRecord(
 				ctx,
@@ -274,7 +275,7 @@ func (s *E2ETestSuite) TestRewardsParamMaxWithdrawRecordsLimit() {
 			recordIDs = append(recordIDs, record.Id)
 		}
 
-		mintCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(rewardsTypes.MaxWithdrawRecordsParamLimit)))
+		mintCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewIntFromUint64(rewardsTypes.MaxWithdrawRecordsParamLimit)))
 		s.Require().NoError(mintKeeper.MintCoins(ctx, mintCoins))
 		s.Require().NoError(bankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, mintCoins))
 	}
@@ -333,7 +334,7 @@ func (s *E2ETestSuite) TestRewardsRecordsQueryLimit() {
 	{
 		ctx := chain.GetContext()
 		records := make([]rewardsTypes.RewardsRecord, 0, rewardsTypes.MaxRecordsQueryLimit)
-		recordRewards := sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())
+		recordRewards := sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())
 		for i := uint64(0); i < rewardsTypes.MaxRecordsQueryLimit; i++ {
 			record, err := rewardsKeeper.CreateRewardsRecord(
 				ctx,
@@ -347,7 +348,7 @@ func (s *E2ETestSuite) TestRewardsRecordsQueryLimit() {
 			records = append(records, record)
 		}
 
-		mintCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(rewardsTypes.MaxRecordsQueryLimit)))
+		mintCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewIntFromUint64(rewardsTypes.MaxRecordsQueryLimit)))
 		s.Require().NoError(mintKeeper.MintCoins(ctx, mintCoins))
 		s.Require().NoError(bankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, mintCoins))
 
@@ -392,13 +393,13 @@ func (s *E2ETestSuite) TestTXFailsAfterAnteHandler() {
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
-		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
+		e2eTesting.WithTxFeeRebatesRewardsRatio(math.LegacyNewDecWithPrec(5, 1)),
+		e2eTesting.WithInflationRewardsRatio(math.LegacyNewDecWithPrec(2, 1)),
 		// Set constant inflation rate
 		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(10, 2), // 10%
-			sdk.NewDecWithPrec(10, 2), // 10%
-			uint64(60*60*8766/1),      // 1 seconds block time
+			math.LegacyNewDecWithPrec(10, 2), // 10%
+			math.LegacyNewDecWithPrec(10, 2), // 10%
+			uint64(60*60*8766/1),             // 1 seconds block time
 		),
 	)
 	rewardsKeeper := chain.GetApp().Keepers.RewardsKeeper
@@ -479,13 +480,13 @@ func (s *E2ETestSuite) TestRewardsFlatFees() {
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
-		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
+		e2eTesting.WithTxFeeRebatesRewardsRatio(math.LegacyNewDecWithPrec(5, 1)),
+		e2eTesting.WithInflationRewardsRatio(math.LegacyNewDecWithPrec(2, 1)),
 		// Set constant inflation rate
 		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(10, 2), // 10%
-			sdk.NewDecWithPrec(10, 2), // 10%
-			uint64(60*60*8766/1),      // 1 seconds block time
+			math.LegacyNewDecWithPrec(10, 2), // 10%
+			math.LegacyNewDecWithPrec(10, 2), // 10%
+			uint64(60*60*8766/1),             // 1 seconds block time
 		),
 	)
 	rewardsKeeper := chain.GetApp().Keepers.RewardsKeeper
@@ -626,13 +627,13 @@ func (s *E2ETestSuite) TestSubMsgRevert() {
 		// Set block gas limit (Archway mainnet param)
 		e2eTesting.WithBlockGasLimit(100_000_000),
 		// x/rewards distribution params
-		e2eTesting.WithTxFeeRebatesRewardsRatio(sdk.NewDecWithPrec(5, 1)),
-		e2eTesting.WithInflationRewardsRatio(sdk.NewDecWithPrec(2, 1)),
+		e2eTesting.WithTxFeeRebatesRewardsRatio(math.LegacyNewDecWithPrec(5, 1)),
+		e2eTesting.WithInflationRewardsRatio(math.LegacyNewDecWithPrec(2, 1)),
 		// Set constant inflation rate
 		e2eTesting.WithMintParams(
-			sdk.NewDecWithPrec(10, 2), // 10%
-			sdk.NewDecWithPrec(10, 2), // 10%
-			uint64(60*60*8766/1),      // 1 seconds block time
+			math.LegacyNewDecWithPrec(10, 2), // 10%
+			math.LegacyNewDecWithPrec(10, 2), // 10%
+			uint64(60*60*8766/1),             // 1 seconds block time
 		),
 	)
 	rewardsKeeper := chain.GetApp().Keepers.RewardsKeeper

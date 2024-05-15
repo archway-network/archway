@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -75,7 +76,7 @@ func (s *E2ETestSuite) TestVoter_ExecuteQueryAndReply() {
 	s.Run("Release contract funds and verify (x/bank submsg execution and reply)", func() {
 		acc1BalanceBefore := chain.GetBalance(acc1.Address)
 
-		contractCoinsExp := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewIntFromUint64(DefNewVotingCostAmt+DefNewVoteCostAmt)))
+		contractCoinsExp := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewIntFromUint64(DefNewVotingCostAmt+DefNewVoteCostAmt)))
 		contractCoinsRcv := chain.GetBalance(contractAddr)
 		s.Assert().EqualValues(contractCoinsExp, contractCoinsRcv)
 

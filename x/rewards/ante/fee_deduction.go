@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -94,7 +95,7 @@ func (dfd DeductFeeDecorator) getFeePayer(ctx sdk.Context, tx sdk.FeeTx) (payer 
 	granter := tx.FeeGranter()
 	// in case granter is nil or payer and granter are equal
 	// then we just return the fee payer as the entity who pays the fees.
-	if granter == nil || payer.Equals(granter) {
+	if granter == nil || bytes.Equal(payer.Bytes(), granter) {
 		return payer, nil
 	}
 
