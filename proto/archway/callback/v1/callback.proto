@@ -45,7 +45,7 @@ message Params {
     // max_future_reservation_limit is the maximum number of blocks in the future that a contract can request a callback in.
     uint64 max_future_reservation_limit = 3;
     // block_reservation_fee_multiplier is used to calculate a part of the reservation fees which will need to be paid when requesting the callback. 
-    string block_reservation_fee_multiplier = 4 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+    string block_reservation_fee_multiplier = 4 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
     // future_reservation_fee_multiplier is used to calculate a part of the reservation fees which will need to be paid while requesting the callback. 
-    string future_reservation_fee_multiplier = 5 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+    string future_reservation_fee_multiplier = 5 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
 }
