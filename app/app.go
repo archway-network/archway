@@ -144,6 +144,8 @@ import (
 	cwicakeeper "github.com/archway-network/archway/x/cwica/keeper"
 	cwicatypes "github.com/archway-network/archway/x/cwica/types"
 
+	extendedGov "github.com/archway-network/archway/x/gov"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 
 	archwayappparams "github.com/archway-network/archway/app/params"
@@ -272,7 +274,7 @@ type ArchwayApp struct {
 	ScopedWASMKeeper     capabilitykeeper.ScopedKeeper
 
 	// the module manager
-	mm *module.Manager
+	ModuleManager *module.Manager
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -535,6 +537,8 @@ func NewArchwayApp(
 		logger,
 	)
 
+	extendedGovKeeper := extendedGov.NewKeeper(app.Keepers.GovKeeper)
+
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
@@ -558,7 +562,7 @@ func NewArchwayApp(
 		Stargate: wasmdKeeper.AcceptListStargateQuerier(getAcceptedStargateQueries(), app.GRPCQueryRouter(), appCodec),
 	}))
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
-	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.Keepers.RewardsKeeper, &app.Keepers.GovKeeper)...)
+	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.Keepers.RewardsKeeper, &extendedGovKeeper)...)
 
 	app.Keepers.WASMKeeper = wasmdKeeper.NewKeeper(
 		appCodec,
@@ -695,7 +699,7 @@ func NewArchwayApp(
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
-	app.mm = module.NewManager(
+	app.ModuleManager = module.NewManager(
 		genutil.NewAppModule(
 			app.Keepers.AccountKeeper,
 			app.Keepers.StakingKeeper,
@@ -738,7 +742,7 @@ func NewArchwayApp(
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
-	app.mm.SetOrderBeginBlockers(
+	app.ModuleManager.SetOrderBeginBlockers(
 		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
@@ -775,7 +779,7 @@ func NewArchwayApp(
 		cwerrorsTypes.ModuleName, // does not have begin blocker
 	)
 
-	app.mm.SetOrderEndBlockers(
+	app.ModuleManager.SetOrderEndBlockers(
 		// we have to specify all modules here (Cosmos's order is taken as a reference)
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
@@ -820,7 +824,7 @@ func NewArchwayApp(
 	// can do so safely.
 	// NOTE: wasm module should be at the end as it can call other module functionality direct or via message dispatching during
 	// genesis phase. For example bank transfer, auth account check, staking, ...
-	app.mm.SetOrderInitGenesis(
+	app.ModuleManager.SetOrderInitGenesis(
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
@@ -861,10 +865,10 @@ func NewArchwayApp(
 	// Uncomment if you want to set a custom migration order here.
 	// app.mm.SetOrderMigrations(custom order)
 
-	app.mm.RegisterInvariants(&app.Keepers.CrisisKeeper)
+	app.ModuleManager.RegisterInvariants(&app.Keepers.CrisisKeeper)
 
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.mm.RegisterServices(app.configurator)
+	app.ModuleManager.RegisterServices(app.configurator)
 	app.setupUpgrades()
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
@@ -930,7 +934,7 @@ func NewArchwayApp(
 	app.SetEndBlocker(app.EndBlocker)
 	app.SetPostHandler(postHandler)
 
-	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
 
 	reflectionSvc, err := runtimeservices.NewReflectionService()
 	if err != nil {
@@ -972,12 +976,12 @@ func (app *ArchwayApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker processes application updates every begin block
 func (app *ArchwayApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
-	return app.mm.BeginBlock(ctx)
+	return app.ModuleManager.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block
 func (app *ArchwayApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
-	return app.mm.EndBlock(ctx)
+	return app.ModuleManager.EndBlock(ctx)
 }
 
 // InitChainer application update at chain initialization
@@ -986,11 +990,11 @@ func (app *ArchwayApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) 
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	err := app.Keepers.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	err := app.Keepers.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	if err != nil {
 		panic(err)
 	}
-	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
+	return app.ModuleManager.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
 // LoadHeight loads a particular height

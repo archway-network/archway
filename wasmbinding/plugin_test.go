@@ -15,6 +15,7 @@ import (
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/wasmbinding"
+	extendedGov "github.com/archway-network/archway/x/gov"
 )
 
 // TestWASMBindingPlugins tests common failure scenarios for custom querier and msg handler plugins.
@@ -31,7 +32,7 @@ func TestWASMBindingPlugins(t *testing.T) {
 	rewardsKeeper := keepers.RewardsKeeper
 	govKeeper := keepers.GovKeeper
 	msgPlugin := wasmbinding.BuildWasmMsgDecorator(rewardsKeeper)
-	queryPlugin := wasmbinding.BuildWasmQueryPlugin(rewardsKeeper, govKeeper)
+	queryPlugin := wasmbinding.BuildWasmQueryPlugin(rewardsKeeper, extendedGov.NewKeeper(govKeeper))
 
 	// Querier tests
 	t.Run("Querier failure", func(t *testing.T) {

@@ -12,6 +12,7 @@ import (
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/wasmbinding/gov"
 	govWbTypes "github.com/archway-network/archway/wasmbinding/gov/types"
+	extendedGov "github.com/archway-network/archway/x/gov"
 )
 
 // TestGovWASMBindings tests the custom querier for the x/gov WASM bindings.
@@ -21,7 +22,7 @@ func TestGovWASMBindings(t *testing.T) {
 	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.GovKeeper
 
 	// Create custom plugins
-	queryPlugin := gov.NewQueryHandler(keeper)
+	queryPlugin := gov.NewQueryHandler(extendedGov.NewKeeper(keeper))
 
 	accAddrs, _ := e2eTesting.GenAccounts(2)
 	depositor := accAddrs[0]
