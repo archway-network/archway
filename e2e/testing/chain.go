@@ -2,6 +2,7 @@
 package e2eTesting
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 	"strconv"
@@ -383,22 +384,16 @@ func (chain *TestChain) BeginBlock() []abci.Event {
 		}
 	}
 
-	res := chain.app.BeginBlock(abci.RequestBeginBlock{
-		Hash:   nil,
-		Header: chain.curHeader,
-		LastCommitInfo: abci.CommitInfo{
-			Round: 0,
-			Votes: voteInfo,
-		},
-		ByzantineValidators: nil,
-	})
+	res, err := chain.app.ModuleManager.BeginBlock(chain.GetContext())
+	require.NoError(chain.t, err)
 
 	return res.Events
 }
 
 // EndBlock finalizes the current block.
 func (chain *TestChain) EndBlock() []abci.Event {
-	res := chain.app.EndBlock(abci.RequestEndBlock{Height: chain.curHeader.Height})
+	res, err := chain.app.ModuleManager.EndBlock(chain.GetContext())
+	require.NoError(chain.t, err)
 	chain.app.Commit()
 
 	return res.Events
@@ -550,7 +545,7 @@ func (chain *TestChain) buildSendMsgOptions(opts ...SendMsgOption) sendMsgOption
 	return options
 }
 
-func genSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv []cryptoTypes.PrivKey, opt sendMsgOptions) (sdk.Tx, error) {
+func genSignedMockTx(ctx context.Context, r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv []cryptoTypes.PrivKey, opt sendMsgOptions) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(priv))
 
 	// create a random length memo
@@ -596,7 +591,7 @@ func genSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 			Sequence:      accSeqs[i],
 			PubKey:        p.PubKey(),
 		}
-		signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+		signBytes, err := txConfig.SignModeHandler().GetSignBytes(ctx, signMode, signerData, tx.GetTx())
 		if err != nil {
 			panic(err)
 		}
