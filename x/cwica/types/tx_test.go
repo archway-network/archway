@@ -197,30 +197,3 @@ func TestMsgSendTxValidate(t *testing.T) {
 		})
 	}
 }
-
-func TestMsgSubmitTXGetSigners(t *testing.T) {
-	tests := []struct {
-		name     string
-		malleate func() sdktypes.Msg
-	}{
-		{
-			"valid_signer",
-			func() sdktypes.Msg {
-				return &types.MsgSendTx{
-					ContractAddress: TestAddress,
-					ConnectionId:    "connection-id",
-					Msgs: []*cosmosTypes.Any{{
-						TypeUrl: "msg",
-						Value:   []byte{100}, // just check that values are not nil
-					}},
-				}
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		msg := tt.malleate()
-		addr, _ := sdktypes.AccAddressFromBech32(TestAddress)
-		require.Equal(t, msg.GetSigners(), []sdktypes.AccAddress{addr})
-	}
-}

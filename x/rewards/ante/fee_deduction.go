@@ -6,14 +6,14 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/archway-network/archway/pkg"
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	"github.com/archway-network/archway/pkg"
-	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 var _ sdk.AnteDecorator = DeductFeeDecorator{}
@@ -25,7 +25,7 @@ type BankKeeper interface {
 
 type CWFeesKeeper interface {
 	IsGrantingContract(ctx context.Context, granter sdk.AccAddress) (bool, error)
-	RequestGrant(ctx context.Context, grantingContract sdk.AccAddress, txMsgs []sdk.Msg, wantFees sdk.Coins) error
+	RequestGrant(ctx context.Context, grantingContract sdk.AccAddress, txMsgs []sdk.Msg, wantFees sdk.Coins, signers []sdk.AccAddress) error
 }
 
 // DeductFeeDecorator deducts fees from the first signer of the tx.
@@ -90,9 +90,10 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 }
 
 // getFeePayer returns the address of the entity will we get fees from.
-func (dfd DeductFeeDecorator) getFeePayer(ctx sdk.Context, tx sdk.FeeTx) (payer sdk.AccAddress, err error) {
-	payer = tx.FeePayer()
-	granter := tx.FeeGranter()
+func (dfd DeductFeeDecorator) getFeePayer(ctx sdk.Context, tx sdk.Tx) (payer sdk.AccAddress, err error) {
+	feeTx, _ := tx.(sdk.FeeTx)
+	payer = feeTx.FeePayer()
+	granter := feeTx.FeeGranter()
 	// in case granter is nil or payer and granter are equal
 	// then we just return the fee payer as the entity who pays the fees.
 	if granter == nil || bytes.Equal(payer.Bytes(), granter) {
@@ -108,7 +109,19 @@ func (dfd DeductFeeDecorator) getFeePayer(ctx sdk.Context, tx sdk.FeeTx) (payer 
 		}
 		// the contract is a cw granter, so we request fees from it.
 		if isCWGranter {
-			err = dfd.cwFeesKeeper.RequestGrant(ctx, granter, tx.GetMsgs(), tx.GetFee())
+			sigTx, ok := tx.(authsigning.SigVerifiableTx)
+			if !ok {
+				return nil, errorsmod.Wrap(sdkErrors.ErrTxDecode, "Tx must be a SigVerifiableTx")
+			}
+			signers, err := sigTx.GetSigners()
+			if err != nil {
+				return nil, errorsmod.Wrap(sdkErrors.ErrInvalidRequest, "cannot get signers from tx")
+			}
+			var signerAddrs []sdk.AccAddress
+			for _, s := range signers {
+				signerAddrs = append(signerAddrs, sdk.AccAddress(s))
+			}
+			err = dfd.cwFeesKeeper.RequestGrant(ctx, granter, feeTx.GetMsgs(), feeTx.GetFee(), signerAddrs)
 			if err != nil {
 				return nil, errorsmod.Wrapf(err, "%s contract is not allowed to pay fees from %s", granter, payer)
 			}
@@ -119,7 +132,7 @@ func (dfd DeductFeeDecorator) getFeePayer(ctx sdk.Context, tx sdk.FeeTx) (payer 
 
 	// we check x/feegrant
 	case dfd.feegrantKeeper != nil:
-		err = dfd.feegrantKeeper.UseGrantedFees(ctx, granter, payer, tx.GetFee(), tx.GetMsgs())
+		err = dfd.feegrantKeeper.UseGrantedFees(ctx, granter, payer, feeTx.GetFee(), feeTx.GetMsgs())
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "%s not allowed to pay fees from %s", granter, payer)
 		}

@@ -82,8 +82,8 @@ const RequestGrantGasLimit = 100_000
 
 // RequestGrant will signal to the contract that there's a grant request for a set of messages and the fees.
 // In case the contract does not accept the grant then an error is returned.
-func (k Keeper) RequestGrant(ctx context.Context, grantingContract sdk.AccAddress, txMsgs []sdk.Msg, wantFees sdk.Coins) error {
-	msg, err := types.NewSudoMsg(k.cdc, wantFees, txMsgs)
+func (k Keeper) RequestGrant(ctx context.Context, grantingContract sdk.AccAddress, txMsgs []sdk.Msg, wantFees sdk.Coins, signers []sdk.AccAddress) error {
+	msg, err := types.NewSudoMsg(k.cdc, wantFees, txMsgs, signers)
 	if err != nil {
 		return err
 	}

@@ -484,6 +484,7 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 	// Build and sign Tx
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	tx, err := genSignedMockTx(
+		chain.GetContext(),
 		r,
 		chain.txConfig,
 		msgs,
@@ -551,7 +552,10 @@ func genSignedMockTx(ctx context.Context, r *rand.Rand, txConfig client.TxConfig
 	// create a random length memo
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
-	signMode := txConfig.SignModeHandler().DefaultMode()
+	signMode, err := authsign.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, err
+	}
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -566,7 +570,7 @@ func genSignedMockTx(ctx context.Context, r *rand.Rand, txConfig client.TxConfig
 	}
 
 	tx := txConfig.NewTxBuilder()
-	err := tx.SetMsgs(msgs...)
+	err = tx.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -591,7 +595,9 @@ func genSignedMockTx(ctx context.Context, r *rand.Rand, txConfig client.TxConfig
 			Sequence:      accSeqs[i],
 			PubKey:        p.PubKey(),
 		}
-		signBytes, err := txConfig.SignModeHandler().GetSignBytes(ctx, signMode, signerData, tx.GetTx())
+		signBytes, err := authsign.GetSignBytesAdapter(
+			context.Background(), txConfig.SignModeHandler(), signMode, signerData,
+			tx.GetTx())
 		if err != nil {
 			panic(err)
 		}

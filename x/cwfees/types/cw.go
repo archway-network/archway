@@ -37,8 +37,8 @@ type CWGrantMessage struct {
 	Msg []byte `json:"msg"`
 }
 
-func NewSudoMsg(cdc codec.BinaryCodec, requestedFees sdk.Coins, msgs []sdk.Msg) (*SudoMsg, error) {
-	cwGrantMsgs, err := NewCWGrantMessages(cdc, msgs)
+func NewSudoMsg(cdc codec.BinaryCodec, requestedFees sdk.Coins, msgs []sdk.Msg, signers []sdk.AccAddress) (*SudoMsg, error) {
+	cwGrantMsgs, err := NewCWGrantMessages(cdc, msgs, signers)
 	if err != nil {
 		return nil, err
 	}
@@ -49,10 +49,10 @@ func NewSudoMsg(cdc codec.BinaryCodec, requestedFees sdk.Coins, msgs []sdk.Msg) 
 	}}, nil
 }
 
-func NewCWGrantMessages(cdc codec.BinaryCodec, msgs []sdk.Msg) ([]CWGrantMessage, error) {
+func NewCWGrantMessages(cdc codec.BinaryCodec, msgs []sdk.Msg, signers []sdk.AccAddress) ([]CWGrantMessage, error) {
 	m := make([]CWGrantMessage, len(msgs))
 	for i := range msgs {
-		msg, err := NewCWGrantMessage(cdc, msgs[i])
+		msg, err := NewCWGrantMessage(cdc, msgs[i], signers)
 		if err != nil {
 			return nil, fmt.Errorf("unable to convert message at index %d, into a CWGrant", i)
 		}
@@ -61,10 +61,9 @@ func NewCWGrantMessages(cdc codec.BinaryCodec, msgs []sdk.Msg) ([]CWGrantMessage
 	return m, nil
 }
 
-func NewCWGrantMessage(cdc codec.BinaryCodec, msg sdk.Msg) (CWGrantMessage, error) {
-	sender := msg.GetSigners()
-	if len(sender) != 1 {
-		return CWGrantMessage{}, fmt.Errorf("cw grants on multi signer messages are disallowed, got number of signers: %d", len(sender))
+func NewCWGrantMessage(cdc codec.BinaryCodec, msg sdk.Msg, signers []sdk.AccAddress) (CWGrantMessage, error) {
+	if len(signers) != 1 {
+		return CWGrantMessage{}, fmt.Errorf("cw grants on multi signer messages are disallowed, got number of signers: %d", len(signers))
 	}
 	protoMarshaler, ok := msg.(proto.Message)
 	if !ok {
@@ -76,7 +75,7 @@ func NewCWGrantMessage(cdc codec.BinaryCodec, msg sdk.Msg) (CWGrantMessage, erro
 	}
 
 	return CWGrantMessage{
-		Sender:  sender[0].String(),
+		Sender:  signers[0].String(),
 		TypeUrl: proto.MessageName(msg),
 		Msg:     msgBytes,
 	}, nil
