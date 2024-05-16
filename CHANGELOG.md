@@ -28,6 +28,11 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviors.
 -->
 
+## [v7.0.1]
+
+### Added
+- [#571](https://github.com/archway-network/archway/pull/571) - Automatically publish proto files to buf.build
+
 ## [v7.0.0](https://github.com/archway-network/archway/releases/tag/v7.0.0)
 
 ### Added
