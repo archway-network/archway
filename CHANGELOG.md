@@ -39,6 +39,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 ### Removed
 
 ### Fixed
+- [#570](https://github.com/archway-network/archway/pull/570) - Fix the Docker.deprecated file to build  
 
 ### Improvements
 - [#567](https://github.com/archway-network/archway/pull/567) - Remove redundant params fetching in SaveCallback 
