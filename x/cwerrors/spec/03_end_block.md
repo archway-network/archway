@@ -14,4 +14,4 @@ All the contract subscriptions which end in the current block are pruned from st
 
 ## Prune old errors
 
-All errors which are marked for deletion for the current block height are pruned from the state.
+All errors which haven been associated with the current block height as the expiration height are pruned from the state

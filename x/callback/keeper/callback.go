@@ -118,10 +118,6 @@ func (k Keeper) SaveCallback(ctx sdk.Context, callback types.Callback) error {
 	// This is to ensure that if the param value is decreased in the future, before the callback is executed,
 	// it does not fail with "out of gas" error. it wouldnt be fair for the contract to err out of the callback
 	// if it wouldnt have been expected to at the time of registration
-	params, err = k.GetParams(ctx)
-	if err != nil {
-		return err
-	}
 	callback.MaxGasLimit = params.CallbackGasLimit
 
 	return k.Callbacks.Set(ctx, collections.Join3(callback.CallbackHeight, contractAddress.Bytes(), callback.JobId), callback)
