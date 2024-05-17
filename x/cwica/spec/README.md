@@ -66,7 +66,27 @@ let sendtx_stargate_msg = CosmosMsg::Stargate {
 Ok(Response::new().add_message(sendtx_stargate_msg))
 ```
 
-Once the txs have been submitted, the contract will receive a callback at the Sudo entrypoints. [Here is how to integrate them](../../../proto/archway/cwica/v1/sudo.proto)
+Once the txs have been submitted and is successfully executed on the counterparty chain, the contract will receive a callback at the Sudo entrypoints. It can be integrated by implementing the snippet below
+
+```rust
+// msg.rs
+pub enum SudoMsg  {
+    Ica {
+        account_registered: Option<AccountRegistered>,
+        tx_executed: Option<ICAResponse>,
+    },
+}
+
+#[cw_serde]
+pub struct AccountRegistered {
+    pub counterparty_address: String,
+}
+
+#[cw_serde]
+pub struct ICAResponse {
+    pub data: Binary,
+}
+```
 
 
 > **NOTE** 
@@ -80,3 +100,4 @@ Once the txs have been submitted, the contract will receive a callback at the Su
 3. [Client](./03_client.md)
 4. [Wasm Bindings](./04_wasm_bindings.md)
 5. [Module Errors](./05_errors.md)
+6. [IBC Handlers](./06_ibc.md)
