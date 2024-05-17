@@ -55,7 +55,7 @@ func (k *Keeper) HandleChanOpenAck(
 }
 
 // HandleAcknowledgement passes the acknowledgement data to the appropriate contract via a sudo call.
-func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
+func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte) error {
 	icaOwner := types.ICAOwnerFromPort(packet.SourcePort)
 	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
 	if err != nil {
@@ -99,10 +99,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	return nil
 }
 
-// HandleTimeout passes the timeout data to the appropriate contract via a sudo call.
+// HandleTimeout creates a new error which can be accessed using the x/cwerrors module.
 // Since all ICA channels are ORDERED, a single timeout shuts down a channel.
 // The channel can be reopened by registering the ICA account again.
-func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error {
+func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet) error {
 	icaOwner := types.ICAOwnerFromPort(packet.SourcePort)
 	contractAddress, err := sdk.AccAddressFromBech32(icaOwner)
 	if err != nil {

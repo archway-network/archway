@@ -31,6 +31,8 @@ Contains all the PRs that improved the code without changing the behaviors.
 ## [Unreleased]
 
 ### Added
+- [#571](https://github.com/archway-network/archway/pull/571) - Automatically
+publish proto files to buf.build
 
 ### Changed
 
@@ -40,6 +42,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 
 ### Fixed
 - [#568](https://github.com/archway-network/archway/pull/568) - Update Swagger doc and config to include CWICA and CWErrors modules
+- [#569](https://github.com/archway-network/archway/pull/569) - Audit remidiations for x/cwerrors and x/cwica 
 
 ### Improvements
 - [#567](https://github.com/archway-network/archway/pull/567) - Remove redundant params fetching in SaveCallback 
