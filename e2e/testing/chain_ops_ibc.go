@@ -4,11 +4,11 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmHash "github.com/cometbft/cometbft/crypto/tmhash"
-	tmProto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmProtoVersion "github.com/cometbft/cometbft/proto/tendermint/version"
-	tmTypes "github.com/cometbft/cometbft/types"
-	tmVersion "github.com/cometbft/cometbft/version"
+	cmHash "github.com/cometbft/cometbft/crypto/tmhash"
+	cmProto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmProtoVersion "github.com/cometbft/cometbft/proto/tendermint/version"
+	cmTypes "github.com/cometbft/cometbft/types"
+	cmVersion "github.com/cometbft/cometbft/version"
 	clientTypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channelTypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	commitmentTypes "github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
@@ -39,13 +39,13 @@ func (chain *TestChain) GetClientState(clientID string) exported.ClientState {
 
 // GetCurrentValSet returns a validator set for the current block height.
 // Used to create an IBC TM client header.
-func (chain *TestChain) GetCurrentValSet() tmTypes.ValidatorSet {
+func (chain *TestChain) GetCurrentValSet() cmTypes.ValidatorSet {
 	return *chain.valSet
 }
 
 // GetValSetAtHeight returns a validator set for the specified block height.
 // Used to create an IBC TM client header.
-func (chain *TestChain) GetValSetAtHeight(height int64) tmTypes.ValidatorSet {
+func (chain *TestChain) GetValSetAtHeight(height int64) cmTypes.ValidatorSet {
 	//	t := chain.t
 
 	// histInfo, err := chain.app.Keepers.StakingKeeper.GetHistoricalInfo(chain.GetContext(), height)
@@ -58,7 +58,7 @@ func (chain *TestChain) GetValSetAtHeight(height int64) tmTypes.ValidatorSet {
 	// valSet := tmTypes.NewValidatorSet(tmValidators)
 
 	// return *valSet
-	return tmTypes.ValidatorSet{}
+	return cmTypes.ValidatorSet{}
 }
 
 // GetProofAtHeight returns the proto encoded merkle proof by key for the specified height.
@@ -154,7 +154,7 @@ func (chain *TestChain) GetTMClientHeaderUpdate(counterpartyChain *TestChain, cl
 	// Once we get TrustedHeight from client, we must query the validators from the counterparty chain
 	// If the LatestHeight == LastHeader.Height, then TrustedValidators are current validators
 	// If LatestHeight < LastHeader.Height, we can query the historical validator set from HistoricalInfo
-	var valSetTrusted tmTypes.ValidatorSet
+	var valSetTrusted cmTypes.ValidatorSet
 	if blockHeightTrusted == header.GetHeight() {
 		valSetTrusted = counterpartyChain.GetCurrentValSet()
 	} else {
@@ -176,59 +176,59 @@ func (chain *TestChain) GetTMClientHeaderUpdate(counterpartyChain *TestChain, cl
 }
 
 // createTMClientHeader creates a valid TM client header.
-func (chain *TestChain) createTMClientHeader(chainID string, blockHeight int64, blockHeightTrusted clientTypes.Height, blockTime time.Time, valSet, valSetTrusted *tmTypes.ValidatorSet, valSigners []tmTypes.PrivValidator) ibcTmTypes.Header {
+func (chain *TestChain) createTMClientHeader(chainID string, blockHeight int64, blockHeightTrusted clientTypes.Height, blockTime time.Time, valSet, valSetTrusted *cmTypes.ValidatorSet, valSigners []cmTypes.PrivValidator) ibcTmTypes.Header {
 	t := chain.t
 
 	require.NotNil(t, valSet)
 
 	valSetHash := valSet.Hash()
 
-	header := tmTypes.Header{
-		Version: tmProtoVersion.Consensus{Block: tmVersion.BlockProtocol, App: 2},
+	header := cmTypes.Header{
+		Version: cmProtoVersion.Consensus{Block: cmVersion.BlockProtocol, App: 2},
 		ChainID: chainID,
 		Height:  blockHeight,
 		Time:    blockTime,
-		LastBlockID: tmTypes.BlockID{
-			Hash: make([]byte, tmHash.Size),
-			PartSetHeader: tmTypes.PartSetHeader{
+		LastBlockID: cmTypes.BlockID{
+			Hash: make([]byte, cmHash.Size),
+			PartSetHeader: cmTypes.PartSetHeader{
 				Total: 10_000,
-				Hash:  make([]byte, tmHash.Size),
+				Hash:  make([]byte, cmHash.Size),
 			},
 		},
 		LastCommitHash:     chain.app.LastCommitID().Hash,
-		DataHash:           tmHash.Sum([]byte("data_hash")),
+		DataHash:           cmHash.Sum([]byte("data_hash")),
 		ValidatorsHash:     valSetHash,
 		NextValidatorsHash: valSetHash,
-		ConsensusHash:      tmHash.Sum([]byte("consensus_hash")),
+		ConsensusHash:      cmHash.Sum([]byte("consensus_hash")),
 		AppHash:            chain.lastHeader.AppHash,
-		LastResultsHash:    tmHash.Sum([]byte("last_results_hash")),
-		EvidenceHash:       tmHash.Sum([]byte("evidence_hash")),
+		LastResultsHash:    cmHash.Sum([]byte("last_results_hash")),
+		EvidenceHash:       cmHash.Sum([]byte("evidence_hash")),
 		ProposerAddress:    valSet.Proposer.Address,
 	}
 
-	blockID := tmTypes.BlockID{
+	blockID := cmTypes.BlockID{
 		Hash: header.Hash(),
-		PartSetHeader: tmTypes.PartSetHeader{
+		PartSetHeader: cmTypes.PartSetHeader{
 			Total: 3,
-			Hash:  tmHash.Sum([]byte("part_set")),
+			Hash:  cmHash.Sum([]byte("part_set")),
 		},
 	}
-	voteSet := tmTypes.NewVoteSet(chainID, blockHeight, 1, tmProto.PrecommitType, valSet)
+	voteSet := cmTypes.NewVoteSet(chainID, blockHeight, 1, cmProto.PrecommitType, valSet)
 
-	commit, err := tmTypes.MakeExtCommit(blockID, blockHeight, 1, voteSet, valSigners, blockTime, false)
+	commit, err := cmTypes.MakeExtCommit(blockID, blockHeight, 1, voteSet, valSigners, blockTime, false)
 	require.NoError(t, err)
 
 	valSetProto, err := valSet.ToProto()
 	require.NoError(t, err)
 
-	var valSetTrustedProto *tmProto.ValidatorSet
+	var valSetTrustedProto *cmProto.ValidatorSet
 	if valSetTrusted != nil {
 		valSetTrustedProto, err = valSetTrusted.ToProto()
 		require.NoError(t, err)
 	}
 
 	return ibcTmTypes.Header{
-		SignedHeader: &tmProto.SignedHeader{
+		SignedHeader: &cmProto.SignedHeader{
 			Header: header.ToProto(),
 			Commit: commit.ToCommit().ToProto(),
 		},

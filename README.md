@@ -15,7 +15,7 @@ The core implementation of the Archway protocol leverages the [Cosmos SDK](https
 The following specifications have been found to work well:
 
 - An x86-64 (amd64) multi-core CPU (AMD / Intel);
-  - Higher clock speeds are preferred as Tendermint is mostly single-threaded;
+  - Higher clock speeds are preferred as CometBFT is mostly single-threaded;
 - 64GB RAM;
 - 1TB NVMe SSD Storage (disk i/o is crucial);
 - 100Mbps bi-directional Internet connection;

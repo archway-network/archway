@@ -26,8 +26,9 @@ import (
 )
 
 var (
-	_ module.AppModuleBasic = AppModuleBasic{}
-	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic  = AppModuleBasic{}
+	_ module.AppModule       = AppModule{}
+	_ module.HasABCIEndBlock = AppModule{}
 )
 
 // ConsensusVersion defines the current x/rewards module consensus version.
@@ -139,12 +140,9 @@ func (a AppModule) ConsensusVersion() uint64 {
 	return ConsensusVersion
 }
 
-// BeginBlock returns the begin blocker for the module.
-func (a AppModule) BeginBlock(ctx sdk.Context) {}
-
 // EndBlock returns the end blocker for the module. It returns no validator updates.
-func (a AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, a.keeper)
+func (a AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	return EndBlocker(sdk.UnwrapSDKContext(ctx), a.keeper)
 }
 
 // AppModuleSimulation functions

@@ -31,7 +31,7 @@ import (
 	"github.com/archway-network/archway/x/genmsg"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmos "github.com/cometbft/cometbft/libs/os"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -118,7 +118,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ibccm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	"github.com/spf13/cast"
 
 	"github.com/archway-network/archway/wasmbinding"
@@ -202,7 +202,7 @@ var (
 		authzmodule.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 		ibc.AppModuleBasic{},
-		ibctm.AppModuleBasic{},
+		ibccm.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
@@ -738,12 +738,15 @@ func NewArchwayApp(
 		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
+	app.ModuleManager.SetOrderPreBlockers(
+		upgradetypes.ModuleName,
+	)
+
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.ModuleManager.SetOrderBeginBlockers(
-		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
 		distrtypes.ModuleName,
@@ -770,13 +773,6 @@ func NewArchwayApp(
 		icatypes.ModuleName,
 		// wasm
 		wasmdTypes.ModuleName,
-		// wasm gas tracking
-		trackingTypes.ModuleName,
-		rewardsTypes.ModuleName,
-		callbackTypes.ModuleName,
-		cwfees.ModuleName, // does not have being blocker.
-		cwicatypes.ModuleName,
-		cwerrorsTypes.ModuleName, // does not have begin blocker
 	)
 
 	app.ModuleManager.SetOrderEndBlockers(
@@ -812,8 +808,6 @@ func NewArchwayApp(
 		callbackTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
-		cwfees.ModuleName, // does not have end blocker
-		cwicatypes.ModuleName,
 
 		cwerrorsTypes.ModuleName, // should be after all the other cw modules
 	)
@@ -931,6 +925,7 @@ func NewArchwayApp(
 
 	app.SetAnteHandler(anteHandler)
 	app.SetInitChainer(app.InitChainer)
+	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 	app.SetPostHandler(postHandler)
@@ -957,7 +952,7 @@ func NewArchwayApp(
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(fmt.Sprintf("failed to load latest version: %s", err))
 		}
-		ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+		ctx := app.BaseApp.NewUncachedContext(true, cmproto.Header{})
 
 		// Initialize pinned codes in wasmvm as they are not persisted there
 		if err := app.Keepers.WASMKeeper.InitializePinnedCodes(ctx); err != nil {
@@ -974,6 +969,11 @@ func NewArchwayApp(
 
 // Name returns the name of the App
 func (app *ArchwayApp) Name() string { return app.BaseApp.Name() }
+
+// BeginBlocker application updates before every begin block
+func (app *ArchwayApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	return app.ModuleManager.PreBlock(ctx)
+}
 
 // BeginBlocker processes application updates every begin block
 func (app *ArchwayApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
@@ -1040,7 +1040,7 @@ func (app *ArchwayApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.AP
 	clientCtx := apiSvr.ClientCtx
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-	// Register new tendermint queries routes from grpc-gateway.
+	// Register new comet queries routes from grpc-gateway.
 	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register node gRPC service for grpc-gateway.
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)

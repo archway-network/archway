@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	_ module.AppModuleBasic = AppModuleBasic{}
-	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic  = AppModuleBasic{}
+	_ module.AppModule       = AppModule{}
+	_ module.HasABCIEndBlock = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module for this module.
@@ -128,8 +129,8 @@ func (a AppModule) ConsensusVersion() uint64 {
 func (a AppModule) BeginBlock(ctx sdk.Context) {}
 
 // EndBlock returns the end blocker for the module. It returns no validator updates.
-func (a AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, a.keeper, a.wasmKeeper)
+func (a AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	return EndBlocker(sdk.UnwrapSDKContext(ctx), a.keeper, a.wasmKeeper)
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.

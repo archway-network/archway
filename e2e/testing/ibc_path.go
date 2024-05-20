@@ -14,7 +14,7 @@ import (
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
-	ibcTmTypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ibcCmTypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	"github.com/stretchr/testify/require"
 )
 
@@ -275,7 +275,7 @@ func (e *IBCEndpoint) createIBCClient() {
 		tmClientAllowUpdateAfterMisbehaviour = false
 	)
 	var (
-		tmClientTrustLevel  = ibcTmTypes.DefaultTrustLevel
+		tmClientTrustLevel  = ibcCmTypes.DefaultTrustLevel
 		tmClientUpgradePath = []string{"upgrade", "upgradedIBCState"}
 	)
 
@@ -283,7 +283,7 @@ func (e *IBCEndpoint) createIBCClient() {
 
 	dstChainLastTMHeader := dstChain.GetTMClientLastHeader()
 
-	clientState := ibcTmTypes.NewClientState(
+	clientState := ibcCmTypes.NewClientState(
 		dstChain.GetChainID(),
 		tmClientTrustLevel,
 		tmClientTrustPeriod,
