@@ -31,7 +31,13 @@ Contains all the PRs that improved the code without changing the behaviors.
 ## [v7.0.1]
 
 ### Added
+
 - [#571](https://github.com/archway-network/archway/pull/571) - Automatically publish proto files to buf.build
+
+### Fixed
+
+- [#570](https://github.com/archway-network/archway/pull/570) - Fix the Docker.deprecated file to build  
+
 
 ## [v7.0.0](https://github.com/archway-network/archway/releases/tag/v7.0.0)
 
