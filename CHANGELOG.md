@@ -41,6 +41,7 @@ publish proto files to buf.build
 ### Removed
 
 ### Fixed
+- [#570](https://github.com/archway-network/archway/pull/570) - Fix the Docker.deprecated file to build  
 - [#569](https://github.com/archway-network/archway/pull/569) - Audit remidiations for x/cwerrors and x/cwica 
 
 ### Improvements
