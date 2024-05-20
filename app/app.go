@@ -810,11 +810,12 @@ func NewArchwayApp(
 		trackingTypes.ModuleName,
 		rewardsTypes.ModuleName,
 		callbackTypes.ModuleName,
-		cwerrorsTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
 		cwfees.ModuleName, // does not have end blocker
 		cwicatypes.ModuleName,
+
+		cwerrorsTypes.ModuleName, // should be after all the other cw modules
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are

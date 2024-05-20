@@ -39,13 +39,13 @@ func (im IBCModule) OnChanCloseConfirm(ctx sdk.Context, portID string, channelID
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface.
-func (im IBCModule) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
-	return im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement, relayer)
+func (im IBCModule) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, _ sdk.AccAddress) error {
+	return im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement)
 }
 
 // OnTimeoutPacket implements the IBCModule interface.
-func (im IBCModule) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error {
-	return im.keeper.HandleTimeout(ctx, packet, relayer)
+func (im IBCModule) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, _ sdk.AccAddress) error {
+	return im.keeper.HandleTimeout(ctx, packet)
 }
 
 // OnChanOpenTry implements the IBCModule interface. We don't need to implement this handler.

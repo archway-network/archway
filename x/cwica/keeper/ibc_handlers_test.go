@@ -24,10 +24,9 @@ func (s *KeeperTestSuite) TestHandleAcknowledgement() {
 		contractAddress.String(),
 		contractAdminAcc.Address.String(),
 	)
-	relayerAddress := s.chain.GetAccount(1).Address
 
 	// TEST CASE 1: invalid contract address
-	err := cwicaKeeper.HandleAcknowledgement(ctx, channeltypes.Packet{}, nil, relayerAddress)
+	err := cwicaKeeper.HandleAcknowledgement(ctx, channeltypes.Packet{}, nil)
 	s.Require().ErrorContains(err, "failed to parse contract address: : invalid address")
 
 	// TEST CASE 2: invalid packet acknowledgement
@@ -36,7 +35,7 @@ func (s *KeeperTestSuite) TestHandleAcknowledgement() {
 		SourcePort:    icatypes.ControllerPortPrefix + contractAddress.String(),
 		SourceChannel: "channel-0",
 	}
-	err = cwicaKeeper.HandleAcknowledgement(ctx, p, nil, relayerAddress)
+	err = cwicaKeeper.HandleAcknowledgement(ctx, p, nil)
 	s.Require().ErrorContains(err, "cannot unmarshal ICS-27 packet acknowledgement")
 
 	// TEST CASE 3: success contract SudoResponse
@@ -46,12 +45,12 @@ func (s *KeeperTestSuite) TestHandleAcknowledgement() {
 	resAckData, err := channeltypes.SubModuleCdc.MarshalJSON(&resACK)
 	s.Require().NoError(err)
 
-	err = cwicaKeeper.HandleAcknowledgement(ctx, p, resAckData, relayerAddress)
+	err = cwicaKeeper.HandleAcknowledgement(ctx, p, resAckData)
 	s.Require().NoError(err)
 
 	// TEST CASE 4: contract callback fails - should not return error - because error is swallowed
 	wmKeeper.SetReturnSudoError(errors.New("error sudoResponse"))
-	err = cwicaKeeper.HandleAcknowledgement(ctx, p, resAckData, relayerAddress)
+	err = cwicaKeeper.HandleAcknowledgement(ctx, p, resAckData)
 	s.Require().NoError(err)
 }
 
@@ -71,10 +70,9 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 		contractAddress.String(),
 		contractAdminAcc.Address.String(),
 	)
-	relayerAddress := s.chain.GetAccount(1).Address
 
 	// TEST CASE 1: invalid contract address
-	err := cwicaKeeper.HandleTimeout(ctx, channeltypes.Packet{}, relayerAddress)
+	err := cwicaKeeper.HandleTimeout(ctx, channeltypes.Packet{})
 	s.Require().ErrorContains(err, "failed to parse contract address: : invalid address")
 
 	// TEST CASE 2: success contract SudoResponse
@@ -84,12 +82,12 @@ func (s *KeeperTestSuite) TestHandleTimeout() {
 		SourceChannel: "channel-0",
 	}
 
-	err = cwicaKeeper.HandleTimeout(ctx, p, relayerAddress)
+	err = cwicaKeeper.HandleTimeout(ctx, p)
 	s.Require().NoError(err)
 
 	// TEST CASE 3: contract callback fails - should not return error - because error is swallowed
 	wmKeeper.SetReturnSudoError(errors.New("SudoTimeout error"))
-	err = cwicaKeeper.HandleTimeout(ctx, p, relayerAddress)
+	err = cwicaKeeper.HandleTimeout(ctx, p)
 	s.Require().NoError(err)
 }
 
