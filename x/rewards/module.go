@@ -29,6 +29,7 @@ var (
 	_ module.AppModuleBasic  = AppModuleBasic{}
 	_ module.AppModule       = AppModule{}
 	_ module.HasABCIEndBlock = AppModule{}
+	_ module.HasGenesis      = AppModule{}
 )
 
 // ConsensusVersion defines the current x/rewards module consensus version.
@@ -120,13 +121,13 @@ func (a AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // InitGenesis performs genesis initialization for the module. It returns no validator updates.
-func (a AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
+func (a AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(bz, &genesisState)
 
 	a.keeper.InitGenesis(ctx, &genesisState)
 
-	return []abci.ValidatorUpdate{}
+	return
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the module.

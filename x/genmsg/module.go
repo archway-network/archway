@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,7 +21,10 @@ const (
 	ModuleName = "genmsg"
 )
 
-var _ module.AppModule = (*AppModule)(nil)
+var (
+	_ module.AppModule  = (*AppModule)(nil)
+	_ module.HasGenesis = (*AppModule)(nil)
+)
 
 // MessageRouter ADR 031 request type routing
 type MessageRouter interface {
@@ -51,14 +53,14 @@ func (AppModule) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingCo
 	return validateGenesis(cdc, state)
 }
 
-func (a AppModule) InitGenesis(context sdk.Context, codec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
+func (a AppModule) InitGenesis(context sdk.Context, codec codec.JSONCodec, message json.RawMessage) {
 	state := new(types.GenesisState)
 	codec.MustUnmarshalJSON(message, state)
 	err := initGenesis(context, codec, a.router, state)
 	if err != nil {
 		panic(err)
 	}
-	return nil
+	return
 }
 
 func (a AppModule) ExportGenesis(_ sdk.Context, codec codec.JSONCodec) json.RawMessage {
