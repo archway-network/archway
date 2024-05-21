@@ -7,10 +7,6 @@ on:
     tags: [v*]
     paths:
       - proto/**
-  pull_request:
-    paths:
-      - proto/**
-      - .github/workflows/proto-registry.yaml
 
 jobs:
   push:
@@ -21,5 +17,4 @@ jobs:
       - uses: bufbuild/buf-push-action@v1
         with:
           input: proto
-          draft: ${{ github.ref_name != 'main'}}
           buf_token: ${{ secrets.BUF_TOKEN }}
