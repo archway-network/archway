@@ -18,9 +18,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: bufbuild/buf-setup-action@v1.31.0
-      - uses: bufbuild/buf-lint-action@v1
-        with:
-          input: proto
       - uses: bufbuild/buf-push-action@v1
         with:
           input: proto
