@@ -18,7 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: bufbuild/buf-setup-action@v1.32
+      - uses: bufbuild/buf-setup-action@v1.32.0
+      - uses: bufbuild/buf-lint-action@v1
+        with:
+          input: proto
       - uses: bufbuild/buf-push-action@v1
         with:
           input: proto
