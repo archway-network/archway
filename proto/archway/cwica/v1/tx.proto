@@ -15,6 +15,7 @@ option go_package = "github.com/archway-network/archway/x/cwica/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   // RegisterInterchainAccount registers an account on the counterparty chain.
   rpc RegisterInterchainAccount(MsgRegisterInterchainAccount)
       returns (MsgRegisterInterchainAccountResponse) {}

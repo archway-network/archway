@@ -10,6 +10,7 @@ option go_package = "github.com/archway-network/archway/x/cwerrors/types";
 
 // Msg defines the cwerrors Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   // UpdateParams defines a governance operation for updating the x/cwerrors
   // module parameters. The authority is defined in the keeper.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
