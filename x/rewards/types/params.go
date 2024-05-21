@@ -6,7 +6,6 @@ import (
 	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -85,12 +84,6 @@ func (m Params) Validate() error {
 		return err
 	}
 	return nil
-}
-
-// String implements the fmt.Stringer interface.
-func (m Params) String() string {
-	bz, _ := yaml.Marshal(m)
-	return string(bz)
 }
 
 func validateInflationRewardsRatio(v interface{}) (retErr error) {

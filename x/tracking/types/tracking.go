@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"sigs.k8s.io/yaml"
 )
 
 // HasGasUsage returns true if the transaction has contract operations.
@@ -19,12 +18,6 @@ func (m TxInfo) Validate() error {
 	}
 
 	return nil
-}
-
-// String implements the fmt.Stringer interface.
-func (m TxInfo) String() string {
-	bz, _ := yaml.Marshal(m)
-	return string(bz)
 }
 
 // GasUsed returns the total gas used by the operation and the flag that indicates whether operation was a noop operation.
@@ -63,16 +56,4 @@ func (m ContractOperationInfo) Validate() error {
 	}
 
 	return nil
-}
-
-// String implements the fmt.Stringer interface.
-func (m ContractOperationInfo) String() string {
-	bz, _ := yaml.Marshal(m)
-	return string(bz)
-}
-
-// String implements the fmt.Stringer interface.
-func (m BlockTracking) String() string {
-	bz, _ := yaml.Marshal(m)
-	return string(bz)
 }
