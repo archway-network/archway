@@ -8,7 +8,6 @@ on:
     paths:
       - proto/**
   pull_request:
-    types: [opened, reopened]
     paths:
       - proto/**
       - .github/workflows/proto-registry.yaml
