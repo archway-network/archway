@@ -38,6 +38,30 @@
             }
         },
         {
+            "url": "./tmp-swagger-gen/archway/cwerrors/v1/query.swagger.json",
+            "tags": {
+                "add": ["Archway"],
+                "remove": ["Query", "Service"]
+            },
+            "operationIds": {
+                "rename": {
+                    "Params": "CWErrorsParams"
+                }
+            }
+        },
+        {
+            "url": "./tmp-swagger-gen/archway/cwica/v1/query.swagger.json",
+            "tags": {
+                "add": ["Archway"],
+                "remove": ["Query", "Service"]
+            },
+            "operationIds": {
+                "rename": {
+                    "Params": "CWIcaParams"
+                }
+            }
+        },
+        {
             "url": "./tmp-swagger-gen/archway/tracking/v1/query.swagger.json",
             "tags": {
                 "add": ["Archway"],
