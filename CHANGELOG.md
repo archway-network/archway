@@ -28,7 +28,7 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviors.
 -->
 
-## [v7.0.1]
+## [v7.0.1](https://github.com/archway-network/archway/releases/tag/v7.0.1)
 
 ### Added
 
@@ -37,6 +37,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 ### Fixed
 
 - [#570](https://github.com/archway-network/archway/pull/570) - Fix the Docker.deprecated file to build  
+- [#568](https://github.com/archway-network/archway/pull/568) - Update Swagger doc and config to include CWICA and CWErrors modules
 
 
 ## [v7.0.0](https://github.com/archway-network/archway/releases/tag/v7.0.0)
