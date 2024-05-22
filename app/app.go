@@ -302,7 +302,6 @@ func NewArchwayApp(
 ) *ArchwayApp {
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	appCodec, legacyAmino := codec.NewProtoCodec(interfaceRegistry), encodingConfig.Amino
-	legacyAmino = encodingConfig.Amino
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
