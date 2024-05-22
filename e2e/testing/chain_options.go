@@ -2,10 +2,11 @@ package e2eTesting
 
 import (
 	math "cosmossdk.io/math"
-	archway "github.com/archway-network/archway/types"
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
+	archway "github.com/archway-network/archway/types"
 
 	"github.com/archway-network/archway/app"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"

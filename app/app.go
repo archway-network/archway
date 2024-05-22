@@ -28,9 +28,6 @@ import (
 	wasmdKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	cosmwasm "github.com/CosmWasm/wasmvm"
-	"github.com/archway-network/archway/app/keepers"
-	"github.com/archway-network/archway/x/cwfees"
-	"github.com/archway-network/archway/x/genmsg"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -115,13 +112,15 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client"
-	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibccm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	"github.com/spf13/cast"
+
+	"github.com/archway-network/archway/app/keepers"
+	"github.com/archway-network/archway/x/cwfees"
+	"github.com/archway-network/archway/x/genmsg"
 
 	"github.com/archway-network/archway/wasmbinding"
 
@@ -467,8 +466,7 @@ func NewArchwayApp(
 	govRouter := govV1Beta1types.NewRouter()
 	govRouter.
 		AddRoute(govtypes.RouterKey, govV1Beta1types.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.Keepers.ParamsKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.Keepers.IBCKeeper.ClientKeeper))
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.Keepers.ParamsKeeper))
 
 	// IBC Fee Module keeper
 	app.Keepers.IBCFeeKeeper = ibcfeekeeper.NewKeeper(
@@ -872,7 +870,10 @@ func NewArchwayApp(
 	app.ModuleManager.RegisterInvariants(&app.Keepers.CrisisKeeper)
 
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.ModuleManager.RegisterServices(app.configurator)
+	err = app.ModuleManager.RegisterServices(app.configurator)
+	if err != nil {
+		panic(fmt.Errorf("failed to register services: %s", err))
+	}
 	app.setupUpgrades()
 
 	// create the simulation manager and define the order of the modules for deterministic simulations

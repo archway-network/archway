@@ -5,13 +5,14 @@ import (
 	"time"
 
 	math "cosmossdk.io/math"
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/x/rewards/keeper"
-	"github.com/archway-network/archway/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/x/rewards/keeper"
+	"github.com/archway-network/archway/x/rewards/types"
 )
 
 func TestRewardsModuleAccountInvariant(t *testing.T) {

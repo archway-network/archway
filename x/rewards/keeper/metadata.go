@@ -3,7 +3,6 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/archway-network/archway/x/rewards/types"
 )
@@ -84,9 +83,5 @@ func (k Keeper) GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress
 
 func (k Keeper) isModuleAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	acc := k.authKeeper.GetAccount(ctx, addr)
-	if acc == nil {
-		return false
-	}
-	_, ok := acc.(authtypes.ModuleAccountI)
-	return ok
+	return acc != nil
 }

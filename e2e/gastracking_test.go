@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	archway "github.com/archway-network/archway/types"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"

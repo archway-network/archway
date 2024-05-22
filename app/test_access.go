@@ -1,9 +1,10 @@
 package app
 
 import (
-	"github.com/archway-network/archway/app/params"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+
+	"github.com/archway-network/archway/app/params"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"

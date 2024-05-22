@@ -4,10 +4,11 @@ import (
 	"fmt"
 
 	math "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/archway-network/archway/dmap"
 	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/rewards/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (

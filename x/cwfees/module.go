@@ -54,7 +54,6 @@ func (a AppModule) InitGenesis(context sdk.Context, codec codec.JSONCodec, messa
 	if err != nil {
 		panic(err)
 	}
-	return
 }
 
 func (a AppModule) ExportGenesis(ctx sdk.Context, codec codec.JSONCodec) json.RawMessage {

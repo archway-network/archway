@@ -13,7 +13,6 @@ import (
 	math "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/archway-network/archway/app"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmProto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmTypes "github.com/cometbft/cometbft/types"
@@ -36,6 +35,8 @@ import (
 	"github.com/cosmos/ibc-go/v8/testing/mock"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/stretchr/testify/require"
+
+	"github.com/archway-network/archway/app"
 )
 
 var TestAccountAddr = sdk.AccAddress("test")
@@ -150,7 +151,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	stakingValidators := make([]stakingTypes.Validator, 0, len(validatorSet.Validators))
 	stakingDelegations := make([]stakingTypes.Delegation, 0, len(validatorSet.Validators))
 	for i, val := range validatorSet.Validators {
-		valPubKey, err := cryptoCodec.FromTmPubKeyInterface(val.PubKey)
+		valPubKey, err := cryptoCodec.FromCmtPubKeyInterface(val.PubKey)
 		require.NoError(t, err)
 
 		valPubKeyAny, err := codecTypes.NewAnyWithValue(valPubKey)
@@ -238,7 +239,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 	genStateBytes, err := json.MarshalIndent(genState, "", " ")
 	require.NoError(t, err)
 
-	archApp.InitChain(
+	_, err = archApp.InitChain(
 		&abci.RequestInitChain{
 			ChainId:         chainid,
 			Validators:      []abci.ValidatorUpdate{},
@@ -246,6 +247,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 			AppStateBytes:   genStateBytes,
 		},
 	)
+	require.NoError(t, err)
 
 	// Create a chain and finalize the 1st block
 	chain := TestChain{
@@ -394,7 +396,8 @@ func (chain *TestChain) BeginBlock() []abci.Event {
 func (chain *TestChain) EndBlock() []abci.Event {
 	res, err := chain.app.ModuleManager.EndBlock(chain.GetContext())
 	require.NoError(chain.t, err)
-	chain.app.Commit()
+	_, err = chain.app.Commit()
+	require.NoError(chain.t, err)
 
 	return res.Events
 }

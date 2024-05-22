@@ -68,14 +68,17 @@ func TestWASMBindingPlugins(t *testing.T) {
 			anyTime := time.Now().UTC()
 			proposal, pErr := govTypes.NewProposal([]sdk.Msg{}, proposalId, anyTime, anyTime, "", "Text Proposal", "Description", depositor, false)
 			require.NoError(t, pErr)
-			govKeeper.SetProposal(ctx, proposal)
+			err := govKeeper.SetProposal(ctx, proposal)
+			require.NoError(t, err)
 
 			deposit := govTypes.NewDeposit(proposalId, depositor, nil)
-			govKeeper.SetDeposit(ctx, deposit)
+			err = govKeeper.SetDeposit(ctx, deposit)
+			require.NoError(t, err)
 
 			voter := accAddrs[1]
-			govKeeper.ActivateVotingPeriod(ctx, proposal)
-			err := govKeeper.AddVote(ctx, proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes), "")
+			err = govKeeper.ActivateVotingPeriod(ctx, proposal)
+			require.NoError(t, err)
+			err = govKeeper.AddVote(ctx, proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes), "")
 			require.NoError(t, err)
 
 			_, err = queryPlugin.Custom(ctx, []byte(fmt.Sprintf("{\"gov_vote\": {\"proposal_id\": %d, \"voter\": \"%s\"}}", proposalId, voter)))

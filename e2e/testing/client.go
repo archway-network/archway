@@ -19,7 +19,7 @@ type grpcClient struct {
 
 func (c grpcClient) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
 	req := args.(proto.Message)
-	resp, err := c.app.Query(nil, &abci.RequestQuery{
+	resp, err := c.app.Query(ctx, &abci.RequestQuery{
 		Data:   c.app.AppCodec().MustMarshal(req),
 		Path:   method,
 		Height: 0, // TODO: heightened queries

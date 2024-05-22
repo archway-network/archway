@@ -57,15 +57,17 @@ func TestArchwaydExport(t *testing.T) {
 	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
 
-	gapp.InitChain(
+	_, err = gapp.InitChain(
 		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simapp.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)
+	require.NoError(t, err, "InitChain must not fail")
 
-	gapp.Commit()
+	_, err = gapp.Commit()
+	require.NoError(t, err, "Commit must not fail")
 
 	_, err = gapp.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
@@ -113,7 +115,7 @@ func genesisStateWithValSet(t *testing.T,
 	bondAmt := sdk.DefaultPowerReduction
 
 	for _, val := range valSet.Validators {
-		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
+		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		require.NoError(t, err)
 		pkAny, err := codectypes.NewAnyWithValue(pk)
 		require.NoError(t, err)

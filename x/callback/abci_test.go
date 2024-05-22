@@ -80,7 +80,7 @@ func TestEndBlocker(t *testing.T) {
 				Sender:          contractAdminAcc.Address.String(),
 				Fees:            feesToPay,
 			}
-			_, err = msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
+			_, err = msgServer.RequestCallback(ctx, reqMsg)
 			require.NoError(t, err)
 
 			// Increment block height and run end blocker at the next block
@@ -120,7 +120,7 @@ func TestEndBlocker(t *testing.T) {
 		Sender:          contractAdminAcc.Address.String(),
 		Fees:            feesToPay,
 	}
-	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(chain.GetContext()), reqMsg)
+	_, err = msgServer.RequestCallback(chain.GetContext(), reqMsg)
 	require.NoError(t, err)
 
 	// Setting the callbackGasLimit param to 1
@@ -149,7 +149,7 @@ func TestEndBlocker(t *testing.T) {
 		Sender:          contractAdminAcc.Address.String(),
 		Fees:            feesToPay,
 	}
-	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(chain.GetContext()), reqMsg)
+	_, err = msgServer.RequestCallback(chain.GetContext(), reqMsg)
 	require.NoError(t, err)
 
 	// Increment block height and run end blocker

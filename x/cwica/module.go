@@ -155,8 +155,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	cdc.MustUnmarshalJSON(gs, &genState)
 
 	InitGenesis(ctx, am.keeper, genState)
-
-	return
 }
 
 // ExportGenesis returns the capability module's exported genesis state as raw JSON bytes.

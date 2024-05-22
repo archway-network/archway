@@ -73,7 +73,7 @@ func (store coreKVStore) ReverseIterator(start, end []byte) (store.Iterator, err
 
 type protoMessage[T any] interface {
 	*T
-	codec.ProtoMarshaler
+	proto.Message
 }
 
 // ProtoValue inits a collections.ValueCodec for a generic gogo protobuf message.

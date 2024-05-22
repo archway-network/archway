@@ -75,7 +75,7 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 	/* Handle fee distribution state. */
 
 	// withdraw all validator commission
-	app.Keepers.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+	err := app.Keepers.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		valBz, err := app.Keepers.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 		if err != nil {
 			panic(err)
@@ -83,6 +83,9 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 		_, _ = app.Keepers.DistrKeeper.WithdrawValidatorCommission(ctx, valBz) //nolint:errcheck
 		return false
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	// withdraw all delegator rewards
 	dels, err := app.Keepers.StakingKeeper.GetAllDelegations(ctx)
@@ -113,7 +116,7 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 	ctx = ctx.WithBlockHeight(0)
 
 	// reinitialize all validators
-	app.Keepers.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+	err = app.Keepers.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		valBz, err := app.Keepers.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 		if err != nil {
 			panic(err)
@@ -139,6 +142,9 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 		}
 		return false
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	// reinitialize all delegations
 	for _, del := range dels {
@@ -166,22 +172,34 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 	/* Handle staking state. */
 
 	// iterate through redelegations, reset creation height
-	app.Keepers.StakingKeeper.IterateRedelegations(ctx, func(_ int64, red stakingtypes.Redelegation) (stop bool) {
+	err = app.Keepers.StakingKeeper.IterateRedelegations(ctx, func(_ int64, red stakingtypes.Redelegation) (stop bool) {
 		for i := range red.Entries {
 			red.Entries[i].CreationHeight = 0
 		}
-		app.Keepers.StakingKeeper.SetRedelegation(ctx, red)
+		err := app.Keepers.StakingKeeper.SetRedelegation(ctx, red)
+		if err != nil {
+			panic(err)
+		}
 		return false
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	// iterate through unbonding delegations, reset creation height
-	app.Keepers.StakingKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd stakingtypes.UnbondingDelegation) (stop bool) {
+	err = app.Keepers.StakingKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd stakingtypes.UnbondingDelegation) (stop bool) {
 		for i := range ubd.Entries {
 			ubd.Entries[i].CreationHeight = 0
 		}
-		app.Keepers.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
+		err := app.Keepers.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
+		if err != nil {
+			panic(err)
+		}
 		return false
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	// Iterate through validators by power descending, reset bond heights, and
 	// update bond intra-tx counters.
@@ -201,7 +219,10 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 			validator.Jailed = true
 		}
 
-		app.Keepers.StakingKeeper.SetValidator(ctx, validator)
+		err = app.Keepers.StakingKeeper.SetValidator(ctx, validator)
+		if err != nil {
+			panic(err)
+		}
 		counter++
 	}
 
@@ -215,12 +236,18 @@ func (app *ArchwayApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 	/* Handle slashing state. */
 
 	// reset start height on signing infos
-	app.Keepers.SlashingKeeper.IterateValidatorSigningInfos(
+	err = app.Keepers.SlashingKeeper.IterateValidatorSigningInfos(
 		ctx,
 		func(addr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 			info.StartHeight = 0
-			app.Keepers.SlashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
+			err := app.Keepers.SlashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
+			if err != nil {
+				panic(err)
+			}
 			return false
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
 }

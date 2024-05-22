@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestSubscribeToError() {
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
 			req := tc.input()
-			res, err := msgServer.SubscribeToError(sdk.WrapSDKContext(ctx), req)
+			res, err := msgServer.SubscribeToError(ctx, req)
 			if tc.expectError {
 				s.Require().Error(err)
 				s.Assert().ErrorContains(err, tc.errorType.Error())
@@ -206,7 +206,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
 			req := tc.input()
-			res, err := msgServer.UpdateParams(sdk.WrapSDKContext(ctx), req)
+			res, err := msgServer.UpdateParams(ctx, req)
 			if tc.expectError {
 				s.Require().Error(err)
 				s.Assert().ErrorContains(err, tc.errorType.Error())

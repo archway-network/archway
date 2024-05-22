@@ -4,9 +4,10 @@ import (
 	"math"
 
 	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/archway-network/archway/pkg"
 	"github.com/archway-network/archway/x/rewards/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // UpdateMinConsensusFee calculates and updates the minimum consensus fee if eligible emitting an event.

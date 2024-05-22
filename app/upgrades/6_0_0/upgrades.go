@@ -58,7 +58,7 @@ var Upgrade = upgrades.Upgrade{
 			case banktypes.ModuleName:
 				keyTable = banktypes.ParamKeyTable() //nolint:staticcheck
 			case stakingtypes.ModuleName:
-				keyTable = stakingtypes.ParamKeyTable()
+				keyTable = stakingtypes.ParamKeyTable() //nolint:staticcheck
 			case minttypes.ModuleName:
 				keyTable = minttypes.ParamKeyTable() //nolint:staticcheck
 			case distrtypes.ModuleName:

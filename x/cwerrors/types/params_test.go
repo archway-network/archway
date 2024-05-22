@@ -4,9 +4,10 @@ import (
 	"testing"
 
 	math "cosmossdk.io/math"
-	"github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/archway-network/archway/x/cwerrors/types"
 )
 
 func TestParamsValidate(t *testing.T) {

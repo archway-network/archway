@@ -3,8 +3,9 @@ package keeper
 import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/archway-network/archway/x/cwerrors/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/cwerrors/types"
 )
 
 // SetError stores a sudo error and queues it for deletion after a certain block height

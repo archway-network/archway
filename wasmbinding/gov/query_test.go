@@ -37,14 +37,17 @@ func TestGovWASMBindings(t *testing.T) {
 
 	proposal, err := govTypes.NewProposal([]sdk.Msg{}, proposalId, ctx.BlockHeader().Time, ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod), "", "Text Proposal", "Description", depositor, false)
 	require.NoError(t, err)
-	keeper.SetProposal(ctx, proposal)
+	err = keeper.SetProposal(ctx, proposal)
+	require.NoError(t, err)
 
 	// Make a deposit
 	deposit := govTypes.NewDeposit(proposalId, depositor, nil)
-	keeper.SetDeposit(ctx, deposit)
+	err = keeper.SetDeposit(ctx, deposit)
+	require.NoError(t, err)
 
 	// Vote
-	keeper.ActivateVotingPeriod(ctx, proposal)
+	err = keeper.ActivateVotingPeriod(ctx, proposal)
+	require.NoError(t, err)
 	err = keeper.AddVote(ctx, proposalId, voter, govTypes.NewNonSplitVoteOption(govTypes.OptionYes), "")
 	require.NoError(t, err)
 

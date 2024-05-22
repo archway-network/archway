@@ -40,19 +40,19 @@ func TestExportGenesis(t *testing.T) {
 		Sender:          contractAdminAcc.Address.String(),
 		Fees:            feesToPay,
 	}
-	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
+	_, err = msgServer.RequestCallback(ctx, reqMsg)
 	require.NoError(t, err)
 
 	reqMsg.JobId = INCREMENT_JOBID
-	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
+	_, err = msgServer.RequestCallback(ctx, reqMsg)
 	require.NoError(t, err)
 
 	reqMsg.JobId = DONOTHING_JOBID
-	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
+	_, err = msgServer.RequestCallback(ctx, reqMsg)
 	require.NoError(t, err)
 
 	reqMsg.CallbackHeight = callbackHeight + 1
-	_, err = msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
+	_, err = msgServer.RequestCallback(ctx, reqMsg)
 	require.NoError(t, err)
 
 	params := types.Params{

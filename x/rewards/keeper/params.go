@@ -2,8 +2,9 @@ package keeper
 
 import (
 	math "cosmossdk.io/math"
-	"github.com/archway-network/archway/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/rewards/types"
 )
 
 // InflationRewardsRatio return inflation rewards params ratio.

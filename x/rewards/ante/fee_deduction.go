@@ -6,14 +6,15 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/archway-network/archway/pkg"
-	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/archway-network/archway/pkg"
+	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 var _ sdk.AnteDecorator = DeductFeeDecorator{}

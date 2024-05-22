@@ -6,12 +6,13 @@ import (
 	"google.golang.org/grpc/status"
 
 	math "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestGRPC_Params() {
@@ -27,13 +28,13 @@ func (s *KeeperTestSuite) TestGRPC_Params() {
 	require.NoError(s.T(), err)
 
 	s.Run("err: empty request", func() {
-		_, err := querySrvr.Params(sdk.WrapSDKContext(ctx), nil)
+		_, err := querySrvr.Params(ctx, nil)
 		s.Require().Error(err)
 		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
 	s.Run("ok: gets params", func() {
-		res, err := querySrvr.Params(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryParamsRequest{})
+		res, err := querySrvr.Params(ctx, &rewardsTypes.QueryParamsRequest{})
 		s.Require().NoError(err)
 		s.Require().Equal(params, res.Params)
 	})
@@ -55,25 +56,25 @@ func (s *KeeperTestSuite) TestGRPC_ContractMetadata() {
 	s.Require().NoError(err)
 
 	s.Run("err: empty request", func() {
-		_, err := querySrvr.ContractMetadata(sdk.WrapSDKContext(ctx), nil)
+		_, err := querySrvr.ContractMetadata(ctx, nil)
 		s.Require().Error(err)
 		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
 	s.Run("err: invalid contract address", func() {
-		_, err := querySrvr.ContractMetadata(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryContractMetadataRequest{ContractAddress: "👻"})
+		_, err := querySrvr.ContractMetadata(ctx, &rewardsTypes.QueryContractMetadataRequest{ContractAddress: "👻"})
 		s.Require().Error(err)
 		s.Require().Equal(status.Error(codes.InvalidArgument, "invalid contract address: decoding bech32 failed: invalid bech32 string length 4"), err)
 	})
 
 	s.Run("err: contract metadata not found", func() {
-		_, err := querySrvr.ContractMetadata(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryContractMetadataRequest{ContractAddress: contractAddr[1].String()})
+		_, err := querySrvr.ContractMetadata(ctx, &rewardsTypes.QueryContractMetadataRequest{ContractAddress: contractAddr[1].String()})
 		s.Require().Error(err)
 		s.Require().Equal(status.Errorf(codes.NotFound, "metadata for the contract: not found"), err)
 	})
 
 	s.Run("ok: gets contract metadata", func() {
-		res, err := querySrvr.ContractMetadata(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryContractMetadataRequest{ContractAddress: contractAddr[0].String()})
+		res, err := querySrvr.ContractMetadata(ctx, &rewardsTypes.QueryContractMetadataRequest{ContractAddress: contractAddr[0].String()})
 		s.Require().NoError(err)
 		s.Require().Equal(contractMeta.ContractAddress, res.Metadata.ContractAddress)
 		s.Require().Equal(contractMeta.RewardsAddress, res.Metadata.RewardsAddress)
@@ -86,13 +87,13 @@ func (s *KeeperTestSuite) TestGRPC_BlockRewardsTracking() {
 	querySrvr := keeper.NewQueryServer(k)
 
 	s.Run("err: empty request", func() {
-		_, err := querySrvr.BlockRewardsTracking(sdk.WrapSDKContext(ctx), nil)
+		_, err := querySrvr.BlockRewardsTracking(ctx, nil)
 		s.Require().Error(err)
 		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
 	s.Run("ok: gets block rewards tracking", func() {
-		res, err := querySrvr.BlockRewardsTracking(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryBlockRewardsTrackingRequest{})
+		res, err := querySrvr.BlockRewardsTracking(ctx, &rewardsTypes.QueryBlockRewardsTrackingRequest{})
 		s.Require().NoError(err)
 		s.Require().Equal(0, len(res.Block.TxRewards))
 		s.Require().Equal(ctx.BlockHeight(), res.Block.InflationRewards.Height)
@@ -104,13 +105,13 @@ func (s *KeeperTestSuite) TestGRPC_RewardsPool() {
 	querySrvr := keeper.NewQueryServer(k)
 
 	s.Run("err: empty request", func() {
-		_, err := querySrvr.RewardsPool(sdk.WrapSDKContext(ctx), nil)
+		_, err := querySrvr.RewardsPool(ctx, nil)
 		s.Require().Error(err)
 		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
 	s.Run("ok: gets rewards pool", func() {
-		res, err := querySrvr.RewardsPool(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryRewardsPoolRequest{})
+		res, err := querySrvr.RewardsPool(ctx, &rewardsTypes.QueryRewardsPoolRequest{})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)
 	})
@@ -122,14 +123,14 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 	querySrvr := keeper.NewQueryServer(k)
 
 	s.Run("err: empty request", func() {
-		_, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), nil)
+		_, err := querySrvr.EstimateTxFees(ctx, nil)
 		s.Require().Error(err)
 		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
 	s.Run("ok: gets estimated tx fees", func() {
 		expectedFee := sdk.NewInt64Coin("stake", 0)
-		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 0})
+		res, err := querySrvr.EstimateTxFees(ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 0})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
@@ -140,7 +141,7 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 	s.Run("ok: gets estimated tx fees (custom minconsfee set)", func() {
 		err := s.chain.GetApp().Keepers.RewardsKeeper.MinConsFee.Set(ctx, sdk.NewDecCoinFromCoin(minConsFee))
 		s.Require().NoError(err)
-		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1})
+		res, err := querySrvr.EstimateTxFees(ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
@@ -166,7 +167,7 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 		})
 		s.Require().NoError(err)
 
-		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1, ContractAddress: contractAddr.String()})
+		res, err := querySrvr.EstimateTxFees(ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1, ContractAddress: contractAddr.String()})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
@@ -193,7 +194,7 @@ func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
 		})
 		s.Require().NoError(err)
 
-		res, err := querySrvr.EstimateTxFees(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1, ContractAddress: contractAddr.String()})
+		res, err := querySrvr.EstimateTxFees(ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1, ContractAddress: contractAddr.String()})
 		s.Require().NoError(err)
 		s.Require().NotNil(res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
@@ -207,13 +208,13 @@ func (s *KeeperTestSuite) TestGRPC_OutstandingRewards() {
 	querySrvr := keeper.NewQueryServer(k)
 
 	s.Run("err: empty request", func() {
-		_, err := querySrvr.OutstandingRewards(sdk.WrapSDKContext(ctx), nil)
+		_, err := querySrvr.OutstandingRewards(ctx, nil)
 		s.Require().Error(err)
 		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
 	s.Run("err: invalid rewards address", func() {
-		_, err := querySrvr.OutstandingRewards(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryOutstandingRewardsRequest{
+		_, err := querySrvr.OutstandingRewards(ctx, &rewardsTypes.QueryOutstandingRewardsRequest{
 			RewardsAddress: "👻",
 		})
 		s.Require().Error(err)
@@ -221,7 +222,7 @@ func (s *KeeperTestSuite) TestGRPC_OutstandingRewards() {
 	})
 
 	s.Run("ok: get outstanding rewards", func() {
-		res, err := querySrvr.OutstandingRewards(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryOutstandingRewardsRequest{
+		res, err := querySrvr.OutstandingRewards(ctx, &rewardsTypes.QueryOutstandingRewardsRequest{
 			RewardsAddress: s.chain.GetAccount(0).Address.String(),
 		})
 		s.Require().NoError(err)
@@ -235,13 +236,13 @@ func (s *KeeperTestSuite) TestGRPC_RewardsRecords() {
 	querySrvr := keeper.NewQueryServer(k)
 
 	s.Run("err: empty request", func() {
-		_, err := querySrvr.RewardsRecords(sdk.WrapSDKContext(ctx), nil)
+		_, err := querySrvr.RewardsRecords(ctx, nil)
 		s.Require().Error(err)
 		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
 	s.Run("err: invalid rewards address", func() {
-		_, err := querySrvr.RewardsRecords(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryRewardsRecordsRequest{
+		_, err := querySrvr.RewardsRecords(ctx, &rewardsTypes.QueryRewardsRecordsRequest{
 			RewardsAddress: "👻",
 		})
 		s.Require().Error(err)
@@ -249,7 +250,7 @@ func (s *KeeperTestSuite) TestGRPC_RewardsRecords() {
 	})
 
 	s.Run("ok: get rewards records", func() {
-		res, err := querySrvr.RewardsRecords(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryRewardsRecordsRequest{
+		res, err := querySrvr.RewardsRecords(ctx, &rewardsTypes.QueryRewardsRecordsRequest{
 			RewardsAddress: s.chain.GetAccount(0).Address.String(),
 		})
 		s.Require().NoError(err)
@@ -263,13 +264,13 @@ func (s *KeeperTestSuite) TestGRPC_FlatFee() {
 	querySrvr := keeper.NewQueryServer(k)
 
 	s.Run("err: empty request", func() {
-		_, err := querySrvr.FlatFee(sdk.WrapSDKContext(ctx), nil)
+		_, err := querySrvr.FlatFee(ctx, nil)
 		s.Require().Error(err)
 		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
 	s.Run("err: invalid contract address", func() {
-		_, err := querySrvr.FlatFee(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryFlatFeeRequest{
+		_, err := querySrvr.FlatFee(ctx, &rewardsTypes.QueryFlatFeeRequest{
 			ContractAddress: "👻",
 		})
 		s.Require().Error(err)
@@ -278,7 +279,7 @@ func (s *KeeperTestSuite) TestGRPC_FlatFee() {
 
 	s.Run("err: flat fee not found", func() {
 		contractAddr := e2eTesting.GenContractAddresses(1)[0]
-		_, err := querySrvr.FlatFee(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryFlatFeeRequest{
+		_, err := querySrvr.FlatFee(ctx, &rewardsTypes.QueryFlatFeeRequest{
 			ContractAddress: contractAddr.String(),
 		})
 		s.Require().Error(err)
@@ -303,7 +304,7 @@ func (s *KeeperTestSuite) TestGRPC_FlatFee() {
 		})
 		s.Require().NoError(err)
 
-		res, err := querySrvr.FlatFee(sdk.WrapSDKContext(ctx), &rewardsTypes.QueryFlatFeeRequest{
+		res, err := querySrvr.FlatFee(ctx, &rewardsTypes.QueryFlatFeeRequest{
 			ContractAddress: contractAddr.String(),
 		})
 		s.Require().NoError(err)

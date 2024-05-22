@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
 			req := tc.prepare()
-			res, err := server.SetContractMetadata(sdk.WrapSDKContext(ctx), req)
+			res, err := server.SetContractMetadata(ctx, req)
 			if tc.expectError {
 				s.Require().Error(err)
 				s.Require().Equal(tc.errorType.Error(), err.Error())
@@ -217,7 +217,7 @@ func (s *KeeperTestSuite) TestMsgServer_WithdrawRewards() {
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
 			req := tc.prepare()
-			res, err := server.WithdrawRewards(sdk.WrapSDKContext(ctx), req)
+			res, err := server.WithdrawRewards(ctx, req)
 			if tc.expectError {
 				s.Require().Error(err)
 				s.Require().Equal(tc.errorType.Error(), err.Error())
@@ -332,7 +332,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetFlatFee() {
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
 			req := tc.prepare()
-			res, err := server.SetFlatFee(sdk.WrapSDKContext(ctx), req)
+			res, err := server.SetFlatFee(ctx, req)
 			if tc.expectError {
 				s.Require().Error(err)
 				s.Require().Equal(tc.errorType.Error(), err.Error())
@@ -404,7 +404,7 @@ func (s *KeeperTestSuite) TestMsgServer_UpdateParams() {
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
 			req := tc.prepare()
-			res, err := server.UpdateParams(sdk.WrapSDKContext(ctx), req)
+			res, err := server.UpdateParams(ctx, req)
 			if tc.expectError {
 				s.Require().Error(err)
 			} else {

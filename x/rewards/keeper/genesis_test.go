@@ -4,9 +4,10 @@ import (
 	"time"
 
 	math "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/rewards/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TestGenesisImportExport check genesis import/export.

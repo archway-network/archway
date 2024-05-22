@@ -67,8 +67,3 @@ func getExpectedLibwasmVersion() (string, error) {
 	}
 	return "", fmt.Errorf("unable to detect the expected libwasmvm version")
 }
-
-func logExit(code int, format string, args ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stderr, format, args...)
-	os.Exit(code)
-}

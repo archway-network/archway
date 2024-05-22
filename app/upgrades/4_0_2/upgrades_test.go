@@ -85,7 +85,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 			suite.Require().NoError(err)
 			ctx = ctx.WithBlockHeight(dummyUpgradeHeight)
 			suite.Require().NotPanics(func() {
-				suite.archway.GetApp().BeginBlocker(ctx)
+				_, err = suite.archway.GetApp().BeginBlocker(ctx)
+				suite.Require().NoError(err)
 			})
 
 			tc.post_upgrade()
