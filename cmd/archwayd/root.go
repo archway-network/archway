@@ -49,14 +49,15 @@ import (
 // NewRootCmd creates a new root command for archwayd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
-	encodingConfig := app.MakeEncodingConfig()
-	tempApp := app.NewArchwayApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil, tempDir(), 0, encodingConfig, simtestutil.NewAppOptionsWithFlagHome(tempDir()), []wasmkeeper.Option{})
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
 	cfg.SetBech32PrefixForValidator(app.Bech32PrefixValAddr, app.Bech32PrefixValPub)
 	cfg.SetBech32PrefixForConsensusNode(app.Bech32PrefixConsAddr, app.Bech32PrefixConsPub)
 	cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 	cfg.Seal()
+
+	encodingConfig := app.MakeEncodingConfig()
+	tempApp := app.NewArchwayApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil, tempDir(), 0, encodingConfig, simtestutil.NewAppOptionsWithFlagHome(tempDir()), []wasmkeeper.Option{})
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
