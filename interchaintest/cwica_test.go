@@ -6,12 +6,12 @@ import (
 
 	cosmosproto "github.com/cosmos/gogoproto/proto"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
-	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v7/ibc"
-	"github.com/strangelove-ventures/interchaintest/v7/relayer"
-	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v7/testutil"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
+	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v8/ibc"
+	"github.com/strangelove-ventures/interchaintest/v8/relayer"
+	"github.com/strangelove-ventures/interchaintest/v8/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -190,7 +190,15 @@ func TestCWICA(t *testing.T) {
 	require.Contains(t, contractRes.Data.Errors, "error handling packet")
 
 	// Create a gov prop on the counterparty chain
-	propMsg, err := counterpartyChain.BuildProposal([]cosmosproto.Message{}, "TextProp", "Summary", "Metadata", "10000000000"+counterpartyChain.Config().Denom)
+	propMsg, err := counterpartyChain.BuildProposal(
+		[]cosmosproto.Message{},
+		"TextProp",
+		"Summary",
+		"Metadata",
+		"10000000000"+counterpartyChain.Config().Denom,
+		counterpartyChainUser.KeyName(),
+		false,
+	)
 	require.NoError(t, err)
 	textProp, err := counterpartyChain.SubmitProposal(ctx, counterpartyChainUser.KeyName(), propMsg)
 	require.NoError(t, err)

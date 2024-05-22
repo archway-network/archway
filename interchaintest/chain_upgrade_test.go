@@ -5,16 +5,15 @@ import (
 	"testing"
 	"time"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	cosmosproto "github.com/cosmos/gogoproto/proto"
 	"github.com/docker/docker/client"
-	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
-	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v7/ibc"
-	"github.com/strangelove-ventures/interchaintest/v7/testutil"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
+	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v8/ibc"
+	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 const (
@@ -88,6 +87,8 @@ func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, nextUpgrade
 		"Every PR we preform an upgrade check to ensure nothing breaks",
 		"metadata",
 		"10000000000"+archwayChain.Config().Denom,
+		chainUser.KeyName(),
+		false,
 	)
 	require.NoError(t, err, "error building proposal tx")
 
