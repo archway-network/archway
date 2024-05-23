@@ -46,6 +46,8 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#570](https://github.com/archway-network/archway/pull/570) - Fix the Docker.deprecated file to build  
 - [#569](https://github.com/archway-network/archway/pull/569) - Audit remidiations for x/cwerrors and x/cwica 
 
+- [#566](https://github.com/archway-network/archway/pull/566) - Fixing the localnet script to correctly set gov params post sdk v47
+
 ### Improvements
 
 - [#567](https://github.com/archway-network/archway/pull/567) - Remove redundant params fetching in SaveCallback 
