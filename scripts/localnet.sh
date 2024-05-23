@@ -71,13 +71,13 @@ setup_chain () {
   genesis="$CHAIN_DIR/$CHAIN_ID/config/genesis.json"
   # x/gov params change
   # reduce voting period to 2 minutes
-  contents="$(jq '.app_state.gov.voting_params.voting_period = "120s"' $genesis)" && echo "${contents}" >  $genesis
+  contents="$(jq '.app_state.gov.params.voting_period = "120s"' $genesis)" && echo "${contents}" >  $genesis
   echo_info "Set x/gov voting period to 120 seconds"
   # reduce minimum deposit amount to 10stake
-  contents="$(jq '.app_state.gov.deposit_params.min_deposit[0].amount = "10"' $genesis)" && echo "${contents}" >  $genesis
+  contents="$(jq '.app_state.gov.params.min_deposit[0].amount = "10"' $genesis)" && echo "${contents}" >  $genesis
   echo_info "Set x/gov proposal min deposit amount to 10 stake"
   # reduce deposit period to 20seconds
-  contents="$(jq '.app_state.gov.deposit_params.max_deposit_period = "20s"' $genesis)" && echo "${contents}" >  $genesis
+  contents="$(jq '.app_state.gov.params.max_deposit_period = "20s"' $genesis)" && echo "${contents}" >  $genesis
   echo_info "Set x/gov proposal max deposit period to 20 seconds"
 
 
