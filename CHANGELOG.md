@@ -30,22 +30,28 @@ Contains all the PRs that improved the code without changing the behaviors.
 
 ## [Unreleased]
 
-### Added
+### Fixed
+
 - [#571](https://github.com/archway-network/archway/pull/571) - Automatically
 publish proto files to buf.build
 
-### Changed
+## [v7.0.1](https://github.com/archway-network/archway/releases/tag/v7.0.1)
 
-### Deprecated
+### Added
 
-### Removed
+- [#571](https://github.com/archway-network/archway/pull/571) - Automatically
+publish proto files to buf.build
 
 ### Fixed
+
+- [#568](https://github.com/archway-network/archway/pull/568) - Update Swagger doc and config to include CWICA and CWErrors modules
+- [#570](https://github.com/archway-network/archway/pull/570) - Fix the Docker.deprecated file to build  
 - [#569](https://github.com/archway-network/archway/pull/569) - Audit remidiations for x/cwerrors and x/cwica 
 
 - [#566](https://github.com/archway-network/archway/pull/566) - Fixing the localnet script to correctly set gov params post sdk v47
 
 ### Improvements
+
 - [#567](https://github.com/archway-network/archway/pull/567) - Remove redundant params fetching in SaveCallback 
 
 ## [v7.0.0](https://github.com/archway-network/archway/releases/tag/v7.0.0)

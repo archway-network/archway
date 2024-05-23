@@ -1,4 +1,4 @@
-FROM golang:1.19.5-alpine3.17 AS go-builder
+FROM golang:1.21.10-alpine3.19 AS go-builder
 # arch can be either x86_64 for amd64 or aarch64 for arm
 ARG arch=x86_64
 ARG libwasmvm_version=v1.5.2
