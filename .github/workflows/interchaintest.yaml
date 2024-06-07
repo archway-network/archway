@@ -12,28 +12,6 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Build current image
-              uses: strangelove-ventures/heighliner-build-action@v0.0.3
-              with:
-                registry: ""
-                tag: local
-                tar-export-path: archway_local_test.tar
-                platform: linux/amd64
-                git-ref: ${{ github.head_ref }}
-
-                chain: archway
-                dockerfile: cosmos
-                build-target: "make build"
-                build-env: "BUILD_TAGS=muslc"
-                binaries: "build/archwayd"
-                heighliner-tag: "v1.5.5"
-
-            - name: Upload current image
-              uses: actions/upload-artifact@v2
-              with:
-                name: archway_local_test
-                path: archway_local_test.tar
-
             - name: Checkout archway-network/archway
               uses: actions/checkout@v3
               with:
