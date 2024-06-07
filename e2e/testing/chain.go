@@ -248,7 +248,13 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		},
 	)
 	require.NoError(t, err)
-	_, err = archApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: archApp.LastBlockHeight() + 1, NextValidatorsHash: validatorSet.Hash()})
+	_, err = archApp.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height:             archApp.LastBlockHeight() + 1,
+		Hash:               archApp.LastCommitID().Hash,
+		NextValidatorsHash: validatorSet.Hash(),
+	})
+	require.NoError(t, err)
+	_, err = archApp.Commit()
 	require.NoError(t, err)
 
 	// Create a chain and finalize the 1st block
@@ -357,7 +363,7 @@ func (chain *TestChain) NextBlock(skipTime time.Duration) []abci.Event {
 
 	// return append(ebEvents, bbEvents...)
 
-	res := chain.FinalizeBlock(1)
+	res := chain.FinalizeBlock(skipTime)
 	return res.GetEvents()
 }
 
