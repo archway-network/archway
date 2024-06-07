@@ -13,8 +13,9 @@ import (
 // Final test stage is the cascade delete of all objects.
 func (s *KeeperTestSuite) TestStates() {
 	type testData struct {
-		Tx  types.TxInfo
-		Ops []types.ContractOperationInfo
+		Case string
+		Tx   types.TxInfo
+		Ops  []types.ContractOperationInfo
 	}
 
 	chain := s.chain
@@ -24,8 +25,8 @@ func (s *KeeperTestSuite) TestStates() {
 	startBlock := ctx.BlockHeight()
 
 	testDataExpected := []testData{
-		// Block 1, Tx 1: 3 ops
 		{
+			Case: "Block 1, Tx 1: 3 ops",
 			Tx: types.TxInfo{
 				Id:       1,
 				Height:   startBlock + 1,
@@ -50,8 +51,8 @@ func (s *KeeperTestSuite) TestStates() {
 				},
 			},
 		},
-		// Block 1, Tx 2: 3 ops (2 from the same contract)
 		{
+			Case: "Block 1, Tx 2: 3 ops (2 from the same contract)",
 			Tx: types.TxInfo{
 				Id:       2,
 				Height:   startBlock + 1,
@@ -84,8 +85,8 @@ func (s *KeeperTestSuite) TestStates() {
 				},
 			},
 		},
-		// Block 2, Tx 1: 3 ops from 2 contracts (mixed)
 		{
+			Case: "Block 2, Tx 1: 3 ops from 2 contracts (mixed)",
 			Tx: types.TxInfo{
 				Id:       3,
 				Height:   startBlock + 2,
@@ -118,8 +119,8 @@ func (s *KeeperTestSuite) TestStates() {
 				},
 			},
 		},
-		// Block 2, Tx 2: 2 ops from 2 contracts
 		{
+			Case: "Block 2, Tx 2: 2 ops from 2 contracts",
 			Tx: types.TxInfo{
 				Id:       4,
 				Height:   startBlock + 2,
@@ -158,7 +159,7 @@ func (s *KeeperTestSuite) TestStates() {
 
 		// Start tracking a new Tx (emulate Ante handler) and check TxID sequence is correct
 		keeper.TrackNewTx(ctx)
-		s.Require().Equal(data.Tx.Id, keeper.GetState().TxInfoState(ctx).GetCurrentTxID())
+		s.Require().Equal(data.Tx.Id, keeper.GetState().TxInfoState(ctx).GetCurrentTxID(), data.Case)
 
 		// Ingest contract operations
 		records := make([]wasmTypes.ContractGasRecord, 0, len(data.Ops))
