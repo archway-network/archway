@@ -2,11 +2,13 @@ package interchaintest
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	cosmosproto "github.com/cosmos/gogoproto/proto"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/docker/docker/client"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
@@ -17,8 +19,8 @@ import (
 )
 
 const (
-	haltHeightDelta    = uint64(10) // The number of blocks after which to apply upgrade after creation of proposal.
-	blocksAfterUpgrade = uint64(10) // The number of blocks to wait for after the upgrade has been applied.
+	haltHeightDelta    = int64(10) // The number of blocks after which to apply upgrade after creation of proposal.
+	blocksAfterUpgrade = int64(10) // The number of blocks to wait for after the upgrade has been applied.
 )
 
 func TestChainUpgrade(t *testing.T) {
@@ -65,7 +67,7 @@ func TestChainUpgrade(t *testing.T) {
 	require.NoError(t, err, "chain did not produce blocks after upgrade")
 }
 
-func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, nextUpgradeName string, archwayChain *cosmos.CosmosChain, chainUser ibc.Wallet) uint64 {
+func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, nextUpgradeName string, archwayChain *cosmos.CosmosChain, chainUser ibc.Wallet) int64 {
 	height, err := archwayChain.Height(ctx) // The current chain height
 	require.NoError(t, err, "error fetching height before submit upgrade proposal")
 
@@ -82,7 +84,7 @@ func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, nextUpgrade
 		},
 	}
 
-	proposal, err := archwayChain.BuildProposal([]cosmosproto.Message{&proposalMsg},
+	proposal, err := archwayChain.BuildProposal([]cosmos.ProtoMessage{&proposalMsg},
 		"Test Upgrade",
 		"Every PR we preform an upgrade check to ensure nothing breaks",
 		"metadata",
@@ -95,16 +97,19 @@ func submitUpgradeProposalAndVote(t *testing.T, ctx context.Context, nextUpgrade
 	upgradeTx, err := archwayChain.SubmitProposal(ctx, chainUser.KeyName(), proposal) // Submitting the software upgrade proposal
 	require.NoError(t, err, "error submitting software upgrade proposal tx")
 
-	err = archwayChain.VoteOnProposalAllValidators(ctx, upgradeTx.ProposalID, cosmos.ProposalVoteYes)
+	proposalID, err := strconv.ParseUint(upgradeTx.ProposalID, 10, 64)
+	require.NoError(t, err, "error parsing proposal ID")
+
+	err = archwayChain.VoteOnProposalAllValidators(ctx, proposalID, cosmos.ProposalVoteYes)
 	require.NoError(t, err, "failed to submit votes")
 
-	_, err = cosmos.PollForProposalStatus(ctx, archwayChain, height, height+haltHeightDelta, upgradeTx.ProposalID, cosmos.ProposalStatusPassed)
+	_, err = cosmos.PollForProposalStatusV1(ctx, archwayChain, height, height+haltHeightDelta, proposalID, govv1.ProposalStatus_PROPOSAL_STATUS_PASSED)
 	require.NoError(t, err, "proposal status did not change to passed in expected number of blocks")
 	return haltHeight
 }
 
 func fundChainUser(t *testing.T, ctx context.Context, archwayChain *cosmos.CosmosChain) ibc.Wallet {
-	const userFunds = int64(10_000_000_000_000)
+	userFunds := math.NewInt(10_000_000_000_000)
 	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, archwayChain)
 	return users[0]
 }

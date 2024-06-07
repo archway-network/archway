@@ -57,7 +57,7 @@ func getDefaultChainConfig() ibc.ChainConfig {
 		NoHostMount:    false,
 		SkipGenTx:      false,
 		PreGenesis:     nil,
-		ModifyGenesisAmounts: func() (types.Coin, types.Coin) {
+		ModifyGenesisAmounts: func(_ int) (types.Coin, types.Coin) {
 			genesisAmount := types.Coin{
 				Amount: math.NewInt(9_000_000_000_000_000_000),
 				Denom:  denom,

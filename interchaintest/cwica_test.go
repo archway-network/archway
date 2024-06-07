@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	cosmosproto "github.com/cosmos/gogoproto/proto"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
@@ -191,7 +190,7 @@ func TestCWICA(t *testing.T) {
 
 	// Create a gov prop on the counterparty chain
 	propMsg, err := counterpartyChain.BuildProposal(
-		[]cosmosproto.Message{},
+		[]cosmos.ProtoMessage{},
 		"TextProp",
 		"Summary",
 		"Metadata",
