@@ -109,9 +109,42 @@ jobs:
                 cd interchaintest
                 go test -v -race -run TestChainUpgrade
 
+    run_chain_start:
+        name: Run chain start test
+        needs: [build_images]
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout archway-network/archway/interchaintest
+            uses: actions/checkout@v3
+            with:
+              fetch-depth: 0
+              sparse-checkout: interchaintest
+
+          - name: Setup up Golang
+            uses: actions/setup-go@v4
+            with:
+              go-version-file: 'interchaintest/go.mod'
+
+          - name: Setup Docker Buildx
+            uses: docker/setup-buildx-action@v2
+
+          - name: Download current image
+            uses: actions/download-artifact@v3
+            with:
+              name: action_image_artifact_archway_local
+
+          - name: Load current image
+            run: docker load --input archway_local
+
+          - name: Run interchain transactions test
+            run: |
+              cd interchaintest
+              go test -v -race -run  TestChainStart
+
     ibc_conformance_tests:
         name: Gaia <> Archway Conformance
-        needs: [build_images]
+        needs: [build_images, run_chain_start]
         runs-on: ubuntu-latest
         
         steps:
@@ -144,7 +177,7 @@ jobs:
 
     cwica_tests:
       name: Interchain transactions test
-      needs: [build_images]
+      needs: [build_images, run_chain_start]
       runs-on: ubuntu-latest
 
       steps:
