@@ -46,6 +46,7 @@ type BankKeeperExpected interface {
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	BlockedAddr(addr sdk.AccAddress) bool
 }
 
 func NewTxRewardsIndex(sb *collections.SchemaBuilder) TxRewardsIndex {

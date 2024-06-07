@@ -22,8 +22,8 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 		if err != nil {
 			return err
 		}
-		if k.isModuleAccount(ctx, addr) {
-			return types.ErrInvalidRequest.Wrap("rewards address cannot be a module account")
+		if k.isBlockedAddress(addr) {
+			return types.ErrInvalidRequest.Wrap("rewards address cannot be a blocked address")
 		}
 	}
 
@@ -81,7 +81,6 @@ func (k Keeper) GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress
 	return &meta
 }
 
-func (k Keeper) isModuleAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
-	acc := k.authKeeper.GetAccount(ctx, addr)
-	return acc != nil
+func (k Keeper) isBlockedAddress(addr sdk.AccAddress) bool {
+	return k.bankKeeper.BlockedAddr(addr)
 }
