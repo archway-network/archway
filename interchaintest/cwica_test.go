@@ -31,7 +31,7 @@ func TestCWICA(t *testing.T) {
 	}
 
 	numOfVals := 1
-	gaiaChainSpec := &interchaintest.ChainSpec{
+	junoChainSpec := &interchaintest.ChainSpec{
 		Name:          "juno",
 		ChainName:     "juno",
 		Version:       "v20.0.0",
@@ -47,7 +47,7 @@ func TestCWICA(t *testing.T) {
 		zaptest.NewLogger(t),
 		[]*interchaintest.ChainSpec{
 			archwayChainSpec,
-			gaiaChainSpec,
+			junoChainSpec,
 		})
 	chains, err := chainFactory.Chains(t.Name())
 	require.NoError(t, err)
