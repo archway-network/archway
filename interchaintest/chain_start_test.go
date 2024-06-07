@@ -14,7 +14,7 @@ func TestChainStart(t *testing.T) {
 		t.Skip("skipping in short mode")
 	}
 
-	archwayChain, _, ctx := startChain(t, "local")
+	archwayChain, client, ctx := startChain(t, "local")
 
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(ctx, time.Second*45)
 	defer timeoutCtxCancel()
@@ -22,4 +22,11 @@ func TestChainStart(t *testing.T) {
 	// just wait for 10 blocks to be produced
 	err := testutil.WaitForBlocks(timeoutCtx, 10, archwayChain)
 	require.NoError(t, err, "chain did not produce blocks")
+
+	t.Cleanup(func() {
+		err = client.Close()
+		if err != nil {
+			t.Logf("an error occurred while closing the chain: %s", err)
+		}
+	})
 }
