@@ -183,7 +183,8 @@ func (s *E2ETestSuite) TestTxFees() {
 		}
 
 		// Start a new block to get rewards and tracking for the previous one
-		abciEvents = append(abciEvents, chain.NextBlock(0)...)
+		e := chain.NextBlock(0)
+		abciEvents = append(abciEvents, e...)
 
 		// Get gas tracked for this Tx
 		var txGasTracked uint64

@@ -172,7 +172,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		}
 
 		stakingValidators = append(stakingValidators, validator)
-		stakingDelegations = append(stakingDelegations, stakingTypes.NewDelegation(genAccs[i].GetAddress().String(), val.Address.String(), math.LegacyOneDec()))
+		stakingDelegations = append(stakingDelegations, stakingTypes.NewDelegation(genAccs[i].GetAddress().String(), sdk.ValAddress(val.Address).String(), math.LegacyOneDec()))
 	}
 
 	stakingGenesis := stakingTypes.NewGenesisState(stakingTypes.DefaultParams(), stakingValidators, stakingDelegations)
@@ -248,6 +248,8 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		},
 	)
 	require.NoError(t, err)
+	_, err = archApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: archApp.LastBlockHeight() + 1, NextValidatorsHash: validatorSet.Hash()})
+	require.NoError(t, err)
 
 	// Create a chain and finalize the 1st block
 	chain := TestChain{
@@ -256,6 +258,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		app: archApp,
 		curHeader: tmProto.Header{
 			ChainID: chainid,
+			Height:  1,
 			Time:    time.Unix(0, 0).UTC(),
 		},
 		txConfig:    encCfg.TxConfig,
@@ -263,11 +266,12 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		valSigners:  valSigners,
 		accPrivKeys: genAccPrivKeys,
 	}
-	chain.BeginBlock()
-	chain.EndBlock()
+	// chain.BeginBlock()
+	// chain.EndBlock()
 
-	// Start a new block
-	chain.BeginBlock()
+	// // Start a new block
+	// chain.BeginBlock()
+	//chain.FinalizeBlock(0)
 	return &chain
 }
 
@@ -299,7 +303,7 @@ func (chain *TestChain) GetModuleBalance(moduleName string) sdk.Coins {
 
 // GetContext returns a context for the current block.
 func (chain *TestChain) GetContext() sdk.Context {
-	ctx := chain.app.BaseApp.NewContext(false)
+	ctx := chain.app.GetContextForCheckTx(nil)
 
 	blockGasMeter := storetypes.NewInfiniteGasMeter()
 	blockMaxGas := chain.app.GetConsensusParams(ctx).Block.MaxGas
@@ -346,12 +350,15 @@ func (chain *TestChain) GetApp() *app.ArchwayApp {
 
 // NextBlock starts a new block with options time shift.
 func (chain *TestChain) NextBlock(skipTime time.Duration) []abci.Event {
-	ebEvents := chain.EndBlock()
+	// ebEvents := chain.EndBlock()
 
-	chain.curHeader.Time = chain.curHeader.Time.Add(skipTime)
-	bbEvents := chain.BeginBlock()
+	// chain.curHeader.Time = chain.curHeader.Time.Add(skipTime)
+	// bbEvents := chain.BeginBlock()
 
-	return append(ebEvents, bbEvents...)
+	// return append(ebEvents, bbEvents...)
+
+	res := chain.FinalizeBlock(1)
+	return res.GetEvents()
 }
 
 func (chain *TestChain) GoToHeight(height int64, skipTime time.Duration) {
@@ -361,6 +368,20 @@ func (chain *TestChain) GoToHeight(height int64, skipTime time.Duration) {
 	for chain.GetBlockHeight() < height {
 		chain.NextBlock(skipTime)
 	}
+}
+
+func (chain *TestChain) FinalizeBlock(skipTime time.Duration) abci.ResponseFinalizeBlock {
+	req := abci.RequestFinalizeBlock{
+		Height: chain.GetBlockHeight() + 1,
+		Time:   chain.GetBlockTime().Add(skipTime),
+	}
+	res, err := chain.app.FinalizeBlock(&req)
+	require.NoError(chain.t, err)
+
+	_, err = chain.app.Commit()
+	require.NoError(chain.t, err)
+	chain.curHeader.Time = chain.curHeader.Time.Add(skipTime)
+	return *res
 }
 
 // BeginBlock begins a new block.
