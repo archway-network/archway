@@ -32,7 +32,7 @@ var Upgrades = []upgrades.Upgrade{
 	upgradelatest.Upgrade, // latest - This upgrade handler is used for all the current changes to the protocol
 }
 
-func (app *ArchwayApp) setupUpgrades() {
+func (app *ArchwayApp) RegisterUpgradeHandlers() {
 	app.setUpgradeHandlers()
 	app.setUpgradeStoreLoaders()
 }

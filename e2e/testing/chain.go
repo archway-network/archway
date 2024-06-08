@@ -267,7 +267,7 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 			Height:  1,
 			Time:    time.Unix(0, 0).UTC(),
 		},
-		txConfig:    encCfg.TxConfig,
+		txConfig:    archApp.TxConfig(),
 		valSet:      validatorSet,
 		valSigners:  valSigners,
 		accPrivKeys: genAccPrivKeys,
@@ -309,8 +309,8 @@ func (chain *TestChain) GetModuleBalance(moduleName string) sdk.Coins {
 
 // GetContext returns a context for the current block.
 func (chain *TestChain) GetContext() sdk.Context {
-	ctx := chain.app.GetContextForCheckTx(nil)
-
+	ctx, err := chain.app.BaseApp.CreateQueryContext(chain.app.LastBlockHeight(), false)
+	require.NoError(chain.t, err)
 	blockGasMeter := storetypes.NewInfiniteGasMeter()
 	blockMaxGas := chain.app.GetConsensusParams(ctx).Block.MaxGas
 	if blockMaxGas >= 0 {
@@ -636,11 +636,10 @@ func genSignedMockTx(ctx context.Context, r *rand.Rand, txConfig client.TxConfig
 			panic(err)
 		}
 		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
-		err = tx.SetSignatures(sigs...)
-		if err != nil {
-			panic(err)
-		}
 	}
-
+	err = tx.SetSignatures(sigs...)
+	if err != nil {
+		panic(err)
+	}
 	return tx.GetTx(), nil
 }

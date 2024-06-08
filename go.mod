@@ -3,7 +3,7 @@ module github.com/archway-network/archway
 go 1.21
 
 require (
-	cosmossdk.io/api v0.7.4
+	cosmossdk.io/api v0.7.5
 	cosmossdk.io/client/v2 v2.0.0-beta.1
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.11.0
@@ -220,3 +220,5 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.17.0
+
+replace github.com/cosmos/cosmos-sdk => ../../cosmos/cosmos-sdk
