@@ -161,7 +161,7 @@ func (s *E2ETestSuite) TestTxFees() {
 				Funds:    sdk.NewCoins(sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: math.NewIntFromUint64(DefNewVotingCostAmt)}),
 			}
 
-			gasUsed, res, err := chain.SendMsgsRaw(senderAcc, []sdk.Msg{&msg},
+			gasUsed, res, _, err := chain.SendMsgsRaw(senderAcc, []sdk.Msg{&msg}, true,
 				e2eTesting.WithMsgFees(txFee),
 				e2eTesting.WithTxGasLimit(txGasLimit),
 			)
@@ -235,7 +235,7 @@ func (s *E2ETestSuite) TestTxFees() {
 			withdrawTxFees.Amount = minConsFee.Amount.MulInt64(withdrawGas).RoundInt()
 
 			msg := rewardsTypes.NewMsgWithdrawRewardsByLimit(rewardsAcc.Address, 1000)
-			_, _, err := chain.SendMsgsRaw(rewardsAcc, []sdk.Msg{msg},
+			_, _, _, err := chain.SendMsgsRaw(rewardsAcc, []sdk.Msg{msg}, true,
 				e2eTesting.WithMsgFees(withdrawTxFees),
 				e2eTesting.WithTxGasLimit(withdrawGas),
 			)

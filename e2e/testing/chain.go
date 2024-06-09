@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	math "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -480,30 +481,20 @@ func WithSimulation() SendMsgOption {
 func (chain *TestChain) SendMsgs(senderAcc Account, expPass bool, msgs []sdk.Msg, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, []abci.Event, error) {
 	var abciEvents []abci.Event
 
-	t := chain.t
-
-	gasInfo, res, err := chain.SendMsgsRaw(senderAcc, msgs, opts...)
-	if expPass {
-		require.NoError(t, err)
-		require.NotNil(t, res)
-	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
-	}
+	gasInfo, res, abciEvents, err := chain.SendMsgsRaw(senderAcc, msgs, expPass, opts...)
 	if res != nil {
 		abciEvents = append(abciEvents, res.Events...)
 	}
 
-	if !chain.buildSendMsgOptions(opts...).noBlockChange {
-		abciEvents = append(abciEvents, chain.EndBlock()...)
-		abciEvents = append(abciEvents, chain.BeginBlock()...)
-	}
+	// if !chain.buildSendMsgOptions(opts...).noBlockChange {
+	// 	abciEvents = append(abciEvents, chain.NextBlock(1)...)
+	// }
 
 	return gasInfo, res, abciEvents, err
 }
 
 // SendMsgsRaw sends a series of messages.
-func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, error) {
+func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, expPass bool, opts ...SendMsgOption) (sdk.GasInfo, *sdk.Result, []abci.Event, error) {
 	t := chain.t
 	options := chain.buildSendMsgOptions(opts...)
 
@@ -528,16 +519,48 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, opts ...S
 	)
 	require.NoError(t, err)
 
-	// Check the Tx
-	if options.simulate {
-		txBz, err := chain.txConfig.TxEncoder()(tx)
-		require.NoError(t, err)
+	txBytes, err := chain.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
 
-		return chain.app.Simulate(txBz)
+	if options.simulate {
+		_, res, err := chain.app.Simulate(txBytes)
+		return sdk.GasInfo{}, res, nil, err
 	}
 
-	// Send the Tx
-	return chain.app.SimDeliver(chain.txConfig.TxEncoder(), tx)
+	resBlock, err := chain.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: chain.GetBlockHeight() + 1,
+		Time:   chain.GetBlockTime().Add(1),
+		Txs:    [][]byte{txBytes},
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(resBlock.TxResults))
+	chain.curHeader.Time = chain.curHeader.Time.Add(1)
+
+	txResult := resBlock.TxResults[0]
+	abciEvents := resBlock.Events
+
+	finalizeSuccess := txResult.Code == 0
+	if expPass {
+		if !finalizeSuccess {
+			t.Log(txResult)
+		}
+		require.True(t, finalizeSuccess)
+	} else {
+		require.False(t, finalizeSuccess)
+
+	}
+
+	_, err = chain.app.Commit()
+	require.NoError(t, err)
+
+	gInfo := sdk.GasInfo{GasWanted: uint64(txResult.GasWanted), GasUsed: uint64(txResult.GasUsed)}
+	txRes := sdk.Result{Data: txResult.Data, Log: txResult.Log, Events: txResult.Events}
+
+	err = nil
+	if !finalizeSuccess {
+		err = errors.ABCIError(txResult.Codespace, txResult.Code, txResult.Log)
+	}
+	return gInfo, &txRes, abciEvents, err
 }
 
 // ParseSDKResultData converts TX result data into a slice of Msgs.
