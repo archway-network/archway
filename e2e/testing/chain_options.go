@@ -9,6 +9,7 @@ import (
 	archway "github.com/archway-network/archway/types"
 
 	"github.com/archway-network/archway/app"
+	callbacktypes "github.com/archway-network/archway/x/callback/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -144,5 +145,16 @@ func WithMintParams(inflationMin, inflationMax math.LegacyDec, blocksPerYear uin
 		mintGenesis.Params.BlocksPerYear = blocksPerYear
 
 		genesis[mintTypes.ModuleName] = cdc.MustMarshalJSON(&mintGenesis)
+	}
+}
+
+func WithCallbackParams(callbackGasLimit uint64) TestChainGenesisOption {
+	return func(cdc codec.Codec, genesis app.GenesisState) {
+		var callbackGenesis callbacktypes.GenesisState
+		cdc.MustUnmarshalJSON(genesis[callbacktypes.ModuleName], &callbackGenesis)
+
+		callbackGenesis.Params.CallbackGasLimit = callbackGasLimit
+
+		genesis[callbacktypes.ModuleName] = cdc.MustMarshalJSON(&callbackGenesis)
 	}
 }

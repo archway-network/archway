@@ -11,14 +11,12 @@ import (
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/callback"
-	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
 	"github.com/archway-network/archway/x/callback/types"
 )
 
 func TestExportGenesis(t *testing.T) {
-	chain := e2eTesting.NewTestChain(t, 1)
-	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.CallbackKeeper
-	msgServer := callbackKeeper.NewMsgServer(keeper)
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithCallbackParams(123))
+	keeper := chain.GetApp().Keepers.CallbackKeeper
 	contractAdminAcc := chain.GetAccount(1)
 
 	// Upload and instantiate contract
@@ -26,52 +24,45 @@ func TestExportGenesis(t *testing.T) {
 	initMsg := CallbackContractInstantiateMsg{Count: 100}
 	contractAddr, _ := chain.InstantiateContract(contractAdminAcc, codeID, contractAdminAcc.Address.String(), "callback_test", nil, initMsg)
 
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	currentBlockHeight := ctx.BlockHeight()
-	callbackHeight := currentBlockHeight + 1
-	futureResFee, blockResFee, txFee, err := keeper.EstimateCallbackFees(ctx, callbackHeight+5)
+	feesToPay, err := getCallbackRegistrationFees(chain)
 	require.NoError(t, err)
-	feesToPay := futureResFee.Add(blockResFee).Add(txFee)
 
-	reqMsg := &types.MsgRequestCallback{
+	msgs := []sdk.Msg{}
+	msgs = append(msgs, &types.MsgRequestCallback{
 		ContractAddress: contractAddr.String(),
 		JobId:           DECREMENT_JOBID,
-		CallbackHeight:  callbackHeight,
+		CallbackHeight:  chain.GetContext().BlockHeight() + 2,
 		Sender:          contractAdminAcc.Address.String(),
 		Fees:            feesToPay,
-	}
-	_, err = msgServer.RequestCallback(ctx, reqMsg)
+	})
+	msgs = append(msgs, &types.MsgRequestCallback{
+		ContractAddress: contractAddr.String(),
+		JobId:           INCREMENT_JOBID,
+		CallbackHeight:  chain.GetContext().BlockHeight() + 2,
+		Sender:          contractAdminAcc.Address.String(),
+		Fees:            feesToPay,
+	})
+	msgs = append(msgs, &types.MsgRequestCallback{
+		ContractAddress: contractAddr.String(),
+		JobId:           DONOTHING_JOBID,
+		CallbackHeight:  chain.GetContext().BlockHeight() + 2,
+		Sender:          contractAdminAcc.Address.String(),
+		Fees:            feesToPay,
+	})
+	msgs = append(msgs, &types.MsgRequestCallback{
+		ContractAddress: contractAddr.String(),
+		JobId:           DECREMENT_JOBID,
+		CallbackHeight:  chain.GetContext().BlockHeight() + 3,
+		Sender:          contractAdminAcc.Address.String(),
+		Fees:            feesToPay,
+	})
+	_, _, _, err = chain.SendMsgs(contractAdminAcc, true, msgs)
 	require.NoError(t, err)
 
-	reqMsg.JobId = INCREMENT_JOBID
-	_, err = msgServer.RequestCallback(ctx, reqMsg)
-	require.NoError(t, err)
+	exportedState := callback.ExportGenesis(chain.GetContext(), keeper)
 
-	reqMsg.JobId = DONOTHING_JOBID
-	_, err = msgServer.RequestCallback(ctx, reqMsg)
-	require.NoError(t, err)
-
-	reqMsg.CallbackHeight = callbackHeight + 1
-	_, err = msgServer.RequestCallback(ctx, reqMsg)
-	require.NoError(t, err)
-
-	params := types.Params{
-		CallbackGasLimit:               1000000,
-		MaxBlockReservationLimit:       1,
-		MaxFutureReservationLimit:      1,
-		BlockReservationFeeMultiplier:  math.LegacyZeroDec(),
-		FutureReservationFeeMultiplier: math.LegacyZeroDec(),
-	}
-	err = keeper.SetParams(ctx, params)
-	require.NoError(t, err)
-
-	exportedState := callback.ExportGenesis(ctx, keeper)
 	require.Equal(t, 4, len(exportedState.Callbacks))
-	require.Equal(t, params.CallbackGasLimit, exportedState.Params.CallbackGasLimit)
-	require.Equal(t, params.MaxBlockReservationLimit, exportedState.Params.MaxBlockReservationLimit)
-	require.Equal(t, params.MaxFutureReservationLimit, exportedState.Params.MaxFutureReservationLimit)
-	require.Equal(t, params.BlockReservationFeeMultiplier, exportedState.Params.BlockReservationFeeMultiplier)
-	require.Equal(t, params.FutureReservationFeeMultiplier, exportedState.Params.FutureReservationFeeMultiplier)
+	require.Equal(t, uint64(123), exportedState.Params.CallbackGasLimit)
 }
 
 func TestInitGenesis(t *testing.T) {

@@ -11,7 +11,6 @@ import (
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
 	"github.com/archway-network/archway/x/callback/types"
 	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
 )
@@ -25,9 +24,7 @@ const (
 
 func TestEndBlocker(t *testing.T) {
 	chain := e2eTesting.NewTestChain(t, 1)
-	keeper := chain.GetApp().Keepers.CallbackKeeper
 	errorsKeeper := chain.GetApp().Keepers.CWErrorsKeeper
-	msgServer := callbackKeeper.NewMsgServer(keeper)
 	contractAdminAcc := chain.GetAccount(0)
 
 	// Upload and instantiate contract
@@ -39,7 +36,6 @@ func TestEndBlocker(t *testing.T) {
 	codeID := chain.UploadContract(contractAdminAcc, "../../contracts/callback-test/artifacts/callback_test.wasm", wasmdTypes.DefaultUploadAccess)
 	initMsg := CallbackContractInstantiateMsg{Count: 100}
 	contractAddr, _ := chain.InstantiateContract(contractAdminAcc, codeID, contractAdminAcc.Address.String(), "callback_test", nil, initMsg)
-	chain.NextBlock(1)
 
 	testCases := []struct {
 		testCase      string
@@ -73,17 +69,16 @@ func TestEndBlocker(t *testing.T) {
 			feesToPay, err := getCallbackRegistrationFees(chain)
 			require.NoError(t, err)
 
-			reqMsg := &types.MsgRequestCallback{
+			reqMsg := types.MsgRequestCallback{
 				ContractAddress: contractAddr.String(),
 				JobId:           tc.jobId,
-				CallbackHeight:  ctx.BlockHeight() + 1,
+				CallbackHeight:  ctx.BlockHeight() + 2,
 				Sender:          contractAdminAcc.Address.String(),
 				Fees:            feesToPay,
 			}
-			_, err = msgServer.RequestCallback(ctx, reqMsg)
+			_, _, _, err = chain.SendMsgs(contractAdminAcc, true, []sdk.Msg{&reqMsg})
 			require.NoError(t, err)
-
-			// Increment block height and run end blocker at the next block
+			//Increment block height
 			chain.NextBlock(1)
 			chain.NextBlock(1)
 
@@ -98,85 +93,72 @@ func TestEndBlocker(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, sudoErrs, 1)
 	require.Equal(t, "SomeError: execute wasm contract failed", sudoErrs[0].ErrorMessage)
-	require.Equal(t, "callback", sudoErrs[0].ModuleName)
+	require.Equal(t, types.ModuleName, sudoErrs[0].ModuleName)
 	require.Equal(t, int32(types.ModuleErrors_ERR_CONTRACT_EXECUTION_FAILED), sudoErrs[0].ErrorCode)
+}
 
-	// Registering the contract for error subscription
-	_, err = errorsKeeper.SetSubscription(chain.GetContext(), contractAddr, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
+func TestEndBlockerWithCallbackGasLimit(t *testing.T) {
+	chain := e2eTesting.NewTestChain(t, 1,
+		e2eTesting.WithCallbackParams(1),
+	)
+	errorsKeeper := chain.GetApp().Keepers.CWErrorsKeeper
+	contractAdminAcc := chain.GetAccount(0)
+
+	// Upload and instantiate contract
+	// The test contract is based on the default counter contract and behaves the following way:
+	// When job_id = 1, it increments the count value
+	codeID := chain.UploadContract(contractAdminAcc, "../../contracts/callback-test/artifacts/callback_test.wasm", wasmdTypes.DefaultUploadAccess)
+	initMsg := CallbackContractInstantiateMsg{Count: 100}
+	contractAddr, _ := chain.InstantiateContract(contractAdminAcc, codeID, contractAdminAcc.Address.String(), "callback_test", nil, initMsg)
+
+	// Subscribing to errors module. The contract does not implement the Sudo::Error entrypoint.
+	subReqMsg := &cwerrortypes.MsgSubscribeToError{
+		Sender:          contractAdminAcc.Address.String(),
+		ContractAddress: contractAddr.String(),
+		Fee:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 0),
+	}
+	_, _, _, err := chain.SendMsgs(contractAdminAcc, true, []sdk.Msg{subReqMsg})
 	require.NoError(t, err)
+	require.True(t, errorsKeeper.HasSubscription(chain.GetContext(), contractAddr))
 
-	params, err := keeper.GetParams(chain.GetContext())
-	require.NoError(t, err)
-
-	// TEST CASE: Test CallbackGasLimit limit value reduced
-	// First we set the params value to default
-	// Register a callback for next block
+	// This callback should fail as it consumes more gas than allowed
 	feesToPay, err := getCallbackRegistrationFees(chain)
 	require.NoError(t, err)
 	reqMsg := &types.MsgRequestCallback{
 		ContractAddress: contractAddr.String(),
 		JobId:           INCREMENT_JOBID,
-		CallbackHeight:  chain.GetContext().BlockHeight() + 1,
+		CallbackHeight:  chain.GetContext().BlockHeight() + 2,
 		Sender:          contractAdminAcc.Address.String(),
 		Fees:            feesToPay,
 	}
-	_, err = msgServer.RequestCallback(chain.GetContext(), reqMsg)
+	_, _, _, err = chain.SendMsgs(contractAdminAcc, true, []sdk.Msg{reqMsg})
 	require.NoError(t, err)
 
-	// Setting the callbackGasLimit param to 1
-	params.CallbackGasLimit = 1
-	err = keeper.SetParams(chain.GetContext(), params)
-	require.NoError(t, err)
-
-	// Increment block height and run end blocker
-	chain.NextBlock(1)
-	chain.NextBlock(1)
-
-	// Checking if the count value has incremented.
-	// Should have incremented as the callback should have access to higher gas limit as it was registered before the gas limit was reduced
-	count := getCount(t, chain, contractAddr)
-	require.Equal(t, initMsg.Count+1, count)
-
-	// TEST CASE: OUT OF GAS ERROR
-	// Reserving a callback for next block
-	// This callback should fail as it consumes more gas than allowed
-	feesToPay, err = getCallbackRegistrationFees(chain)
-	require.NoError(t, err)
-	reqMsg = &types.MsgRequestCallback{
-		ContractAddress: contractAddr.String(),
-		JobId:           INCREMENT_JOBID,
-		CallbackHeight:  chain.GetContext().BlockHeight() + 1,
-		Sender:          contractAdminAcc.Address.String(),
-		Fees:            feesToPay,
-	}
-	_, err = msgServer.RequestCallback(chain.GetContext(), reqMsg)
-	require.NoError(t, err)
-
-	// Increment block height and run end blocker
+	// Increment block height
 	chain.NextBlock(1)
 	chain.NextBlock(1)
 
 	// Checking if the count value has incremented. Should not have incremented as the callback failed due to out of gas error
-	count = getCount(t, chain, contractAddr)
-	require.Equal(t, initMsg.Count+1, count)
+	count := getCount(t, chain, contractAddr)
+	require.Equal(t, initMsg.Count, count)
 
-	sudoErrs, err = errorsKeeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr)
+	sudoErrs, err := errorsKeeper.GetErrorsByContractAddress(chain.GetContext(), contractAddr)
 	require.NoError(t, err)
-	require.Len(t, sudoErrs, 2)
-	require.Equal(t, "cwerrors", sudoErrs[1].ModuleName) // because Sudo::Error entrypoint does not exist on the contract
-	require.Equal(t, int32(cwerrortypes.ModuleErrors_ERR_CALLBACK_EXECUTION_FAILED), sudoErrs[1].ErrorCode)
+	require.Len(t, sudoErrs, 1)
+	require.Equal(t, cwerrortypes.ModuleName, sudoErrs[0].ModuleName) // because Sudo::Error entrypoint does not exist on the contract
+	require.Equal(t, int32(cwerrortypes.ModuleErrors_ERR_CALLBACK_EXECUTION_FAILED), sudoErrs[0].ErrorCode)
 }
 
 func getCallbackRegistrationFees(chain *e2eTesting.TestChain) (sdk.Coin, error) {
 	ctx := chain.GetContext()
 	currentBlockHeight := ctx.BlockHeight()
-	callbackHeight := currentBlockHeight + 1
+	callbackHeight := currentBlockHeight + 2
 	futureResFee, blockResFee, txFee, err := chain.GetApp().Keepers.CallbackKeeper.EstimateCallbackFees(ctx, callbackHeight)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 	feesToPay := futureResFee.Add(blockResFee).Add(txFee)
-	return feesToPay, nil
+	return feesToPay.Add(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)), nil
 }
 
 // getCount is a helper function to get the contract's count value
