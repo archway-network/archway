@@ -23,12 +23,14 @@ func TestKeeper(t *testing.T) {
 	t.Run("register as granter – not a cw contract", func(t *testing.T) {
 		acc := app.GetAccount(0)
 		err := k.RegisterAsGranter(ctx, acc.Address)
+		require.Error(t, err)
 		require.ErrorIs(t, err, types.ErrNotAContract)
 	})
 
 	t.Run("unregister as granter – not a granter", func(t *testing.T) {
 		acc := app.GetAccount(0)
 		err := k.UnregisterAsGranter(ctx, acc.Address)
+		require.Error(t, err)
 		require.ErrorIs(t, err, types.ErrNotAGranter)
 	})
 
@@ -37,7 +39,7 @@ func TestKeeper(t *testing.T) {
 		grantedAcc := app.GetAccount(1) // account who receives grants.
 		initMsg := fmt.Sprintf(`{"grants": ["%s"]}`, grantedAcc.Address)
 		cwGranter, _ := app.InstantiateContract(app.GetAccount(0), codeID, app.GetAccount(0).Address.String(), "cwfees", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
-
+		ctx := app.GetContext()
 		err := k.RegisterAsGranter(ctx, cwGranter)
 		require.NoError(t, err)
 		isGranter, err := k.IsGrantingContract(ctx, cwGranter)
@@ -57,6 +59,7 @@ func TestKeeper(t *testing.T) {
 		initMsg := fmt.Sprintf(`{"grants": ["%s"]}`, grantedAcc.Address)
 		cwGranter, _ := app.InstantiateContract(app.GetAccount(0), codeID, app.GetAccount(0).Address.String(), "cwfees", sdk.NewCoins(sdk.NewInt64Coin("stake", 1_000_000_000_000)), json.RawMessage(initMsg))
 
+		ctx := app.GetContext()
 		wantState := &types.GenesisState{GrantingContracts: []string{cwGranter.String()}}
 		err := k.ImportState(ctx, wantState)
 		require.NoError(t, err)
