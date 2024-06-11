@@ -613,7 +613,6 @@ func NewArchwayApp(
 		app.Keepers.TrackingKeeper,
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
-		app.getSubspace(rewardsTypes.ModuleName),
 		govModuleAddr,
 		logger,
 	)

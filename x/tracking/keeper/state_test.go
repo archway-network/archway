@@ -1,9 +1,13 @@
 package keeper_test
 
 import (
+	"testing"
+
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/archway-network/archway/pkg/testutils"
+	"github.com/archway-network/archway/x/tracking"
 	"github.com/archway-network/archway/x/tracking/types"
 )
 
@@ -11,15 +15,14 @@ import (
 // Test append multiple objects for different blocks to make sure there are no namespace
 // collisions (prefixed store keys) and state indexes work as expected.
 // Final test stage is the cascade delete of all objects.
-func (s *KeeperTestSuite) TestStates() {
+func TestStates(t *testing.T) {
 	type testData struct {
 		Case string
 		Tx   types.TxInfo
 		Ops  []types.ContractOperationInfo
 	}
 
-	chain := s.chain
-	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.TrackingKeeper
+	keeper, ctx := testutils.TrackingKeeper(t)
 
 	// Fixtures
 	startBlock := ctx.BlockHeight()
@@ -36,7 +39,7 @@ func (s *KeeperTestSuite) TestStates() {
 				{
 					Id:              1,
 					TxId:            1,
-					ContractAddress: chain.GetAccount(0).Address.String(),
+					ContractAddress: testutils.AccAddress().String(),
 					OperationType:   types.ContractOperation_CONTRACT_OPERATION_EXECUTION,
 					VmGas:           100, // here and below: converted to SDK gas
 					SdkGas:          200,
@@ -44,7 +47,7 @@ func (s *KeeperTestSuite) TestStates() {
 				{
 					Id:              2,
 					TxId:            1,
-					ContractAddress: chain.GetAccount(1).Address.String(),
+					ContractAddress: testutils.AccAddress().String(),
 					OperationType:   types.ContractOperation_CONTRACT_OPERATION_QUERY,
 					VmGas:           50,
 					SdkGas:          100,
@@ -62,7 +65,7 @@ func (s *KeeperTestSuite) TestStates() {
 				{
 					Id:              3,
 					TxId:            2,
-					ContractAddress: chain.GetAccount(2).Address.String(),
+					ContractAddress: testutils.AccAddress().String(),
 					OperationType:   types.ContractOperation_CONTRACT_OPERATION_INSTANTIATION,
 					VmGas:           500,
 					SdkGas:          1000,
@@ -70,7 +73,7 @@ func (s *KeeperTestSuite) TestStates() {
 				{
 					Id:              4,
 					TxId:            2,
-					ContractAddress: chain.GetAccount(3).Address.String(),
+					ContractAddress: testutils.AccAddress().String(),
 					OperationType:   types.ContractOperation_CONTRACT_OPERATION_EXECUTION,
 					VmGas:           250,
 					SdkGas:          300,
@@ -78,7 +81,7 @@ func (s *KeeperTestSuite) TestStates() {
 				{
 					Id:              5,
 					TxId:            2,
-					ContractAddress: chain.GetAccount(3).Address.String(),
+					ContractAddress: testutils.AccAddress().String(),
 					OperationType:   types.ContractOperation_CONTRACT_OPERATION_EXECUTION,
 					VmGas:           250,
 					SdkGas:          300,
@@ -96,7 +99,7 @@ func (s *KeeperTestSuite) TestStates() {
 				{
 					Id:              6,
 					TxId:            3,
-					ContractAddress: chain.GetAccount(0).Address.String(),
+					ContractAddress: testutils.AccAddress().String(),
 					OperationType:   types.ContractOperation_CONTRACT_OPERATION_EXECUTION,
 					VmGas:           50,
 					SdkGas:          25,
@@ -104,7 +107,7 @@ func (s *KeeperTestSuite) TestStates() {
 				{
 					Id:              7,
 					TxId:            3,
-					ContractAddress: chain.GetAccount(1).Address.String(),
+					ContractAddress: testutils.AccAddress().String(),
 					OperationType:   types.ContractOperation_CONTRACT_OPERATION_IBC,
 					VmGas:           100,
 					SdkGas:          50,
@@ -112,7 +115,7 @@ func (s *KeeperTestSuite) TestStates() {
 				{
 					Id:              8,
 					TxId:            3,
-					ContractAddress: chain.GetAccount(0).Address.String(),
+					ContractAddress: testutils.AccAddress().String(),
 					OperationType:   types.ContractOperation_CONTRACT_OPERATION_REPLY,
 					VmGas:           200,
 					SdkGas:          300,
@@ -130,7 +133,7 @@ func (s *KeeperTestSuite) TestStates() {
 				{
 					Id:              9,
 					TxId:            4,
-					ContractAddress: chain.GetAccount(0).Address.String(),
+					ContractAddress: testutils.AccAddress().String(),
 					OperationType:   types.ContractOperation_CONTRACT_OPERATION_MIGRATE,
 					VmGas:           100,
 					SdkGas:          500,
@@ -138,7 +141,7 @@ func (s *KeeperTestSuite) TestStates() {
 				{
 					Id:              10,
 					TxId:            4,
-					ContractAddress: chain.GetAccount(1).Address.String(),
+					ContractAddress: testutils.AccAddress().String(),
 					OperationType:   types.ContractOperation_CONTRACT_OPERATION_SUDO,
 					VmGas:           500,
 					SdkGas:          1000,
@@ -152,14 +155,15 @@ func (s *KeeperTestSuite) TestStates() {
 	for _, data := range testDataExpected {
 		// Switch to next block
 		if data.Tx.Height != block {
-			chain.NextBlock(0) // that updates TxInfo objs via EndBlocker
-			ctx = chain.GetContext()
+			tracking.EndBlocker(ctx, keeper) // that updates TxInfo objs via EndBlocker
+			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
 			block = ctx.BlockHeight()
 		}
 
 		// Start tracking a new Tx (emulate Ante handler) and check TxID sequence is correct
 		keeper.TrackNewTx(ctx)
-		s.Require().Equal(data.Tx.Id, keeper.GetState().TxInfoState(ctx).GetCurrentTxID(), data.Case)
+		require.Equal(t, data.Tx.Id, keeper.GetState().TxInfoState(ctx).GetCurrentTxID())
 
 		// Ingest contract operations
 		records := make([]wasmTypes.ContractGasRecord, 0, len(data.Ops))
@@ -176,21 +180,21 @@ func (s *KeeperTestSuite) TestStates() {
 				},
 			)
 		}
-		s.Require().NoError(keeper.IngestGasRecord(ctx, records))
+		require.NoError(t, keeper.IngestGasRecord(ctx, records))
 	}
 	keeper.FinalizeBlockTxTracking(ctx)
 
 	// Check non-existing records
-	s.Run("Check non-existing state records", func() {
+	t.Run("Check non-existing state records", func(t *testing.T) {
 		_, txFound := keeper.GetState().TxInfoState(ctx).GetTxInfo(10)
-		s.Assert().False(txFound)
+		require.False(t, txFound)
 
 		_, opFound := keeper.GetState().ContractOpInfoState(ctx).GetContractOpInfo(100)
-		s.Assert().False(opFound)
+		require.False(t, opFound)
 	})
 
 	// Check that the states are as expected
-	s.Run("Check objects one by one", func() {
+	t.Run("Check objects one by one", func(t *testing.T) {
 		opState := keeper.GetState().ContractOpInfoState(ctx)
 		txState := keeper.GetState().TxInfoState(ctx)
 
@@ -198,19 +202,19 @@ func (s *KeeperTestSuite) TestStates() {
 			// Check ContractOperations
 			for _, op := range data.Ops {
 				opInfo, found := opState.GetContractOpInfo(op.Id)
-				s.Require().True(found, "ContractOpInfo (%d): not found", op.Id)
-				s.Assert().Equal(op, opInfo, "ContractOpInfo (%d): wrong value", op.Id)
+				require.True(t, found, "ContractOpInfo (%d): not found", op.Id)
+				require.Equal(t, op, opInfo, "ContractOpInfo (%d): wrong value", op.Id)
 			}
 
 			// Check TxInfo
 			txInfo, found := txState.GetTxInfo(data.Tx.Id)
-			s.Require().True(found, "TxInfo (%d): not found", data.Tx.Id)
-			s.Assert().Equal(data.Tx, txInfo, "TxInfo (%d): wrong value", data.Tx.Id)
+			require.True(t, found, "TxInfo (%d): not found", data.Tx.Id)
+			require.Equal(t, data.Tx, txInfo, "TxInfo (%d): wrong value", data.Tx.Id)
 		}
 	})
 
 	// Check TxInfos search via block index
-	s.Run("Check TxInfo block index", func() {
+	t.Run("Check TxInfo block index", func(t *testing.T) {
 		txState := keeper.GetState().TxInfoState(ctx)
 
 		// 1st block
@@ -222,7 +226,7 @@ func (s *KeeperTestSuite) TestStates() {
 			}
 
 			txInfosReceived := txState.GetTxInfosByBlock(height)
-			s.Assert().ElementsMatch(txInfosExpected, txInfosReceived, "TxInfosByBlock (%d): wrong value", height)
+			require.ElementsMatch(t, txInfosExpected, txInfosReceived, "TxInfosByBlock (%d): wrong value", height)
 		}
 
 		// 2nd block
@@ -234,12 +238,12 @@ func (s *KeeperTestSuite) TestStates() {
 			}
 
 			txInfosReceived := txState.GetTxInfosByBlock(height)
-			s.Assert().ElementsMatch(txInfosExpected, txInfosReceived, "TxInfosByBlock (%d): wrong value", height)
+			require.ElementsMatch(t, txInfosExpected, txInfosReceived, "TxInfosByBlock (%d): wrong value", height)
 		}
 	})
 
 	// Check ContractOpInfos search via tx index
-	s.Run("Check ContractOpInfo tx index", func() {
+	t.Run("Check ContractOpInfo tx index", func(t *testing.T) {
 		opsState := keeper.GetState().ContractOpInfoState(ctx)
 
 		for _, data := range testDataExpected {
@@ -247,41 +251,41 @@ func (s *KeeperTestSuite) TestStates() {
 			opsExpected := data.Ops
 
 			opsReceived := opsState.GetContractOpInfoByTxID(txID)
-			s.Assert().ElementsMatch(opsExpected, opsReceived, "ContractOpInfoByTxID (%d): wrong value", txID)
+			require.ElementsMatch(t, opsExpected, opsReceived, "ContractOpInfoByTxID (%d): wrong value", txID)
 		}
 	})
 
 	// Check records removal
-	s.Run("Check records removal for the 1st block", func() {
+	t.Run("Check records removal for the 1st block", func(t *testing.T) {
 		txState := keeper.GetState().TxInfoState(ctx)
 
 		keeper.GetState().DeleteTxInfosCascade(ctx, startBlock+1)
 
 		block1Txs := txState.GetTxInfosByBlock(startBlock + 1)
-		s.Assert().Empty(block1Txs)
+		require.Empty(t, block1Txs)
 
 		block2Txs := txState.GetTxInfosByBlock(startBlock + 2)
-		s.Assert().Len(block2Txs, 2)
+		require.Len(t, block2Txs, 2)
 
 		_, tx1Found := txState.GetTxInfo(testDataExpected[0].Tx.Id)
-		s.Assert().False(tx1Found)
+		require.False(t, tx1Found)
 
 		_, tx2Found := txState.GetTxInfo(testDataExpected[1].Tx.Id)
-		s.Assert().False(tx2Found)
+		require.False(t, tx2Found)
 	})
 
-	s.Run("Check records removal for the 2nd block", func() {
+	t.Run("Check records removal for the 2nd block", func(t *testing.T) {
 		txState := keeper.GetState().TxInfoState(ctx)
 
 		keeper.GetState().DeleteTxInfosCascade(ctx, startBlock+2)
 
 		block2Txs := txState.GetTxInfosByBlock(startBlock + 2)
-		s.Assert().Empty(block2Txs)
+		require.Empty(t, block2Txs)
 
 		_, tx3Found := txState.GetTxInfo(testDataExpected[2].Tx.Id)
-		s.Assert().False(tx3Found)
+		require.False(t, tx3Found)
 
 		_, tx4Found := txState.GetTxInfo(testDataExpected[3].Tx.Id)
-		s.Assert().False(tx4Found)
+		require.False(t, tx4Found)
 	})
 }

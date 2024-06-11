@@ -78,22 +78,3 @@ func CallbackKeeper(tb testing.TB) (keeper.Keeper, sdk.Context) {
 
 	return k, ctx
 }
-
-type MockRewardsKeeper struct {
-	ComputationalPriceOfGasFn func(ctx sdk.Context) sdk.DecCoin
-	GetContractMetadataFn     func(ctx sdk.Context, contractAddr sdk.AccAddress) *rewardstypes.ContractMetadata
-}
-
-func (k MockRewardsKeeper) ComputationalPriceOfGas(ctx sdk.Context) sdk.DecCoin {
-	if k.ComputationalPriceOfGasFn == nil {
-		panic("not supposed to be called!")
-	}
-	return k.ComputationalPriceOfGasFn(ctx)
-}
-
-func (k MockRewardsKeeper) GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress) *rewardstypes.ContractMetadata {
-	if k.GetContractMetadataFn == nil {
-		panic("not supposed to be called!")
-	}
-	return k.GetContractMetadataFn(ctx, contractAddr)
-}

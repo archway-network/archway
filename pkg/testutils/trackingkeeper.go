@@ -1,15 +1,15 @@
 package testutils
 
 import (
-	"context"
 	"testing"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/archway-network/archway/x/cwerrors/keeper"
-	"github.com/archway-network/archway/x/cwerrors/types"
+	wasmdtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/archway-network/archway/x/tracking/keeper"
+	"github.com/archway-network/archway/x/tracking/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,11 +18,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func CWErrorsKeeper(tb testing.TB) (keeper.Keeper, sdk.Context) {
+func TrackingKeeper(tb testing.TB) (keeper.Keeper, sdk.Context) {
 	tb.Helper()
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
-	memStoreKey := storetypes.NewMemoryStoreKey("m_cwerrors")
-	tStoreKey := storetypes.NewTransientStoreKey(types.TStoreKey)
+	memStoreKey := storetypes.NewMemoryStoreKey("m_tracking")
+	tStoreKey := storetypes.NewTransientStoreKey("t_tracking")
 
 	db := dbm.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db, log.NewTestLogger(tb), storemetrics.NewNoOpMetrics())
@@ -34,24 +34,15 @@ func CWErrorsKeeper(tb testing.TB) (keeper.Keeper, sdk.Context) {
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
-	bankKeeper := MockBankKeeper{
-		SendCoinsFromAccountToModuleFn: func(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
-			return nil
-		},
-	}
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
-		tStoreKey,
-		nil,
-		bankKeeper,
-		nil,
-		"cosmos1a48wdtjn3egw7swhfkeshwdtjvs6hq9nlyrwut", // random addr for gov module
+		wasmdtypes.NewDefaultWasmGasRegister(),
+		log.NewTestLogger(tb),
 	)
-	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
-
-	params := types.DefaultParams()
-	_ = k.SetParams(ctx, params)
+	ctx := sdk.NewContext(stateStore, tmproto.Header{
+		Height: 1,
+	}, false, log.NewNopLogger())
 
 	return k, ctx
 }
