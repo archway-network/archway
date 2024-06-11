@@ -4,13 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/archway-network/archway/pkg/testutils"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // TestWithdrawRewardsByLimit tests the withdraw operation using record limit mode.
 func (s *KeeperTestSuite) TestWithdrawRewardsByLimit() {
-	keeper := s.chain.GetApp().Keepers.RewardsKeeper
-	accAddr := s.chain.GetAccount(0).Address
+	accAddr := testutils.AccAddress()
 
 	testData := []withdrawTestRecordData{
 		{
@@ -32,15 +32,13 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByLimit() {
 
 	// Invalid inputs
 	s.Run("Fail: limit is GT MaxWithdrawRecords", func() {
-		ctx := s.chain.GetContext()
-		_, _, err := keeper.WithdrawRewardsByRecordsLimit(ctx, accAddr, rewardsTypes.MaxWithdrawRecordsParamLimit+1)
+		_, _, err := s.keeper.WithdrawRewardsByRecordsLimit(s.ctx, accAddr, rewardsTypes.MaxWithdrawRecordsParamLimit+1)
 		s.Assert().ErrorIs(err, rewardsTypes.ErrInvalidRequest)
 	})
 
 	// Withdraw nothing
 	s.Run("OK: withdraw empty rewards", func() {
-		ctx := s.chain.GetContext()
-		totalRewardsReceived, recordsUsedReceived, err := keeper.WithdrawRewardsByRecordsLimit(ctx, accAddr, 1000)
+		totalRewardsReceived, recordsUsedReceived, err := s.keeper.WithdrawRewardsByRecordsLimit(s.ctx, accAddr, 1000)
 		s.Require().NoError(err)
 		s.Assert().Empty(totalRewardsReceived)
 		s.Assert().Empty(recordsUsedReceived)
@@ -54,8 +52,7 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByLimit() {
 		s.CheckWithdrawResults(
 			accAddr, testData[:2],
 			func() (sdk.Coins, int, error) {
-				ctx := s.chain.GetContext()
-				return keeper.WithdrawRewardsByRecordsLimit(ctx, accAddr, 2)
+				return s.keeper.WithdrawRewardsByRecordsLimit(s.ctx, accAddr, 2)
 			},
 		)
 	})
@@ -65,8 +62,7 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByLimit() {
 		s.CheckWithdrawResults(
 			accAddr, testData[2:],
 			func() (sdk.Coins, int, error) {
-				ctx := s.chain.GetContext()
-				return keeper.WithdrawRewardsByRecordsLimit(ctx, accAddr, 0)
+				return s.keeper.WithdrawRewardsByRecordsLimit(s.ctx, accAddr, 0)
 			},
 		)
 	})
@@ -74,8 +70,7 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByLimit() {
 
 // TestWithdrawRewardsByIDs tests the withdraw operation using record IDs mode.
 func (s *KeeperTestSuite) TestWithdrawRewardsByIDs() {
-	keeper := s.chain.GetApp().Keepers.RewardsKeeper
-	accAddr1, accAddr2 := s.chain.GetAccount(0).Address, s.chain.GetAccount(1).Address
+	accAddr1, accAddr2 := testutils.AccAddress(), testutils.AccAddress()
 
 	testData := []withdrawTestRecordData{
 		{
@@ -102,36 +97,31 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByIDs() {
 
 	// Override the default record limit
 	{
-		ctx := s.chain.GetContext()
-		params := keeper.GetParams(ctx)
+		params := s.keeper.GetParams(s.ctx)
 		params.MaxWithdrawRecords = 5
-		err := keeper.Params.Set(ctx, params)
+		err := s.keeper.Params.Set(s.ctx, params)
 		require.NoError(s.T(), err)
 	}
 
 	// Invalid inputs
 	s.Run("Fail: limit is GT MaxWithdrawRecords", func() {
-		ctx := s.chain.GetContext()
-		_, _, err := keeper.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{1, 2, 3, 4, 5, 6})
+		_, _, err := s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{1, 2, 3, 4, 5, 6})
 		s.Assert().ErrorIs(err, rewardsTypes.ErrInvalidRequest)
 	})
 
 	s.Run("Fail: non-existing IDs", func() {
-		ctx := s.chain.GetContext()
-		_, _, err := keeper.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{1, 2, 3, 10})
+		_, _, err := s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{1, 2, 3, 10})
 		s.Assert().ErrorIs(err, rewardsTypes.ErrInvalidRequest)
 	})
 
 	s.Run("Fail: rewardsAddr mismatch", func() {
-		ctx := s.chain.GetContext()
-		_, _, err := keeper.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{1, 2, 3, 4})
+		_, _, err := s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{1, 2, 3, 4})
 		s.Assert().ErrorIs(err, rewardsTypes.ErrInvalidRequest)
 	})
 
 	// Withdraw nothing
 	s.Run("OK: withdraw empty rewards", func() {
-		ctx := s.chain.GetContext()
-		totalRewardsReceived, recordsUsedReceived, err := keeper.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{})
+		totalRewardsReceived, recordsUsedReceived, err := s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{})
 		s.Require().NoError(err)
 		s.Assert().Empty(totalRewardsReceived)
 		s.Assert().Empty(recordsUsedReceived)
@@ -145,8 +135,7 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByIDs() {
 		s.CheckWithdrawResults(
 			accAddr1, testData[:2],
 			func() (sdk.Coins, int, error) {
-				ctx := s.chain.GetContext()
-				return keeper.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{1, 2})
+				return s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{1, 2})
 			},
 		)
 	})
@@ -155,8 +144,7 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByIDs() {
 		s.CheckWithdrawResults(
 			accAddr1, testData[2:3],
 			func() (sdk.Coins, int, error) {
-				ctx := s.chain.GetContext()
-				return keeper.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{3})
+				return s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{3})
 			},
 		)
 	})
@@ -166,8 +154,7 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByIDs() {
 		s.CheckWithdrawResults(
 			accAddr2, testData[3:],
 			func() (sdk.Coins, int, error) {
-				ctx := s.chain.GetContext()
-				return keeper.WithdrawRewardsByRecordIDs(ctx, accAddr2, []uint64{4})
+				return s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr2, []uint64{4})
 			},
 		)
 	})

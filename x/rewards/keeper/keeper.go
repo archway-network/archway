@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/archway-network/archway/internal/collcompat"
 
@@ -87,7 +86,6 @@ func NewRewardsRecordsIndex(sb *collections.SchemaBuilder) RewardsRecordsIndex {
 type Keeper struct {
 	cdc              codec.Codec
 	storeKey         storetypes.StoreKey
-	paramStore       paramTypes.Subspace
 	contractInfoView ContractInfoReaderExpected
 	trackingKeeper   TrackingKeeperExpected
 	authKeeper       AuthKeeperExpected
@@ -115,20 +113,14 @@ func NewKeeper(
 	trackingKeeper TrackingKeeperExpected,
 	ak AuthKeeperExpected,
 	bk BankKeeperExpected,
-	ps paramTypes.Subspace,
 	authority string,
 	logger log.Logger,
 ) Keeper {
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
-
 	schemaBuilder := collections.NewSchemaBuilder(collcompat.NewKVStoreService(key))
 
 	k := Keeper{
 		storeKey:         key,
 		cdc:              cdc,
-		paramStore:       ps,
 		contractInfoView: contractInfoReader,
 		trackingKeeper:   trackingKeeper,
 		authKeeper:       ak,

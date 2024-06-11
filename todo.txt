@@ -1,6 +1,10 @@
 todo
 
-x/cwfees - full integration - move to interchiantest
-x/rewards/keeper -- 🤬
-x/tracking/keeper -- 🤬
-e2e
+x/cwfees 1/10- full integration - move to interchiantest
+x/rewards/keeper -- 17/111
+e2e -- 18/79
+
+60/601
+
+
+DONE 603 tests, 87 failures in 17.723s

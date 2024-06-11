@@ -28,8 +28,7 @@ func (s *KeeperTestSuite) TestStates() {
 		RewardsRecords []types.RewardsRecord
 	}
 
-	chain := s.chain
-	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.RewardsKeeper
+	keeper, ctx := s.keeper, s.ctx
 
 	// Fixtures
 	startBlock, startTime := ctx.BlockHeight(), ctx.BlockTime()

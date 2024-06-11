@@ -13,14 +13,12 @@ import (
 // TestGenesisImportExport check genesis import/export.
 // Test updates the initial state with new records and checks that they were merged.
 func (s *KeeperTestSuite) TestGenesisImportExport() {
-	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
-
 	contractAddrs := e2eTesting.GenContractAddresses(2)
 	accAddrs, _ := e2eTesting.GenAccounts(2)
 
 	var genesisStateInitial types.GenesisState
 	s.Run("Check export of the initial genesis", func() {
-		genesisState := keeper.ExportGenesis(ctx)
+		genesisState := s.keeper.ExportGenesis(s.ctx)
 		s.Require().NotNil(genesisState)
 
 		s.Assert().Equal(types.DefaultParams(), genesisState.Params)
@@ -90,15 +88,15 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 			Id:               1,
 			RewardsAddress:   accAddrs[0].String(),
 			Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
-			CalculatedHeight: ctx.BlockHeight(),
-			CalculatedTime:   ctx.BlockTime(),
+			CalculatedHeight: s.ctx.BlockHeight(),
+			CalculatedTime:   s.ctx.BlockTime(),
 		},
 		{
 			Id:               2,
 			RewardsAddress:   accAddrs[1].String(),
 			Rewards:          sdk.NewCoins(sdk.NewCoin("uarch", math.NewInt(1))),
-			CalculatedHeight: ctx.BlockHeight() + 1,
-			CalculatedTime:   ctx.BlockTime().Add(5 * time.Second),
+			CalculatedHeight: s.ctx.BlockHeight() + 1,
+			CalculatedTime:   s.ctx.BlockTime().Add(5 * time.Second),
 		},
 	}
 
@@ -124,7 +122,7 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 		newFlatFees,
 	)
 	s.Run("Check import of an updated genesis", func() {
-		keeper.InitGenesis(ctx, genesisStateImported)
+		s.keeper.InitGenesis(s.ctx, genesisStateImported)
 
 		genesisStateExpected := types.GenesisState{
 			Params:              newParams,
@@ -137,7 +135,7 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 			FlatFees:            append(genesisStateInitial.FlatFees, newFlatFees...),
 		}
 
-		genesisStateReceived := keeper.ExportGenesis(ctx)
+		genesisStateReceived := s.keeper.ExportGenesis(s.ctx)
 		s.Require().NotNil(genesisStateReceived)
 		s.Assert().Equal(genesisStateExpected.Params, genesisStateReceived.Params)
 		s.Assert().ElementsMatch(genesisStateExpected.ContractsMetadata, genesisStateReceived.ContractsMetadata)
