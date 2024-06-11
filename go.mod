@@ -220,5 +220,3 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.17.0
-
-replace github.com/cosmos/cosmos-sdk => ../../cosmos/cosmos-sdk
