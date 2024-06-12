@@ -18,7 +18,7 @@ import (
 )
 
 func TestGRPC_Params(t *testing.T) {
-	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
 	querySrvr := keeper.NewQueryServer(k)
 	params := rewardsTypes.Params{
 		InflationRewardsRatio: math.LegacyMustNewDecFromStr("0.1"),
@@ -43,7 +43,9 @@ func TestGRPC_Params(t *testing.T) {
 }
 
 func TestGRPC_ContractMetadata(t *testing.T) {
-	k, ctx, _, wk := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	querySrvr := keeper.NewQueryServer(k)
 
 	contractAddr := e2eTesting.GenContractAddresses(2)
@@ -84,7 +86,9 @@ func TestGRPC_ContractMetadata(t *testing.T) {
 }
 
 func TestGRPC_BlockRewardsTracking(t *testing.T) {
-	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	querySrvr := keeper.NewQueryServer(k)
 
 	t.Run("err: empty request", func(t *testing.T) {
@@ -102,7 +106,9 @@ func TestGRPC_BlockRewardsTracking(t *testing.T) {
 }
 
 func TestGRPC_RewardsPool(t *testing.T) {
-	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	querySrvr := keeper.NewQueryServer(k)
 
 	t.Run("err: empty request", func(t *testing.T) {
@@ -119,7 +125,9 @@ func TestGRPC_RewardsPool(t *testing.T) {
 }
 
 func TestGRPC_EstimateTxFees(t *testing.T) {
-	k, ctx, _, wk := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	querySrvr := keeper.NewQueryServer(k)
 
 	t.Run("err: empty request", func(t *testing.T) {
@@ -199,7 +207,9 @@ func TestGRPC_EstimateTxFees(t *testing.T) {
 }
 
 func TestGRPC_OutstandingRewards(t *testing.T) {
-	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	querySrvr := keeper.NewQueryServer(k)
 
 	t.Run("err: empty request", func(t *testing.T) {
@@ -226,7 +236,9 @@ func TestGRPC_OutstandingRewards(t *testing.T) {
 }
 
 func TestGRPC_RewardsRecords(t *testing.T) {
-	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	querySrvr := keeper.NewQueryServer(k)
 
 	t.Run("err: empty request", func(t *testing.T) {
@@ -253,7 +265,9 @@ func TestGRPC_RewardsRecords(t *testing.T) {
 }
 
 func TestGRPC_FlatFee(t *testing.T) {
-	k, ctx, _, wk := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	querySrvr := keeper.NewQueryServer(k)
 
 	t.Run("err: empty request", func(t *testing.T) {

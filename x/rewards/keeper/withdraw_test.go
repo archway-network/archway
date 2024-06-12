@@ -1,15 +1,21 @@
 package keeper_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/archway-network/archway/pkg/testutils"
+	"github.com/archway-network/archway/x/rewards"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 // TestWithdrawRewardsByLimit tests the withdraw operation using record limit mode.
-func (s *KeeperTestSuite) TestWithdrawRewardsByLimit() {
+func TestWithdrawRewardsByLimit(t *testing.T) {
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	accAddr := testutils.AccAddress()
 
 	testData := []withdrawTestRecordData{
@@ -31,45 +37,49 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByLimit() {
 	}
 
 	// Invalid inputs
-	s.Run("Fail: limit is GT MaxWithdrawRecords", func() {
-		_, _, err := s.keeper.WithdrawRewardsByRecordsLimit(s.ctx, accAddr, rewardsTypes.MaxWithdrawRecordsParamLimit+1)
-		s.Assert().ErrorIs(err, rewardsTypes.ErrInvalidRequest)
+	t.Run("Fail: limit is GT MaxWithdrawRecords", func(t *testing.T) {
+		_, _, err := k.WithdrawRewardsByRecordsLimit(ctx, accAddr, rewardsTypes.MaxWithdrawRecordsParamLimit+1)
+		require.ErrorIs(t, err, rewardsTypes.ErrInvalidRequest)
 	})
 
 	// Withdraw nothing
-	s.Run("OK: withdraw empty rewards", func() {
-		totalRewardsReceived, recordsUsedReceived, err := s.keeper.WithdrawRewardsByRecordsLimit(s.ctx, accAddr, 1000)
-		s.Require().NoError(err)
-		s.Assert().Empty(totalRewardsReceived)
-		s.Assert().Empty(recordsUsedReceived)
+	t.Run("OK: withdraw empty rewards", func(t *testing.T) {
+		totalRewardsReceived, recordsUsedReceived, err := k.WithdrawRewardsByRecordsLimit(ctx, accAddr, 1000)
+		require.NoError(t, err)
+		require.Empty(t, totalRewardsReceived)
+		require.Empty(t, recordsUsedReceived)
 	})
 
 	// Setup environment
-	s.SetupWithdrawTest(testData)
+	err := SetupWithdrawTest(k, ctx, testData)
+	require.NoError(t, err)
+	rewards.EndBlocker(ctx, k)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// Withdraw the 1st half
-	s.Run("OK: withdraw 1st half", func() {
-		s.CheckWithdrawResults(
+	t.Run("OK: withdraw 1st half", func(t *testing.T) {
+		CheckWithdrawResults(t, k, ctx,
 			accAddr, testData[:2],
 			func() (sdk.Coins, int, error) {
-				return s.keeper.WithdrawRewardsByRecordsLimit(s.ctx, accAddr, 2)
+				return k.WithdrawRewardsByRecordsLimit(ctx, accAddr, 2)
 			},
 		)
 	})
 
 	// Withdraw the rest
-	s.Run("OK: withdraw 2nd half", func() {
-		s.CheckWithdrawResults(
+	t.Run("OK: withdraw 2nd half", func(t *testing.T) {
+		CheckWithdrawResults(t, k, ctx,
 			accAddr, testData[2:],
 			func() (sdk.Coins, int, error) {
-				return s.keeper.WithdrawRewardsByRecordsLimit(s.ctx, accAddr, 0)
+				return k.WithdrawRewardsByRecordsLimit(ctx, accAddr, 0)
 			},
 		)
 	})
 }
 
 // TestWithdrawRewardsByIDs tests the withdraw operation using record IDs mode.
-func (s *KeeperTestSuite) TestWithdrawRewardsByIDs() {
+func TestWithdrawRewardsByIDs(t *testing.T) {
+	k, ctx, _ := testutils.RewardsKeeper(t)
 	accAddr1, accAddr2 := testutils.AccAddress(), testutils.AccAddress()
 
 	testData := []withdrawTestRecordData{
@@ -97,64 +107,65 @@ func (s *KeeperTestSuite) TestWithdrawRewardsByIDs() {
 
 	// Override the default record limit
 	{
-		params := s.keeper.GetParams(s.ctx)
+		params := k.GetParams(ctx)
 		params.MaxWithdrawRecords = 5
-		err := s.keeper.Params.Set(s.ctx, params)
-		require.NoError(s.T(), err)
+		err := k.Params.Set(ctx, params)
+		require.NoError(t, err)
 	}
 
 	// Invalid inputs
-	s.Run("Fail: limit is GT MaxWithdrawRecords", func() {
-		_, _, err := s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{1, 2, 3, 4, 5, 6})
-		s.Assert().ErrorIs(err, rewardsTypes.ErrInvalidRequest)
+	t.Run("Fail: limit is GT MaxWithdrawRecords", func(t *testing.T) {
+		_, _, err := k.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{1, 2, 3, 4, 5, 6})
+		require.ErrorIs(t, err, rewardsTypes.ErrInvalidRequest)
 	})
 
-	s.Run("Fail: non-existing IDs", func() {
-		_, _, err := s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{1, 2, 3, 10})
-		s.Assert().ErrorIs(err, rewardsTypes.ErrInvalidRequest)
+	t.Run("Fail: non-existing IDs", func(t *testing.T) {
+		_, _, err := k.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{1, 2, 3, 10})
+		require.ErrorIs(t, err, rewardsTypes.ErrInvalidRequest)
 	})
 
-	s.Run("Fail: rewardsAddr mismatch", func() {
-		_, _, err := s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{1, 2, 3, 4})
-		s.Assert().ErrorIs(err, rewardsTypes.ErrInvalidRequest)
+	t.Run("Fail: rewardsAddr mismatch", func(t *testing.T) {
+		_, _, err := k.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{1, 2, 3, 4})
+		require.ErrorIs(t, err, rewardsTypes.ErrInvalidRequest)
 	})
 
 	// Withdraw nothing
-	s.Run("OK: withdraw empty rewards", func() {
-		totalRewardsReceived, recordsUsedReceived, err := s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{})
-		s.Require().NoError(err)
-		s.Assert().Empty(totalRewardsReceived)
-		s.Assert().Empty(recordsUsedReceived)
+	t.Run("OK: withdraw empty rewards", func(t *testing.T) {
+		totalRewardsReceived, recordsUsedReceived, err := k.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{})
+		require.NoError(t, err)
+		require.Empty(t, totalRewardsReceived)
+		require.Empty(t, recordsUsedReceived)
 	})
 
 	// Setup environment
-	s.SetupWithdrawTest(testData)
+	err := SetupWithdrawTest(k, ctx, testData)
+	require.NoError(t, err)
 
 	// Withdraw for the 1st account
-	s.Run("OK: withdraw 1st half for account1", func() {
-		s.CheckWithdrawResults(
+	t.Run("OK: withdraw 1st half for account1", func(t *testing.T) {
+		CheckWithdrawResults(t, k, ctx,
 			accAddr1, testData[:2],
 			func() (sdk.Coins, int, error) {
-				return s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{1, 2})
+				return k.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{1, 2})
 			},
 		)
 	})
 
-	s.Run("OK: withdraw 2nd half for account1", func() {
-		s.CheckWithdrawResults(
+	t.Run("OK: withdraw 2nd half for account1", func(t *testing.T) {
+		CheckWithdrawResults(t, k, ctx,
 			accAddr1, testData[2:3],
 			func() (sdk.Coins, int, error) {
-				return s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr1, []uint64{3})
+				return k.WithdrawRewardsByRecordIDs(ctx, accAddr1, []uint64{3})
 			},
 		)
 	})
 
 	// Withdraw for the 2nd account
-	s.Run("OK: withdraw all for account2", func() {
-		s.CheckWithdrawResults(
+	t.Run("OK: withdraw all for account2", func(t *testing.T) {
+		CheckWithdrawResults(t, k, ctx,
 			accAddr2, testData[3:],
 			func() (sdk.Coins, int, error) {
-				return s.keeper.WithdrawRewardsByRecordIDs(s.ctx, accAddr2, []uint64{4})
+				return k.WithdrawRewardsByRecordIDs(ctx, accAddr2, []uint64{4})
 			},
 		)
 	})

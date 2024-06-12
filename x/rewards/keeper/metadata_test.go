@@ -13,7 +13,9 @@ import (
 )
 
 func TestSetContractMetadata(t *testing.T) {
-	k, ctx, _, wk := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	contractAdminAcc, otherAcc := testutils.AccAddress(), testutils.AccAddress()
 	rewardAddr := sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 

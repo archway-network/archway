@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"context"
 	"testing"
 
 	"cosmossdk.io/log"
@@ -9,16 +10,17 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/archway-network/archway/x/rewards/keeper"
 	"github.com/archway-network/archway/x/rewards/types"
-	rewardstypes "github.com/archway-network/archway/x/rewards/types"
+	trackingtypes "github.com/archway-network/archway/x/tracking/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 )
 
-func RewardsKeeper(tb testing.TB) (keeper.Keeper, sdk.Context, MockBankKeeper, MockContractViewer) {
+func RewardsKeeper(tb testing.TB) (keeper.Keeper, sdk.Context, MockBankKeeper) {
 	tb.Helper()
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey("m_rewards")
@@ -34,18 +36,37 @@ func RewardsKeeper(tb testing.TB) (keeper.Keeper, sdk.Context, MockBankKeeper, M
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
-	wasmKeeper := NewMockContractViewer()
+	trackingKeeper := MockTrackingKeeper{
+		GetBlockTrackingInfoFn: func(ctx sdk.Context, height int64) trackingtypes.BlockTracking {
+			return trackingtypes.BlockTracking{
+				Txs: nil,
+			}
+		},
+	}
 	bankKeeper := MockBankKeeper{
-		BlockedAddrFn: func(addr sdk.AccAddress) bool {
-			return false
+		BlockedAddrFn: func(addr sdk.AccAddress) bool { // everyaddress except distribution module address is blocked
+			return addr.String() == authtypes.NewModuleAddress("distribution").String()
+		},
+		GetAllBalancesFn: func(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
+			return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
+		},
+		SendCoinsFromModuleToAccountFn: func(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error {
+			return nil
+		},
+	}
+	authKeeper := MockAuthKeeper{
+		GetModuleAccountFn: func(ctx context.Context, name string) sdk.ModuleAccountI {
+			return MockModuleAccount{
+				Address: "cosmos150j9auccvjdsquttx0qhawvux2m67fcxw49hy9",
+			}
 		},
 	}
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
-		wasmKeeper,
 		nil,
-		nil,
+		trackingKeeper,
+		authKeeper,
 		bankKeeper,
 		"cosmos1a48wdtjn3egw7swhfkeshwdtjvs6hq9nlyrwut", // random addr for gov module
 		log.NewTestLogger(tb),
@@ -53,13 +74,14 @@ func RewardsKeeper(tb testing.TB) (keeper.Keeper, sdk.Context, MockBankKeeper, M
 	ctx := sdk.NewContext(stateStore, tmproto.Header{
 		Height: 1,
 	}, false, log.NewNopLogger())
-
-	return k, ctx, bankKeeper, *wasmKeeper
+	err := k.Params.Set(ctx, types.DefaultParams())
+	require.NoError(tb, err)
+	return k, ctx, bankKeeper
 }
 
 type MockRewardsKeeper struct {
 	ComputationalPriceOfGasFn func(ctx sdk.Context) sdk.DecCoin
-	GetContractMetadataFn     func(ctx sdk.Context, contractAddr sdk.AccAddress) *rewardstypes.ContractMetadata
+	GetContractMetadataFn     func(ctx sdk.Context, contractAddr sdk.AccAddress) *types.ContractMetadata
 }
 
 func (k MockRewardsKeeper) ComputationalPriceOfGas(ctx sdk.Context) sdk.DecCoin {
@@ -69,7 +91,7 @@ func (k MockRewardsKeeper) ComputationalPriceOfGas(ctx sdk.Context) sdk.DecCoin 
 	return k.ComputationalPriceOfGasFn(ctx)
 }
 
-func (k MockRewardsKeeper) GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress) *rewardstypes.ContractMetadata {
+func (k MockRewardsKeeper) GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress) *types.ContractMetadata {
 	if k.GetContractMetadataFn == nil {
 		panic("not supposed to be called!")
 	}

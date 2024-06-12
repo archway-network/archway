@@ -19,7 +19,9 @@ import (
 )
 
 func TestMsgServer_SetContractMetadata(t *testing.T) {
-	k, ctx, _, wk := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	contractAdminAcc, otherAcc := testutils.AccAddress(), testutils.AccAddress()
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
 
@@ -127,7 +129,7 @@ func TestMsgServer_SetContractMetadata(t *testing.T) {
 
 func TestMsgServer_WithdrawRewards(t *testing.T) {
 
-	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
 	acc := testutils.AccAddress()
 
 	server := keeper.NewMsgServer(k)
@@ -231,7 +233,9 @@ func TestMsgServer_WithdrawRewards(t *testing.T) {
 }
 
 func TestMsgServer_SetFlatFee(t *testing.T) {
-	k, ctx, _, wk := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	contractAdminAcc, otherAcc := testutils.AccAddress(), testutils.AccAddress()
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
 
@@ -343,7 +347,7 @@ func TestMsgServer_SetFlatFee(t *testing.T) {
 }
 
 func TestMsgServer_UpdateParams(t *testing.T) {
-	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
 	account := testutils.AccAddress()
 
 	server := keeper.NewMsgServer(k)

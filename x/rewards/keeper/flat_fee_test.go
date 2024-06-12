@@ -12,7 +12,9 @@ import (
 )
 
 func TestSetFlatFee(t *testing.T) {
-	k, ctx, _, wk := testutils.RewardsKeeper(t)
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
 	contractAdminAcc := testutils.AccAddress()
 
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]

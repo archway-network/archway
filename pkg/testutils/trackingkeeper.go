@@ -46,3 +46,21 @@ func TrackingKeeper(tb testing.TB) (keeper.Keeper, sdk.Context) {
 
 	return k, ctx
 }
+
+type MockTrackingKeeper struct {
+	GetCurrentTxIDFn          func(ctx sdk.Context) uint64
+	GetBlockTrackingInfoFn    func(ctx sdk.Context, height int64) types.BlockTracking
+	RemoveBlockTrackingInfoFn func(ctx sdk.Context, height int64)
+}
+
+func (m MockTrackingKeeper) GetCurrentTxID(ctx sdk.Context) uint64 {
+	return m.GetCurrentTxIDFn(ctx)
+}
+
+func (m MockTrackingKeeper) GetBlockTrackingInfo(ctx sdk.Context, height int64) types.BlockTracking {
+	return m.GetBlockTrackingInfoFn(ctx, height)
+}
+
+func (m MockTrackingKeeper) RemoveBlockTrackingInfo(ctx sdk.Context, height int64) {
+	m.RemoveBlockTrackingInfoFn(ctx, height)
+}
