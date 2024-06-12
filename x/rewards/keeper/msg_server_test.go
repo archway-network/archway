@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
 
 	math "cosmossdk.io/math"
 	"google.golang.org/grpc/codes"
@@ -9,6 +10,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
@@ -16,11 +18,12 @@ import (
 	rewardstypes "github.com/archway-network/archway/x/rewards/types"
 )
 
-func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
+func TestMsgServer_SetContractMetadata(t *testing.T) {
+	k, ctx, _, wk := testutils.RewardsKeeper(t)
 	contractAdminAcc, otherAcc := testutils.AccAddress(), testutils.AccAddress()
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
 
-	server := keeper.NewMsgServer(s.keeper)
+	server := keeper.NewMsgServer(k)
 
 	testCases := []struct {
 		testCase    string
@@ -76,7 +79,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 		{
 			testCase: "err: the message sender is not the contract admin",
 			prepare: func() *rewardstypes.MsgSetContractMetadata {
-				s.wasmKeeper.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
+				wk.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
 
 				return &rewardstypes.MsgSetContractMetadata{
 					SenderAddress: otherAcc.String(),
@@ -91,7 +94,7 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 		{
 			testCase: "ok: all good'",
 			prepare: func() *rewardstypes.MsgSetContractMetadata {
-				s.wasmKeeper.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
+				wk.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
 
 				return &rewardstypes.MsgSetContractMetadata{
 					SenderAddress: contractAdminAcc.String(),
@@ -108,24 +111,26 @@ func (s *KeeperTestSuite) TestMsgServer_SetContractMetadata() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
+		t.Run(fmt.Sprintf("Case: %s", tc.testCase), func(t *testing.T) {
 			req := tc.prepare()
-			res, err := server.SetContractMetadata(s.ctx, req)
+			res, err := server.SetContractMetadata(ctx, req)
 			if tc.expectError {
-				s.Require().Error(err)
-				s.Require().Equal(tc.errorType.Error(), err.Error())
+				require.Error(t, err)
+				require.Equal(t, tc.errorType.Error(), err.Error())
 			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(&rewardstypes.MsgSetContractMetadataResponse{}, res)
+				require.NoError(t, err)
+				require.Equal(t, &rewardstypes.MsgSetContractMetadataResponse{}, res)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestMsgServer_WithdrawRewards() {
+func TestMsgServer_WithdrawRewards(t *testing.T) {
+
+	k, ctx, _, _ := testutils.RewardsKeeper(t)
 	acc := testutils.AccAddress()
 
-	server := keeper.NewMsgServer(s.keeper)
+	server := keeper.NewMsgServer(k)
 
 	testCases := []struct {
 		testCase    string
@@ -210,26 +215,27 @@ func (s *KeeperTestSuite) TestMsgServer_WithdrawRewards() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
+		t.Run(fmt.Sprintf("Case: %s", tc.testCase), func(t *testing.T) {
 			req := tc.prepare()
-			res, err := server.WithdrawRewards(s.ctx, req)
+			res, err := server.WithdrawRewards(ctx, req)
 			if tc.expectError {
-				s.Require().Error(err)
-				s.Require().Equal(tc.errorType.Error(), err.Error())
+				require.Error(t, err)
+				require.Equal(t, tc.errorType.Error(), err.Error())
 			} else {
-				s.Require().NoError(err)
-				s.Require().EqualValues(0, res.RecordsNum)
-				s.Require().Empty(res.TotalRewards)
+				require.NoError(t, err)
+				require.EqualValues(t, 0, res.RecordsNum)
+				require.Empty(t, res.TotalRewards)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestMsgServer_SetFlatFee() {
+func TestMsgServer_SetFlatFee(t *testing.T) {
+	k, ctx, _, wk := testutils.RewardsKeeper(t)
 	contractAdminAcc, otherAcc := testutils.AccAddress(), testutils.AccAddress()
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
 
-	server := keeper.NewMsgServer(s.keeper)
+	server := keeper.NewMsgServer(k)
 
 	testCases := []struct {
 		testCase    string
@@ -280,14 +286,14 @@ func (s *KeeperTestSuite) TestMsgServer_SetFlatFee() {
 		{
 			testCase: "err: the message sender is not the contract owner",
 			prepare: func() *rewardstypes.MsgSetFlatFee {
-				s.wasmKeeper.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
+				wk.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
 				contractMetadata := rewardstypes.ContractMetadata{
 					ContractAddress: contractAddr.String(),
 					OwnerAddress:    contractAdminAcc.String(),
 					RewardsAddress:  otherAcc.String(),
 				}
-				err := s.keeper.SetContractMetadata(s.ctx, contractAdminAcc, contractAddr, contractMetadata)
-				s.Require().NoError(err)
+				err := k.SetContractMetadata(ctx, contractAdminAcc, contractAddr, contractMetadata)
+				require.NoError(t, err)
 
 				return &rewardstypes.MsgSetFlatFee{
 					SenderAddress:   otherAcc.String(),
@@ -301,14 +307,14 @@ func (s *KeeperTestSuite) TestMsgServer_SetFlatFee() {
 		{
 			testCase: "ok: all good'",
 			prepare: func() *rewardstypes.MsgSetFlatFee {
-				s.wasmKeeper.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
+				wk.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
 				contractMetadata := rewardstypes.ContractMetadata{
 					ContractAddress: contractAddr.String(),
 					OwnerAddress:    contractAdminAcc.String(),
 					RewardsAddress:  otherAcc.String(),
 				}
-				err := s.keeper.SetContractMetadata(s.ctx, contractAdminAcc, contractAddr, contractMetadata)
-				s.Require().NoError(err)
+				err := k.SetContractMetadata(ctx, contractAdminAcc, contractAddr, contractMetadata)
+				require.NoError(t, err)
 
 				return &rewardstypes.MsgSetFlatFee{
 					SenderAddress:   contractAdminAcc.String(),
@@ -322,24 +328,25 @@ func (s *KeeperTestSuite) TestMsgServer_SetFlatFee() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
+		t.Run(fmt.Sprintf("Case: %s", tc.testCase), func(t *testing.T) {
 			req := tc.prepare()
-			res, err := server.SetFlatFee(s.ctx, req)
+			res, err := server.SetFlatFee(ctx, req)
 			if tc.expectError {
-				s.Require().Error(err)
-				s.Require().Equal(tc.errorType.Error(), err.Error())
+				require.Error(t, err)
+				require.Equal(t, tc.errorType.Error(), err.Error())
 			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(&rewardstypes.MsgSetFlatFeeResponse{}, res)
+				require.NoError(t, err)
+				require.Equal(t, &rewardstypes.MsgSetFlatFeeResponse{}, res)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestMsgServer_UpdateParams() {
+func TestMsgServer_UpdateParams(t *testing.T) {
+	k, ctx, _, _ := testutils.RewardsKeeper(t)
 	account := testutils.AccAddress()
 
-	server := keeper.NewMsgServer(s.keeper)
+	server := keeper.NewMsgServer(k)
 
 	govAddress := "cosmos1a48wdtjn3egw7swhfkeshwdtjvs6hq9nlyrwut"
 
@@ -393,14 +400,14 @@ func (s *KeeperTestSuite) TestMsgServer_UpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
+		t.Run(fmt.Sprintf("Case: %s", tc.testCase), func(t *testing.T) {
 			req := tc.prepare()
-			res, err := server.UpdateParams(s.ctx, req)
+			res, err := server.UpdateParams(ctx, req)
 			if tc.expectError {
-				s.Require().Error(err)
+				require.Error(t, err)
 			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(&rewardstypes.MsgUpdateParamsResponse{}, res)
+				require.NoError(t, err)
+				require.Equal(t, &rewardstypes.MsgUpdateParamsResponse{}, res)
 			}
 		})
 	}
