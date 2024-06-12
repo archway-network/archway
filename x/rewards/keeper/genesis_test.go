@@ -1,33 +1,37 @@
 package keeper_test
 
 import (
+	"testing"
 	"time"
 
 	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/rewards/types"
 )
 
 // TestGenesisImportExport check genesis import/export.
 // Test updates the initial state with new records and checks that they were merged.
-func (s *KeeperTestSuite) TestGenesisImportExport() {
+func TestGenesisImportExport(t *testing.T) {
+	k, ctx, _, _ := testutils.RewardsKeeper(t)
 	contractAddrs := e2eTesting.GenContractAddresses(2)
 	accAddrs, _ := e2eTesting.GenAccounts(2)
 
 	var genesisStateInitial types.GenesisState
-	s.Run("Check export of the initial genesis", func() {
-		genesisState := s.keeper.ExportGenesis(s.ctx)
-		s.Require().NotNil(genesisState)
+	t.Run("Check export of the initial genesis", func(t *testing.T) {
+		genesisState := k.ExportGenesis(ctx)
+		require.NotNil(t, genesisState)
 
-		s.Assert().Equal(types.DefaultParams(), genesisState.Params)
-		s.Assert().Empty(genesisState.ContractsMetadata)
-		s.Assert().NotEmpty(genesisState.BlockRewards) // height is 2 so we have some inflation rewards already
-		s.Assert().Empty(genesisState.TxRewards)
-		s.Assert().Empty(genesisState.RewardsRecordLastId)
-		s.Assert().Empty(genesisState.RewardsRecords)
-		s.Assert().Empty(genesisState.FlatFees)
+		require.Equal(t, types.DefaultParams(), genesisState.Params)
+		require.Empty(t, genesisState.ContractsMetadata)
+		require.Empty(t, genesisState.BlockRewards)
+		require.Empty(t, genesisState.TxRewards)
+		require.Empty(t, genesisState.RewardsRecordLastId)
+		require.Empty(t, genesisState.RewardsRecords)
+		require.Empty(t, genesisState.FlatFees)
 
 		genesisStateInitial = *genesisState
 	})
@@ -88,15 +92,15 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 			Id:               1,
 			RewardsAddress:   accAddrs[0].String(),
 			Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
-			CalculatedHeight: s.ctx.BlockHeight(),
-			CalculatedTime:   s.ctx.BlockTime(),
+			CalculatedHeight: ctx.BlockHeight(),
+			CalculatedTime:   ctx.BlockTime(),
 		},
 		{
 			Id:               2,
 			RewardsAddress:   accAddrs[1].String(),
 			Rewards:          sdk.NewCoins(sdk.NewCoin("uarch", math.NewInt(1))),
-			CalculatedHeight: s.ctx.BlockHeight() + 1,
-			CalculatedTime:   s.ctx.BlockTime().Add(5 * time.Second),
+			CalculatedHeight: ctx.BlockHeight() + 1,
+			CalculatedTime:   ctx.BlockTime().Add(5 * time.Second),
 		},
 	}
 
@@ -121,8 +125,8 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 		newRewardsRecords,
 		newFlatFees,
 	)
-	s.Run("Check import of an updated genesis", func() {
-		s.keeper.InitGenesis(s.ctx, genesisStateImported)
+	t.Run("Check import of an updated genesis", func(t *testing.T) {
+		k.InitGenesis(ctx, genesisStateImported)
 
 		genesisStateExpected := types.GenesisState{
 			Params:              newParams,
@@ -135,15 +139,15 @@ func (s *KeeperTestSuite) TestGenesisImportExport() {
 			FlatFees:            append(genesisStateInitial.FlatFees, newFlatFees...),
 		}
 
-		genesisStateReceived := s.keeper.ExportGenesis(s.ctx)
-		s.Require().NotNil(genesisStateReceived)
-		s.Assert().Equal(genesisStateExpected.Params, genesisStateReceived.Params)
-		s.Assert().ElementsMatch(genesisStateExpected.ContractsMetadata, genesisStateReceived.ContractsMetadata)
-		s.Assert().ElementsMatch(genesisStateExpected.BlockRewards, genesisStateReceived.BlockRewards)
-		s.Assert().ElementsMatch(genesisStateExpected.TxRewards, genesisStateReceived.TxRewards)
-		s.Assert().Equal(genesisStateExpected.MinConsensusFee.String(), genesisStateReceived.MinConsensusFee.String())
-		s.Assert().Equal(genesisStateExpected.RewardsRecordLastId, genesisStateReceived.RewardsRecordLastId)
-		s.Assert().ElementsMatch(genesisStateExpected.RewardsRecords, genesisStateReceived.RewardsRecords)
-		s.Assert().ElementsMatch(genesisStateExpected.FlatFees, genesisStateReceived.FlatFees)
+		genesisStateReceived := k.ExportGenesis(ctx)
+		require.NotNil(t, genesisStateReceived)
+		require.Equal(t, genesisStateExpected.Params, genesisStateReceived.Params)
+		require.ElementsMatch(t, genesisStateExpected.ContractsMetadata, genesisStateReceived.ContractsMetadata)
+		require.ElementsMatch(t, genesisStateExpected.BlockRewards, genesisStateReceived.BlockRewards)
+		require.ElementsMatch(t, genesisStateExpected.TxRewards, genesisStateReceived.TxRewards)
+		require.Equal(t, genesisStateExpected.MinConsensusFee.String(), genesisStateReceived.MinConsensusFee.String())
+		require.Equal(t, genesisStateExpected.RewardsRecordLastId, genesisStateReceived.RewardsRecordLastId)
+		require.ElementsMatch(t, genesisStateExpected.RewardsRecords, genesisStateReceived.RewardsRecords)
+		require.ElementsMatch(t, genesisStateExpected.FlatFees, genesisStateReceived.FlatFees)
 	})
 }
