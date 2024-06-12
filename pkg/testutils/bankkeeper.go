@@ -29,21 +29,21 @@ func (k MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, sender
 }
 
 func (k MockBankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error {
-	if k.SendCoinsFromAccountToModuleFn == nil {
+	if k.SendCoinsFromModuleToAccountFn == nil {
 		panic("not supposed to be called!")
 	}
 	return k.SendCoinsFromModuleToAccountFn(ctx, senderModule, recipientAddr, amt)
 }
 
 func (k MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error {
-	if k.SendCoinsFromAccountToModuleFn == nil {
+	if k.SendCoinsFromModuleToModuleFn == nil {
 		panic("not supposed to be called!")
 	}
 	return k.SendCoinsFromModuleToModuleFn(ctx, senderModule, recipientModule, amt)
 }
 
 func (k MockBankKeeper) BlockedAddr(addr sdk.AccAddress) bool {
-	if k.SendCoinsFromAccountToModuleFn == nil {
+	if k.BlockedAddrFn == nil {
 		panic("not supposed to be called!")
 	}
 	return k.BlockedAddrFn(addr)

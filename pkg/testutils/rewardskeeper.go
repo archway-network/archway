@@ -35,7 +35,11 @@ func RewardsKeeper(tb testing.TB) (keeper.Keeper, sdk.Context, MockBankKeeper, M
 	cdc := codec.NewProtoCodec(registry)
 
 	wasmKeeper := NewMockContractViewer()
-	bankKeeper := MockBankKeeper{}
+	bankKeeper := MockBankKeeper{
+		BlockedAddrFn: func(addr sdk.AccAddress) bool {
+			return false
+		},
+	}
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
