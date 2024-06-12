@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,282 +17,289 @@ import (
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
-func (s *KeeperTestSuite) TestGRPC_Params() {
-	querySrvr := keeper.NewQueryServer(s.keeper)
+func TestGRPC_Params(t *testing.T) {
+	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	querySrvr := keeper.NewQueryServer(k)
 	params := rewardsTypes.Params{
 		InflationRewardsRatio: math.LegacyMustNewDecFromStr("0.1"),
 		TxFeeRebateRatio:      math.LegacyMustNewDecFromStr("0.1"),
 		MaxWithdrawRecords:    uint64(2),
 		MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 	}
-	err := s.keeper.Params.Set(s.ctx, params)
-	require.NoError(s.T(), err)
+	err := k.Params.Set(ctx, params)
+	require.NoError(t, err)
 
-	s.Run("err: empty request", func() {
-		_, err := querySrvr.Params(s.ctx, nil)
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	t.Run("err: empty request", func(t *testing.T) {
+		_, err := querySrvr.Params(ctx, nil)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
-	s.Run("ok: gets params", func() {
-		res, err := querySrvr.Params(s.ctx, &rewardsTypes.QueryParamsRequest{})
-		s.Require().NoError(err)
-		s.Require().Equal(params, res.Params)
+	t.Run("ok: gets params", func(t *testing.T) {
+		res, err := querySrvr.Params(ctx, &rewardsTypes.QueryParamsRequest{})
+		require.NoError(t, err)
+		require.Equal(t, params, res.Params)
 	})
 }
 
-func (s *KeeperTestSuite) TestGRPC_ContractMetadata() {
-	querySrvr := keeper.NewQueryServer(s.keeper)
-	contractViewer := testutils.NewMockContractViewer()
-	s.keeper.SetContractInfoViewer(contractViewer)
+func TestGRPC_ContractMetadata(t *testing.T) {
+	k, ctx, _, wk := testutils.RewardsKeeper(t)
+	querySrvr := keeper.NewQueryServer(k)
+
 	contractAddr := e2eTesting.GenContractAddresses(2)
 	contractAdminAcc := testutils.AccAddress()
-	contractViewer.AddContractAdmin(contractAddr[0].String(), contractAdminAcc.String())
+	wk.AddContractAdmin(contractAddr[0].String(), contractAdminAcc.String())
 	contractMeta := rewardsTypes.ContractMetadata{
 		ContractAddress: contractAddr[0].String(),
 		OwnerAddress:    contractAdminAcc.String(),
 	}
-	err := s.keeper.SetContractMetadata(s.ctx, contractAdminAcc, contractAddr[0], contractMeta)
-	s.Require().NoError(err)
+	err := k.SetContractMetadata(ctx, contractAdminAcc, contractAddr[0], contractMeta)
+	require.NoError(t, err)
 
-	s.Run("err: empty request", func() {
-		_, err := querySrvr.ContractMetadata(s.ctx, nil)
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	t.Run("err: empty request", func(t *testing.T) {
+		_, err := querySrvr.ContractMetadata(ctx, nil)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
-	s.Run("err: invalid contract address", func() {
-		_, err := querySrvr.ContractMetadata(s.ctx, &rewardsTypes.QueryContractMetadataRequest{ContractAddress: "👻"})
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "invalid contract address: decoding bech32 failed: invalid bech32 string length 4"), err)
+	t.Run("err: invalid contract address", func(t *testing.T) {
+		_, err := querySrvr.ContractMetadata(ctx, &rewardsTypes.QueryContractMetadataRequest{ContractAddress: "👻"})
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "invalid contract address: decoding bech32 failed: invalid bech32 string length 4"), err)
 	})
 
-	s.Run("err: contract metadata not found", func() {
-		_, err := querySrvr.ContractMetadata(s.ctx, &rewardsTypes.QueryContractMetadataRequest{ContractAddress: contractAddr[1].String()})
-		s.Require().Error(err)
-		s.Require().Equal(status.Errorf(codes.NotFound, "metadata for the contract: not found"), err)
+	t.Run("err: contract metadata not found", func(t *testing.T) {
+		_, err := querySrvr.ContractMetadata(ctx, &rewardsTypes.QueryContractMetadataRequest{ContractAddress: contractAddr[1].String()})
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.NotFound, "metadata for the contract: not found"), err)
 	})
 
-	s.Run("ok: gets contract metadata", func() {
-		res, err := querySrvr.ContractMetadata(s.ctx, &rewardsTypes.QueryContractMetadataRequest{ContractAddress: contractAddr[0].String()})
-		s.Require().NoError(err)
-		s.Require().Equal(contractMeta.ContractAddress, res.Metadata.ContractAddress)
-		s.Require().Equal(contractMeta.RewardsAddress, res.Metadata.RewardsAddress)
-		s.Require().Equal(contractMeta.OwnerAddress, res.Metadata.OwnerAddress)
-	})
-}
-
-func (s *KeeperTestSuite) TestGRPC_BlockRewardsTracking() {
-	querySrvr := keeper.NewQueryServer(s.keeper)
-
-	s.Run("err: empty request", func() {
-		_, err := querySrvr.BlockRewardsTracking(s.ctx, nil)
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
-	})
-
-	s.Run("ok: gets block rewards tracking", func() {
-		res, err := querySrvr.BlockRewardsTracking(s.ctx, &rewardsTypes.QueryBlockRewardsTrackingRequest{})
-		s.Require().NoError(err)
-		s.Require().Equal(0, len(res.Block.TxRewards))
-		s.Require().Equal(s.ctx.BlockHeight(), res.Block.InflationRewards.Height)
+	t.Run("ok: gets contract metadata", func(t *testing.T) {
+		res, err := querySrvr.ContractMetadata(ctx, &rewardsTypes.QueryContractMetadataRequest{ContractAddress: contractAddr[0].String()})
+		require.NoError(t, err)
+		require.Equal(t, contractMeta.ContractAddress, res.Metadata.ContractAddress)
+		require.Equal(t, contractMeta.OwnerAddress, res.Metadata.OwnerAddress)
+		require.Equal(t, contractMeta.RewardsAddress, res.Metadata.RewardsAddress)
 	})
 }
 
-func (s *KeeperTestSuite) TestGRPC_RewardsPool() {
-	querySrvr := keeper.NewQueryServer(s.keeper)
+func TestGRPC_BlockRewardsTracking(t *testing.T) {
+	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	querySrvr := keeper.NewQueryServer(k)
 
-	s.Run("err: empty request", func() {
-		_, err := querySrvr.RewardsPool(s.ctx, nil)
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	t.Run("err: empty request", func(t *testing.T) {
+		_, err := querySrvr.BlockRewardsTracking(ctx, nil)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
-	s.Run("ok: gets rewards pool", func() {
-		res, err := querySrvr.RewardsPool(s.ctx, &rewardsTypes.QueryRewardsPoolRequest{})
-		s.Require().NoError(err)
-		s.Require().NotNil(res)
+	t.Run("ok: gets block rewards tracking", func(t *testing.T) {
+		res, err := querySrvr.BlockRewardsTracking(ctx, &rewardsTypes.QueryBlockRewardsTrackingRequest{})
+		require.NoError(t, err)
+		require.Equal(t, 0, len(res.Block.TxRewards))
+		require.Equal(t, ctx.BlockHeight(), res.Block.InflationRewards.Height)
 	})
 }
 
-func (s *KeeperTestSuite) TestGRPC_EstimateTxFees() {
-	querySrvr := keeper.NewQueryServer(s.keeper)
+func TestGRPC_RewardsPool(t *testing.T) {
+	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	querySrvr := keeper.NewQueryServer(k)
 
-	s.Run("err: empty request", func() {
-		_, err := querySrvr.EstimateTxFees(s.ctx, nil)
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	t.Run("err: empty request", func(t *testing.T) {
+		_, err := querySrvr.RewardsPool(ctx, nil)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
-	s.Run("ok: gets estimated tx fees", func() {
+	t.Run("ok: gets rewards pool", func(t *testing.T) {
+		res, err := querySrvr.RewardsPool(ctx, &rewardsTypes.QueryRewardsPoolRequest{})
+		require.NoError(t, err)
+		require.NotNil(t, res)
+	})
+}
+
+func TestGRPC_EstimateTxFees(t *testing.T) {
+	k, ctx, _, wk := testutils.RewardsKeeper(t)
+	querySrvr := keeper.NewQueryServer(k)
+
+	t.Run("err: empty request", func(t *testing.T) {
+		_, err := querySrvr.EstimateTxFees(ctx, nil)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "empty request"), err)
+	})
+
+	t.Run("ok: gets estimated tx fees", func(t *testing.T) {
 		expectedFee := sdk.NewInt64Coin("stake", 0)
-		res, err := querySrvr.EstimateTxFees(s.ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 0})
-		s.Require().NoError(err)
-		s.Require().NotNil(res)
+		res, err := querySrvr.EstimateTxFees(ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 0})
+		require.NoError(t, err)
+		require.NotNil(t, res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
-		s.Require().EqualValues(expectedFee.Amount, fees.AmountOf("stake"))
+		require.EqualValues(t, expectedFee.Amount, fees.AmountOf("stake"))
 	})
 
 	minConsFee := sdk.NewInt64Coin("stake", 100)
-	s.Run("ok: gets estimated tx fees (custom minconsfee set)", func() {
-		err := s.keeper.MinConsFee.Set(s.ctx, sdk.NewDecCoinFromCoin(minConsFee))
-		s.Require().NoError(err)
-		res, err := querySrvr.EstimateTxFees(s.ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1})
-		s.Require().NoError(err)
-		s.Require().NotNil(res)
+	t.Run("ok: gets estimated tx fees (custom minconsfee set)", func(t *testing.T) {
+		err := k.MinConsFee.Set(ctx, sdk.NewDecCoinFromCoin(minConsFee))
+		require.NoError(t, err)
+		res, err := querySrvr.EstimateTxFees(ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1})
+		require.NoError(t, err)
+		require.NotNil(t, res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
-		s.Require().EqualValues(minConsFee.Amount, fees.AmountOf("stake"))
+		require.EqualValues(t, minConsFee.Amount, fees.AmountOf("stake"))
 	})
 
-	s.Run("ok: gets estimated tx fees inclulding contract flat fee(diff denom)", func() {
+	t.Run("ok: gets estimated tx fees inclulding contract flat fee(diff denom)", func(t *testing.T) {
 		expectedFlatFee := sdk.NewInt64Coin("token", 123)
 		contractAdminAcc := testutils.AccAddress()
 		contractAddr := e2eTesting.GenContractAddresses(1)[0]
-		s.wasmKeeper.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
-		err := s.keeper.SetContractMetadata(s.ctx, contractAdminAcc, contractAddr, rewardsTypes.ContractMetadata{
+		wk.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
+		err := k.SetContractMetadata(ctx, contractAdminAcc, contractAddr, rewardsTypes.ContractMetadata{
 			ContractAddress: contractAddr.String(),
 			OwnerAddress:    contractAdminAcc.String(),
 			RewardsAddress:  contractAdminAcc.String(),
 		})
-		s.Require().NoError(err)
-		err = s.keeper.SetFlatFee(s.ctx, contractAdminAcc, types.FlatFee{
+		require.NoError(t, err)
+		err = k.SetFlatFee(ctx, contractAdminAcc, types.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         expectedFlatFee,
 		})
-		s.Require().NoError(err)
+		require.NoError(t, err)
 
-		res, err := querySrvr.EstimateTxFees(s.ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1, ContractAddress: contractAddr.String()})
-		s.Require().NoError(err)
-		s.Require().NotNil(res)
+		res, err := querySrvr.EstimateTxFees(ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1, ContractAddress: contractAddr.String()})
+		require.NoError(t, err)
+		require.NotNil(t, res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
-		s.Require().Equal(expectedFlatFee.Amount, fees.AmountOf("token"))
-		s.Require().EqualValues(minConsFee.Amount, fees.AmountOf("stake"))
+		require.Equal(t, expectedFlatFee.Amount, fees.AmountOf("token"))
+		require.EqualValues(t, minConsFee.Amount, fees.AmountOf("stake"))
 	})
 
-	s.Run("ok: gets estimated tx fees including contract flat fee(same denom)", func() {
+	t.Run("ok: gets estimated tx fees including contract flat fee(same denom)", func(t *testing.T) {
 		expectedFlatFee := sdk.NewInt64Coin("stake", 123)
 		contractAdminAcc := testutils.AccAddress()
 		contractAddr := e2eTesting.GenContractAddresses(1)[0]
-		s.wasmKeeper.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
-		err := s.keeper.SetContractMetadata(s.ctx, contractAdminAcc, contractAddr, rewardsTypes.ContractMetadata{
+		wk.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
+		err := k.SetContractMetadata(ctx, contractAdminAcc, contractAddr, rewardsTypes.ContractMetadata{
 			ContractAddress: contractAddr.String(),
 			OwnerAddress:    contractAdminAcc.String(),
 			RewardsAddress:  contractAdminAcc.String(),
 		})
-		s.Require().NoError(err)
-		err = s.keeper.SetFlatFee(s.ctx, contractAdminAcc, types.FlatFee{
+		require.NoError(t, err)
+		err = k.SetFlatFee(ctx, contractAdminAcc, types.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         expectedFlatFee,
 		})
-		s.Require().NoError(err)
+		require.NoError(t, err)
 
-		res, err := querySrvr.EstimateTxFees(s.ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1, ContractAddress: contractAddr.String()})
-		s.Require().NoError(err)
-		s.Require().NotNil(res)
+		res, err := querySrvr.EstimateTxFees(ctx, &rewardsTypes.QueryEstimateTxFeesRequest{GasLimit: 1, ContractAddress: contractAddr.String()})
+		require.NoError(t, err)
+		require.NotNil(t, res)
 		fees := sdk.NewCoins(res.EstimatedFee...)
-		s.Require().Equal(expectedFlatFee.Add(minConsFee).Amount, fees.AmountOf("stake"))
+		require.Equal(t, expectedFlatFee.Add(minConsFee).Amount, fees.AmountOf("stake"))
 	})
 }
 
-func (s *KeeperTestSuite) TestGRPC_OutstandingRewards() {
-	querySrvr := keeper.NewQueryServer(s.keeper)
+func TestGRPC_OutstandingRewards(t *testing.T) {
+	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	querySrvr := keeper.NewQueryServer(k)
 
-	s.Run("err: empty request", func() {
-		_, err := querySrvr.OutstandingRewards(s.ctx, nil)
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	t.Run("err: empty request", func(t *testing.T) {
+		_, err := querySrvr.OutstandingRewards(ctx, nil)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
-	s.Run("err: invalid rewards address", func() {
-		_, err := querySrvr.OutstandingRewards(s.ctx, &rewardsTypes.QueryOutstandingRewardsRequest{
+	t.Run("err: invalid rewards address", func(t *testing.T) {
+		_, err := querySrvr.OutstandingRewards(ctx, &rewardsTypes.QueryOutstandingRewardsRequest{
 			RewardsAddress: "👻",
 		})
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "invalid rewards address: decoding bech32 failed: invalid bech32 string length 4"), err)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "invalid rewards address: decoding bech32 failed: invalid bech32 string length 4"), err)
 	})
 
-	s.Run("ok: get outstanding rewards", func() {
-		res, err := querySrvr.OutstandingRewards(s.ctx, &rewardsTypes.QueryOutstandingRewardsRequest{
+	t.Run("ok: get outstanding rewards", func(t *testing.T) {
+		res, err := querySrvr.OutstandingRewards(ctx, &rewardsTypes.QueryOutstandingRewardsRequest{
 			RewardsAddress: testutils.AccAddress().String(),
 		})
-		s.Require().NoError(err)
-		s.Require().EqualValues(0, res.RecordsNum)
+		require.NoError(t, err)
+		require.EqualValues(t, 0, res.RecordsNum)
 	})
 }
 
-func (s *KeeperTestSuite) TestGRPC_RewardsRecords() {
-	querySrvr := keeper.NewQueryServer(s.keeper)
+func TestGRPC_RewardsRecords(t *testing.T) {
+	k, ctx, _, _ := testutils.RewardsKeeper(t)
+	querySrvr := keeper.NewQueryServer(k)
 
-	s.Run("err: empty request", func() {
-		_, err := querySrvr.RewardsRecords(s.ctx, nil)
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	t.Run("err: empty request", func(t *testing.T) {
+		_, err := querySrvr.RewardsRecords(ctx, nil)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
-	s.Run("err: invalid rewards address", func() {
-		_, err := querySrvr.RewardsRecords(s.ctx, &rewardsTypes.QueryRewardsRecordsRequest{
+	t.Run("err: invalid rewards address", func(t *testing.T) {
+		_, err := querySrvr.RewardsRecords(ctx, &rewardsTypes.QueryRewardsRecordsRequest{
 			RewardsAddress: "👻",
 		})
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "invalid rewards address: decoding bech32 failed: invalid bech32 string length 4"), err)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "invalid rewards address: decoding bech32 failed: invalid bech32 string length 4"), err)
 	})
 
-	s.Run("ok: get rewards records", func() {
-		res, err := querySrvr.RewardsRecords(s.ctx, &rewardsTypes.QueryRewardsRecordsRequest{
+	t.Run("ok: get rewards records", func(t *testing.T) {
+		res, err := querySrvr.RewardsRecords(ctx, &rewardsTypes.QueryRewardsRecordsRequest{
 			RewardsAddress: testutils.AccAddress().String(),
 		})
-		s.Require().NoError(err)
-		s.Require().EqualValues(0, len(res.Records))
+		require.NoError(t, err)
+		require.EqualValues(t, 0, len(res.Records))
 	})
 }
 
-func (s *KeeperTestSuite) TestGRPC_FlatFee() {
-	querySrvr := keeper.NewQueryServer(s.keeper)
+func TestGRPC_FlatFee(t *testing.T) {
+	k, ctx, _, wk := testutils.RewardsKeeper(t)
+	querySrvr := keeper.NewQueryServer(k)
 
-	s.Run("err: empty request", func() {
-		_, err := querySrvr.FlatFee(s.ctx, nil)
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "empty request"), err)
+	t.Run("err: empty request", func(t *testing.T) {
+		_, err := querySrvr.FlatFee(ctx, nil)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "empty request"), err)
 	})
 
-	s.Run("err: invalid contract address", func() {
-		_, err := querySrvr.FlatFee(s.ctx, &rewardsTypes.QueryFlatFeeRequest{
+	t.Run("err: invalid contract address", func(t *testing.T) {
+		_, err := querySrvr.FlatFee(ctx, &rewardsTypes.QueryFlatFeeRequest{
 			ContractAddress: "👻",
 		})
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.InvalidArgument, "invalid contract address: decoding bech32 failed: invalid bech32 string length 4"), err)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.InvalidArgument, "invalid contract address: decoding bech32 failed: invalid bech32 string length 4"), err)
 	})
 
-	s.Run("err: flat fee not found", func() {
+	t.Run("err: flat fee not found", func(t *testing.T) {
 		contractAddr := e2eTesting.GenContractAddresses(1)[0]
-		_, err := querySrvr.FlatFee(s.ctx, &rewardsTypes.QueryFlatFeeRequest{
+		_, err := querySrvr.FlatFee(ctx, &rewardsTypes.QueryFlatFeeRequest{
 			ContractAddress: contractAddr.String(),
 		})
-		s.Require().Error(err)
-		s.Require().Equal(status.Error(codes.NotFound, "flat fee: not found"), err)
+		require.Error(t, err)
+		require.Equal(t, status.Error(codes.NotFound, "flat fee: not found"), err)
 	})
 
-	s.Run("ok: get flat fee", func() {
+	t.Run("ok: get flat fee", func(t *testing.T) {
 		contractAdminAcc := testutils.AccAddress()
 		contractAddr := e2eTesting.GenContractAddresses(1)[0]
-		s.wasmKeeper.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
-		err := s.keeper.SetContractMetadata(s.ctx, contractAdminAcc, contractAddr, rewardsTypes.ContractMetadata{
+		wk.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
+		err := k.SetContractMetadata(ctx, contractAdminAcc, contractAddr, rewardsTypes.ContractMetadata{
 			ContractAddress: contractAddr.String(),
 			OwnerAddress:    contractAdminAcc.String(),
 			RewardsAddress:  contractAdminAcc.String(),
 		})
-		s.Require().NoError(err)
-		err = s.keeper.SetFlatFee(s.ctx, contractAdminAcc, types.FlatFee{
+		require.NoError(t, err)
+		err = k.SetFlatFee(ctx, contractAdminAcc, types.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         sdk.NewInt64Coin("token", 123),
 		})
-		s.Require().NoError(err)
+		require.NoError(t, err)
 
-		res, err := querySrvr.FlatFee(s.ctx, &rewardsTypes.QueryFlatFeeRequest{
+		res, err := querySrvr.FlatFee(ctx, &rewardsTypes.QueryFlatFeeRequest{
 			ContractAddress: contractAddr.String(),
 		})
-		s.Require().NoError(err)
-		s.Require().NotNil(res)
-		s.Require().EqualValues(sdk.NewInt64Coin("token", 123), res.FlatFeeAmount)
+		require.NoError(t, err)
+		require.NotNil(t, res)
+		require.Equal(t, sdk.NewInt64Coin("token", 123), res.FlatFeeAmount)
 	})
 }
