@@ -8,9 +8,6 @@ import (
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/archway-network/archway/x/rewards/keeper"
-	"github.com/archway-network/archway/x/rewards/types"
-	trackingtypes "github.com/archway-network/archway/x/tracking/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,6 +15,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/archway-network/archway/x/rewards/keeper"
+	"github.com/archway-network/archway/x/rewards/types"
+	trackingtypes "github.com/archway-network/archway/x/tracking/types"
 )
 
 func RewardsKeeper(tb testing.TB) (keeper.Keeper, sdk.Context, MockBankKeeper) {

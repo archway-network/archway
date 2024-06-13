@@ -53,7 +53,8 @@ func TestWithdrawRewardsByLimit(t *testing.T) {
 	// Setup environment
 	err := SetupWithdrawTest(k, ctx, testData)
 	require.NoError(t, err)
-	rewards.EndBlocker(ctx, k)
+	_, err = rewards.EndBlocker(ctx, k)
+	require.NoError(t, err)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 	// Withdraw the 1st half

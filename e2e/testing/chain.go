@@ -547,7 +547,6 @@ func (chain *TestChain) SendMsgsRaw(senderAcc Account, msgs []sdk.Msg, expPass b
 		require.True(t, finalizeSuccess)
 	} else {
 		require.False(t, finalizeSuccess)
-
 	}
 
 	_, err = chain.app.Commit()

@@ -128,7 +128,6 @@ func TestMsgServer_SetContractMetadata(t *testing.T) {
 }
 
 func TestMsgServer_WithdrawRewards(t *testing.T) {
-
 	k, ctx, _ := testutils.RewardsKeeper(t)
 	acc := testutils.AccAddress()
 

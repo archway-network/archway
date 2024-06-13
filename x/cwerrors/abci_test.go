@@ -79,7 +79,8 @@ func TestEndBlocker(t *testing.T) {
 
 	// Go to prune height & execute endblockers
 	ctx = ctx.WithBlockHeight(pruneHeight)
-	cwerrors.EndBlocker(ctx, keeper, wasmKeeper)
+	_, err = cwerrors.EndBlocker(ctx, keeper, wasmKeeper)
+	require.NoError(t, err)
 
 	// Check number of errors match
 	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr.Bytes())
@@ -91,7 +92,8 @@ func TestEndBlocker(t *testing.T) {
 
 	// Go to next block & execute endblockers
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	cwerrors.EndBlocker(ctx, keeper, wasmKeeper)
+	_, err = cwerrors.EndBlocker(ctx, keeper, wasmKeeper)
+	require.NoError(t, err)
 
 	// Check number of errors match
 	sudoErrs, err = keeper.GetErrorsByContractAddress(ctx, contractAddr.Bytes())

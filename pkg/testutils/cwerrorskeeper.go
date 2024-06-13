@@ -8,14 +8,15 @@ import (
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/archway-network/archway/x/cwerrors/keeper"
-	"github.com/archway-network/archway/x/cwerrors/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/archway-network/archway/x/cwerrors/keeper"
+	"github.com/archway-network/archway/x/cwerrors/types"
 )
 
 func CWErrorsKeeper(tb testing.TB) (keeper.Keeper, sdk.Context) {

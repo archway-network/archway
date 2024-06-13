@@ -155,7 +155,8 @@ func TestStates(t *testing.T) {
 	for _, data := range testDataExpected {
 		// Switch to next block
 		if data.Tx.Height != block {
-			tracking.EndBlocker(ctx, keeper) // that updates TxInfo objs via EndBlocker
+			_, err := tracking.EndBlocker(ctx, keeper) // that updates TxInfo objs via EndBlocker
+			require.NoError(t, err)
 			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
 			block = ctx.BlockHeight()

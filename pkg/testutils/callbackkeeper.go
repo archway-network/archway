@@ -9,9 +9,6 @@ import (
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/archway-network/archway/x/callback/keeper"
-	"github.com/archway-network/archway/x/callback/types"
-	rewardstypes "github.com/archway-network/archway/x/rewards/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +16,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
+
+	"github.com/archway-network/archway/x/callback/keeper"
+	"github.com/archway-network/archway/x/callback/types"
+	rewardstypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 func CallbackKeeper(tb testing.TB) (keeper.Keeper, sdk.Context) {

@@ -3,8 +3,9 @@ package keeper_test
 import (
 	"testing"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/stretchr/testify/suite"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 type KeeperTestSuite struct {
