@@ -1,4 +1,4 @@
-package upgradelatest
+package upgrade8_0_0
 
 import (
 	"context"
