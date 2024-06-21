@@ -1,0 +1,63 @@
+syntax = "proto3";
+package archway.cwregistry.v1;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "archway/cwregistry/v1/cwregistry.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwregistry/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+  // RegisterContract registers a contract with the contract registry.
+  rpc RegisterContract(MsgRegisterContract) returns (MsgRegisterContractResponse) {}
+// RegisterCode registers a contract code with the contract registry.
+  rpc RegisterCode(MsgRegisterCode) returns (MsgRegisterCodeResponse) {}
+}
+
+// MsgRegisterContract registers a contract with the contract registry.
+message MsgRegisterContract {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  option (cosmos.msg.v1.signer) = "sender";
+  // sender is the bech32 address of the sender.
+  string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // contract_address is the bech32 address of the contract.
+  string contract_address = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // source_metadata is the metadata of the contract source.
+  SourceMetadata source_metadata = 3;
+  // source_builder is the builder image of the contract source.
+  SourceBuilder source_builder = 4;
+  // schema is the json schema of the contract.
+  string schema = 5;
+  // contacts is the list of dev contacts for the contract.
+  repeated string contacts = 6;
+}
+
+// MsgRegisterContractResponse defines the Msg/RegisterContract response type.
+message MsgRegisterContractResponse {}
+
+// MsgRegisterCode registers a contract code with the contract registry.
+message MsgRegisterCode {
+    option (gogoproto.equal) = false;
+    option (gogoproto.goproto_getters) = false;
+    option (cosmos.msg.v1.signer) = "sender";
+    // sender is the bech32 address of the sender.
+    string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+    // code_id is the id of the contract code.
+    uint64 code_id = 2;
+    // source_metadata is the metadata of the contract source.
+    SourceMetadata source_metadata = 3;
+    // source_builder is the builder image of the contract source.
+    SourceBuilder source_builder = 4;
+    // schema is the json schema of the contract.
+    string schema = 5;
+    // contacts is the list of dev contacts for the contract.
+    repeated string contacts = 6;
+}
+  
+  message MsgRegisterCodeResponse {}

@@ -1,0 +1,13 @@
+syntax = "proto3";
+package archway.cwregistry.v1;
+
+import "gogoproto/gogo.proto";
+import "archway/cwregistry/v1/cwregistry.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwregistry/types";
+
+// GenesisState defines the cwregistry module's genesis state.
+message GenesisState {
+    // code_metadata defines all the code metadata stored in the cwregistry module.
+    repeated CodeMetadata code_metadata = 1 [ (gogoproto.nullable) = false ];
+}

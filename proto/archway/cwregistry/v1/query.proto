@@ -1,0 +1,9 @@
+syntax = "proto3";
+package archway.cwregistry.v1;
+
+option go_package = "github.com/archway-network/archway/x/cwregistry/types";
+
+// Query defines the gRPC querier service.
+service Query {
+
+}
