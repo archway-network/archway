@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/archway-network/archway/app/upgrades"
 	upgrade_0_6 "github.com/archway-network/archway/app/upgrades/06"
@@ -32,7 +32,7 @@ var Upgrades = []upgrades.Upgrade{
 	upgradelatest.Upgrade, // latest - This upgrade handler is used for all the current changes to the protocol
 }
 
-func (app *ArchwayApp) setupUpgrades() {
+func (app *ArchwayApp) RegisterUpgradeHandlers() {
 	app.setUpgradeHandlers()
 	app.setUpgradeStoreLoaders()
 }
@@ -58,7 +58,7 @@ func (app *ArchwayApp) setUpgradeHandlers() {
 	for _, u := range Upgrades {
 		app.Keepers.UpgradeKeeper.SetUpgradeHandler(
 			u.UpgradeName,
-			u.CreateUpgradeHandler(app.mm, app.configurator, app.Keepers),
+			u.CreateUpgradeHandler(app.ModuleManager, app.configurator, app.Keepers),
 		)
 	}
 }

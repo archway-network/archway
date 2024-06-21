@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -112,7 +113,7 @@ func (s *QueryServer) EstimateTxFees(c context.Context, request *types.QueryEsti
 
 	fees := sdk.NewCoins()
 	computationalPoG := s.keeper.ComputationalPriceOfGas(ctx)
-	fees = fees.Add(sdk.NewCoin(computationalPoG.Denom, computationalPoG.Amount.MulInt(sdk.NewIntFromUint64(request.GasLimit)).RoundInt()))
+	fees = fees.Add(sdk.NewCoin(computationalPoG.Denom, computationalPoG.Amount.MulInt(math.NewIntFromUint64(request.GasLimit)).RoundInt()))
 
 	if request.ContractAddress != "" { // if contract address is passed in, get the flat fee and add that.
 		contractAddr, err := sdk.AccAddressFromBech32(request.ContractAddress)

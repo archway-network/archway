@@ -8,7 +8,6 @@ import (
 	cosmwasm "github.com/CosmWasm/wasmvm"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
 	"github.com/archway-network/archway/app"
@@ -20,12 +19,8 @@ func main() {
 	rootCmd.AddCommand(ensureLibWasmVM())
 
 	if err := svrcmd.Execute(rootCmd, "ARCHWAY", app.DefaultNodeHome); err != nil {
-		switch e := err.(type) {
-		case server.ErrorCode:
-			logExit(e.Code, e.Error())
-		default:
-			logExit(1, err.Error())
-		}
+		fmt.Fprintln(rootCmd.OutOrStderr(), err)
+		os.Exit(1)
 	}
 }
 
@@ -71,9 +66,4 @@ func getExpectedLibwasmVersion() (string, error) {
 		return d.Version, nil
 	}
 	return "", fmt.Errorf("unable to detect the expected libwasmvm version")
-}
-
-func logExit(code int, format string, args ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stderr, format, args...)
-	os.Exit(code)
 }

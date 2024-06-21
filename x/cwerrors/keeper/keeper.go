@@ -2,10 +2,8 @@ package keeper
 
 import (
 	"cosmossdk.io/collections"
-	"github.com/cometbft/cometbft/libs/log"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/archway-network/archway/x/cwerrors/types"
@@ -106,11 +104,6 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, tStoreKey storetyp
 	}
 	k.Schema = schema
 	return k
-}
-
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // GetAuthority returns the x/cwerrors module's authority.

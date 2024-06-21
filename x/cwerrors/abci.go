@@ -12,19 +12,18 @@ import (
 const ErrorCallbackGasLimit = 150_000
 
 // EndBlocker is called every block, and prunes errors that are older than the current block height.
-func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) []abci.ValidatorUpdate {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) ([]abci.ValidatorUpdate, error) {
 	// Iterate over all errors (with callback subscription) and execute the error callback for each error
 	k.IterateSudoErrorCallbacks(ctx, sudoErrorCallbackExec(ctx, k, wk))
 	// Prune any error callback subscripitons that have expired in the current block height
 	if err := k.PruneSubscriptionsEndBlock(ctx); err != nil {
-		panic(err)
+		return nil, err
 	}
 	// Prune any errors(in state) that have expired in the current block height
 	if err := k.PruneErrorsCurrentBlock(ctx); err != nil {
-		panic(err)
+		return nil, err
 	}
-
-	return nil
+	return nil, nil
 }
 
 func sudoErrorCallbackExec(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected) func(types.SudoError) bool {

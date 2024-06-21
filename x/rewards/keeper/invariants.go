@@ -31,7 +31,7 @@ func ModuleAccountBalanceInvariant(k Keeper) sdk.Invariant {
 				true // we do not know if the invariant is broken, but we cannot compute the rewards
 		}
 
-		broken := !poolExpected.IsEqual(poolCurrent)
+		broken := !poolExpected.Equal(poolCurrent)
 
 		return sdk.FormatInvariant(types.ModuleName, "module account and total rewards records coins", fmt.Sprintf(
 			"\tPool's tokens: %v\n"+

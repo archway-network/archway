@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
@@ -43,13 +44,13 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				TxRewards: []rewardsTypes.TxRewards{
 					{TxId: 1, Height: 1},
 				},
-				MinConsensusFee:     sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+				MinConsensusFee:     sdk.NewDecCoin(sdk.DefaultBondDenom, math.OneInt()),
 				RewardsRecordLastId: 1,
 				RewardsRecords: []rewardsTypes.RewardsRecord{
 					{
 						Id:               1,
 						RewardsAddress:   accAddrs[0].String(),
-						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
+						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
 					},
@@ -70,13 +71,13 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				TxRewards: []rewardsTypes.TxRewards{
 					{TxId: 1, Height: 1},
 				},
-				MinConsensusFee:     sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+				MinConsensusFee:     sdk.NewDecCoin(sdk.DefaultBondDenom, math.OneInt()),
 				RewardsRecordLastId: 1,
 				RewardsRecords: []rewardsTypes.RewardsRecord{
 					{
 						Id:               1,
 						RewardsAddress:   accAddrs[0].String(),
-						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
+						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
 					},
@@ -84,11 +85,11 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				FlatFees: []rewardsTypes.FlatFee{
 					{
 						ContractAddress: contractAddrs[0].String(),
-						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()),
 					},
 					{
 						ContractAddress: contractAddrs[1].String(),
-						FlatFee:         sdk.NewCoin("uarch", sdk.NewInt(10)),
+						FlatFee:         sdk.NewCoin("uarch", math.NewInt(10)),
 					},
 				},
 			},
@@ -97,8 +98,8 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 			name: "Fail: invalid Params",
 			genesisState: rewardsTypes.GenesisState{
 				Params: rewardsTypes.Params{
-					InflationRewardsRatio: sdk.NewDecWithPrec(15, 0),
-					TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
+					InflationRewardsRatio: math.LegacyNewDecWithPrec(15, 0),
+					TxFeeRebateRatio:      math.LegacyNewDecWithPrec(5, 2),
 				},
 			},
 			errExpected: true,
@@ -185,7 +186,7 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				Params: rewardsTypes.DefaultParams(),
 				MinConsensusFee: sdk.DecCoin{
 					Denom:  sdk.DefaultBondDenom,
-					Amount: sdk.NewDec(-1),
+					Amount: math.LegacyNewDec(-1),
 				},
 			},
 			errExpected: true,
@@ -209,14 +210,14 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 					{
 						Id:               1,
 						RewardsAddress:   accAddrs[0].String(),
-						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
+						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
 					},
 					{
 						Id:               1,
 						RewardsAddress:   accAddrs[0].String(),
-						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
+						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
 					},
@@ -233,7 +234,7 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 					{
 						Id:               1,
 						RewardsAddress:   accAddrs[0].String(),
-						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
+						Rewards:          sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())),
 						CalculatedHeight: 1,
 						CalculatedTime:   mockTime,
 					},
@@ -251,11 +252,11 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				FlatFees: []rewardsTypes.FlatFee{
 					{
 						ContractAddress: contractAddrs[0].String(),
-						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()),
 					},
 					{
 						ContractAddress: contractAddrs[1].String(),
-						FlatFee:         sdk.NewCoin("uarch", sdk.NewInt(10)),
+						FlatFee:         sdk.NewCoin("uarch", math.NewInt(10)),
 					},
 				},
 			},
@@ -272,7 +273,7 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 					{
 						ContractAddress: contractAddrs[0].String(),
 						FlatFee: sdk.Coin{
-							Amount: sdk.NewInt(-1),
+							Amount: math.NewInt(-1),
 							Denom:  sdk.DefaultBondDenom,
 						},
 					},
@@ -290,11 +291,11 @@ func TestRewardsGenesisStateValidate(t *testing.T) {
 				FlatFees: []rewardsTypes.FlatFee{
 					{
 						ContractAddress: contractAddrs[0].String(),
-						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1)),
 					},
 					{
 						ContractAddress: contractAddrs[0].String(),
-						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2)),
+						FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(2)),
 					},
 				},
 			},

@@ -9,6 +9,7 @@ import "cosmos/msg/v1/msg.proto";
 option go_package = "github.com/archway-network/archway/x/cwfees/types";
 
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   // RegisterAsGranter allows a cosmwasm contract to register itself as a fee granter.
   rpc RegisterAsGranter(MsgRegisterAsGranter) returns (MsgRegisterAsGranterResponse);
   // UnregisterAsGranter allows a cosmwasm contract to unregister itself as a fee granter.

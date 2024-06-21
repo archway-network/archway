@@ -20,8 +20,6 @@ enum ContractOperation {
 // TxInfo keeps a transaction gas tracking data.
 // Object is being created at the module EndBlocker.
 message TxInfo {
-  option (gogoproto.goproto_stringer) = false;
-
   // id defines the unique transaction ID.
   uint64 id = 1;
   // height defines the block height of the transaction.
@@ -34,8 +32,6 @@ message TxInfo {
 // ContractOperationInfo keeps a single contract operation gas consumption data.
 // Object is being created by the IngestGasRecord call from the wasmd.
 message ContractOperationInfo {
-  option (gogoproto.goproto_stringer) = false;
-
   // id defines the unique operation ID.
   uint64 id = 1;
   // tx_id defines a transaction ID operation relates to (TxInfo.id).
@@ -55,16 +51,12 @@ message ContractOperationInfo {
 
 // BlockTracking is the tracking information for a block.
 message BlockTracking {
-  option (gogoproto.goproto_stringer) = false;
-
   // txs defines the list of transactions tracked in the block.
   repeated TxTracking txs = 1 [ (gogoproto.nullable) = false ];
 }
 
 // TxTracking is the tracking information for a single transaction.
 message TxTracking {
-  option (gogoproto.goproto_stringer) = false;
-
   // info defines the transaction details.
   TxInfo info = 1 [ (gogoproto.nullable) = false ];
   // contract_operations defines the list of contract operations consumed by the

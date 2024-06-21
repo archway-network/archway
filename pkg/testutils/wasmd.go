@@ -1,6 +1,8 @@
 package testutils
 
 import (
+	"context"
+
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
@@ -30,7 +32,7 @@ func (v *MockContractViewer) AddContractAdmin(contractAddr, adminAddr string) {
 }
 
 // GetContractInfo returns a contract info if admin is set.
-func (v MockContractViewer) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmdTypes.ContractInfo {
+func (v MockContractViewer) GetContractInfo(ctx context.Context, contractAddress sdk.AccAddress) *wasmdTypes.ContractInfo {
 	adminAddr, found := v.contractAdminSet[contractAddress.String()]
 	if !found {
 		return nil
@@ -42,13 +44,13 @@ func (v MockContractViewer) GetContractInfo(ctx sdk.Context, contractAddress sdk
 }
 
 // HasContractInfo returns true if admin is set.
-func (v MockContractViewer) HasContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) bool {
+func (v MockContractViewer) HasContractInfo(ctx context.Context, contractAddress sdk.AccAddress) bool {
 	_, found := v.contractAdminSet[contractAddress.String()]
 	return found
 }
 
 // Sudo implements the wasmKeeper.ContractInfoViewer interface.
-func (v MockContractViewer) Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error) {
+func (v MockContractViewer) Sudo(ctx context.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error) {
 	return nil, v.returnSudoError
 }
 

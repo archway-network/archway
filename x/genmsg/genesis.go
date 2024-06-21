@@ -13,13 +13,7 @@ import (
 func anyToMsg(ir codectypes.InterfaceRegistry, anyMsg *codectypes.Any) (sdk.Msg, error) {
 	var sdkMsg sdk.Msg
 	err := ir.UnpackAny(anyMsg, &sdkMsg)
-	if err != nil {
-		return nil, err
-	}
-	if err = sdkMsg.ValidateBasic(); err != nil {
-		return nil, err
-	}
-	return sdkMsg, nil
+	return sdkMsg, err
 }
 
 func validateGenesis(cdc codec.JSONCodec, genesis *types.GenesisState) error {

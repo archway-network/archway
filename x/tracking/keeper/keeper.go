@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/x/tracking/types"
@@ -13,23 +13,25 @@ import (
 // Keeper provides module state operations.
 type Keeper struct {
 	WasmGasRegister wasmtypes.GasRegister
+	logger          log.Logger
 
 	cdc   codec.Codec
 	state State
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, gasRegister wasmtypes.GasRegister) Keeper {
+func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, gasRegister wasmtypes.GasRegister, logger log.Logger) Keeper {
 	return Keeper{
 		cdc:             cdc,
 		WasmGasRegister: gasRegister,
 		state:           NewState(cdc, key),
+		logger:          logger.With("module", "x/"+types.ModuleName),
 	}
 }
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+	return k.logger
 }
 
 // TrackNewTx creates a new transaction tracking info with a unique ID that is used to link new contract operations to.

@@ -1,8 +1,10 @@
 package mintbankkeeper
 
 import (
+	"context"
 	"fmt"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -15,7 +17,7 @@ var _ mintTypes.BankKeeper = Keeper{}
 
 // RewardsKeeperExpected defines the expected interface for the x/rewards keeper.
 type RewardsKeeperExpected interface {
-	InflationRewardsRatio(ctx sdk.Context) sdk.Dec
+	InflationRewardsRatio(ctx sdk.Context) math.LegacyDec
 	TrackInflationRewards(ctx sdk.Context, rewards sdk.Coin)
 	UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin)
 }
@@ -36,7 +38,8 @@ func NewKeeper(bk mintTypes.BankKeeper, rk RewardsKeeperExpected) Keeper {
 }
 
 // SendCoinsFromModuleToModule implements the mintTypes.BankKeeper interface.
-func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error {
+func (k Keeper) SendCoinsFromModuleToModule(goCtx context.Context, senderModule, recipientModule string, amt sdk.Coins) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Perform the split only if the recipient is fee collector (which for instance is always the case) and
 	// inflation rewards are enabled.
 	ratio := k.rewardsKeeper.InflationRewardsRatio(ctx)
@@ -74,11 +77,11 @@ func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recip
 }
 
 // SendCoinsFromModuleToAccount implements the mintTypes.BankKeeper interface.
-func (k Keeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k Keeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt)
 }
 
 // MintCoins implements the mintTypes.BankKeeper interface.
-func (k Keeper) MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error {
+func (k Keeper) MintCoins(ctx context.Context, name string, amt sdk.Coins) error {
 	return k.bankKeeper.MintCoins(ctx, name, amt)
 }

@@ -1,68 +1,73 @@
 package keeper_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
-func (s *KeeperTestSuite) TestSetFlatFee() {
-	ctx, keeper := s.chain.GetContext(), s.chain.GetApp().Keepers.RewardsKeeper
-	contractAdminAcc := s.chain.GetAccount(0)
-	contractViewer := testutils.NewMockContractViewer()
-	keeper.SetContractInfoViewer(contractViewer)
+func TestSetFlatFee(t *testing.T) {
+	k, ctx, _ := testutils.RewardsKeeper(t)
+	wk := testutils.NewMockContractViewer()
+	k.SetContractInfoViewer(wk)
+	contractAdminAcc := testutils.AccAddress()
 
 	contractAddr := e2eTesting.GenContractAddresses(1)[0]
 	fee := sdk.NewInt64Coin("test", 10)
 
-	s.Run("Fail: non-existing contract metadata", func() {
-		err := keeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
+	t.Run("Fail: non-existing contract metadata", func(t *testing.T) {
+		err := k.SetFlatFee(ctx, contractAdminAcc, rewardsTypes.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         fee,
 		})
-		s.Assert().ErrorIs(err, rewardsTypes.ErrMetadataNotFound)
+		require.ErrorIs(t, err, rewardsTypes.ErrMetadataNotFound)
 	})
 
-	contractViewer.AddContractAdmin(contractAddr.String(), contractAdminAcc.Address.String())
+	wk.AddContractAdmin(contractAddr.String(), contractAdminAcc.String())
 	var metaCurrent rewardsTypes.ContractMetadata
 	metaCurrent.ContractAddress = contractAddr.String()
-	metaCurrent.OwnerAddress = contractAdminAcc.Address.String()
-	_ = keeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
+	metaCurrent.OwnerAddress = contractAdminAcc.String()
+	err := k.SetContractMetadata(ctx, contractAdminAcc, contractAddr, metaCurrent)
+	require.NoError(t, err)
 
-	s.Run("Fail: rewards address not set", func() {
-		err := keeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
+	t.Run("Fail: rewards address not set", func(t *testing.T) {
+		err := k.SetFlatFee(ctx, contractAdminAcc, rewardsTypes.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         fee,
 		})
-		s.Assert().ErrorIs(err, rewardsTypes.ErrMetadataNotFound)
+		require.ErrorIs(t, err, rewardsTypes.ErrMetadataNotFound)
 	})
 
-	metaCurrent.RewardsAddress = contractAdminAcc.Address.String()
-	_ = keeper.SetContractMetadata(ctx, contractAdminAcc.Address, contractAddr, metaCurrent)
+	metaCurrent.RewardsAddress = contractAdminAcc.String()
+	err = k.SetContractMetadata(ctx, contractAdminAcc, contractAddr, metaCurrent)
+	require.NoError(t, err)
 
-	s.Run("OK: set flat fee", func() {
-		err := keeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
+	t.Run("OK: set flat fee", func(t *testing.T) {
+		err := k.SetFlatFee(ctx, contractAdminAcc, rewardsTypes.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         fee,
 		})
-		s.Require().NoError(err)
+		require.NoError(t, err)
 
-		flatFee, ok := keeper.GetFlatFee(ctx, contractAddr)
-		s.Require().True(ok)
-		s.Require().Equal(fee, flatFee)
+		flatFee, ok := k.GetFlatFee(ctx, contractAddr)
+		require.True(t, ok)
+		require.Equal(t, fee, flatFee)
 	})
 
-	s.Run("OK: remove flat fee", func() {
-		err := keeper.SetFlatFee(ctx, contractAdminAcc.Address, rewardsTypes.FlatFee{
+	t.Run("OK: remove flat fee", func(t *testing.T) {
+		err := k.SetFlatFee(ctx, contractAdminAcc, rewardsTypes.FlatFee{
 			ContractAddress: contractAddr.String(),
 			FlatFee:         sdk.NewInt64Coin("test", 0),
 		})
-		s.Require().NoError(err)
+		require.NoError(t, err)
 
-		flatFee, ok := keeper.GetFlatFee(ctx, contractAddr)
-		s.Require().False(ok)
-		s.Require().Equal(sdk.Coin{}, flatFee)
+		flatFee, ok := k.GetFlatFee(ctx, contractAddr)
+		require.False(t, ok)
+		require.Equal(t, sdk.Coin{}, flatFee)
 	})
 }

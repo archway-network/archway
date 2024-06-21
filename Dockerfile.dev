@@ -9,9 +9,9 @@ RUN apk add --no-cache bash jq
 
 # rest server
 EXPOSE 1317
-# tendermint p2p
+# comet p2p
 EXPOSE 26656
-# tendermint rpc
+# comet rpc
 EXPOSE 26657
 
 ENTRYPOINT [ "/usr/bin/archwayd" ]

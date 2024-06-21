@@ -1,14 +1,15 @@
 package e2eTesting
 
 import (
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	math "cosmossdk.io/math"
+	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	archway "github.com/archway-network/archway/types"
 
 	"github.com/archway-network/archway/app"
+	callbacktypes "github.com/archway-network/archway/x/callback/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
@@ -28,7 +29,7 @@ type (
 
 	TestChainGenesisOption func(cdc codec.Codec, genesis app.GenesisState)
 
-	TestChainConsensusParamsOption func(params *tmproto.ConsensusParams)
+	TestChainConsensusParamsOption func(params *cmproto.ConsensusParams)
 )
 
 // defaultChainConfig builds chain default config.
@@ -92,13 +93,13 @@ func WithLogger() TestChainConfigOption {
 
 // WithBlockGasLimit sets the block gas limit (not set by default).
 func WithBlockGasLimit(gasLimit int64) TestChainConsensusParamsOption {
-	return func(params *tmproto.ConsensusParams) {
+	return func(params *cmproto.ConsensusParams) {
 		params.Block.MaxGas = gasLimit
 	}
 }
 
 // WithInflationRewardsRatio sets x/rewards inflation rewards ratio parameter.
-func WithInflationRewardsRatio(ratio sdk.Dec) TestChainGenesisOption {
+func WithInflationRewardsRatio(ratio math.LegacyDec) TestChainGenesisOption {
 	return func(cdc codec.Codec, genesis app.GenesisState) {
 		var rewardsGenesis rewardsTypes.GenesisState
 		cdc.MustUnmarshalJSON(genesis[rewardsTypes.ModuleName], &rewardsGenesis)
@@ -122,7 +123,7 @@ func WithMaxWithdrawRecords(num uint64) TestChainGenesisOption {
 }
 
 // WithTxFeeRebatesRewardsRatio sets x/rewards tx fee rebates rewards ratio parameter.
-func WithTxFeeRebatesRewardsRatio(ratio sdk.Dec) TestChainGenesisOption {
+func WithTxFeeRebatesRewardsRatio(ratio math.LegacyDec) TestChainGenesisOption {
 	return func(cdc codec.Codec, genesis app.GenesisState) {
 		var rewardsGenesis rewardsTypes.GenesisState
 		cdc.MustUnmarshalJSON(genesis[rewardsTypes.ModuleName], &rewardsGenesis)
@@ -134,7 +135,7 @@ func WithTxFeeRebatesRewardsRatio(ratio sdk.Dec) TestChainGenesisOption {
 }
 
 // WithMintParams sets x/mint inflation calculation parameters.
-func WithMintParams(inflationMin, inflationMax sdk.Dec, blocksPerYear uint64) TestChainGenesisOption {
+func WithMintParams(inflationMin, inflationMax math.LegacyDec, blocksPerYear uint64) TestChainGenesisOption {
 	return func(cdc codec.Codec, genesis app.GenesisState) {
 		var mintGenesis mintTypes.GenesisState
 		cdc.MustUnmarshalJSON(genesis[mintTypes.ModuleName], &mintGenesis)
@@ -144,5 +145,16 @@ func WithMintParams(inflationMin, inflationMax sdk.Dec, blocksPerYear uint64) Te
 		mintGenesis.Params.BlocksPerYear = blocksPerYear
 
 		genesis[mintTypes.ModuleName] = cdc.MustMarshalJSON(&mintGenesis)
+	}
+}
+
+func WithCallbackParams(callbackGasLimit uint64) TestChainGenesisOption {
+	return func(cdc codec.Codec, genesis app.GenesisState) {
+		var callbackGenesis callbacktypes.GenesisState
+		cdc.MustUnmarshalJSON(genesis[callbacktypes.ModuleName], &callbackGenesis)
+
+		callbackGenesis.Params.CallbackGasLimit = callbackGasLimit
+
+		genesis[callbacktypes.ModuleName] = cdc.MustMarshalJSON(&callbackGenesis)
 	}
 }

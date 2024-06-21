@@ -7,16 +7,14 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	paramTypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/archway-network/archway/internal/collcompat"
 
@@ -26,7 +24,7 @@ import (
 
 // ContractInfoReaderExpected defines the interface for the x/wasmd module dependency.
 type ContractInfoReaderExpected interface {
-	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
+	GetContractInfo(ctx context.Context, contractAddress sdk.AccAddress) *wasmTypes.ContractInfo
 }
 
 // TrackingKeeperExpected defines the interface for the x/tracking module dependency.
@@ -38,15 +36,16 @@ type TrackingKeeperExpected interface {
 
 // AuthKeeperExpected defines the interface for the x/auth module dependency.
 type AuthKeeperExpected interface {
-	GetModuleAccount(ctx sdk.Context, name string) authTypes.ModuleAccountI
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authTypes.AccountI
+	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 // BankKeeperExpected defines the interface for the x/bank module dependency.
 type BankKeeperExpected interface {
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	BlockedAddr(addr sdk.AccAddress) bool
 }
 
 func NewTxRewardsIndex(sb *collections.SchemaBuilder) TxRewardsIndex {
@@ -87,12 +86,12 @@ func NewRewardsRecordsIndex(sb *collections.SchemaBuilder) RewardsRecordsIndex {
 type Keeper struct {
 	cdc              codec.Codec
 	storeKey         storetypes.StoreKey
-	paramStore       paramTypes.Subspace
 	contractInfoView ContractInfoReaderExpected
 	trackingKeeper   TrackingKeeperExpected
 	authKeeper       AuthKeeperExpected
 	bankKeeper       BankKeeperExpected
 	authority        string // this should be the x/gov module account
+	logger           log.Logger
 
 	Schema collections.Schema
 
@@ -107,22 +106,27 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance.
-func NewKeeper(cdc codec.Codec, key storetypes.StoreKey, contractInfoReader ContractInfoReaderExpected, trackingKeeper TrackingKeeperExpected, ak AuthKeeperExpected, bk BankKeeperExpected, ps paramTypes.Subspace, authority string) Keeper {
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
-
+func NewKeeper(
+	cdc codec.Codec,
+	key storetypes.StoreKey,
+	contractInfoReader ContractInfoReaderExpected,
+	trackingKeeper TrackingKeeperExpected,
+	ak AuthKeeperExpected,
+	bk BankKeeperExpected,
+	authority string,
+	logger log.Logger,
+) Keeper {
 	schemaBuilder := collections.NewSchemaBuilder(collcompat.NewKVStoreService(key))
 
 	k := Keeper{
 		storeKey:         key,
 		cdc:              cdc,
-		paramStore:       ps,
 		contractInfoView: contractInfoReader,
 		trackingKeeper:   trackingKeeper,
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		authority:        authority,
+		logger:           logger.With("module", "x/"+types.ModuleName),
 		Params: collections.NewItem(
 			schemaBuilder,
 			types.ParamsPrefix,
@@ -192,7 +196,7 @@ func (k *Keeper) SetContractInfoViewer(viewer ContractInfoReaderExpected) {
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
+	return k.logger
 }
 
 // UndistributedRewardsPool returns the current undistributed rewards (yet to be withdrawn).

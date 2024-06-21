@@ -25,8 +25,10 @@ import (
 )
 
 var (
-	_ module.AppModuleBasic = AppModuleBasic{}
-	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic  = AppModuleBasic{}
+	_ module.AppModule       = AppModule{}
+	_ module.HasABCIEndBlock = AppModule{}
+	_ module.HasGenesis      = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module for this module.
@@ -105,13 +107,11 @@ func (a AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // InitGenesis performs genesis initialization for the module. It returns no validator updates.
-func (a AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
+func (a AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(bz, &genesisState)
 
 	a.keeper.InitGenesis(ctx, &genesisState)
-
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the module.
@@ -125,12 +125,9 @@ func (a AppModule) ConsensusVersion() uint64 {
 	return 1
 }
 
-// BeginBlock returns the begin blocker for the module.
-func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {}
-
 // EndBlock returns the end blocker for the module. It returns no validator updates.
-func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, a.keeper)
+func (a AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	return EndBlocker(sdk.UnwrapSDKContext(ctx), a.keeper)
 }
 
 // AppModuleSimulation functions
@@ -138,11 +135,17 @@ func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Vali
 // GenerateGenesisState creates a randomized GenState of the module.
 func (a AppModule) GenerateGenesisState(input *module.SimulationState) {}
 
-// RegisterStoreDecoder registers a decoder for the module's types.
-func (a AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-}
+// // RegisterStoreDecoder registers a decoder for the module's types.
+// func (a AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+// }
 
 // WeightedOperations returns all the module operations with their respective weights.
 func (a AppModule) WeightedOperations(_ module.SimulationState) []simTypes.WeightedOperation {
 	return []simTypes.WeightedOperation{}
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}

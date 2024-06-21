@@ -126,8 +126,6 @@ message QueryEstimateTxFeesResponse {
 
 // BlockTracking is the tracking information for a block.
 message BlockTracking {
-  option (gogoproto.goproto_stringer) = false;
-
   // inflation_rewards defines the inflation rewards for the block.
   BlockRewards inflation_rewards = 1 [ (gogoproto.nullable) = false ];
   // tx_rewards defines the transaction rewards for the block.

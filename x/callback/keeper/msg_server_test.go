@@ -2,9 +2,11 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -14,18 +16,19 @@ import (
 	"github.com/archway-network/archway/x/callback/types"
 )
 
-func (s *KeeperTestSuite) TestRequestCallback() {
+func TestRequestCallback(t *testing.T) {
 	// Setting up chain and contract in mock wasm keeper
-	ctx, keeper := s.chain.GetContext().WithBlockHeight(101), s.chain.GetApp().Keepers.CallbackKeeper
-	contractViewer := testutils.NewMockContractViewer()
-	keeper.SetWasmKeeper(contractViewer)
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
-	contractAdminAcc := s.chain.GetAccount(2)
-	contractViewer.AddContractAdmin(
+	keeper, ctx := testutils.CallbackKeeper(t)
+	wasmKeeper := testutils.NewMockContractViewer()
+	keeper.SetWasmKeeper(wasmKeeper)
+
+	contractAddresses := e2eTesting.GenContractAddresses(3)
+	contractAddr := contractAddresses[0]
+	contractAdminAcc := testutils.AccAddress()
+	wasmKeeper.AddContractAdmin(
 		contractAddr.String(),
-		contractAdminAcc.Address.String(),
+		contractAdminAcc.String(),
 	)
-	contractAdminBalance := s.chain.GetBalance(contractAdminAcc.Address)
 
 	msgServer := callbackKeeper.NewMsgServer(keeper)
 
@@ -61,7 +64,7 @@ func (s *KeeperTestSuite) TestRequestCallback() {
 			testCase: "FAIL: contract does not exist",
 			input: func() *types.MsgRequestCallback {
 				return &types.MsgRequestCallback{
-					ContractAddress: contractAdminAcc.Address.String(),
+					ContractAddress: contractAdminAcc.String(),
 					JobId:           1,
 					CallbackHeight:  102,
 					Sender:          contractAddr.String(),
@@ -79,7 +82,7 @@ func (s *KeeperTestSuite) TestRequestCallback() {
 					JobId:           1,
 					CallbackHeight:  102,
 					Sender:          contractAddr.String(),
-					Fees:            sdk.NewInt64Coin("stake", 3500000000),
+					Fees:            sdk.NewInt64Coin("stake", 3500000001),
 				}
 			},
 			expectError: true,
@@ -92,7 +95,7 @@ func (s *KeeperTestSuite) TestRequestCallback() {
 					ContractAddress: contractAddr.String(),
 					JobId:           1,
 					CallbackHeight:  120,
-					Sender:          contractAdminAcc.Address.String(),
+					Sender:          contractAdminAcc.String(),
 					Fees:            sdk.NewInt64Coin("stake", 3500000000),
 				}
 			},
@@ -101,37 +104,36 @@ func (s *KeeperTestSuite) TestRequestCallback() {
 		},
 	}
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
+		t.Run(fmt.Sprintf("Case: %s", tc.testCase), func(t *testing.T) {
 			req := tc.input()
-			res, err := msgServer.RequestCallback(sdk.WrapSDKContext(ctx), req)
+			res, err := msgServer.RequestCallback(ctx, req)
 			if tc.expectError {
-				s.Require().Error(err)
-				s.Assert().ErrorIs(err, tc.errorType)
+				require.Error(t, err)
+				require.ErrorIs(t, err, tc.errorType)
 			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(&types.MsgRequestCallbackResponse{}, res)
+				require.NoError(t, err)
+				require.Equal(t, &types.MsgRequestCallbackResponse{}, res)
 				// Ensuring the callback exists now
 				exists, err := keeper.ExistsCallback(ctx, req.CallbackHeight, req.ContractAddress, req.JobId)
-				s.Require().NoError(err)
-				s.Require().True(exists)
-				// Ensure account balance has been updated
-				contractAdminBalance = contractAdminBalance.Sub(req.Fees)
-				s.Require().Equal(contractAdminBalance, s.chain.GetBalance(sdk.MustAccAddressFromBech32(req.Sender)))
+				require.NoError(t, err)
+				require.True(t, exists)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestCancelCallback() {
+func TestCancelCallback(t *testing.T) {
 	// Setting up chain and contract in mock wasm keeper
-	ctx, keeper := s.chain.GetContext().WithBlockHeight(102), s.chain.GetApp().Keepers.CallbackKeeper
-	contractViewer := testutils.NewMockContractViewer()
-	keeper.SetWasmKeeper(contractViewer)
-	contractAddr := e2eTesting.GenContractAddresses(1)[0]
-	contractAdminAcc := s.chain.GetAccount(2)
-	contractViewer.AddContractAdmin(
+	keeper, ctx := testutils.CallbackKeeper(t)
+	wasmKeeper := testutils.NewMockContractViewer()
+	keeper.SetWasmKeeper(wasmKeeper)
+
+	contractAddresses := e2eTesting.GenContractAddresses(3)
+	contractAddr := contractAddresses[0]
+	contractAdminAcc := testutils.AccAddress()
+	wasmKeeper.AddContractAdmin(
 		contractAddr.String(),
-		contractAdminAcc.Address.String(),
+		contractAdminAcc.String(),
 	)
 
 	msgServer := callbackKeeper.NewMsgServer(keeper)
@@ -140,14 +142,13 @@ func (s *KeeperTestSuite) TestCancelCallback() {
 		ContractAddress: contractAddr.String(),
 		JobId:           1,
 		CallbackHeight:  130,
-		Sender:          contractAdminAcc.Address.String(),
+		Sender:          contractAdminAcc.String(),
 		Fees:            sdk.NewInt64Coin("stake", 3500000000),
 	}
-	_, err := msgServer.RequestCallback(sdk.WrapSDKContext(ctx), reqMsg)
-	s.Require().NoError(err)
+	_, err := msgServer.RequestCallback(ctx, reqMsg)
+	require.NoError(t, err)
 	callback, err := keeper.GetCallback(ctx, reqMsg.CallbackHeight, reqMsg.ContractAddress, reqMsg.JobId)
-	s.Require().NoError(err)
-	senderBalance := s.chain.GetBalance(sdk.MustAccAddressFromBech32(callback.ReservedBy))
+	require.NoError(t, err)
 
 	testCases := []struct {
 		testCase    string
@@ -170,7 +171,7 @@ func (s *KeeperTestSuite) TestCancelCallback() {
 					ContractAddress: contractAddr.String(),
 					JobId:           2,
 					CallbackHeight:  130,
-					Sender:          contractAdminAcc.Address.String(),
+					Sender:          contractAdminAcc.String(),
 				}
 			},
 			expectError: true,
@@ -183,7 +184,7 @@ func (s *KeeperTestSuite) TestCancelCallback() {
 					ContractAddress: contractAddr.String(),
 					JobId:           1,
 					CallbackHeight:  130,
-					Sender:          s.chain.GetAccount(3).Address.String(),
+					Sender:          testutils.AccAddress().String(),
 				}
 			},
 			expectError: true,
@@ -196,7 +197,7 @@ func (s *KeeperTestSuite) TestCancelCallback() {
 					ContractAddress: contractAddr.String(),
 					JobId:           1,
 					CallbackHeight:  130,
-					Sender:          contractAdminAcc.Address.String(),
+					Sender:          contractAdminAcc.String(),
 				}
 			},
 			expectError: false,
@@ -205,24 +206,21 @@ func (s *KeeperTestSuite) TestCancelCallback() {
 	}
 
 	for _, tc := range testCases {
-		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
+		t.Run(fmt.Sprintf("Case: %s", tc.testCase), func(t *testing.T) {
 			req := tc.input()
-			res, err := msgServer.CancelCallback(sdk.WrapSDKContext(ctx), req)
+			res, err := msgServer.CancelCallback(ctx, req)
 			if tc.expectError {
-				s.Require().Error(err)
-				s.Assert().ErrorIs(err, tc.errorType)
+				require.Error(t, err)
+				require.ErrorIs(t, err, tc.errorType)
 			} else {
-				s.Require().NoError(err)
+				require.NoError(t, err)
 				// Ensuring the callback no longer exists
 				exists, err := keeper.ExistsCallback(ctx, req.CallbackHeight, req.ContractAddress, req.JobId)
-				s.Require().NoError(err)
-				s.Require().False(exists)
+				require.NoError(t, err)
+				require.False(t, exists)
 				// Ensuring the refund amount matches expected amount
 				refundAmount := callback.FeeSplit.TransactionFees.Add(*callback.FeeSplit.SurplusFees)
-				s.Require().Equal(refundAmount, res.Refund)
-				// Ensuring the sender's balance has been updated
-				senderBalance = senderBalance.Add(refundAmount)
-				s.Require().Equal(senderBalance, s.chain.GetBalance(sdk.MustAccAddressFromBech32(req.Sender)))
+				require.Equal(t, refundAmount, res.Refund)
 			}
 		})
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -55,7 +56,7 @@ func TestSplitCoins(t *testing.T) {
 			coins, err := sdk.ParseCoinsNormalized(tc.coins)
 			require.NoError(t, err)
 
-			ratio, err := sdk.NewDecFromStr(tc.ratio)
+			ratio, err := math.LegacyNewDecFromStr(tc.ratio)
 			require.NoError(t, err)
 
 			stack1Expected, err := sdk.ParseCoinsNormalized(tc.stack1Expected)

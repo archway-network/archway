@@ -102,7 +102,7 @@ func (s *KeeperTestSuite) TestCallbacks() {
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
 			req := tc.input()
-			res, err := queryServer.Callbacks(sdk.WrapSDKContext(ctx), req)
+			res, err := queryServer.Callbacks(ctx, req)
 			if tc.expectError {
 				s.Require().Error(err)
 			} else {
@@ -188,7 +188,7 @@ func (s *KeeperTestSuite) TestEstimateCallbackFees() {
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case: %s", tc.testCase), func() {
 			req := tc.input()
-			res, err := queryServer.EstimateCallbackFees(sdk.WrapSDKContext(ctx), req)
+			res, err := queryServer.EstimateCallbackFees(ctx, req)
 			if tc.expectError {
 				s.Require().Error(err)
 			} else {

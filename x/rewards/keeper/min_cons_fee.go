@@ -3,6 +3,7 @@ package keeper
 import (
 	"math"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/pkg"
@@ -17,7 +18,7 @@ func (k Keeper) UpdateMinConsensusFee(ctx sdk.Context, inflationRewards sdk.Coin
 		return
 	}
 
-	inflationRewardsAmt := sdk.NewDecFromInt(inflationRewards.Amount)
+	inflationRewardsAmt := sdkmath.LegacyNewDecFromInt(inflationRewards.Amount)
 
 	blockGasLimit := ctx.BlockGasMeter().Limit()
 	if blockGasLimit == math.MaxUint64 { // Because thisss https://github.com/cosmos/cosmos-sdk/pull/9651
@@ -70,7 +71,7 @@ func (k Keeper) ComputationalPriceOfGas(ctx sdk.Context) sdk.DecCoin {
 	if minPoG.Denom != antiDoSPoG.Denom {
 		panic("conflict between anti dos denom and min price of gas denom: %s != %s" + minPoG.Denom + antiDoSPoG.Denom)
 	}
-	return sdk.NewDecCoinFromDec(minPoG.Denom, sdk.MaxDec(minPoG.Amount, antiDoSPoG.Amount))
+	return sdk.NewDecCoinFromDec(minPoG.Denom, sdkmath.LegacyMaxDec(minPoG.Amount, antiDoSPoG.Amount))
 }
 
 // calculateMinConsensusFee calculates the minimum consensus fee amount using the formula:
@@ -78,10 +79,10 @@ func (k Keeper) ComputationalPriceOfGas(ctx sdk.Context) sdk.DecCoin {
 //	[ -1 * ( BlockRewards / ( GasLimit * (TxFeeRatio - 1) ) ]
 //
 // A simplified expression is used, original from specs: -1 * ( BlockRewards / ( GasLimit * TxFeeRatio - GasLimit ) )
-func calculateMinConsensusFeeAmt(blockRewards, gasLimit, txFeeRatio sdk.Dec) sdk.Dec {
+func calculateMinConsensusFeeAmt(blockRewards, gasLimit, txFeeRatio sdkmath.LegacyDec) sdkmath.LegacyDec {
 	return blockRewards.Quo(
 		gasLimit.Mul(
-			txFeeRatio.Sub(sdk.OneDec()),
+			txFeeRatio.Sub(sdkmath.LegacyOneDec()),
 		),
 	).Neg()
 }

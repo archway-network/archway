@@ -6,7 +6,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"sigs.k8s.io/yaml"
 )
 
 // HasOwnerAddress returns true if the rewards address is set.
@@ -61,10 +60,4 @@ func (m ContractMetadata) Validate(genesisValidation bool) error {
 	}
 
 	return nil
-}
-
-// String implements the fmt.Stringer interface.
-func (m ContractMetadata) String() string {
-	bz, _ := yaml.Marshal(m)
-	return string(bz)
 }

@@ -3,9 +3,9 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/x/tracking/types"
@@ -13,7 +13,7 @@ import (
 
 // TxInfoState provides access to the types.TxInfo objects storage operations.
 type TxInfoState struct {
-	stateStore storeTypes.KVStore
+	stateStore storetypes.KVStore
 	cdc        codec.Codec
 	ctx        sdk.Context
 }
@@ -64,7 +64,7 @@ func (s TxInfoState) GetTxInfo(id uint64) (types.TxInfo, bool) {
 func (s TxInfoState) GetTxInfosByBlock(height int64) (objs []types.TxInfo) {
 	store := prefix.NewStore(s.stateStore, types.TxInfoBlockIndexPrefix)
 
-	iterator := sdk.KVStorePrefixIterator(store, s.buildBlockIndexPrefix(height))
+	iterator := storetypes.KVStorePrefixIterator(store, s.buildBlockIndexPrefix(height))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -85,7 +85,7 @@ func (s TxInfoState) GetTxInfosByBlock(height int64) (objs []types.TxInfo) {
 func (s TxInfoState) DeleteTxInfosByBlock(height int64) []uint64 {
 	store := prefix.NewStore(s.stateStore, types.TxInfoBlockIndexPrefix)
 
-	iterator := sdk.KVStorePrefixIterator(store, s.buildBlockIndexPrefix(height))
+	iterator := storetypes.KVStorePrefixIterator(store, s.buildBlockIndexPrefix(height))
 	defer iterator.Close()
 
 	var blockIndexKeys [][]byte

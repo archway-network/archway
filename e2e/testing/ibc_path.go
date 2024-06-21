@@ -7,14 +7,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clientTypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	connectionTypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
-	channelTypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	commitmentTypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
-	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
-	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	clientTypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	connectionTypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	channelTypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	commitmentTypes "github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
-	ibcTmTypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	ibcCmTypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	"github.com/stretchr/testify/require"
 )
 
@@ -275,7 +275,7 @@ func (e *IBCEndpoint) createIBCClient() {
 		tmClientAllowUpdateAfterMisbehaviour = false
 	)
 	var (
-		tmClientTrustLevel  = ibcTmTypes.DefaultTrustLevel
+		tmClientTrustLevel  = ibcCmTypes.DefaultTrustLevel
 		tmClientUpgradePath = []string{"upgrade", "upgradedIBCState"}
 	)
 
@@ -283,7 +283,7 @@ func (e *IBCEndpoint) createIBCClient() {
 
 	dstChainLastTMHeader := dstChain.GetTMClientLastHeader()
 
-	clientState := ibcTmTypes.NewClientState(
+	clientState := ibcCmTypes.NewClientState(
 		dstChain.GetChainID(),
 		tmClientTrustLevel,
 		tmClientTrustPeriod,
@@ -336,7 +336,7 @@ func (e *IBCEndpoint) sendConnectionOpenInit() {
 	const (
 		defDelayPeriod uint64 = 0
 	)
-	version := connectionTypes.ExportedVersionsToProto(connectionTypes.GetCompatibleVersions())[0]
+	version := connectionTypes.GetCompatibleVersions()[0]
 
 	t, srcChain, dstChain := e.t, e.srcChain, e.dstEndpoint.srcChain
 	srcChainClientID, dstChainClientID := e.clientID, e.dstEndpoint.clientID
@@ -363,7 +363,7 @@ func (e *IBCEndpoint) sendConnectionOpenTry() {
 	const (
 		defDelayPeriod uint64 = 0
 	)
-	version := connectionTypes.ExportedVersionsToProto(connectionTypes.GetCompatibleVersions())[0]
+	version := connectionTypes.GetCompatibleVersions()[0]
 
 	t, srcChain, dstChain := e.t, e.srcChain, e.dstEndpoint.srcChain
 	srcChainClientID, dstChainClientID, srcChainConnectionID, dstChainConnectionID := e.clientID, e.dstEndpoint.clientID, e.connectionID, e.dstEndpoint.connectionID
@@ -400,7 +400,7 @@ func (e *IBCEndpoint) sendConnectionOpenTry() {
 
 // sendConnectionOpenAck sends a ConnectionOpenAck message to the source chain.
 func (e *IBCEndpoint) sendConnectionOpenAck() {
-	version := connectionTypes.ExportedVersionsToProto(connectionTypes.GetCompatibleVersions())[0]
+	version := connectionTypes.GetCompatibleVersions()[0]
 
 	srcChain := e.srcChain
 	srcChainConnectionID, dstChainConnectionID := e.connectionID, e.dstEndpoint.connectionID

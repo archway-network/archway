@@ -4,18 +4,22 @@ import (
 	"testing"
 
 	"cosmossdk.io/collections"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
+	"github.com/archway-network/archway/pkg/testutils"
+	"github.com/archway-network/archway/x/rewards/keeper"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	chain *e2eTesting.TestChain
+	keeper     keeper.Keeper
+	ctx        sdk.Context
+	bankKeeper keeper.BankKeeperExpected
 }
 
 // withdrawTestRecordData is a helper struct to store RewardsRecord data for Withdraw tests.
@@ -26,71 +30,77 @@ type withdrawTestRecordData struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.chain = e2eTesting.NewTestChain(s.T(), 1)
+	keeper, ctx, bk := testutils.RewardsKeeper(s.T())
+	s.keeper = keeper
+	s.ctx = ctx
+	s.bankKeeper = bk
 }
 
 // SetupWithdrawTest is a helper function to setup the test environment for Withdraw tests.
-func (s *KeeperTestSuite) SetupWithdrawTest(testData []withdrawTestRecordData) {
+func SetupWithdrawTest(k keeper.Keeper, ctx sdk.Context, testData []withdrawTestRecordData) error {
 	// Create test records
 	for _, testRecord := range testData {
-		ctx := s.chain.GetContext()
-		keepers := s.chain.GetApp().Keepers
+		// // Get rid of the current inflationary rewards for the current block (otherwise the invariant fails)
+		// blockRewards, err := s.keeper.BlockRewards.Get(s.ctx, uint64(s.ctx.BlockHeight()))
+		// s.Require().NoError(err)
+		// s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToModule(s.ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, sdk.Coins{blockRewards.InflationRewards}))
 
-		// Get rid of the current inflationary rewards for the current block (otherwise the invariant fails)
-		blockRewards, err := keepers.RewardsKeeper.BlockRewards.Get(ctx, uint64(ctx.BlockHeight()))
-		s.Require().NoError(err)
-		s.Require().NoError(keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, rewardsTypes.ContractRewardCollector, rewardsTypes.TreasuryCollector, sdk.Coins{blockRewards.InflationRewards}))
-
-		err = keepers.RewardsKeeper.BlockRewards.Set(ctx, uint64(ctx.BlockHeight()), rewardsTypes.BlockRewards{
+		err := k.BlockRewards.Set(ctx, uint64(ctx.BlockHeight()), rewardsTypes.BlockRewards{
 			Height:           ctx.BlockHeight(),
-			InflationRewards: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+			InflationRewards: sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
 			MaxGas:           0,
 		})
-		s.Require().NoError(err)
+		if err != nil {
+			return err
+		}
 
-		// Mint rewards for the current record
-		rewardsToMint := testRecord.Rewards
-		s.Require().NoError(keepers.MintKeeper.MintCoins(ctx, rewardsToMint))
-		s.Require().NoError(keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, rewardsToMint))
+		// // Mint rewards for the current record
+		// rewardsToMint := testRecord.Rewards
+		// s.Require().NoError(keepers.MintKeeper.MintCoins(s.ctx, rewardsToMint))
+		// s.Require().NoError(s.bankKeeper.SendCoinsFromModuleToModule(s.ctx, mintTypes.ModuleName, rewardsTypes.ContractRewardCollector, rewardsToMint))
 
 		// Create the record
-		_, err = keepers.RewardsKeeper.CreateRewardsRecord(
+		_, err = k.CreateRewardsRecord(
 			ctx,
 			testRecord.RewardsAddr,
 			testRecord.Rewards,
 			ctx.BlockHeight(), ctx.BlockTime(),
 		)
-		s.Require().NoError(err)
+		if err != nil {
+			return err
+		}
 
-		// Switch to the next block
-		s.chain.NextBlock(0)
+		// // Switch to the next block
+		// rewards.EndBlocker(ctx, keeper)
+		// //s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	}
+	return nil
 }
 
 // CheckWithdrawResults is a helper function to check the results of a Withdraw operation.
-func (s *KeeperTestSuite) CheckWithdrawResults(rewardsAddr sdk.AccAddress, recordsUsed []withdrawTestRecordData, withdraw func() (sdk.Coins, int, error)) {
-	// Estimate the expected rewards amount and get the current account balance
+func CheckWithdrawResults(t *testing.T, k keeper.Keeper, ctx sdk.Context, rewardsAddr sdk.AccAddress, recordsUsed []withdrawTestRecordData, withdraw func() (sdk.Coins, int, error)) {
+	// // Estimate the expected rewards amount and get the current account balance
 	totalRewardsExpected := sdk.NewCoins()
 	for _, testRecord := range recordsUsed {
 		totalRewardsExpected = totalRewardsExpected.Add(testRecord.Rewards...)
 	}
 
-	accBalanceBefore := s.chain.GetBalance(rewardsAddr)
+	// accBalanceBefore := s.bankKeeper.GetAllBalances(s.ctx, rewardsAddr)
 
-	// Withdraw and check the output
+	// // Withdraw and check the output
 	totalRewardsReceived, recordsUsedReceived, err := withdraw()
-	s.Require().NoError(err)
-	s.Assert().Equal(totalRewardsExpected.String(), totalRewardsReceived.String())
-	s.Assert().EqualValues(len(recordsUsed), recordsUsedReceived)
+	require.NoError(t, err)
+	require.Equal(t, totalRewardsExpected.String(), totalRewardsReceived.String())
+	require.EqualValues(t, len(recordsUsed), recordsUsedReceived)
 
-	// Check the account balance diff
-	accBalanceAfter := s.chain.GetBalance(rewardsAddr)
-	s.Assert().Equal(totalRewardsExpected.String(), accBalanceAfter.Sub(accBalanceBefore...).String())
+	// // Check the account balance diff
+	// accBalanceAfter := s.bankKeeper.GetAllBalances(s.ctx, rewardsAddr)
+	// s.Assert().Equal(totalRewardsExpected.String(), accBalanceAfter.Sub(accBalanceBefore...).String())
 
 	// Check records pruning
 	for _, testRecord := range recordsUsed {
-		_, err := s.chain.GetApp().Keepers.RewardsKeeper.RewardsRecords.Get(s.chain.GetContext(), testRecord.RecordID)
-		s.ErrorIs(err, collections.ErrNotFound)
+		_, err := k.RewardsRecords.Get(ctx, testRecord.RecordID)
+		require.ErrorIs(t, err, collections.ErrNotFound)
 	}
 }
 

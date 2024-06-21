@@ -73,6 +73,9 @@ setup_chain () {
   # reduce voting period to 2 minutes
   contents="$(jq '.app_state.gov.params.voting_period = "120s"' $genesis)" && echo "${contents}" >  $genesis
   echo_info "Set x/gov voting period to 120 seconds"
+  # reduce expedied voting period to 1 minute
+  contents="$(jq '.app_state.gov.params.expedited_voting_period = "60s"' $genesis)" && echo "${contents}" >  $genesis
+  echo_info "Set x/gov expedited voting period to 60 seconds"
   # reduce minimum deposit amount to 10stake
   contents="$(jq '.app_state.gov.params.min_deposit[0].amount = "10"' $genesis)" && echo "${contents}" >  $genesis
   echo_info "Set x/gov proposal min deposit amount to 10 stake"

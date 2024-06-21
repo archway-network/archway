@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/codec"
+	proto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 
 	"github.com/archway-network/archway/app"
@@ -18,19 +18,22 @@ type grpcClient struct {
 }
 
 func (c grpcClient) Invoke(ctx context.Context, method string, args, reply interface{}, opts ...grpc.CallOption) error {
-	req := args.(codec.ProtoMarshaler)
-	resp := c.app.Query(abci.RequestQuery{
+	req := args.(proto.Message)
+	resp, err := c.app.Query(ctx, &abci.RequestQuery{
 		Data:   c.app.AppCodec().MustMarshal(req),
 		Path:   method,
 		Height: 0, // TODO: heightened queries
 		Prove:  false,
 	})
+	if err != nil {
+		return err
+	}
 
 	if resp.Code != abci.CodeTypeOK {
 		return fmt.Errorf(resp.Log)
 	}
 
-	c.app.AppCodec().MustUnmarshal(resp.Value, reply.(codec.ProtoMarshaler))
+	c.app.AppCodec().MustUnmarshal(resp.Value, reply.(proto.Message))
 
 	return nil
 }
