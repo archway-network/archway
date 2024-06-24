@@ -4,6 +4,9 @@ import (
 	"context"
 
 	"github.com/archway-network/archway/x/cwregistry/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type msgServer struct {
@@ -19,11 +22,45 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 // RegisterCode implements types.MsgServer.
-func (m msgServer) RegisterCode(context.Context, *types.MsgRegisterCode) (*types.MsgRegisterCodeResponse, error) {
-	panic("unimplemented")
+func (m msgServer) RegisterCode(c context.Context, req *types.MsgRegisterCode) (*types.MsgRegisterCodeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	sender, err := sdk.AccAddressFromBech32(req.Sender)
+	if err != nil {
+		return nil, err
+	}
+	codeMetadata := types.CodeMetadata{
+		Source:        req.SourceMetadata,
+		SourceBuilder: req.SourceBuilder,
+		Schema:        req.Schema,
+		Contacts:      req.Contacts,
+	}
+	err = m.SetCodeMetadata(ctx, sender, req.CodeId, codeMetadata)
+	return &types.MsgRegisterCodeResponse{}, err
 }
 
 // RegisterContract implements types.MsgServer.
-func (m msgServer) RegisterContract(context.Context, *types.MsgRegisterContract) (*types.MsgRegisterContractResponse, error) {
-	panic("unimplemented")
+func (m msgServer) RegisterContract(c context.Context, req *types.MsgRegisterContract) (*types.MsgRegisterContractResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	sender, err := sdk.AccAddressFromBech32(req.Sender)
+	if err != nil {
+		return nil, err
+	}
+	contractAddress, err := sdk.AccAddressFromBech32(req.ContractAddress)
+	if err != nil {
+		return nil, err
+	}
+	codeMetadata := types.CodeMetadata{
+		Source:        req.SourceMetadata,
+		SourceBuilder: req.SourceBuilder,
+		Schema:        req.Schema,
+		Contacts:      req.Contacts,
+	}
+	err = m.SetContractMetadata(ctx, sender, contractAddress, codeMetadata)
+	return &types.MsgRegisterContractResponse{}, err
 }
