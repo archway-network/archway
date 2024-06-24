@@ -58,6 +58,16 @@ func (k Keeper) SetCodeMetadata(ctx sdk.Context, sender sdk.AccAddress, codeID u
 	return k.saveCodeMetadata(ctx, codeMetadata)
 }
 
+// UnsafeSetCodeMetadata sets the metadata for the code with the given codeID without checking permissions
+// Should only be used in genesis
+func (k Keeper) UnsafeSetCodeMetadata(ctx sdk.Context, codeMetadata types.CodeMetadata) error {
+	codeInfo := k.wasmKeeper.GetCodeInfo(ctx, codeMetadata.CodeId)
+	if codeInfo == nil {
+		return types.ErrNoSuchCode
+	}
+	return k.saveCodeMetadata(ctx, codeMetadata)
+}
+
 // saveCodeMetadata saves the code metadata to the store
 func (k Keeper) saveCodeMetadata(ctx sdk.Context, codeMetadata types.CodeMetadata) error {
 	schemaContent := codeMetadata.Schema
