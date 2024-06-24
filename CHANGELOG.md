@@ -28,12 +28,10 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviors.
 -->
 
-## [Unreleased]
-
-### Added
+## [v8.0.0](https://github.com/archway-network/archway/releases/tag/v8.0.0)
 
 ### Changed
-- [#573](https://github.com/archway-network/archway/pull/573) - Bump cosmos-sdk to v0.50.6
+- [#573](https://github.com/archway-network/archway/pull/573) - Bump cosmos-sdk to v0.50.6 and ibc to v8.2.1
 
 ### Fixed
 - [#569](https://github.com/archway-network/archway/pull/569) - Audit remidiations for x/cwerrors and x/cwica 
