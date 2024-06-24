@@ -22,6 +22,15 @@ func (k Keeper) GetCodeMetadata(ctx sdk.Context, codeID uint64) (types.CodeMetad
 	return k.CodeMetadata.Get(ctx, codeID)
 }
 
+// HasCodeMetadata returns true if the code metadata for the given codeID exists
+func (k Keeper) HasCodeMetadata(ctx sdk.Context, codeID uint64) bool {
+	has, err := k.CodeMetadata.Has(ctx, codeID)
+	if err != nil {
+		return false
+	}
+	return has
+}
+
 // SetContractMetadata sets the metadata for the contract with the given address
 func (k Keeper) SetContractMetadata(ctx sdk.Context, sender sdk.AccAddress, contractAddress sdk.AccAddress, codeMetadata types.CodeMetadata) error {
 	contractInfo := k.wasmKeeper.GetContractInfo(ctx, contractAddress)
