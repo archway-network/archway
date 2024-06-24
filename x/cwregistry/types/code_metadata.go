@@ -6,9 +6,6 @@ import (
 )
 
 func (c CodeMetadata) Validate() error {
-	if c.CodeId == 0 {
-		return ErrNoSuchCode
-	}
 	if len(c.Schema) > 255 {
 		return ErrSchemaTooLarge
 	}

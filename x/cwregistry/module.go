@@ -1,4 +1,4 @@
-package cwica
+package cwregistry
 
 import (
 	"context"

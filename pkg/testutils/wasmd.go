@@ -15,6 +15,7 @@ var _ wasmKeeper.Messenger = (*MockMessenger)(nil)
 // Mock returns a contract info if admin is set.
 type MockContractViewer struct {
 	contractAdminSet map[string]string // key: contractAddr, value: adminAddr
+	codeAdminSet     map[uint64]string // key: codeID, value: adminAddr
 	returnSudoError  error
 }
 
@@ -22,6 +23,7 @@ type MockContractViewer struct {
 func NewMockContractViewer() *MockContractViewer {
 	return &MockContractViewer{
 		contractAdminSet: make(map[string]string),
+		codeAdminSet:     make(map[uint64]string),
 		returnSudoError:  nil,
 	}
 }
@@ -29,6 +31,10 @@ func NewMockContractViewer() *MockContractViewer {
 // AddContractAdmin adds a contract admin link.
 func (v *MockContractViewer) AddContractAdmin(contractAddr, adminAddr string) {
 	v.contractAdminSet[contractAddr] = adminAddr
+}
+
+func (v *MockContractViewer) AddCodeAdmin(codeID uint64, adminAddr string) {
+	v.codeAdminSet[codeID] = adminAddr
 }
 
 // GetContractInfo returns a contract info if admin is set.
@@ -47,6 +53,16 @@ func (v MockContractViewer) GetContractInfo(ctx context.Context, contractAddress
 func (v MockContractViewer) HasContractInfo(ctx context.Context, contractAddress sdk.AccAddress) bool {
 	_, found := v.contractAdminSet[contractAddress.String()]
 	return found
+}
+
+func (v MockContractViewer) GetCodeInfo(ctx context.Context, codeID uint64) *wasmdTypes.CodeInfo {
+	_, found := v.codeAdminSet[codeID]
+	if !found {
+		return nil
+	}
+	return &wasmdTypes.CodeInfo{
+		Creator: v.codeAdminSet[codeID],
+	}
 }
 
 // Sudo implements the wasmKeeper.ContractInfoViewer interface.
