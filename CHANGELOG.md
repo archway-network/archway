@@ -30,6 +30,9 @@ Contains all the PRs that improved the code without changing the behaviors.
 
 ## [v8.0.0](https://github.com/archway-network/archway/releases/tag/v8.0.0)
 
+### Added
+- [#577](https://github.com/archway-network/archway/pull/577) - Adding a cute ascii art of Archway for the cli
+
 ### Changed
 - [#573](https://github.com/archway-network/archway/pull/573) - Bump cosmos-sdk to v0.50.6 and ibc to v8.2.1
 
