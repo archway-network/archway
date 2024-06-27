@@ -38,6 +38,7 @@ func CWRegistryKeeper(tb testing.TB) (keeper.Keeper, sdk.Context) {
 		cdc,
 		storeKey,
 		nil,
+		tb.TempDir(),
 		log.NewTestLogger(tb),
 	)
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())

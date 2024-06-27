@@ -1,11 +1,13 @@
 package keeper
 
 import (
+	"path/filepath"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
-
 	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/archway-network/archway/x/cwregistry/types"
+	"github.com/cometbft/cometbft/libs/os"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,6 +20,7 @@ type (
 		storeKey   storetypes.StoreKey
 		wasmKeeper types.WasmKeeper
 		logger     log.Logger
+		dataRoot   string
 		Schema     collections.Schema
 
 		// CodeMetadata key: CodeMetadataKeyPrefix + codeID | value: CodeMetadata
@@ -29,6 +32,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	wasmKeeper types.WasmKeeper,
+	homePath string,
 	logger log.Logger,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
@@ -38,6 +42,7 @@ func NewKeeper(
 		storeKey:   storeKey,
 		wasmKeeper: wasmKeeper,
 		logger:     logger.With("module", "x/"+types.ModuleName),
+		dataRoot:   filepath.Join(homePath, "registry"),
 		CodeMetadata: collections.NewMap(
 			sb,
 			types.CodeMetadataKeyPrefix,
@@ -45,6 +50,10 @@ func NewKeeper(
 			collections.Uint64Key,
 			collcompat.ProtoValue[types.CodeMetadata](cdc),
 		),
+	}
+	err := os.EnsureDir(k.dataRoot, 0755)
+	if err != nil {
+		panic(err)
 	}
 
 	schema, err := sb.Build()
