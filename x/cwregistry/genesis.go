@@ -20,7 +20,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 // ExportGenesis returns the cwregistry module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	codeMetadata, err := k.GetAllCallbacks(ctx)
+	codeMetadata, err := k.GetAllCodeMetadata(ctx)
 	if err != nil {
 		panic(err)
 	}

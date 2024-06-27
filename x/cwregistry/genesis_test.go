@@ -48,7 +48,7 @@ func TestInitGenesis(t *testing.T) {
 	}
 	cwregistry.InitGenesis(ctx, keeper, genState)
 
-	c, err := keeper.GetAllCallbacks(ctx)
+	c, err := keeper.GetAllCodeMetadata(ctx)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(c))
 }

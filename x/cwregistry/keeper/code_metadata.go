@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GetAllCallbacks returns all code metadata stored
-func (k Keeper) GetAllCallbacks(ctx sdk.Context) (codeMetadata []types.CodeMetadata, err error) {
+// GetAllCodeMetadata returns all code metadata stored
+func (k Keeper) GetAllCodeMetadata(ctx sdk.Context) (codeMetadata []types.CodeMetadata, err error) {
 	err = k.CodeMetadata.Walk(ctx, nil, func(key uint64, value types.CodeMetadata) (stop bool, err error) {
 		codeMetadata = append(codeMetadata, value)
 		return false, nil

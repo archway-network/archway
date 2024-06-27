@@ -41,7 +41,7 @@ func (q *QueryServer) CodeSchema(c context.Context, req *types.QueryCodeSchemaRe
 	if !q.keeper.HasCodeMetadata(ctx, req.GetCodeId()) {
 		return nil, status.Error(codes.NotFound, "code metadata not found")
 	}
-	schema, err := q.keeper.GetSchema(ctx, req.GetCodeId())
+	schema, err := q.keeper.GetSchema(req.GetCodeId())
 	return &types.QueryCodeSchemaResponse{Schema: schema}, err
 }
 
@@ -74,6 +74,6 @@ func (q *QueryServer) ContractSchema(c context.Context, req *types.QueryContract
 	if !q.keeper.HasCodeMetadata(ctx, codeInfo.CodeID) {
 		return nil, status.Error(codes.NotFound, "code metadata not found")
 	}
-	schema, err := q.keeper.GetSchema(ctx, codeInfo.CodeID)
+	schema, err := q.keeper.GetSchema(codeInfo.CodeID)
 	return &types.QueryContractSchemaResponse{Schema: schema}, err
 }
