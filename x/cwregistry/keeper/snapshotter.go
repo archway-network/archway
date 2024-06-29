@@ -16,7 +16,6 @@ import (
 
 var _ snapshot.ExtensionSnapshotter = &CwRegistrySnapshotter{}
 
-// SnapshotFormat format 1 is just gzipped wasm byte code for each item payload. No protobuf envelope, no metadata.
 const SnapshotFormat = 1
 
 type CwRegistrySnapshotter struct {
@@ -62,7 +61,12 @@ func (s *CwRegistrySnapshotter) SnapshotExtension(height uint64, payloadWriter s
 		if err != nil {
 			return err
 		}
-		err = payloadWriter(compressedSchema)
+		snapshotPayload := types.NewSnapshot(metadata.CodeId, compressedSchema)
+		payloadData, err := snapshotPayload.Marshal()
+		if err != nil {
+			return err
+		}
+		err = payloadWriter(payloadData)
 		if err != nil {
 			return err
 		}
@@ -82,14 +86,19 @@ func (s *CwRegistrySnapshotter) RestoreExtension(height uint64, format uint32, p
 		case err != nil:
 			return fmt.Errorf("cannot read blob from the payload: %w", err)
 		}
-		if !ioutils.IsGzip(payload) {
-			return types.ErrInvalidSnapshotPayload
-		}
-		schema, err := ioutils.Uncompress(payload, math.MaxInt64)
+		var snapshotPayload types.SnapshotPayload
+		err = snapshotPayload.Unmarshal(payload)
 		if err != nil {
 			return err
 		}
-		err = s.registryKeeper.SetSchema(1, string(schema))
+		if !ioutils.IsGzip(snapshotPayload.Schema) {
+			return types.ErrInvalidSnapshotPayload
+		}
+		schema, err := ioutils.Uncompress(snapshotPayload.Schema, math.MaxInt64)
+		if err != nil {
+			return err
+		}
+		err = s.registryKeeper.SetSchema(snapshotPayload.CodeId, string(schema))
 		if err != nil {
 			return err
 		}
