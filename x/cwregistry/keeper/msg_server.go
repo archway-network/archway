@@ -3,10 +3,11 @@ package keeper
 import (
 	"context"
 
-	"github.com/archway-network/archway/x/cwregistry/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/archway-network/archway/x/cwregistry/types"
 )
 
 type msgServer struct {

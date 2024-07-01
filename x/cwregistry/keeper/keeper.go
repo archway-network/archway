@@ -3,6 +3,7 @@ package keeper
 import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
+
 	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/archway-network/archway/x/cwregistry/types"
 

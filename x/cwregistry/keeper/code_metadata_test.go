@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/archway-network/archway/pkg/testutils"
 	"github.com/archway-network/archway/x/cwregistry/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSetCodeMetadata(t *testing.T) {

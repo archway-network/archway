@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/archway-network/archway/x/cwregistry/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/archway-network/archway/x/cwregistry/types"
 )
 
 // GetAllCodeMetadata returns all code metadata stored
