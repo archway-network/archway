@@ -36,18 +36,3 @@ message SourceBuilder {
     // Name of the generated contract binary. e.g counter.wasm
     string contract_name = 3;
 }
-
-
-// // Params defines the module parameters.
-// message Params {
-//     // callback_gas_limit is the maximum gas that can be consumed by a callback.
-//     uint64 callback_gas_limit = 1;
-//     // max_block_reservation_limit is the maximum number of callbacks which can be registered in a given block. 
-//     uint64 max_block_reservation_limit = 2;
-//     // max_future_reservation_limit is the maximum number of blocks in the future that a contract can request a callback in.
-//     uint64 max_future_reservation_limit = 3;
-//     // block_reservation_fee_multiplier is used to calculate a part of the reservation fees which will need to be paid when requesting the callback. 
-//     string block_reservation_fee_multiplier = 4 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
-//     // future_reservation_fee_multiplier is used to calculate a part of the reservation fees which will need to be paid while requesting the callback. 
-//     string future_reservation_fee_multiplier = 5 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
-// }
