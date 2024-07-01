@@ -2,11 +2,16 @@ package types
 
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
-	panic("unimplemented 👻")
+	return &GenesisState{}
 }
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	panic("unimplemented 👻")
+	for _, meta := range gs.CodeMetadata {
+		if err := meta.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

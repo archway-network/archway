@@ -151,6 +151,10 @@ import (
 	cwicakeeper "github.com/archway-network/archway/x/cwica/keeper"
 	cwicatypes "github.com/archway-network/archway/x/cwica/types"
 
+	cwregistry "github.com/archway-network/archway/x/cwregistry"
+	cwregistrykeeper "github.com/archway-network/archway/x/cwregistry/keeper"
+	cwregistryTypes "github.com/archway-network/archway/x/cwregistry/types"
+
 	extendedGov "github.com/archway-network/archway/x/gov"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -225,6 +229,7 @@ var (
 		cwfees.AppModule{},
 		cwica.AppModuleBasic{},
 		cwerrors.AppModuleBasic{},
+		cwregistry.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -329,7 +334,7 @@ func NewArchwayApp(
 		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
 		icacontrollertypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey, cwicatypes.StoreKey,
 
-		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName, cwerrorsTypes.StoreKey,
+		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName, cwerrorsTypes.StoreKey, cwregistryTypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey, cwerrorsTypes.TStoreKey)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -666,6 +671,14 @@ func NewArchwayApp(
 		logger,
 	)
 
+	app.Keepers.CWRegistryKeeper = cwregistrykeeper.NewKeeper(
+		appCodec,
+		keys[cwregistryTypes.StoreKey],
+		app.Keepers.WASMKeeper,
+		homePath,
+		logger,
+	)
+
 	var transferStack porttypes.IBCModule
 	transferStack = transfer.NewIBCModule(app.Keepers.TransferKeeper)
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.Keepers.IBCFeeKeeper)
@@ -747,6 +760,7 @@ func NewArchwayApp(
 		callback.NewAppModule(app.appCodec, app.Keepers.CallbackKeeper, app.Keepers.WASMKeeper, app.Keepers.CWErrorsKeeper),
 		cwica.NewAppModule(appCodec, app.Keepers.CWICAKeeper, app.Keepers.AccountKeeper),
 		cwerrors.NewAppModule(app.appCodec, app.Keepers.CWErrorsKeeper, app.Keepers.WASMKeeper),
+		cwregistry.NewAppModule(app.appCodec, app.Keepers.CWRegistryKeeper),
 		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -876,6 +890,7 @@ func NewArchwayApp(
 		genmsg.ModuleName,
 		callbackTypes.ModuleName,
 		cwerrorsTypes.ModuleName,
+		cwregistryTypes.ModuleName,
 		// invariants checks are always the last to run
 		crisistypes.ModuleName,
 		cwicatypes.ModuleName,
