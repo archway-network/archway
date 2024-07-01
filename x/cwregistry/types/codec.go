@@ -11,14 +11,13 @@ import (
 
 // RegisterCodec registers concrete types on the Amino codec
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgRegisterContract{}, "/archway.cwregistry.v1.MsgRegisterContract", nil)
 	cdc.RegisterConcrete(&MsgRegisterCode{}, "/archway.cwregistry.v1.MsgRegisterCode", nil)
 }
 
 // RegisterInterfaces registers the x/cwica interfaces types with the interface registry
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgRegisterContract{},
+
 		&MsgRegisterCode{},
 	)
 

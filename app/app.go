@@ -675,7 +675,6 @@ func NewArchwayApp(
 		appCodec,
 		keys[cwregistryTypes.StoreKey],
 		app.Keepers.WASMKeeper,
-		homePath,
 		logger,
 	)
 

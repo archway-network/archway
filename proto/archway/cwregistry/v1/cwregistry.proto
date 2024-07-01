@@ -11,7 +11,7 @@ message CodeMetadata {
     SourceMetadata source = 2;
     // The information regarding the image used to build and optimize the contract binary
     SourceBuilder source_builder = 3;
-    // The JSON schema which specifies the interaction endpoints of the contract
+    // The JSON schema url which specifies the interaction endpoints of the contract
     string schema = 4;
     // The contacts of the developers or security incidence handlers 
     repeated string contacts = 5;

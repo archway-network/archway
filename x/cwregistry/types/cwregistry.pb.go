@@ -30,7 +30,7 @@ type CodeMetadata struct {
 	Source *SourceMetadata `protobuf:"bytes,2,opt,name=source,proto3" json:"source,omitempty"`
 	// The information regarding the image used to build and optimize the contract binary
 	SourceBuilder *SourceBuilder `protobuf:"bytes,3,opt,name=source_builder,json=sourceBuilder,proto3" json:"source_builder,omitempty"`
-	// The JSON schema which specifies the interaction endpoints of the contract
+	// The JSON schema url which specifies the interaction endpoints of the contract
 	Schema string `protobuf:"bytes,4,opt,name=schema,proto3" json:"schema,omitempty"`
 	// The contacts of the developers or security incidence handlers
 	Contacts []string `protobuf:"bytes,5,rep,name=contacts,proto3" json:"contacts,omitempty"`

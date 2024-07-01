@@ -40,27 +40,3 @@ func (m msgServer) RegisterCode(c context.Context, req *types.MsgRegisterCode) (
 	err = m.SetCodeMetadata(ctx, sender, req.CodeId, codeMetadata)
 	return &types.MsgRegisterCodeResponse{}, err
 }
-
-// RegisterContract implements types.MsgServer.
-func (m msgServer) RegisterContract(c context.Context, req *types.MsgRegisterContract) (*types.MsgRegisterContractResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	ctx := sdk.UnwrapSDKContext(c)
-	sender, err := sdk.AccAddressFromBech32(req.Sender)
-	if err != nil {
-		return nil, err
-	}
-	contractAddress, err := sdk.AccAddressFromBech32(req.ContractAddress)
-	if err != nil {
-		return nil, err
-	}
-	codeMetadata := types.CodeMetadata{
-		Source:        req.SourceMetadata,
-		SourceBuilder: req.SourceBuilder,
-		Schema:        req.Schema,
-		Contacts:      req.Contacts,
-	}
-	err = m.SetContractMetadata(ctx, sender, contractAddress, codeMetadata)
-	return &types.MsgRegisterContractResponse{}, err
-}

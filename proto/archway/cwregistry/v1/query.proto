@@ -16,14 +16,6 @@ service Query {
     rpc ContractMetadata(QueryContractMetadataRequest) returns (QueryContractMetadataResponse) { 
         option (google.api.http).get = "/archway/cwregistry/v1/contract_metadata";
     }
-
-    rpc CodeSchema(QueryCodeSchemaRequest) returns (QueryCodeSchemaResponse) { 
-        option (google.api.http).get = "/archway/cwregistry/v1/code_schema";
-    }
-
-    rpc ContractSchema(QueryContractSchemaRequest) returns (QueryContractSchemaResponse) { 
-        option (google.api.http).get = "/archway/cwregistry/v1/contract_schema";
-    }
 }
 
 // QueryCodeMetadataRequest is the request type for the Query/CodeMetadata RPC method.
@@ -48,28 +40,4 @@ message QueryContractMetadataRequest {
 message QueryContractMetadataResponse {
     // contract_metadata is the metadata for the contract.
     CodeMetadata code_metadata = 1;
-}
-
-// QueryCodeSchemaRequest is the request type for the Query/CodeSchema RPC method.
-message QueryCodeSchemaRequest {
-    // code_id is the contract code id to query schema for.
-    uint64 code_id = 1;
-}
-
-// QueryCodeSchemaResponse is the response type for the Query/CodeSchema RPC method.
-message QueryCodeSchemaResponse {
-    // code_schema is the schema for the contract code.
-    string schema = 1;
-}
-
-// QueryContractSchemaRequest is the request type for the Query/ContractSchema RPC method.
-message QueryContractSchemaRequest {
-    // contract_address is the bech32 contract address to query schema for.
-    string contract_address = 1;
-}
-
-// QueryContractSchemaResponse is the response type for the Query/ContractSchema RPC method.
-message QueryContractSchemaResponse {
-    // contract_schema is the schema for the contract.
-    string schema = 1;
 }

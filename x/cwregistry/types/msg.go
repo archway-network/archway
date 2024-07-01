@@ -5,6 +5,5 @@ import (
 )
 
 var (
-	_ sdk.Msg = &MsgRegisterContract{}
 	_ sdk.Msg = &MsgRegisterCode{}
 )

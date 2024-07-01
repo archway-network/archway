@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"os"
-
 	"github.com/archway-network/archway/x/cwregistry/types"
 	"github.com/spf13/cobra"
 )
@@ -90,9 +88,5 @@ func parseSourceBuilder(cmd *cobra.Command) types.SourceBuilder {
 
 func parseSchema(cmd *cobra.Command) string {
 	schemaPath, _ := cmd.Flags().GetString(flagSchemaPath)
-	fileContent, err := os.ReadFile(schemaPath)
-	if err != nil {
-		return ""
-	}
-	return string(fileContent)
+	return schemaPath
 }
