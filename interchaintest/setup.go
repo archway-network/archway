@@ -3,15 +3,16 @@ package interchaintest
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types"
-	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
-	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v7/ibc"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
+	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 )
 
 const (
-	initialVersion = "v7.0.0" // The last release of the chain. The one the mainnet is running on
-	upgradeName    = "latest" // The next upgrade name. Should match the upgrade handler.
+	initialVersion = "v7.0.1" // The last release of the chain. The one the mainnet is running on
+	upgradeName    = "v8.0.0" // The next upgrade name. Should match the upgrade handler.
 	chainName      = "archway"
 )
 
@@ -56,13 +57,13 @@ func getDefaultChainConfig() ibc.ChainConfig {
 		NoHostMount:    false,
 		SkipGenTx:      false,
 		PreGenesis:     nil,
-		ModifyGenesisAmounts: func() (types.Coin, types.Coin) {
+		ModifyGenesisAmounts: func(_ int) (types.Coin, types.Coin) {
 			genesisAmount := types.Coin{
-				Amount: types.NewInt(9_000_000_000_000_000_000),
+				Amount: math.NewInt(9_000_000_000_000_000_000),
 				Denom:  denom,
 			}
 			genesisSelfDelegation := types.Coin{
-				Amount: types.NewInt(5_000_000_000_000_000_000),
+				Amount: math.NewInt(5_000_000_000_000_000_000),
 				Denom:  denom,
 			}
 			return genesisAmount, genesisSelfDelegation

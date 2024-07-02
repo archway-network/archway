@@ -3,9 +3,9 @@ package cwerrors_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/pkg/testutils"
@@ -35,7 +35,7 @@ func TestExportGenesis(t *testing.T) {
 
 	newParams := types.Params{
 		ErrorStoredTime:    99999,
-		SubscriptionFee:    sdk.NewCoin("stake", sdk.NewInt(100)),
+		SubscriptionFee:    sdk.NewCoin("stake", math.NewInt(100)),
 		SubscriptionPeriod: 1,
 	}
 	err = keeper.SetParams(ctx, newParams)
@@ -63,7 +63,7 @@ func TestInitGenesis(t *testing.T) {
 	genstate = types.GenesisState{
 		Params: types.Params{
 			ErrorStoredTime:    99999,
-			SubscriptionFee:    sdk.NewCoin("stake", sdk.NewInt(100)),
+			SubscriptionFee:    sdk.NewCoin("stake", math.NewInt(100)),
 			SubscriptionPeriod: 1,
 		},
 		Errors: []types.SudoError{

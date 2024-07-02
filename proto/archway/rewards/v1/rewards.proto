@@ -6,22 +6,23 @@ option go_package = "github.com/archway-network/archway/x/rewards/types";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 
 // Params defines the module parameters.
 message Params {
-  option (gogoproto.goproto_stringer) = false;
-
   // inflation_rewards_ratio defines the percentage of minted inflation tokens
   // that are used for dApp rewards [0.0, 1.0]. If set to 0.0, no inflation
   // rewards are distributed.
   string inflation_rewards_ratio = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   // tx_fee_rebate_ratio defines the percentage of tx fees that are used for
   // dApp rewards [0.0, 1.0]. If set to 0.0, no fee rewards are distributed.
   string tx_fee_rebate_ratio = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   // max_withdraw_records defines the maximum number of RewardsRecord objects
@@ -40,8 +41,6 @@ message Params {
 // ContractMetadata defines the contract rewards distribution options for a
 // particular contract.
 message ContractMetadata {
-  option (gogoproto.goproto_stringer) = false;
-
   // contract_address defines the contract address (bech32 encoded).
   string contract_address = 1;
   // owner_address is the contract owner address that can modify contract reward
@@ -60,8 +59,6 @@ message ContractMetadata {
 
 // BlockRewards defines block related rewards distribution data.
 message BlockRewards {
-  option (gogoproto.goproto_stringer) = false;
-
   // height defines the block height.
   int64 height = 1;
   // inflation_rewards is the rewards to be distributed.
@@ -74,8 +71,6 @@ message BlockRewards {
 
 // TxRewards defines transaction related rewards distribution data.
 message TxRewards {
-  option (gogoproto.goproto_stringer) = false;
-
   // tx_id is the tracking transaction ID (x/tracking is the data source for
   // this value).
   uint64 tx_id = 1;
@@ -93,8 +88,6 @@ message TxRewards {
 // bindings. For a contract to trigger rewards transfer, contract address must
 // be set as the rewards_address in a corresponding ContractMetadata.
 message RewardsRecord {
-  option (gogoproto.goproto_stringer) = false;
-
   // id is the unique ID of the record.
   uint64 id = 1;
   // rewards_address is the address to distribute rewards to (bech32 encoded).
@@ -111,8 +104,6 @@ message RewardsRecord {
 
 // FlatFee defines the flat fee for a particular contract.
 message FlatFee {
-  option (gogoproto.goproto_stringer) = false;
-
   // contract_address defines the contract address (bech32 encoded).
   string contract_address = 1;
   // flat_fee defines the minimum flat fee set by the contract_owner

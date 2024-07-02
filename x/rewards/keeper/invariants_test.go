@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mintTypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/assert"
@@ -36,16 +37,16 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 		{
 			name: "OK: pool == records tokens",
 			poolCoins: sdk.NewCoins(
-				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-				sdk.NewCoin("uarch", sdk.NewInt(200)),
+				sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
+				sdk.NewCoin("uarch", math.NewInt(200)),
 			),
 			rewardsRecords: []types.RewardsRecord{
 				{
 					Id:             1,
 					RewardsAddress: accAddr[0].String(),
 					Rewards: sdk.NewCoins(
-						sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(75)),
-						sdk.NewCoin("uarch", sdk.NewInt(100)),
+						sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(75)),
+						sdk.NewCoin("uarch", math.NewInt(100)),
 					),
 					CalculatedHeight: 1,
 					CalculatedTime:   mockTime,
@@ -54,8 +55,8 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 					Id:             2,
 					RewardsAddress: accAddr[0].String(),
 					Rewards: sdk.NewCoins(
-						sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(25)),
-						sdk.NewCoin("uarch", sdk.NewInt(100)),
+						sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(25)),
+						sdk.NewCoin("uarch", math.NewInt(100)),
 					),
 					CalculatedHeight: 2,
 					CalculatedTime:   mockTime.Add(5 * time.Second),
@@ -65,7 +66,7 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 		{
 			name: "Fail: non-empty pool, no records",
 			poolCoins: sdk.NewCoins(
-				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+				sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1)),
 			),
 			rewardsRecords: nil,
 			brokenExpected: true,
@@ -73,15 +74,15 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 		{
 			name: "Fail: pool > records tokens",
 			poolCoins: []sdk.Coin{
-				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-				sdk.NewCoin("uarch", sdk.NewInt(200)),
+				sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
+				sdk.NewCoin("uarch", math.NewInt(200)),
 			},
 			rewardsRecords: []types.RewardsRecord{
 				{
 					Id:             1,
 					RewardsAddress: accAddr[0].String(),
 					Rewards: sdk.NewCoins(
-						sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(50)),
+						sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(50)),
 					),
 					CalculatedHeight: 1,
 					CalculatedTime:   mockTime,
@@ -92,15 +93,15 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 		{
 			name: "Fail: pool < records tokens",
 			poolCoins: []sdk.Coin{
-				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(50)),
-				sdk.NewCoin("uarch", sdk.NewInt(50)),
+				sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(50)),
+				sdk.NewCoin("uarch", math.NewInt(50)),
 			},
 			rewardsRecords: []types.RewardsRecord{
 				{
 					Id:             1,
 					RewardsAddress: accAddr[0].String(),
 					Rewards: sdk.NewCoins(
-						sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(55)),
+						sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(55)),
 					),
 					CalculatedHeight: 1,
 					CalculatedTime:   mockTime,
@@ -109,7 +110,7 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 					Id:             1,
 					RewardsAddress: accAddr[1].String(),
 					Rewards: sdk.NewCoins(
-						sdk.NewCoin("uarch", sdk.NewInt(55)),
+						sdk.NewCoin("uarch", math.NewInt(55)),
 					),
 					CalculatedHeight: 2,
 					CalculatedTime:   mockTime.Add(5 * time.Second),
@@ -125,7 +126,7 @@ func TestRewardsModuleAccountInvariant(t *testing.T) {
 					Id:             1,
 					RewardsAddress: accAddr[0].String(),
 					Rewards: sdk.NewCoins(
-						sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+						sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1)),
 					),
 					CalculatedHeight: 1,
 					CalculatedTime:   mockTime,

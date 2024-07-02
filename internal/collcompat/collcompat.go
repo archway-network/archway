@@ -5,8 +5,8 @@ import (
 
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,7 +73,7 @@ func (store coreKVStore) ReverseIterator(start, end []byte) (store.Iterator, err
 
 type protoMessage[T any] interface {
 	*T
-	codec.ProtoMarshaler
+	proto.Message
 }
 
 // ProtoValue inits a collections.ValueCodec for a generic gogo protobuf message.

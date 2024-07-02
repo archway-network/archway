@@ -20,8 +20,10 @@ import (
 )
 
 var (
-	_ module.AppModuleBasic = AppModuleBasic{}
-	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic  = AppModuleBasic{}
+	_ module.AppModule       = AppModule{}
+	_ module.HasABCIEndBlock = AppModule{}
+	_ module.HasGenesis      = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module for this module.
@@ -104,13 +106,11 @@ func (a AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // InitGenesis performs genesis initialization for the module. It returns no validator updates.
-func (a AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
+func (a AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(bz, &genesisState)
 
 	InitGenesis(ctx, a.keeper, genesisState)
-
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the module.
@@ -125,9 +125,15 @@ func (a AppModule) ConsensusVersion() uint64 {
 }
 
 // BeginBlock returns the begin blocker for the module.
-func (a AppModule) BeginBlock(ctx sdk.Context, block abci.RequestBeginBlock) {}
+func (a AppModule) BeginBlock(ctx sdk.Context) {}
 
 // EndBlock returns the end blocker for the module. It returns no validator updates.
-func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, a.keeper, a.wasmKeeper)
+func (a AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	return EndBlocker(sdk.UnwrapSDKContext(ctx), a.keeper, a.wasmKeeper)
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}

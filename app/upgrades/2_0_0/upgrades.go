@@ -1,20 +1,22 @@
 package upgrade2_0_0
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"context"
+
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
@@ -25,7 +27,7 @@ const Name = "v2.0.0"
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
 	CreateUpgradeHandler: func(mm *module.Manager, cfg module.Configurator, _ keepers.ArchwayKeepers) upgradetypes.UpgradeHandler {
-		return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 
 			// Set Initial Consensus Version
 			icaModule := mm.Modules[icatypes.ModuleName]
@@ -59,7 +61,7 @@ var Upgrade = upgrades.Upgrade{
 				panic("module is not of type ica.AppModule")
 			}
 			// initialize ICS27 module
-			icamodule.InitModule(ctx, controllerParams, hostParams)
+			icamodule.InitModule(sdk.UnwrapSDKContext(ctx), controllerParams, hostParams)
 
 			return mm.RunMigrations(ctx, cfg, fromVM)
 		}

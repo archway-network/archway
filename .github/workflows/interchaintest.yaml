@@ -28,6 +28,8 @@ jobs:
               with:
                 repository: strangelove-ventures/heighliner
                 path: heighliner
+                ref: 'v1.5.5'
+                
 
             - name: Setup up Golang
               uses: actions/setup-go@v4

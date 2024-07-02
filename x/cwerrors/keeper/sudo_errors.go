@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/x/cwerrors/types"
@@ -149,7 +150,7 @@ func (k Keeper) SetSudoErrorCallback(ctx sdk.Context, errorId uint64, sudoErr ty
 // GetAllSudoErrorCallbacks returns all sudo error callbacks from the transient store
 func (k Keeper) GetAllSudoErrorCallbacks(ctx sdk.Context) (sudoErrs []types.SudoError) {
 	tStore := ctx.TransientStore(k.tStoreKey)
-	itr := sdk.KVStorePrefixIterator(tStore, types.ErrorsForSudoCallbackKey)
+	itr := storetypes.KVStorePrefixIterator(tStore, types.ErrorsForSudoCallbackKey)
 	defer itr.Close()
 	for ; itr.Valid(); itr.Next() {
 		var sudoErr types.SudoError
@@ -162,7 +163,7 @@ func (k Keeper) GetAllSudoErrorCallbacks(ctx sdk.Context) (sudoErrs []types.Sudo
 // IterateSudoErrorCallbacks iterates over all sudo error callbacks from the transient store
 func (k Keeper) IterateSudoErrorCallbacks(ctx sdk.Context, exec func(types.SudoError) bool) {
 	tStore := ctx.TransientStore(k.tStoreKey)
-	itr := sdk.KVStorePrefixIterator(tStore, types.ErrorsForSudoCallbackKey)
+	itr := storetypes.KVStorePrefixIterator(tStore, types.ErrorsForSudoCallbackKey)
 	defer itr.Close()
 	for ; itr.Valid(); itr.Next() {
 		var sudoErr types.SudoError

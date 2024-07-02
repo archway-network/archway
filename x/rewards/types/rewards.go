@@ -6,7 +6,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"sigs.k8s.io/yaml"
 
 	"github.com/archway-network/archway/pkg"
 )
@@ -36,12 +35,6 @@ func (m BlockRewards) Validate() error {
 	return nil
 }
 
-// String implements the fmt.Stringer interface.
-func (m BlockRewards) String() string {
-	bz, _ := yaml.Marshal(m)
-	return string(bz)
-}
-
 // HasRewards returns true if the transaction rewards have been set.
 func (m TxRewards) HasRewards() bool {
 	return !sdk.Coins(m.FeeRewards).IsZero()
@@ -68,24 +61,6 @@ func (m TxRewards) Validate() error {
 	}
 
 	return nil
-}
-
-// String implements the fmt.Stringer interface.
-func (m TxRewards) String() string {
-	bz, _ := yaml.Marshal(m)
-	return string(bz)
-}
-
-// String implements the fmt.Stringer interface.
-func (m BlockTracking) String() string {
-	bz, _ := yaml.Marshal(m)
-	return string(bz)
-}
-
-// String implements the fmt.Stringer interface.
-func (m RewardsRecord) String() string {
-	bz, _ := yaml.Marshal(m)
-	return string(bz)
 }
 
 // MustGetRewardsAddress returns the rewards address.
@@ -123,12 +98,6 @@ func (m RewardsRecord) Validate() error {
 	}
 
 	return nil
-}
-
-// String implements the fmt.Stringer interface.
-func (m FlatFee) String() string {
-	bz, _ := yaml.Marshal(m)
-	return string(bz)
 }
 
 // Validate performs object fields validation.

@@ -28,7 +28,7 @@ func TestIntegration(t *testing.T) {
 		genesis[genmsg.ModuleName] = cdc.MustMarshalJSON(&types.GenesisState{Messages: []*codectypes.Any{anyMsg}})
 	}))
 	bankQuery := banktypes.NewQueryClient(chain.Client())
-	resp, err := bankQuery.Balance(sdk.WrapSDKContext(chain.GetContext()), &banktypes.QueryBalanceRequest{
+	resp, err := bankQuery.Balance(chain.GetContext(), &banktypes.QueryBalanceRequest{
 		Address: recvAddr.String(),
 		Denom:   "stake",
 	})

@@ -3,15 +3,15 @@ package types
 import (
 	fmt "fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/math"
 )
 
 var (
 	DefaultCallbackGasLimit               = uint64(1000000)
 	DefaultMaxBlockReservationLimit       = uint64(3)
 	DefaultMaxFutureReservationLimit      = uint64(10000)
-	DefaultBlockReservationFeeMultiplier  = sdk.MustNewDecFromStr("1.0")
-	DefaultFutureReservationFeeMultiplier = sdk.MustNewDecFromStr("1.0")
+	DefaultBlockReservationFeeMultiplier  = math.LegacyMustNewDecFromStr("1.0")
+	DefaultFutureReservationFeeMultiplier = math.LegacyMustNewDecFromStr("1.0")
 )
 
 // NewParams creates a new Params instance.
@@ -19,8 +19,8 @@ func NewParams(
 	callbackGasLimit uint64,
 	maxBlockReservationLimit uint64,
 	maxFutureReservationLimit uint64,
-	blockReservationFeeMultiplier sdk.Dec,
-	futureReservationFeeMultiplier sdk.Dec,
+	blockReservationFeeMultiplier math.LegacyDec,
+	futureReservationFeeMultiplier math.LegacyDec,
 ) Params {
 	return Params{
 		CallbackGasLimit:               callbackGasLimit,

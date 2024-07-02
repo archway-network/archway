@@ -3,6 +3,7 @@ package e2e
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	cwTypes "github.com/CosmWasm/cosmwasm-go/std/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
@@ -28,7 +29,7 @@ func (s *E2ETestSuite) SetupTest() {
 func (s *E2ETestSuite) CosmWasmCoinsToSDK(cwCoins ...cwTypes.Coin) sdk.Coins {
 	coins := sdk.NewCoins()
 	for _, cwCoin := range cwCoins {
-		amt, ok := sdk.NewIntFromString(cwCoin.Amount.String())
+		amt, ok := math.NewIntFromString(cwCoin.Amount.String())
 		s.Require().True(ok)
 
 		coins = coins.Add(sdk.NewCoin(cwCoin.Denom, amt))

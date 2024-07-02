@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
@@ -20,8 +21,8 @@ func TestRewardsParamsValidate(t *testing.T) {
 		{
 			name: "OK",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
+				InflationRewardsRatio: math.LegacyNewDecWithPrec(2, 2),
+				TxFeeRebateRatio:      math.LegacyNewDecWithPrec(5, 2),
 				MaxWithdrawRecords:    1,
 				MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 			},
@@ -29,8 +30,8 @@ func TestRewardsParamsValidate(t *testing.T) {
 		{
 			name: "Fail: InflationRewardsRatio: negative",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(-2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
+				InflationRewardsRatio: math.LegacyNewDecWithPrec(-2, 2),
+				TxFeeRebateRatio:      math.LegacyNewDecWithPrec(5, 2),
 				MaxWithdrawRecords:    1,
 				MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 			},
@@ -39,8 +40,8 @@ func TestRewardsParamsValidate(t *testing.T) {
 		{
 			name: "Fail: InflationRewardsRatio: equal to 1.0",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(1, 0),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(5, 2),
+				InflationRewardsRatio: math.LegacyNewDecWithPrec(1, 0),
+				TxFeeRebateRatio:      math.LegacyNewDecWithPrec(5, 2),
 				MaxWithdrawRecords:    1,
 				MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 			},
@@ -49,8 +50,8 @@ func TestRewardsParamsValidate(t *testing.T) {
 		{
 			name: "Fail: TxFeeRebateRatio: negative",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(-1, 2),
+				InflationRewardsRatio: math.LegacyNewDecWithPrec(2, 2),
+				TxFeeRebateRatio:      math.LegacyNewDecWithPrec(-1, 2),
 				MaxWithdrawRecords:    1,
 				MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 			},
@@ -59,8 +60,8 @@ func TestRewardsParamsValidate(t *testing.T) {
 		{
 			name: "Fail: TxFeeRebateRatio: equal to 1.0",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(1, 0),
+				InflationRewardsRatio: math.LegacyNewDecWithPrec(2, 2),
+				TxFeeRebateRatio:      math.LegacyNewDecWithPrec(1, 0),
 				MaxWithdrawRecords:    1,
 				MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 			},
@@ -69,8 +70,8 @@ func TestRewardsParamsValidate(t *testing.T) {
 		{
 			name: "Fail: MaxWithdrawRecords: empty",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(1, 0),
+				InflationRewardsRatio: math.LegacyNewDecWithPrec(2, 2),
+				TxFeeRebateRatio:      math.LegacyNewDecWithPrec(1, 0),
 				MaxWithdrawRecords:    0,
 				MinPriceOfGas:         rewardsTypes.DefaultMinPriceOfGas,
 			},
@@ -79,8 +80,8 @@ func TestRewardsParamsValidate(t *testing.T) {
 		{
 			name: "Fail: MinPriceOfGas: empty",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(1, 0),
+				InflationRewardsRatio: math.LegacyNewDecWithPrec(2, 2),
+				TxFeeRebateRatio:      math.LegacyNewDecWithPrec(1, 0),
 				MaxWithdrawRecords:    1000,
 			},
 			errExpected: true,
@@ -88,10 +89,10 @@ func TestRewardsParamsValidate(t *testing.T) {
 		{
 			name: "Fail: MinPriceOfGas: negative",
 			params: rewardsTypes.Params{
-				InflationRewardsRatio: sdk.NewDecWithPrec(2, 2),
-				TxFeeRebateRatio:      sdk.NewDecWithPrec(1, 0),
+				InflationRewardsRatio: math.LegacyNewDecWithPrec(2, 2),
+				TxFeeRebateRatio:      math.LegacyNewDecWithPrec(1, 0),
 				MaxWithdrawRecords:    1000,
-				MinPriceOfGas:         sdk.DecCoin{Denom: "stake", Amount: sdk.NewDec(-100)},
+				MinPriceOfGas:         sdk.DecCoin{Denom: "stake", Amount: math.LegacyNewDec(-100)},
 			},
 			errExpected: true,
 		},

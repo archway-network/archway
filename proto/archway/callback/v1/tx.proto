@@ -10,6 +10,7 @@ import "archway/callback/v1/callback.proto";
 
 // Msg defines the module messaging service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   // UpdateParams defines a governance operation for updating the x/callback
   // module parameters. The authority is defined in the keeper.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
@@ -27,15 +28,14 @@ func (s *KeeperTestSuite) TestStates() {
 		RewardsRecords []types.RewardsRecord
 	}
 
-	chain := s.chain
-	ctx, keeper := chain.GetContext(), chain.GetApp().Keepers.RewardsKeeper
+	keeper, ctx := s.keeper, s.ctx
 
 	// Fixtures
 	startBlock, startTime := ctx.BlockHeight(), ctx.BlockTime()
 	contractAddrs := e2eTesting.GenContractAddresses(3)
 	accAddrs, _ := e2eTesting.GenAccounts(3)
-	coin1 := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(100)}
-	coin2 := sdk.Coin{Denom: "uarch", Amount: sdk.NewInt(200)}
+	coin1 := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(100)}
+	coin2 := sdk.Coin{Denom: "uarch", Amount: math.NewInt(200)}
 
 	testDataExpected := testData{
 		Metadata: []types.ContractMetadata{
@@ -75,7 +75,7 @@ func (s *KeeperTestSuite) TestStates() {
 			{
 				BlockRewards: types.BlockRewards{
 					Height:           startBlock + 1,
-					InflationRewards: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdk.NewInt(100)},
+					InflationRewards: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(100)},
 					MaxGas:           1000,
 				},
 				TxRewards: []types.TxRewards{
@@ -147,7 +147,7 @@ func (s *KeeperTestSuite) TestStates() {
 
 			// Modify the expected coin because proto.Unmarshal creates a coin with zero amount (not nil)
 			if blockRewardsExpected.InflationRewards.Amount.IsNil() {
-				blockRewardsExpected.InflationRewards.Amount = sdk.ZeroInt()
+				blockRewardsExpected.InflationRewards.Amount = math.ZeroInt()
 			}
 			s.Assert().Equal(blockRewardsExpected, blockRewardsReceived, "BlockRewards [%d]: wrong value", i)
 

@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
@@ -53,7 +54,7 @@ func TestParamsValidate(t *testing.T) {
 			name: "Fail: SubsciptionFee: invalid",
 			params: types.NewParams(
 				100,
-				sdk.Coin{Denom: "", Amount: sdk.NewInt(100)},
+				sdk.Coin{Denom: "", Amount: math.NewInt(100)},
 				100,
 			),
 			errExpected: true,

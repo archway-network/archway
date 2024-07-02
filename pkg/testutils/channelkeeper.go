@@ -2,8 +2,8 @@ package testutils
 
 import (
 	types0 "github.com/cosmos/cosmos-sdk/types"
-	types4 "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	types4 "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	exported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 )
 
 // MockChannelKeeper is a mock of ChannelKeeper interface.

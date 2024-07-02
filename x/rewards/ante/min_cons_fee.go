@@ -2,6 +2,7 @@ package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	math "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -36,7 +37,7 @@ func (mfd MinFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool,
 	expectedFees = expectedFees.Add(
 		sdk.NewCoin(
 			computationalGasPrice.Denom,
-			computationalGasPrice.Amount.MulInt(sdk.NewIntFromUint64(feeTx.GetGas())).TruncateInt(),
+			computationalGasPrice.Amount.MulInt(math.NewIntFromUint64(feeTx.GetGas())).TruncateInt(),
 		),
 	)
 

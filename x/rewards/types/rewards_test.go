@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
@@ -23,7 +24,7 @@ func TestBlockRewardsValidate(t *testing.T) {
 			name: "OK",
 			record: rewardsTypes.BlockRewards{
 				Height:           1,
-				InflationRewards: sdk.Coin{Denom: "uatom", Amount: sdk.OneInt()},
+				InflationRewards: sdk.Coin{Denom: "uatom", Amount: math.OneInt()},
 			},
 		},
 		{
@@ -36,7 +37,7 @@ func TestBlockRewardsValidate(t *testing.T) {
 			name: "Fail: invalid Height",
 			record: rewardsTypes.BlockRewards{
 				Height:           -1,
-				InflationRewards: sdk.Coin{Denom: "uatom", Amount: sdk.OneInt()},
+				InflationRewards: sdk.Coin{Denom: "uatom", Amount: math.OneInt()},
 			},
 			errExpected: true,
 		},
@@ -44,7 +45,7 @@ func TestBlockRewardsValidate(t *testing.T) {
 			name: "Fail: invalid InflationRewards denom",
 			record: rewardsTypes.BlockRewards{
 				Height:           1,
-				InflationRewards: sdk.Coin{Denom: "123invalid", Amount: sdk.OneInt()},
+				InflationRewards: sdk.Coin{Denom: "123invalid", Amount: math.OneInt()},
 			},
 			errExpected: true,
 		},
@@ -52,7 +53,7 @@ func TestBlockRewardsValidate(t *testing.T) {
 			name: "Fail: invalid InflationRewards amount (negative)",
 			record: rewardsTypes.BlockRewards{
 				Height:           1,
-				InflationRewards: sdk.Coin{Denom: "uatom", Amount: sdk.NewInt(-1)},
+				InflationRewards: sdk.Coin{Denom: "uatom", Amount: math.NewInt(-1)},
 			},
 			errExpected: true,
 		},
@@ -83,7 +84,7 @@ func TestTxRewardsValidate(t *testing.T) {
 			record: rewardsTypes.TxRewards{
 				TxId:       1,
 				Height:     1,
-				FeeRewards: sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())),
+				FeeRewards: sdk.NewCoins(sdk.NewCoin("uatom", math.OneInt())),
 			},
 		},
 		{
@@ -98,7 +99,7 @@ func TestTxRewardsValidate(t *testing.T) {
 			record: rewardsTypes.TxRewards{
 				TxId:       0,
 				Height:     1,
-				FeeRewards: sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())),
+				FeeRewards: sdk.NewCoins(sdk.NewCoin("uatom", math.OneInt())),
 			},
 			errExpected: true,
 		},
@@ -107,7 +108,7 @@ func TestTxRewardsValidate(t *testing.T) {
 			record: rewardsTypes.TxRewards{
 				TxId:       1,
 				Height:     -1,
-				FeeRewards: sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())),
+				FeeRewards: sdk.NewCoins(sdk.NewCoin("uatom", math.OneInt())),
 			},
 			errExpected: true,
 		},
@@ -117,7 +118,7 @@ func TestTxRewardsValidate(t *testing.T) {
 				TxId:   1,
 				Height: 1,
 				FeeRewards: []sdk.Coin{
-					{Denom: "uarch", Amount: sdk.OneInt()},
+					{Denom: "uarch", Amount: math.OneInt()},
 					{},
 				},
 			},
@@ -128,7 +129,7 @@ func TestTxRewardsValidate(t *testing.T) {
 			record: rewardsTypes.TxRewards{
 				TxId:       1,
 				Height:     1,
-				FeeRewards: []sdk.Coin{{Denom: "123invalid", Amount: sdk.OneInt()}},
+				FeeRewards: []sdk.Coin{{Denom: "123invalid", Amount: math.OneInt()}},
 			},
 			errExpected: true,
 		},
@@ -164,7 +165,7 @@ func TestRewardsRecordValidate(t *testing.T) {
 				Id:             1,
 				RewardsAddress: accAddr.String(),
 				Rewards: []sdk.Coin{
-					{Denom: "uatom", Amount: sdk.OneInt()},
+					{Denom: "uatom", Amount: math.OneInt()},
 				},
 				CalculatedHeight: 1,
 				CalculatedTime:   mockTime,
@@ -176,7 +177,7 @@ func TestRewardsRecordValidate(t *testing.T) {
 				Id:             0,
 				RewardsAddress: accAddr.String(),
 				Rewards: []sdk.Coin{
-					{Denom: "uatom", Amount: sdk.OneInt()},
+					{Denom: "uatom", Amount: math.OneInt()},
 				},
 				CalculatedHeight: 1,
 				CalculatedTime:   mockTime,
@@ -189,7 +190,7 @@ func TestRewardsRecordValidate(t *testing.T) {
 				Id:             1,
 				RewardsAddress: "invalid",
 				Rewards: []sdk.Coin{
-					{Denom: "uatom", Amount: sdk.OneInt()},
+					{Denom: "uatom", Amount: math.OneInt()},
 				},
 				CalculatedHeight: 1,
 				CalculatedTime:   mockTime,
@@ -202,7 +203,7 @@ func TestRewardsRecordValidate(t *testing.T) {
 				Id:             1,
 				RewardsAddress: accAddr.String(),
 				Rewards: []sdk.Coin{
-					{Denom: "uatom", Amount: sdk.NewInt(-1)},
+					{Denom: "uatom", Amount: math.NewInt(-1)},
 				},
 				CalculatedHeight: 1,
 				CalculatedTime:   mockTime,
@@ -215,7 +216,7 @@ func TestRewardsRecordValidate(t *testing.T) {
 				Id:             1,
 				RewardsAddress: accAddr.String(),
 				Rewards: []sdk.Coin{
-					{Denom: "uatom", Amount: sdk.OneInt()},
+					{Denom: "uatom", Amount: math.OneInt()},
 				},
 				CalculatedHeight: -1,
 				CalculatedTime:   mockTime,
@@ -228,7 +229,7 @@ func TestRewardsRecordValidate(t *testing.T) {
 				Id:             1,
 				RewardsAddress: accAddr.String(),
 				Rewards: []sdk.Coin{
-					{Denom: "uatom", Amount: sdk.OneInt()},
+					{Denom: "uatom", Amount: math.OneInt()},
 				},
 				CalculatedHeight: 1,
 				CalculatedTime:   time.Time{},
@@ -262,7 +263,7 @@ func TestFlatFeeValidate(t *testing.T) {
 			name: "OK: with flat fee coin",
 			flatFee: rewardsTypes.FlatFee{
 				ContractAddress: contractAddr.String(),
-				FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+				FlatFee:         sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)),
 			},
 		},
 		{
@@ -285,7 +286,7 @@ func TestFlatFeeValidate(t *testing.T) {
 				ContractAddress: contractAddr.String(),
 				FlatFee: sdk.Coin{
 					Denom:  sdk.DefaultBondDenom,
-					Amount: sdk.NewInt(-1),
+					Amount: math.NewInt(-1),
 				},
 			},
 			errExpected: true,

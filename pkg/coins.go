@@ -1,19 +1,20 @@
 package pkg
 
 import (
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SplitCoins splits coins in a proportion defined by the ratio.
 // CONTRACT: inputs must be valid.
-func SplitCoins(coins sdk.Coins, ratio sdk.Dec) (stack1, stack2 sdk.Coins) {
+func SplitCoins(coins sdk.Coins, ratio math.LegacyDec) (stack1, stack2 sdk.Coins) {
 	stack1 = sdk.NewCoins()
 	stack2 = sdk.NewCoins()
 
 	for _, coin := range coins {
 		stack1Coin := sdk.Coin{
 			Denom:  coin.Denom,
-			Amount: sdk.NewDecFromInt(coin.Amount).Mul(ratio).TruncateInt(),
+			Amount: math.LegacyNewDecFromInt(coin.Amount).Mul(ratio).TruncateInt(),
 		}
 		stack2Coin := coin.Sub(stack1Coin)
 

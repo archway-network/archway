@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/pkg"
@@ -17,8 +17,8 @@ import (
 )
 
 type WasmdKeeper interface {
-	HasContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) bool
-	Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
+	HasContractInfo(ctx context.Context, contractAddress sdk.AccAddress) bool
+	Sudo(ctx context.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
 }
 
 type Keeper struct {
@@ -82,8 +82,8 @@ const RequestGrantGasLimit = 100_000
 
 // RequestGrant will signal to the contract that there's a grant request for a set of messages and the fees.
 // In case the contract does not accept the grant then an error is returned.
-func (k Keeper) RequestGrant(ctx context.Context, grantingContract sdk.AccAddress, txMsgs []sdk.Msg, wantFees sdk.Coins) error {
-	msg, err := types.NewSudoMsg(k.cdc, wantFees, txMsgs)
+func (k Keeper) RequestGrant(ctx context.Context, grantingContract sdk.AccAddress, txMsgs []sdk.Msg, wantFees sdk.Coins, signers []sdk.AccAddress) error {
+	msg, err := types.NewSudoMsg(k.cdc, wantFees, txMsgs, signers)
 	if err != nil {
 		return err
 	}

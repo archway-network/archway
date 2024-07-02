@@ -14,9 +14,9 @@ import (
 )
 
 // EndBlocker fetches all the callbacks registered for the current block height and executes them
-func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected, ek types.ErrorsKeeperExpected) []abci.ValidatorUpdate {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper, wk types.WasmKeeperExpected, ek types.ErrorsKeeperExpected) ([]abci.ValidatorUpdate, error) {
 	k.IterateCallbacksByHeight(ctx, ctx.BlockHeight(), callbackExec(ctx, k, wk, ek))
-	return nil
+	return nil, nil
 }
 
 // callbackExec returns a function which executes the callback and deletes it from state after execution

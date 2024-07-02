@@ -10,6 +10,7 @@ import "archway/rewards/v1/rewards.proto";
 
 // Msg defines the module messaging service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   // SetContractMetadata creates or updates an existing contract metadata.
   // Method is authorized to the contract owner (admin if no metadata exists).
   rpc SetContractMetadata(MsgSetContractMetadata)

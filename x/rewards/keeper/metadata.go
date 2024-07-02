@@ -3,7 +3,6 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/archway-network/archway/x/rewards/types"
 )
@@ -23,8 +22,8 @@ func (k Keeper) SetContractMetadata(ctx sdk.Context, senderAddr, contractAddr sd
 		if err != nil {
 			return err
 		}
-		if k.isModuleAccount(ctx, addr) {
-			return types.ErrInvalidRequest.Wrap("rewards address cannot be a module account")
+		if k.isBlockedAddress(addr) {
+			return types.ErrInvalidRequest.Wrap("rewards address cannot be a blocked address")
 		}
 	}
 
@@ -82,11 +81,6 @@ func (k Keeper) GetContractMetadata(ctx sdk.Context, contractAddr sdk.AccAddress
 	return &meta
 }
 
-func (k Keeper) isModuleAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
-	acc := k.authKeeper.GetAccount(ctx, addr)
-	if acc == nil {
-		return false
-	}
-	_, ok := acc.(authtypes.ModuleAccountI)
-	return ok
+func (k Keeper) isBlockedAddress(addr sdk.AccAddress) bool {
+	return k.bankKeeper.BlockedAddr(addr)
 }

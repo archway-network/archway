@@ -1,12 +1,15 @@
 package upgrade7_0_0
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"context"
+
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
@@ -31,54 +34,58 @@ const NameAsciiArt = `
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
 	CreateUpgradeHandler: func(mm *module.Manager, cfg module.Configurator, keepers keepers.ArchwayKeepers) upgradetypes.UpgradeHandler {
-		return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 			migrations, err := mm.RunMigrations(ctx, cfg, fromVM)
 			if err != nil {
 				return nil, err
 			}
 
-			ctx.Logger().Info("Setting default params for the new modules")
-			bondDenom := keepers.StakingKeeper.BondDenom(ctx)
+			sdk.UnwrapSDKContext(ctx).Logger().Info("Setting default params for the new modules")
+			bondDenom, err := keepers.StakingKeeper.BondDenom(ctx)
+			if err != nil {
+				return nil, err
+			}
+			unwrappedCtx := sdk.UnwrapSDKContext(ctx)
 			// Setting callback params
-			callbackParams, err := keepers.CallbackKeeper.GetParams(ctx)
+			callbackParams, err := keepers.CallbackKeeper.GetParams(unwrappedCtx)
 			if err != nil {
 				return nil, err
 			}
 			callbackParams.CallbackGasLimit = 150000
 			callbackParams.MaxBlockReservationLimit = 10
 			callbackParams.MaxFutureReservationLimit = 432000 // roughly 30 days
-			callbackParams.BlockReservationFeeMultiplier = sdk.MustNewDecFromStr("0.0")
-			callbackParams.FutureReservationFeeMultiplier = sdk.MustNewDecFromStr("1000000000000.0")
-			err = keepers.CallbackKeeper.SetParams(ctx, callbackParams)
+			callbackParams.BlockReservationFeeMultiplier = math.LegacyMustNewDecFromStr("0.0")
+			callbackParams.FutureReservationFeeMultiplier = math.LegacyMustNewDecFromStr("1000000000000.0")
+			err = keepers.CallbackKeeper.SetParams(unwrappedCtx, callbackParams)
 			if err != nil {
 				return nil, err
 			}
 
 			// Setting cwerrors params
-			cwerrorsParams, err := keepers.CWErrorsKeeper.GetParams(ctx)
+			cwerrorsParams, err := keepers.CWErrorsKeeper.GetParams(unwrappedCtx)
 			if err != nil {
 				return nil, err
 			}
 			cwerrorsParams.ErrorStoredTime = 302400                                           // roughly 21 days
 			cwerrorsParams.SubscriptionFee = sdk.NewInt64Coin(bondDenom, 1000000000000000000) // 1 ARCH (1e18 attoarch)
 			cwerrorsParams.SubscriptionPeriod = 302400                                        // roughly 21 days
-			err = keepers.CWErrorsKeeper.SetParams(ctx, cwerrorsParams)
+			err = keepers.CWErrorsKeeper.SetParams(unwrappedCtx, cwerrorsParams)
 			if err != nil {
 				return nil, err
 			}
 
 			// Setting cwica params
-			cwicaParams, err := keepers.CWICAKeeper.GetParams(ctx)
+			cwicaParams, err := keepers.CWICAKeeper.GetParams(unwrappedCtx)
 			if err != nil {
 				return nil, err
 			}
 			cwicaParams.MsgSendTxMaxMessages = 5
-			err = keepers.CWICAKeeper.SetParams(ctx, cwicaParams)
+			err = keepers.CWICAKeeper.SetParams(unwrappedCtx, cwicaParams)
 			if err != nil {
 				return nil, err
 			}
 
-			ctx.Logger().Info(upgrades.ArchwayLogo + NameAsciiArt)
+			unwrappedCtx.Logger().Info(upgrades.ArchwayLogo + NameAsciiArt)
 			return migrations, nil
 		}
 	},

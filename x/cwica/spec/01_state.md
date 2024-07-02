@@ -13,7 +13,6 @@ Storage keys:
 
 ```protobuf
 message Params {
-  option (gogoproto.goproto_stringer) = false;
   // Defines maximum amount of messages which can be passed in MsgSubmitTx
   uint64 msg_submit_tx_max_messages = 1;
 }

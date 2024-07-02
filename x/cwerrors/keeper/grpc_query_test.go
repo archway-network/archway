@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestErrors() {
 	queryServer := cwerrorsKeeper.NewQueryServer(keeper)
 
 	// Sending nil query
-	_, err := queryServer.Errors(sdk.WrapSDKContext(ctx), nil)
+	_, err := queryServer.Errors(ctx, nil)
 	s.Require().Error(err)
 
 	// Set errors for block 1
@@ -51,10 +51,10 @@ func (s *KeeperTestSuite) TestErrors() {
 	s.Require().NoError(err)
 
 	// Check number of errors match
-	res, err := queryServer.Errors(sdk.WrapSDKContext(ctx), &types.QueryErrorsRequest{ContractAddress: contractAddr.String()})
+	res, err := queryServer.Errors(ctx, &types.QueryErrorsRequest{ContractAddress: contractAddr.String()})
 	s.Require().NoError(err)
 	s.Require().Len(res.Errors, 2)
-	res, err = queryServer.Errors(sdk.WrapSDKContext(ctx), &types.QueryErrorsRequest{ContractAddress: contractAddr2.String()})
+	res, err = queryServer.Errors(ctx, &types.QueryErrorsRequest{ContractAddress: contractAddr2.String()})
 	s.Require().NoError(err)
 	s.Require().Len(res.Errors, 1)
 
@@ -70,10 +70,10 @@ func (s *KeeperTestSuite) TestErrors() {
 	s.Require().NoError(err)
 
 	// Check number of errors match
-	res, err = queryServer.Errors(sdk.WrapSDKContext(ctx), &types.QueryErrorsRequest{ContractAddress: contractAddr.String()})
+	res, err = queryServer.Errors(ctx, &types.QueryErrorsRequest{ContractAddress: contractAddr.String()})
 	s.Require().NoError(err)
 	s.Require().Len(res.Errors, 3)
-	res, err = queryServer.Errors(sdk.WrapSDKContext(ctx), &types.QueryErrorsRequest{ContractAddress: contractAddr2.String()})
+	res, err = queryServer.Errors(ctx, &types.QueryErrorsRequest{ContractAddress: contractAddr2.String()})
 	s.Require().NoError(err)
 	s.Require().Len(res.Errors, 2)
 }
@@ -91,22 +91,22 @@ func (s *KeeperTestSuite) TestIsSubscribed() {
 	queryServer := cwerrorsKeeper.NewQueryServer(keeper)
 
 	// TEST CASE 1: empty request
-	_, err := queryServer.IsSubscribed(sdk.WrapSDKContext(ctx), nil)
+	_, err := queryServer.IsSubscribed(ctx, nil)
 	s.Require().Error(err)
 
 	// TEST CASE 2: invalid contract address
-	_, err = queryServer.IsSubscribed(sdk.WrapSDKContext(ctx), &types.QueryIsSubscribedRequest{ContractAddress: "👻"})
+	_, err = queryServer.IsSubscribed(ctx, &types.QueryIsSubscribedRequest{ContractAddress: "👻"})
 	s.Require().Error(err)
 
 	// TEST CASE 3: subscription not found
-	res, err := queryServer.IsSubscribed(sdk.WrapSDKContext(ctx), &types.QueryIsSubscribedRequest{ContractAddress: contractAddr.String()})
+	res, err := queryServer.IsSubscribed(ctx, &types.QueryIsSubscribedRequest{ContractAddress: contractAddr.String()})
 	s.Require().NoError(err)
 	s.Require().False(res.Subscribed)
 
 	// TEST CASE 4: subscription found
 	expectedEndHeight, err := keeper.SetSubscription(ctx, contractAdminAcc.Address, contractAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
 	s.Require().NoError(err)
-	res, err = queryServer.IsSubscribed(sdk.WrapSDKContext(ctx), &types.QueryIsSubscribedRequest{ContractAddress: contractAddr.String()})
+	res, err = queryServer.IsSubscribed(ctx, &types.QueryIsSubscribedRequest{ContractAddress: contractAddr.String()})
 	s.Require().NoError(err)
 	s.Require().True(res.Subscribed)
 	s.Require().Equal(expectedEndHeight, res.SubscriptionValidTill)
@@ -117,7 +117,7 @@ func (s *KeeperTestSuite) TestParams() {
 	queryServer := cwerrorsKeeper.NewQueryServer(keeper)
 
 	// Sending nil query
-	_, err := queryServer.Params(sdk.WrapSDKContext(ctx), nil)
+	_, err := queryServer.Params(ctx, nil)
 	s.Require().Error(err)
 
 	// Set params
@@ -130,7 +130,7 @@ func (s *KeeperTestSuite) TestParams() {
 	s.Require().NoError(err)
 
 	// Query params
-	res, err := queryServer.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})
+	res, err := queryServer.Params(ctx, &types.QueryParamsRequest{})
 	s.Require().NoError(err)
 	s.Require().Equal(params, res.Params)
 }

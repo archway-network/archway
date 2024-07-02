@@ -28,31 +28,33 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviors.
 -->
 
-## [Unreleased]
-
-### Fixed
-
-- [#571](https://github.com/archway-network/archway/pull/571) - Automatically
-publish proto files to buf.build
-
-## [v7.0.1](https://github.com/archway-network/archway/releases/tag/v7.0.1)
+## [v8.0.0](https://github.com/archway-network/archway/releases/tag/v8.0.0)
 
 ### Added
+- [#577](https://github.com/archway-network/archway/pull/577) - Adding a cute ascii art of Archway for the cli
 
-- [#571](https://github.com/archway-network/archway/pull/571) - Automatically
-publish proto files to buf.build
+### Changed
+- [#573](https://github.com/archway-network/archway/pull/573) - Bump cosmos-sdk to v0.50.6 and ibc to v8.2.1
 
 ### Fixed
-
-- [#568](https://github.com/archway-network/archway/pull/568) - Update Swagger doc and config to include CWICA and CWErrors modules
-- [#570](https://github.com/archway-network/archway/pull/570) - Fix the Docker.deprecated file to build  
 - [#569](https://github.com/archway-network/archway/pull/569) - Audit remidiations for x/cwerrors and x/cwica 
-
 - [#566](https://github.com/archway-network/archway/pull/566) - Fixing the localnet script to correctly set gov params post sdk v47
 
 ### Improvements
 
 - [#567](https://github.com/archway-network/archway/pull/567) - Remove redundant params fetching in SaveCallback 
+- [#572](https://github.com/archway-network/archway/pull/572) - Using buf 1.31 to push files
+
+## [v7.0.1](https://github.com/archway-network/archway/releases/tag/v7.0.0)
+
+### Added
+
+- [#571](https://github.com/archway-network/archway/pull/571) - Automatically publish proto files to buf.build
+
+### Fixed
+
+- [#568](https://github.com/archway-network/archway/pull/568) - Update Swagger doc and config to include CWICA and CWErrors modules
+- [#570](https://github.com/archway-network/archway/pull/570) - Fix the Docker.deprecated file to build  
 
 ## [v7.0.0](https://github.com/archway-network/archway/releases/tag/v7.0.0)
 

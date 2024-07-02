@@ -2,7 +2,7 @@ package testutils
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
+	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 )
 
 // MockConnectionlKeeper is a mock of ConnectionKeeper interface.

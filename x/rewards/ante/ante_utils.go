@@ -2,6 +2,7 @@ package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	math "cosmossdk.io/math"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +18,7 @@ type RewardsKeeperExpected interface {
 	CreateFlatFeeRewardsRecords(ctx sdk.Context, contractAddress sdk.AccAddress, flatfee sdk.Coins)
 
 	// Used in DeductFeeDecorator
-	TxFeeRebateRatio(ctx sdk.Context) sdk.Dec
+	TxFeeRebateRatio(ctx sdk.Context) math.LegacyDec
 	TrackFeeRebatesRewards(ctx sdk.Context, rewards sdk.Coins)
 }
 
