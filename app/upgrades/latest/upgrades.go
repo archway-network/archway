@@ -1,4 +1,4 @@
-package upgrade8_0_0
+package upgradelatest
 
 import (
 	"context"
@@ -10,17 +10,11 @@ import (
 
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
+	cwregistrytypes "github.com/archway-network/archway/x/cwregistry/types"
 )
 
-const Name = "v8.0.0"
-const NameAsciiArt = `                          
-             ###     ###     ### 
-     # #     # #     # #     # #    
-     # #     ###     # #     # #   
-      #      # #     # #     # # 
-             ###  #  ###  #  ### 
-
-`
+const Name = "latest"
+const NameAsciiArt = ""
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
@@ -36,6 +30,8 @@ var Upgrade = upgrades.Upgrade{
 		}
 	},
 	StoreUpgrades: storetypes.StoreUpgrades{
-		Added: []string{},
+		Added: []string{
+			cwregistrytypes.ModuleName,
+		},
 	},
 }
