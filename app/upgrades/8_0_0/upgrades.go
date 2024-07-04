@@ -1,4 +1,4 @@
-package upgradelatest
+package upgrade8_0_0
 
 import (
 	"context"
@@ -13,10 +13,15 @@ import (
 	cwregistrytypes "github.com/archway-network/archway/x/cwregistry/types"
 )
 
-// This upgrade handler is used for all the current changes to the protocol
+const Name = "v8.0.0"
+const NameAsciiArt = `                          
+             ###     ###     ### 
+     # #     # #     # #     # #    
+     # #     ###     # #     # #   
+      #      # #     # #     # # 
+             ###  #  ###  #  ### 
 
-const Name = "latest"
-const NameAsciiArt = ""
+`
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: Name,
