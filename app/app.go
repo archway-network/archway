@@ -539,6 +539,7 @@ func NewArchwayApp(
 		app.MsgServiceRouter(),
 		govModuleAddr,
 	)
+	app.Keepers.ICAHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
