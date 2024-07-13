@@ -27,6 +27,11 @@ Contains bug fixes.
 
 Contains all the PRs that improved the code without changing the behaviors.
 -->
+## [Unreleased]
+
+### Added 
+- [#578](https://github.com/archway-network/archway/pull/578) - Adding x/cwregistry module
+
 
 ## [v8.0.0](https://github.com/archway-network/archway/releases/tag/v8.0.0)
 

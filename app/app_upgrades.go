@@ -15,6 +15,7 @@ import (
 	upgrade6_0_0 "github.com/archway-network/archway/app/upgrades/6_0_0"
 	upgrade7_0_0 "github.com/archway-network/archway/app/upgrades/7_0_0"
 	upgrade8_0_0 "github.com/archway-network/archway/app/upgrades/8_0_0"
+	upgradelatest "github.com/archway-network/archway/app/upgrades/latest"
 )
 
 // UPGRADES
@@ -29,6 +30,8 @@ var Upgrades = []upgrades.Upgrade{
 	upgrade6_0_0.Upgrade,      // v6.0.0
 	upgrade7_0_0.Upgrade,      // v7.0.0
 	upgrade8_0_0.Upgrade,      // v8.0.0
+
+	upgradelatest.Upgrade, // latest
 }
 
 func (app *ArchwayApp) RegisterUpgradeHandlers() {

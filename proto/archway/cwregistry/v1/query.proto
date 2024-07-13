@@ -1,0 +1,43 @@
+syntax = "proto3";
+package archway.cwregistry.v1;
+
+import "gogoproto/gogo.proto";
+import "archway/cwregistry/v1/cwregistry.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/archway-network/archway/x/cwregistry/types";
+
+// Query service for the cwregistry module.
+service Query {
+    rpc CodeMetadata(QueryCodeMetadataRequest) returns (QueryCodeMetadataResponse) { 
+      option (google.api.http).get = "/archway/cwregistry/v1/code_metadata";
+    }
+
+    rpc ContractMetadata(QueryContractMetadataRequest) returns (QueryContractMetadataResponse) { 
+        option (google.api.http).get = "/archway/cwregistry/v1/contract_metadata";
+    }
+}
+
+// QueryCodeMetadataRequest is the request type for the Query/CodeMetadata RPC method.
+message QueryCodeMetadataRequest {
+    // code_id is the contract code id to query metadata for.
+    uint64 code_id = 1;
+}
+
+// QueryContractMetadataRequest is the request type for the Query/ContractMetadata RPC method.
+message QueryCodeMetadataResponse {
+    // code_metadata is the metadata for the contract code.
+    CodeMetadata code_metadata = 1;
+}
+
+// QueryContractMetadataRequest is the request type for the Query/ContractMetadata RPC method.
+message QueryContractMetadataRequest {
+    // contract_address is the bech32 contract address to query metadata for.
+    string contract_address = 1;
+}
+
+// QueryContractMetadataResponse is the response type for the Query/ContractMetadata RPC method.
+message QueryContractMetadataResponse {
+    // contract_metadata is the metadata for the contract.
+    CodeMetadata code_metadata = 1;
+}

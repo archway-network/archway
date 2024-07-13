@@ -1,0 +1,38 @@
+syntax = "proto3";
+package archway.cwregistry.v1;
+
+option go_package = "github.com/archway-network/archway/x/cwregistry/types";
+
+// CodeMetadata defines the metadata of a contract code
+message CodeMetadata {
+    // The Code ID of the deployed contract
+    uint64 code_id = 1;
+    // The information regarding the contract source codebase
+    SourceMetadata source = 2;
+    // The information regarding the image used to build and optimize the contract binary
+    SourceBuilder source_builder = 3;
+    // The JSON schema url which specifies the interaction endpoints of the contract
+    string schema = 4;
+    // The contacts of the developers or security incidence handlers 
+    repeated string contacts = 5;
+}
+
+// SourceMetadata defines the metadata of the source code of a contract
+message SourceMetadata {
+    // The link to the code repository. e.g https://github.com/archway-network/archway
+    string repository = 1;
+    // The tag of the commit message at which the binary was built and deployed. e.g v1.0.2
+    string tag = 2;
+    // The software license of the smart contract code. e.g Apache-2.0
+    string license = 3;
+}
+
+// SourceBuilder defines the metadata of the builder used to build the contract binary
+message SourceBuilder {
+    // Docker image. e.g cosmwasm/rust-optimizer
+    string image = 1; 
+    // Docker image tag. e.g 0.12.6
+    string tag = 2;
+    // Name of the generated contract binary. e.g counter.wasm
+    string contract_name = 3;
+}
