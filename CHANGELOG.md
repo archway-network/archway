@@ -36,6 +36,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 ### Changed
 - [#573](https://github.com/archway-network/archway/pull/573) - Bump cosmos-sdk to v0.50.6 and ibc to v8.2.1
 - [#580](https://github.com/archway-network/archway/pull/580) - Bump cosmos-sdk to v0.50.7 and ibc to v8.3.2
+- [#583](https://github.com/archway-network/archway/pull/583) - Bump cometbft to v0.38.10
 
 ### Fixed
 - [#569](https://github.com/archway-network/archway/pull/569) - Audit remidiations for x/cwerrors and x/cwica 
