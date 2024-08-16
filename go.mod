@@ -19,7 +19,7 @@ require (
 	cosmossdk.io/x/upgrade v0.1.2
 	github.com/CosmWasm/cosmwasm-go v0.5.1-0.20220822092235-974247a04ac7
 	github.com/CosmWasm/wasmd v0.50.0
-	github.com/CosmWasm/wasmvm v1.5.2
+	github.com/CosmWasm/wasmvm v1.5.4
 	github.com/cometbft/cometbft v0.38.10
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -210,7 +210,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.50.0-archway
+replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.50.1-archway
 
 replace github.com/archway-network/voter => ./contracts/go/voter
 
