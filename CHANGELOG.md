@@ -41,6 +41,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 ### Fixed
 - [#569](https://github.com/archway-network/archway/pull/569) - Audit remidiations for x/cwerrors and x/cwica 
 - [#566](https://github.com/archway-network/archway/pull/566) - Fixing the localnet script to correctly set gov params post sdk v47
+- [#586](https://github.com/archway-network/archway/pull/586) - Applied patches for CWAs CWA-2024-003 and CWA-2024-004
 
 ### Improvements
 
