@@ -199,7 +199,7 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 )
 
-replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.45.0-archway
+replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.46.0-archway
 
 replace github.com/archway-network/voter => ./contracts/go/voter
 
