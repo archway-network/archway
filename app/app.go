@@ -676,7 +676,7 @@ func NewArchwayApp(
 	var icaControllerStack porttypes.IBCModule
 	icaControllerStack = cwica.NewIBCModule(app.Keepers.CWICAKeeper)
 	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.Keepers.ICAControllerKeeper)
-	//icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.Keepers.IBCFeeKeeper)
+	// icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.Keepers.IBCFeeKeeper)
 
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
 	// channel.RecvPacket -> fee.OnRecvPacket -> icaHost.OnRecvPacket
@@ -1203,6 +1203,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 
 func getAcceptedStargateQueries() wasmdKeeper.AcceptedStargateQueries {
 	return wasmdKeeper.AcceptedStargateQueries{
-		"/archway.cwerrors.v1.Query/Errors": &cwerrorsTypes.QueryErrorsRequest{},
+		"/archway.cwerrors.v1.Query/Errors":               &cwerrorsTypes.QueryErrorsRequest{},
+		"/archway.callback.v1.Query/EstimateCallbackFees": &callbackTypes.QueryEstimateCallbackFeesRequest{},
 	}
 }
