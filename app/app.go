@@ -1218,5 +1218,6 @@ func getAcceptedStargateQueries() wasmdKeeper.AcceptedStargateQueries {
 	return wasmdKeeper.AcceptedStargateQueries{
 		"/archway.cwerrors.v1.Query/Errors":               &cwerrorsTypes.QueryErrorsRequest{},
 		"/archway.callback.v1.Query/EstimateCallbackFees": &callbackTypes.QueryEstimateCallbackFeesRequest{},
+		"/archway.callback.v1.Query/Params":               &callbackTypes.QueryParamsRequest{},
 	}
 }
