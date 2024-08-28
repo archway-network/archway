@@ -213,7 +213,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.50.1-archway
+replace github.com/CosmWasm/wasmd => github.com/archway-network/archway-wasmd v0.50.1-archway-CWSA-2024-005
 
 replace github.com/archway-network/voter => ./contracts/go/voter
 
