@@ -32,6 +32,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 
 ### Added
 - [#577](https://github.com/archway-network/archway/pull/577) - Adding a cute ascii art of Archway for the cli
+- [#588](https://github.com/archway-network/archway/pull/588) - Add IBC hooks, bump IBC, allows contracts to query callback fee estimations. 
 
 ### Changed
 - [#573](https://github.com/archway-network/archway/pull/573) - Bump cosmos-sdk to v0.50.6 and ibc to v8.2.1

@@ -7,18 +7,19 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8/types"
 
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
 )
 
-const Name = "v8.0.0"
-const NameAsciiArt = `                          
-             ###     ###     ### 
-     # #     # #     # #     # #    
-     # #     ###     # #     # #   
-      #      # #     # #     # # 
-             ###  #  ###  #  ### 
+const Name = "v9.0.0"
+const NameAsciiArt = `
+             ###     ###     ###
+     # #     # #     # #     # #
+     # #      ##     # #     # #
+      #        #     # #     # #
+             ###  #  ###  #  ###
 
 `
 
@@ -35,5 +36,7 @@ var Upgrade = upgrades.Upgrade{
 			return migrations, nil
 		}
 	},
-	StoreUpgrades: storetypes.StoreUpgrades{},
+	StoreUpgrades: storetypes.StoreUpgrades{
+		Added: []string{ibchookstypes.StoreKey},
+	},
 }
