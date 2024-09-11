@@ -28,7 +28,7 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviors.
 -->
 
-## [v9.0.0](https://github.com/archway-network/archway/releases/tag/v8.0.0)
+## [v9.0.0](https://github.com/archway-network/archway/releases/tag/v9.0.0)
 
 ### Added
 - [#577](https://github.com/archway-network/archway/pull/577) - Adding a cute ascii art of Archway for the cli
@@ -45,11 +45,17 @@ Contains all the PRs that improved the code without changing the behaviors.
 - [#586](https://github.com/archway-network/archway/pull/586) - Applied patches for CWAs CWA-2024-003 and CWA-2024-004
 - [#589](https://github.com/archway-network/archway/pull/589) - Patch CWSA-2024-005
 
-
 ### Improvements
 
 - [#567](https://github.com/archway-network/archway/pull/567) - Remove redundant params fetching in SaveCallback 
 - [#572](https://github.com/archway-network/archway/pull/572) - Using buf 1.31 to push files
+
+## [v8.0.0](https://github.com/archway-network/archway/releases/tag/v8.0.0)
+
+### Fixed
+
+- Fix for CosmWasm security advisory (consensus breaking)
+  https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2024-005.md
 
 ## [v7.0.1](https://github.com/archway-network/archway/releases/tag/v7.0.0)
 
