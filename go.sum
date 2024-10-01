@@ -849,8 +849,8 @@ github.com/apache/arrow/go/v12 v12.0.0/go.mod h1:d+tV/eHZZ7Dz7RPrFKtPK02tpr+c9/P
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
 github.com/apache/thrift v0.13.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
 github.com/apache/thrift v0.16.0/go.mod h1:PHK3hniurgQaNMZYaCLEqXKsYK8upmhPbmdP2FXSqgU=
-github.com/archway-network/archway-wasmd v0.50.1-archway-CWSA-2024-005 h1:gzVR6kPrwv89aNt0WSZuqP/3xpr+lB3jv10CVhdZy0k=
-github.com/archway-network/archway-wasmd v0.50.1-archway-CWSA-2024-005/go.mod h1:9Dl+5yBJPFVa1lvk8ApdvSmpDGKxdrWHvngEcA0ZVDY=
+github.com/archway-network/archway-wasmd v0.50.2-archway h1:xN743wdWUxBoRdry/bsgzcBIQglzO6c8JnTfm3sBVLc=
+github.com/archway-network/archway-wasmd v0.50.2-archway/go.mod h1:9Dl+5yBJPFVa1lvk8ApdvSmpDGKxdrWHvngEcA0ZVDY=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-metrics v0.4.1/go.mod h1:E6amYzXo6aW1tqzoZGT755KkbgrJsSdpwZ+3JqfkOG4=
