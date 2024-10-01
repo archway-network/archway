@@ -1,0 +1,27 @@
+syntax = "proto3";
+package archway.oracle.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "archway/oracle/v1/oracle.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/archway-network/archway/x/oracle/types";
+
+// a snapshot of the prices at a given point in time
+message PriceSnapshot {
+  string pair = 1 [
+    (gogoproto.moretags) = "yaml:\"pair\"",
+    (gogoproto.customtype) =
+        "github.com/archway-network/archway/x/common/asset.Pair",
+    (gogoproto.nullable) = false
+  ];
+
+  string price = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+
+  // milliseconds since unix epoch
+  int64 timestamp_ms = 3;
+}

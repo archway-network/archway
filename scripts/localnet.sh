@@ -21,17 +21,13 @@ echo_success () {
 }
 
 # Set localnet settings
-if [[ -f "build/archwayd" ]] ;then
-  BINARY=build/archwayd
-  # Console log text colour
-  red=`tput setaf 9`
-  green=`tput setaf 10`
-  blue=`tput setaf 12`
-  reset=`tput sgr0`
-else
-  BINARY=archwayd
-fi
-CHAIN_ID=localnet-1
+BINARY=build/archwayd
+# Console log text colour
+red=`tput setaf 9`
+green=`tput setaf 10`
+blue=`tput setaf 12`
+reset=`tput sgr0`
+CHAIN_ID=archway-localnet-1
 CHAIN_DIR=./data
 VALIDATOR_MNEMONIC="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
 DEVELOPER_MNEMONIC="friend excite rough reopen cover wheel spoon convince island path clean monkey play snow number walnut pull lock shoot hurry dream divide concert discover"
@@ -83,23 +79,25 @@ setup_chain () {
   contents="$(jq '.app_state.gov.params.max_deposit_period = "20s"' $genesis)" && echo "${contents}" >  $genesis
   echo_info "Set x/gov proposal max deposit period to 20 seconds"
 
+  $BINARY config set client keyring-backend test --home $CHAIN_DIR/$CHAIN_ID
+  $BINARY config set client chain-id $CHAIN_ID --home $CHAIN_DIR/$CHAIN_ID
 
   # Adding users
   echo_info "Adding genesis accounts..."
   echo_info "1. validator"
-  echo $VALIDATOR_MNEMONIC | $BINARY --home $CHAIN_DIR/$CHAIN_ID keys add validator --recover --keyring-backend test
-  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show validator --keyring-backend test -a) $GENESIS_COINS
+  echo $VALIDATOR_MNEMONIC | $BINARY --home $CHAIN_DIR/$CHAIN_ID keys add validator --recover
+  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show validator -a) $GENESIS_COINS
   echo_info "2. developer"
-  echo $DEVELOPER_MNEMONIC | $BINARY --home $CHAIN_DIR/$CHAIN_ID keys add developer --recover --keyring-backend test
-  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show developer --keyring-backend test -a) $GENESIS_COINS
+  echo $DEVELOPER_MNEMONIC | $BINARY --home $CHAIN_DIR/$CHAIN_ID keys add developer --recover
+  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show developer -a) $GENESIS_COINS
   echo_info "3. user"
-  echo $USER_MNEMONIC | $BINARY --home $CHAIN_DIR/$CHAIN_ID keys add user --recover --keyring-backend test
-  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show user --keyring-backend test -a) $GENESIS_COINS
+  echo $USER_MNEMONIC | $BINARY --home $CHAIN_DIR/$CHAIN_ID keys add user --recover
+  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAIN_ID keys show user -a) $GENESIS_COINS
 
 
   # Creating gentx
   echo_info "Creating gentx for validator..."
-  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis gentx validator 100000000000000000000000stake --chain-id $CHAIN_ID --fees 950000000000000000000stake --keyring-backend test
+  $BINARY --home $CHAIN_DIR/$CHAIN_ID genesis gentx validator 100000000000000000000000stake --chain-id $CHAIN_ID --fees 950000000000000000000stake
 
 
   # Collecting gentx
@@ -126,4 +124,4 @@ fi
 
 # Starting chain
 echo_info "Starting chain..."
-$BINARY --home $CHAIN_DIR/$CHAIN_ID start --minimum-gas-prices 0stake
+$BINARY --home $CHAIN_DIR/$CHAIN_ID start --minimum-gas-prices 0stake --log_level debug

@@ -32,6 +32,7 @@ import (
 	callbackKeeper "github.com/archway-network/archway/x/callback/keeper"
 	cwerrorsKeeper "github.com/archway-network/archway/x/cwerrors/keeper"
 	cwicaKeeper "github.com/archway-network/archway/x/cwica/keeper"
+	oracleKeeper "github.com/archway-network/archway/x/oracle/keeper"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
 )
@@ -69,4 +70,5 @@ type ArchwayKeepers struct {
 	CallbackKeeper callbackKeeper.Keeper
 	CWErrorsKeeper cwerrorsKeeper.Keeper
 	CWICAKeeper    cwicaKeeper.Keeper
+	OracleKeeper   oracleKeeper.Keeper
 }

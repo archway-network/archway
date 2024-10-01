@@ -127,6 +127,7 @@ import (
 	ibccm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	"github.com/spf13/cast"
 
+	"github.com/archway-network/archway/app/appconst"
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/x/cwfees"
 	"github.com/archway-network/archway/x/genmsg"
@@ -154,41 +155,16 @@ import (
 	cwicakeeper "github.com/archway-network/archway/x/cwica/keeper"
 	cwicatypes "github.com/archway-network/archway/x/cwica/types"
 
+	oracle "github.com/archway-network/archway/x/oracle"
+	oraclekeeper "github.com/archway-network/archway/x/oracle/keeper"
+	oracletypes "github.com/archway-network/archway/x/oracle/types"
+
 	extendedGov "github.com/archway-network/archway/x/gov"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
 	archwayappparams "github.com/archway-network/archway/app/params"
 	archway "github.com/archway-network/archway/types"
-)
-
-const appName = "Archway"
-
-// We pull these out so we can set them with LDFLAGS in the Makefile
-var (
-	NodeDir      = ".archway"
-	Bech32Prefix = "archway"
-)
-
-// These constants are derived from the above variables.
-// These are the ones we will want to use in the code, based on
-// any overrides above
-var (
-	// DefaultNodeHome default home directories for archwayd
-	DefaultNodeHome = os.ExpandEnv("$HOME/") + NodeDir
-
-	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32PrefixAccAddr = Bech32Prefix
-	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-	Bech32PrefixAccPub = Bech32Prefix + sdk.PrefixPublic
-	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	Bech32PrefixValAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator
-	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	Bech32PrefixValPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
-	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	Bech32PrefixConsAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus
-	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	Bech32PrefixConsPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
 )
 
 var (
@@ -229,6 +205,7 @@ var (
 		cwfees.AppModule{},
 		cwica.AppModuleBasic{},
 		cwerrors.AppModuleBasic{},
+		oracle.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -247,6 +224,7 @@ var (
 		wasmdTypes.ModuleName:                {authtypes.Burner},
 		rewardsTypes.TreasuryCollector:       {authtypes.Burner},
 		callbackTypes.ModuleName:             nil,
+		oracletypes.ModuleName:               nil,
 	}
 )
 
@@ -317,7 +295,7 @@ func NewArchwayApp(
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(appconst.AppName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -335,6 +313,7 @@ func NewArchwayApp(
 		icacontrollertypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey, cwicatypes.StoreKey,
 
 		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName, cwerrorsTypes.StoreKey,
+		oracletypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey, cwerrorsTypes.TStoreKey)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -672,8 +651,19 @@ func NewArchwayApp(
 		logger,
 	)
 
+	app.Keepers.OracleKeeper = oraclekeeper.NewKeeper(
+		appCodec,
+		keys[oracletypes.StoreKey],
+		app.Keepers.AccountKeeper,
+		app.Keepers.BankKeeper,
+		app.Keepers.DistrKeeper,
+		app.Keepers.StakingKeeper,
+		app.Keepers.SlashingKeeper,
+		distrtypes.ModuleName,
+	)
+
 	app.Keepers.IBCHooksKeeper = ibchookskeeper.NewKeeper(keys[ibchookstypes.StoreKey])
-	ics20WasmHooks := ibchooks.NewWasmHooks(&app.Keepers.IBCHooksKeeper, nil, Bech32Prefix)
+	ics20WasmHooks := ibchooks.NewWasmHooks(&app.Keepers.IBCHooksKeeper, nil, appconst.Bech32Prefix)
 	hooksIcs4Wrapper := ibchooks.NewICS4Middleware(app.Keepers.IBCKeeper.ChannelKeeper, ics20WasmHooks)
 
 	var transferStack porttypes.IBCModule
@@ -759,6 +749,7 @@ func NewArchwayApp(
 		cwica.NewAppModule(appCodec, app.Keepers.CWICAKeeper, app.Keepers.AccountKeeper),
 		cwerrors.NewAppModule(app.appCodec, app.Keepers.CWErrorsKeeper, app.Keepers.WASMKeeper),
 		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
+		oracle.NewAppModule(appCodec, app.Keepers.OracleKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -801,6 +792,7 @@ func NewArchwayApp(
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
+		oracletypes.ModuleName,
 		// additional non simd modules
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -836,6 +828,7 @@ func NewArchwayApp(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
+		oracletypes.ModuleName,
 		// wasm
 		ibchookstypes.ModuleName,
 		wasmdTypes.ModuleName,
@@ -876,6 +869,7 @@ func NewArchwayApp(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
+		oracletypes.ModuleName,
 		// additional non simd modules
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -1219,5 +1213,17 @@ func getAcceptedStargateQueries() wasmdKeeper.AcceptedStargateQueries {
 		"/archway.cwerrors.v1.Query/Errors":               &cwerrorsTypes.QueryErrorsRequest{},
 		"/archway.callback.v1.Query/EstimateCallbackFees": &callbackTypes.QueryEstimateCallbackFeesRequest{},
 		"/archway.callback.v1.Query/Params":               &callbackTypes.QueryParamsRequest{},
+		"/archway.oracle.v1.Query/ExchangeRate":           new(oracletypes.QueryExchangeRateResponse),
+		"/archway.oracle.v1.Query/ExchangeRateTwap":       new(oracletypes.QueryExchangeRateResponse),
+		"/archway.oracle.v1.Query/ExchangeRates":          new(oracletypes.QueryExchangeRatesResponse),
+		"/archway.oracle.v1.Query/Actives":                new(oracletypes.QueryActivesResponse),
+		"/archway.oracle.v1.Query/VoteTargets":            new(oracletypes.QueryVoteTargetsResponse),
+		"/archway.oracle.v1.Query/FeederDelegation":       new(oracletypes.QueryFeederDelegationResponse),
+		"/archway.oracle.v1.Query/MissCounter":            new(oracletypes.QueryMissCounterResponse),
+		"/archway.oracle.v1.Query/AggregatePrevote":       new(oracletypes.QueryAggregatePrevoteResponse),
+		"/archway.oracle.v1.Query/AggregatePrevotes":      new(oracletypes.QueryAggregatePrevotesResponse),
+		"/archway.oracle.v1.Query/AggregateVote":          new(oracletypes.QueryAggregateVoteResponse),
+		"/archway.oracle.v1.Query/AggregateVotes":         new(oracletypes.QueryAggregateVotesResponse),
+		"/archway.oracle.v1.Query/Params":                 new(oracletypes.QueryParamsResponse),
 	}
 }
