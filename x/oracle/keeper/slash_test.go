@@ -20,24 +20,32 @@ import (
 
 func TestSlashAndResetMissCounters(t *testing.T) {
 	// initial setup
-	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(2))
+	accNum := 2
+	amt := sdk.TokensFromConsensusPower(50, sdk.DefaultPowerReduction)
+	InitTokens := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
+
+	chain := e2eTesting.NewTestChain(t, 1,
+		e2eTesting.WithValidatorsNum(accNum),
+		e2eTesting.WithGenAccounts(accNum),
+		e2eTesting.WithBondAmount(amt.String()),
+		e2eTesting.WithGenDefaultCoinBalance(InitTokens.String()),
+	)
 	keepers := chain.GetApp().Keepers
 	ctx := chain.GetContext()
 
-	amt := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
-
-	vals := chain.GetCurrentValSet().Validators
-	ValAddrs := make([]sdk.ValAddress, len(vals))
-	for i := range vals {
-		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	AccAddrs := make([]sdk.AccAddress, accNum)
+	ValAddrs := make([]sdk.ValAddress, accNum)
+	for i := 0; i < accNum; i++ {
+		AccAddrs[i] = chain.GetAccount(i).Address
+	}
+	for i, val := range chain.GetCurrentValSet().Validators {
+		ValAddrs[i] = sdk.ValAddress(val.Address)
 	}
 
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
 	keepers.OracleKeeper.Params.Set(ctx, params)
-
-	InitTokens := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 
 	keepers.StakingKeeper.EndBlocker(ctx)
 
@@ -46,7 +54,7 @@ func TestSlashAndResetMissCounters(t *testing.T) {
 	require.Equal(
 		t,
 		sdk.NewCoins(sdk.NewCoin(stakingparams.BondDenom, InitTokens.Sub(amt))),
-		keepers.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(ValAddrs[0])),
+		keepers.BankKeeper.GetAllBalances(ctx, AccAddrs[0]),
 	)
 	validator, err := keepers.StakingKeeper.GetValidator(ctx, ValAddrs[0])
 	require.NoError(t, err)
@@ -54,7 +62,7 @@ func TestSlashAndResetMissCounters(t *testing.T) {
 	require.Equal(
 		t,
 		sdk.NewCoins(sdk.NewCoin(stakingparams.BondDenom, InitTokens.Sub(amt))),
-		keepers.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(ValAddrs[1])),
+		keepers.BankKeeper.GetAllBalances(ctx, AccAddrs[1]),
 	)
 	validator1, err := keepers.StakingKeeper.GetValidator(ctx, ValAddrs[1])
 	require.NoError(t, err)
@@ -106,7 +114,10 @@ func TestSlashAndResetMissCounters(t *testing.T) {
 }
 
 func TestInvalidVotesSlashing(t *testing.T) {
-	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(5))
+	chain := e2eTesting.NewTestChain(t, 1,
+		e2eTesting.WithValidatorsNum(5),
+		e2eTesting.WithBondAmount(testStakingAmt.String()),
+	)
 	keepers := chain.GetApp().Keepers
 	ctx := chain.GetContext()
 	msgServer := keeper.NewMsgServerImpl(keepers.OracleKeeper)
@@ -195,7 +206,10 @@ func TestInvalidVotesSlashing(t *testing.T) {
 // TestWhitelistSlashing: Creates a scenario where one valoper (valIdx 0) does
 // not vote throughout an entire vote window, while valopers 1 and 2 do.
 func TestWhitelistSlashing(t *testing.T) {
-	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(5))
+	chain := e2eTesting.NewTestChain(t, 1,
+		e2eTesting.WithValidatorsNum(5),
+		e2eTesting.WithBondAmount(testStakingAmt.String()),
+	)
 	keepers := chain.GetApp().Keepers
 	ctx := chain.GetContext()
 	msgServer := keeper.NewMsgServerImpl(keepers.OracleKeeper)
@@ -285,7 +299,10 @@ func TestNotPassedBallotSlashing(t *testing.T) {
 }
 
 func TestAbstainSlashing(t *testing.T) {
-	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(5))
+	chain := e2eTesting.NewTestChain(t, 1,
+		e2eTesting.WithValidatorsNum(5),
+		e2eTesting.WithBondAmount(testStakingAmt.String()),
+	)
 	keepers := chain.GetApp().Keepers
 	ctx := chain.GetContext()
 	msgServer := keeper.NewMsgServerImpl(keepers.OracleKeeper)

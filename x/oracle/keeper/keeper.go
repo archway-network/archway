@@ -118,9 +118,17 @@ func (k Keeper) ValidateFeeder(
 	}
 
 	// Check that the given validator is in the active set for consensus.
-	if val, err := k.StakingKeeper.Validator(ctx, validatorAddr); err != nil || !val.IsBonded() {
+	val, err := k.StakingKeeper.Validator(ctx, validatorAddr)
+	if err != nil {
 		return sdkerrors.Wrapf(
 			err,
+			"failed to get validator %s",
+			validatorAddr.String(),
+		)
+	}
+	if !val.IsBonded() {
+		return sdkerrors.Wrapf(
+			fmt.Errorf("Invalid Validator Status"),
 			"validator %s is not active set",
 			validatorAddr.String(),
 		)

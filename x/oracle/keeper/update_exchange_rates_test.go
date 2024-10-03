@@ -36,6 +36,7 @@ func TestOracleThreshold(t *testing.T) {
 
 	chain := e2eTesting.NewTestChain(t, 1,
 		e2eTesting.WithValidatorsNum(5),
+		e2eTesting.WithBondAmount(testStakingAmt.String()),
 	)
 	keepers := chain.GetApp().Keepers
 	msgServer := keeper.NewMsgServerImpl(keepers.OracleKeeper)
@@ -52,6 +53,7 @@ func TestOracleThreshold(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
+	params.ExpirationBlocks = 0
 	keepers.OracleKeeper.Params.Set(ctx, params)
 
 	// Case 1.
@@ -91,9 +93,25 @@ func TestOracleThreshold(t *testing.T) {
 
 	// Case 3.
 	// Increase voting power of absent validator, exchange rate consensus fails
+	delegateAmount := testStakingAmt.MulRaw(8)
+	delegateCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, delegateAmount))
+	// topup not-bonded pool to withdraw for delegate
+	err = keepers.BankKeeper.MintCoins(
+		ctx,
+		minttypes.ModuleName,
+		delegateCoins,
+	)
+	require.NoError(t, err)
+	err = keepers.BankKeeper.SendCoinsFromModuleToModule(
+		ctx,
+		minttypes.ModuleName,
+		stakingtypes.NotBondedPoolName,
+		delegateCoins,
+	)
+	require.NoError(t, err)
 	val, err := keepers.StakingKeeper.GetValidator(ctx, ValAddrs[4])
 	require.NoError(t, err)
-	_, err = keepers.StakingKeeper.Delegate(ctx.WithBlockHeight(0), AccAddrs[4], testStakingAmt.MulRaw(8), stakingtypes.Unbonded, val, false)
+	_, err = keepers.StakingKeeper.Delegate(ctx.WithBlockHeight(0), AccAddrs[4], delegateAmount, stakingtypes.Unbonded, val, false)
 	require.NoError(t, err)
 
 	for i := 0; i < 4; i++ {
@@ -102,10 +120,10 @@ func TestOracleThreshold(t *testing.T) {
 		prevoteMsg := types.NewMsgAggregateExchangeRatePrevote(hash, AccAddrs[i], ValAddrs[i])
 		voteMsg := types.NewMsgAggregateExchangeRateVote(salt, exchangeRateStr, AccAddrs[i], ValAddrs[i])
 
-		_, err1 := msgServer.AggregateExchangeRatePrevote(ctx.WithBlockHeight(0), prevoteMsg)
-		_, err2 := msgServer.AggregateExchangeRateVote(ctx.WithBlockHeight(1), voteMsg)
-		require.NoError(t, err1)
-		require.NoError(t, err2)
+		_, err = msgServer.AggregateExchangeRatePrevote(ctx.WithBlockHeight(0), prevoteMsg)
+		require.NoError(t, err)
+		_, err = msgServer.AggregateExchangeRateVote(ctx.WithBlockHeight(1), voteMsg)
+		require.NoError(t, err)
 	}
 	keepers.OracleKeeper.UpdateExchangeRates(ctx)
 	_, err = keepers.OracleKeeper.ExchangeRates.Get(ctx, exchangeRates[0].Pair)

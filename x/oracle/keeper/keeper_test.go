@@ -11,23 +11,28 @@ import (
 
 func TestValidateFeeder(t *testing.T) {
 	// initial setup
+	accNum := 3
+
+	amt := sdk.TokensFromConsensusPower(50, sdk.DefaultPowerReduction)
+	InitTokens := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
+
 	chain := e2eTesting.NewTestChain(t, 1,
-		// e2eTesting.WithCallbackParams(123),
-		e2eTesting.WithValidatorsNum(2),
+		e2eTesting.WithValidatorsNum(accNum),
+		e2eTesting.WithGenAccounts(accNum),
+		e2eTesting.WithBondAmount(amt.String()),
+		e2eTesting.WithGenDefaultCoinBalance(InitTokens.String()),
 	)
 	keepers := chain.GetApp().Keepers
-	amt := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
 	ctx := chain.GetContext()
 
-	vals := chain.GetCurrentValSet().Validators
-	AccAddrs := make([]sdk.AccAddress, len(vals))
-	ValAddrs := make([]sdk.ValAddress, len(vals))
-	for i := range vals {
-		AccAddrs[i] = sdk.AccAddress(vals[i].Address)
-		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	AccAddrs := make([]sdk.AccAddress, accNum)
+	ValAddrs := make([]sdk.ValAddress, accNum)
+	for i := 0; i < accNum; i++ {
+		AccAddrs[i] = chain.GetAccount(i).Address
 	}
-
-	InitTokens := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
+	for i, val := range chain.GetCurrentValSet().Validators {
+		ValAddrs[i] = sdk.ValAddress(val.Address)
+	}
 
 	keepers.StakingKeeper.EndBlocker(ctx)
 
@@ -47,10 +52,12 @@ func TestValidateFeeder(t *testing.T) {
 		keepers.BankKeeper.GetAllBalances(ctx, AccAddrs[1]),
 	)
 	validator1, err := keepers.StakingKeeper.GetValidator(ctx, ValAddrs[1])
+	require.NoError(t, err)
 	require.Equal(t, amt, validator1.GetBondedTokens())
 
-	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[0], ValAddrs[0]))
-	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[1], ValAddrs[1]))
+	// test self delegation
+	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, sdk.AccAddress(ValAddrs[0]), ValAddrs[0]))
+	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, sdk.AccAddress(ValAddrs[1]), ValAddrs[1]))
 
 	// delegate works
 	keepers.OracleKeeper.FeederDelegations.Insert(ctx, ValAddrs[0], AccAddrs[1])
