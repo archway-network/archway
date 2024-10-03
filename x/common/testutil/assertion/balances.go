@@ -22,7 +22,7 @@ type allBalancesEqual struct {
 }
 
 func (b allBalancesEqual) Do(app *app.ArchwayApp, ctx sdk.Context) (sdk.Context, error) {
-	coins := app.BankKeeper.GetAllBalances(ctx, b.Account)
+	coins := app.Keepers.BankKeeper.GetAllBalances(ctx, b.Account)
 	if !coins.Equal(b.Amount) {
 		return ctx, fmt.Errorf(
 			"account %s balance not equal, expected %s, got %s",
@@ -48,7 +48,7 @@ type balanceEqual struct {
 func (b balanceEqual) IsNotMandatory() {}
 
 func (b balanceEqual) Do(app *app.ArchwayApp, ctx sdk.Context) (sdk.Context, error) {
-	coin := app.BankKeeper.GetBalance(ctx, b.Account, b.Denom)
+	coin := app.Keepers.BankKeeper.GetBalance(ctx, b.Account, b.Denom)
 	if !coin.Amount.Equal(b.Amount) {
 		return ctx, fmt.Errorf(
 			"account %s balance not equal, expected %s, got %s",
@@ -74,7 +74,7 @@ type moduleBalanceEqual struct {
 func (b moduleBalanceEqual) IsNotMandatory() {}
 
 func (b moduleBalanceEqual) Do(app *app.ArchwayApp, ctx sdk.Context) (sdk.Context, error) {
-	coin := app.BankKeeper.GetBalance(ctx, app.AccountKeeper.GetModuleAddress(b.ModuleName), b.Denom)
+	coin := app.Keepers.BankKeeper.GetBalance(ctx, app.Keepers.AccountKeeper.GetModuleAddress(b.ModuleName), b.Denom)
 	if !coin.Amount.Equal(b.Amount) {
 		return ctx, fmt.Errorf(
 			"module %s balance not equal, expected %s, got %s",

@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	tmproto "github.com/cometbft/cometbft/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/math"
 
@@ -132,7 +132,9 @@ func TestPBPower(t *testing.T) {
 	totalPower := int64(0)
 
 	for i := 0; i < len(sk.Validators()); i++ {
-		power := sk.Validator(ctx, valAccAddrs[i]).GetConsensusPower(sdk.DefaultPowerReduction)
+		val, err := sk.Validator(ctx, valAccAddrs[i])
+		require.NoError(t, err)
+		power := val.GetConsensusPower(sdk.DefaultPowerReduction)
 		vote := types.NewExchangeRateVote(
 			math.LegacyZeroDec(),
 			asset.Registry.Pair(denoms.ETH, denoms.NUSD),

@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"sort"
@@ -10,34 +10,38 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	testutilevents "github.com/archway-network/archway/x/common/testutil"
 
 	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/denoms"
+	"github.com/archway-network/archway/x/oracle/keeper"
 	"github.com/archway-network/archway/x/oracle/types"
 )
 
 func TestQueryParams(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
+	chain := e2eTesting.NewTestChain(t, 1)
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
 
-	querier := NewQuerier(input.OracleKeeper)
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
 	res, err := querier.Params(ctx, &types.QueryParamsRequest{})
 	require.NoError(t, err)
 
-	params, err := input.OracleKeeper.Params.Get(input.Ctx)
+	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 
 	require.Equal(t, params, res.Params)
 }
 
 func TestQueryExchangeRate(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1)
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
 
 	rate := math.LegacyNewDec(1700)
-	input.OracleKeeper.ExchangeRates.Insert(input.Ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(input.Ctx.BlockHeight())})
+	keepers.OracleKeeper.ExchangeRates.Insert(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
 
 	// empty request
 	_, err := querier.ExchangeRate(ctx, nil)
@@ -52,12 +56,19 @@ func TestQueryExchangeRate(t *testing.T) {
 }
 
 func TestQueryMissCounter(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(1))
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
+
+	vals := chain.GetCurrentValSet().Validators
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
 
 	missCounter := uint64(1)
-	input.OracleKeeper.MissCounters.Insert(input.Ctx, ValAddrs[0], missCounter)
+	keepers.OracleKeeper.MissCounters.Insert(ctx, ValAddrs[0], missCounter)
 
 	// empty request
 	_, err := querier.MissCounter(ctx, nil)
@@ -72,13 +83,14 @@ func TestQueryMissCounter(t *testing.T) {
 }
 
 func TestQueryExchangeRates(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1)
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
 
 	rate := math.LegacyNewDec(1700)
-	input.OracleKeeper.ExchangeRates.Insert(input.Ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(input.Ctx.BlockHeight())})
-	input.OracleKeeper.ExchangeRates.Insert(input.Ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(input.Ctx.BlockHeight())})
+	keepers.OracleKeeper.ExchangeRates.Insert(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
+	keepers.OracleKeeper.ExchangeRates.Insert(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
 
 	res, err := querier.ExchangeRates(ctx, &types.QueryExchangeRatesRequest{})
 	require.NoError(t, err)
@@ -90,25 +102,26 @@ func TestQueryExchangeRates(t *testing.T) {
 }
 
 func TestQueryExchangeRateTwap(t *testing.T) {
-	input := CreateTestFixture(t)
-	querier := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1)
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
 
 	rate := math.LegacyNewDec(1700)
-	input.OracleKeeper.SetPrice(input.Ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), rate)
+	keepers.OracleKeeper.SetPrice(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), rate)
 	testutilevents.RequireContainsTypedEvent(
 		t,
-		input.Ctx,
+		ctx,
 		&types.EventPriceUpdate{
 			Pair:        asset.Registry.Pair(denoms.BTC, denoms.NUSD).String(),
 			Price:       rate,
-			TimestampMs: input.Ctx.BlockTime().UnixMilli(),
+			TimestampMs: ctx.BlockTime().UnixMilli(),
 		},
 	)
 
-	ctx := sdk.WrapSDKContext(input.Ctx.
-		WithBlockTime(input.Ctx.BlockTime().Add(time.Second)).
-		WithBlockHeight(input.Ctx.BlockHeight() + 1),
-	)
+	ctx = ctx.
+		WithBlockTime(ctx.BlockTime().Add(time.Second)).
+		WithBlockHeight(ctx.BlockHeight() + 1)
 
 	_, err := querier.ExchangeRateTwap(ctx, &types.QueryExchangeRateRequest{Pair: asset.Registry.Pair(denoms.ETH, denoms.NUSD)})
 	require.Error(t, err)
@@ -166,9 +179,10 @@ func TestCalcTwap(t *testing.T) {
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			input := CreateTestFixture(t)
-			querier := NewQuerier(input.OracleKeeper)
-			ctx := input.Ctx
+			chain := e2eTesting.NewTestChain(t, 1)
+			keepers := chain.GetApp().Keepers
+			querier := keeper.NewQuerier(keepers.OracleKeeper)
+			ctx := chain.GetContext()
 
 			newParams := types.Params{
 				VotePeriod:         types.DefaultVotePeriod,
@@ -183,11 +197,11 @@ func TestCalcTwap(t *testing.T) {
 				ValidatorFeeRatio:  types.DefaultValidatorFeeRatio,
 			}
 
-			input.OracleKeeper.Params.Set(ctx, newParams)
+			keepers.OracleKeeper.Params.Set(ctx, newParams)
 			ctx = ctx.WithBlockTime(time.UnixMilli(0))
 			for _, reserve := range tc.priceSnapshots {
 				ctx = ctx.WithBlockTime(time.UnixMilli(reserve.TimestampMs))
-				input.OracleKeeper.SetPrice(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), reserve.Price)
+				keepers.OracleKeeper.SetPrice(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), reserve.Price)
 			}
 
 			ctx = ctx.WithBlockTime(tc.currentBlockTime).WithBlockHeight(tc.currentBlockHeight)
@@ -202,14 +216,15 @@ func TestCalcTwap(t *testing.T) {
 }
 
 func TestQueryActives(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	queryClient := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1)
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	queryClient := keeper.NewQuerier(keepers.OracleKeeper)
 
 	rate := math.LegacyNewDec(1700)
-	input.OracleKeeper.ExchangeRates.Insert(input.Ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(input.Ctx.BlockHeight())})
-	input.OracleKeeper.ExchangeRates.Insert(input.Ctx, asset.Registry.Pair(denoms.NIBI, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(input.Ctx.BlockHeight())})
-	input.OracleKeeper.ExchangeRates.Insert(input.Ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(input.Ctx.BlockHeight())})
+	keepers.OracleKeeper.ExchangeRates.Insert(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
+	keepers.OracleKeeper.ExchangeRates.Insert(ctx, asset.Registry.Pair(denoms.NIBI, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
+	keepers.OracleKeeper.ExchangeRates.Insert(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
 
 	res, err := queryClient.Actives(ctx, &types.QueryActivesRequest{})
 	require.NoError(t, err)
@@ -224,11 +239,20 @@ func TestQueryActives(t *testing.T) {
 }
 
 func TestQueryFeederDelegation(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(2))
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
 
-	input.OracleKeeper.FeederDelegations.Insert(input.Ctx, ValAddrs[0], Addrs[1])
+	vals := chain.GetCurrentValSet().Validators
+	AccAddrs := make([]sdk.AccAddress, len(vals))
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		AccAddrs[i] = sdk.AccAddress(vals[i].Address)
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
+
+	keepers.OracleKeeper.FeederDelegations.Insert(ctx, ValAddrs[0], AccAddrs[1])
 
 	// empty request
 	_, err := querier.FeederDelegation(ctx, nil)
@@ -239,18 +263,25 @@ func TestQueryFeederDelegation(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, Addrs[1].String(), res.FeederAddr)
+	require.Equal(t, AccAddrs[1].String(), res.FeederAddr)
 }
 
 func TestQueryAggregatePrevote(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(2))
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
+
+	vals := chain.GetCurrentValSet().Validators
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
 
 	prevote1 := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{}, ValAddrs[0], 0)
-	input.OracleKeeper.Prevotes.Insert(input.Ctx, ValAddrs[0], prevote1)
+	keepers.OracleKeeper.Prevotes.Insert(ctx, ValAddrs[0], prevote1)
 	prevote2 := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{}, ValAddrs[1], 0)
-	input.OracleKeeper.Prevotes.Insert(input.Ctx, ValAddrs[1], prevote2)
+	keepers.OracleKeeper.Prevotes.Insert(ctx, ValAddrs[1], prevote2)
 
 	// validator 0 address params
 	res, err := querier.AggregatePrevote(ctx, &types.QueryAggregatePrevoteRequest{
@@ -272,16 +303,23 @@ func TestQueryAggregatePrevote(t *testing.T) {
 }
 
 func TestQueryAggregatePrevotes(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(3))
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
+
+	vals := chain.GetCurrentValSet().Validators
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
 
 	prevote1 := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{}, ValAddrs[0], 0)
-	input.OracleKeeper.Prevotes.Insert(input.Ctx, ValAddrs[0], prevote1)
+	keepers.OracleKeeper.Prevotes.Insert(ctx, ValAddrs[0], prevote1)
 	prevote2 := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{}, ValAddrs[1], 0)
-	input.OracleKeeper.Prevotes.Insert(input.Ctx, ValAddrs[1], prevote2)
+	keepers.OracleKeeper.Prevotes.Insert(ctx, ValAddrs[1], prevote2)
 	prevote3 := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{}, ValAddrs[2], 0)
-	input.OracleKeeper.Prevotes.Insert(input.Ctx, ValAddrs[2], prevote3)
+	keepers.OracleKeeper.Prevotes.Insert(ctx, ValAddrs[2], prevote3)
 
 	expectedPrevotes := []types.AggregateExchangeRatePrevote{prevote1, prevote2, prevote3}
 	sort.SliceStable(expectedPrevotes, func(i, j int) bool {
@@ -294,14 +332,21 @@ func TestQueryAggregatePrevotes(t *testing.T) {
 }
 
 func TestQueryAggregateVote(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(2))
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
+
+	vals := chain.GetCurrentValSet().Validators
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
 
 	vote1 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "", ExchangeRate: math.LegacyOneDec()}}, ValAddrs[0])
-	input.OracleKeeper.Votes.Insert(input.Ctx, ValAddrs[0], vote1)
+	keepers.OracleKeeper.Votes.Insert(ctx, ValAddrs[0], vote1)
 	vote2 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "", ExchangeRate: math.LegacyOneDec()}}, ValAddrs[1])
-	input.OracleKeeper.Votes.Insert(input.Ctx, ValAddrs[1], vote2)
+	keepers.OracleKeeper.Votes.Insert(ctx, ValAddrs[1], vote2)
 
 	// empty request
 	_, err := querier.AggregateVote(ctx, nil)
@@ -323,16 +368,23 @@ func TestQueryAggregateVote(t *testing.T) {
 }
 
 func TestQueryAggregateVotes(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(3))
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
+
+	vals := chain.GetCurrentValSet().Validators
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
 
 	vote1 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "", ExchangeRate: math.LegacyOneDec()}}, ValAddrs[0])
-	input.OracleKeeper.Votes.Insert(input.Ctx, ValAddrs[0], vote1)
+	keepers.OracleKeeper.Votes.Insert(ctx, ValAddrs[0], vote1)
 	vote2 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "", ExchangeRate: math.LegacyOneDec()}}, ValAddrs[1])
-	input.OracleKeeper.Votes.Insert(input.Ctx, ValAddrs[1], vote2)
+	keepers.OracleKeeper.Votes.Insert(ctx, ValAddrs[1], vote2)
 	vote3 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "", ExchangeRate: math.LegacyOneDec()}}, ValAddrs[2])
-	input.OracleKeeper.Votes.Insert(input.Ctx, ValAddrs[2], vote3)
+	keepers.OracleKeeper.Votes.Insert(ctx, ValAddrs[2], vote3)
 
 	expectedVotes := []types.AggregateExchangeRateVote{vote1, vote2, vote3}
 	sort.SliceStable(expectedVotes, func(i, j int) bool {
@@ -345,18 +397,19 @@ func TestQueryAggregateVotes(t *testing.T) {
 }
 
 func TestQueryVoteTargets(t *testing.T) {
-	input := CreateTestFixture(t)
-	ctx := sdk.WrapSDKContext(input.Ctx)
-	querier := NewQuerier(input.OracleKeeper)
+	chain := e2eTesting.NewTestChain(t, 1)
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+	querier := keeper.NewQuerier(keepers.OracleKeeper)
 
 	// clear pairs
-	for _, p := range input.OracleKeeper.WhitelistedPairs.Iterate(input.Ctx, collections.Range[asset.Pair]{}).Keys() {
-		input.OracleKeeper.WhitelistedPairs.Delete(input.Ctx, p)
+	for _, p := range keepers.OracleKeeper.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
+		keepers.OracleKeeper.WhitelistedPairs.Delete(ctx, p)
 	}
 
 	voteTargets := []asset.Pair{"denom1:denom2", "denom3:denom4", "denom5:denom6"}
 	for _, target := range voteTargets {
-		input.OracleKeeper.WhitelistedPairs.Insert(input.Ctx, target)
+		keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, target)
 	}
 
 	res, err := querier.VoteTargets(ctx, &types.QueryVoteTargetsRequest{})

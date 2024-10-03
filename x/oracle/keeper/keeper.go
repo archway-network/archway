@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -98,14 +99,17 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // ValidateFeeder return the given feeder is allowed to feed the message or not
 func (k Keeper) ValidateFeeder(
-	ctx sdk.Context, feederAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+	ctx context.Context, feederAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 ) error {
 	// A validator delegates price feeder consent to itself by default.
 	// Thus, we only need to verify consent for price feeder addresses that don't
 	// match the validator address.
 	if !feederAddr.Equals(validatorAddr) {
 		delegate := k.FeederDelegations.GetOr(
-			ctx, validatorAddr, sdk.AccAddress(validatorAddr))
+			sdk.UnwrapSDKContext(ctx),
+			validatorAddr,
+			sdk.AccAddress(validatorAddr),
+		)
 		if !delegate.Equals(feederAddr) {
 			return sdkerrors.Wrapf(
 				types.ErrNoVotingPermission,

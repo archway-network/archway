@@ -15,14 +15,14 @@ import (
 	"github.com/archway-network/archway/x/oracle/types"
 )
 
-// groupVotesByPair takes a collection of votes and groups them by their
+// GroupVotesByPair takes a collection of votes and groups them by their
 // associated asset pair. This method only considers votes from active validators
 // and disregards votes from validators that are not in the provided validator set.
 //
 // Note that any abstain votes (votes with a non-positive exchange rate) are
 // assigned zero vote power. This function then returns a map where each
 // asset pair is associated with its collection of ExchangeRateVotes.
-func (k Keeper) groupVotesByPair(
+func (k Keeper) GroupVotesByPair(
 	ctx sdk.Context,
 	validatorPerformances types.ValidatorPerformances,
 ) (pairVotes map[asset.Pair]types.ExchangeRateVotes) {
@@ -59,8 +59,8 @@ func (k Keeper) groupVotesByPair(
 	return
 }
 
-// clearVotesAndPrevotes clears all tallied prevotes and votes from the store
-func (k Keeper) clearVotesAndPrevotes(ctx sdk.Context, votePeriod uint64) {
+// ClearVotesAndPrevotes clears all tallied prevotes and votes from the store
+func (k Keeper) ClearVotesAndPrevotes(ctx sdk.Context, votePeriod uint64) {
 	// Clear all aggregate prevotes
 	for _, prevote := range k.Prevotes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).KeyValues() {
 		valAddr, aggregatePrevote := prevote.Key, prevote.Value
@@ -81,8 +81,8 @@ func (k Keeper) clearVotesAndPrevotes(ctx sdk.Context, votePeriod uint64) {
 	}
 }
 
-// isPassingVoteThreshold votes is passing the threshold amount of voting power
-func isPassingVoteThreshold(
+// IsPassingVoteThreshold votes is passing the threshold amount of voting power
+func IsPassingVoteThreshold(
 	votes types.ExchangeRateVotes, thresholdVotingPower sdkmath.Int, minVoters uint64,
 ) bool {
 	totalPower := math.NewInt(votes.Power())
@@ -101,14 +101,14 @@ func isPassingVoteThreshold(
 	return true
 }
 
-// removeInvalidVotes removes the votes which have not reached the vote
+// RemoveInvalidVotes removes the votes which have not reached the vote
 // threshold or which are not part of the whitelisted pairs anymore: example
 // when params change during a vote period but some votes were already made.
 //
 // ALERT: This function mutates the pairVotes map, it removes the votes for
 // the pair which is not passing the threshold or which is not whitelisted
 // anymore.
-func (k Keeper) removeInvalidVotes(
+func (k Keeper) RemoveInvalidVotes(
 	ctx sdk.Context,
 	pairVotes map[asset.Pair]types.ExchangeRateVotes,
 	whitelistedPairs set.Set[asset.Pair],
@@ -133,7 +133,7 @@ func (k Keeper) removeInvalidVotes(
 
 		// If the votes is not passed, remove it from the whitelistedPairs set
 		// to prevent slashing validators who did valid vote.
-		if !isPassingVoteThreshold(
+		if !IsPassingVoteThreshold(
 			pairVotes[pair],
 			k.VoteThreshold(ctx).MulInt64(totalBondedPower).RoundInt(),
 			k.MinVoters(ctx),

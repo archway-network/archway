@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -31,6 +32,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/archway-network/archway/app"
 	"github.com/archway-network/archway/app/appconst"
@@ -40,7 +42,12 @@ import (
 // NewRootCmd creates a new root command for archwayd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
-	app.SetPrefixes()
+	cfg := sdk.GetConfig()
+	cfg.SetBech32PrefixForAccount(appconst.Bech32PrefixAccAddr, appconst.Bech32PrefixAccPub)
+	cfg.SetBech32PrefixForValidator(appconst.Bech32PrefixValAddr, appconst.Bech32PrefixValPub)
+	cfg.SetBech32PrefixForConsensusNode(appconst.Bech32PrefixConsAddr, appconst.Bech32PrefixConsPub)
+	cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
+	cfg.Seal()
 
 	encodingConfig := app.MakeEncodingConfig()
 	tempApp := app.NewArchwayApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil, tempDir(), 0, encodingConfig, simtestutil.NewAppOptionsWithFlagHome(tempDir()), []wasmkeeper.Option{})

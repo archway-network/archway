@@ -25,11 +25,11 @@ func (s *TestSuite) TestEventsUtils() {
 	funds := sdk.NewCoins(sdk.NewInt64Coin(denoms.NIBI, 5_000_000))
 	_, addrs := testutil.PrivKeyAddressPairs(2)
 	senderAddr, otherAddr := addrs[0], addrs[1]
-	err := testapp.FundAccount(bapp.BankKeeper, ctx, senderAddr, funds)
+	err := testapp.FundAccount(bapp.Keepers.BankKeeper, ctx, senderAddr, funds)
 	s.NoError(err)
 
 	s.NoError(
-		bapp.BankKeeper.SendCoins(ctx, senderAddr, otherAddr, newCoins("12unibi")),
+		bapp.Keepers.BankKeeper.SendCoins(ctx, senderAddr, otherAddr, newCoins("12unibi")),
 	)
 
 	// Events on the ctx after broadcasting tx

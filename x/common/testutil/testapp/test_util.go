@@ -15,12 +15,12 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	nibiruapp "github.com/archway-network/archway/app"
+	"github.com/archway-network/archway/app"
 )
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.
-func GenesisStateWithSingleValidator(codec codec.Codec, genesisState nibiruapp.GenesisState) (nibiruapp.GenesisState, error) {
+func GenesisStateWithSingleValidator(codec codec.Codec, genesisState app.GenesisState) (app.GenesisState, error) {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
@@ -54,10 +54,10 @@ func GenesisStateWithSingleValidator(codec codec.Codec, genesisState nibiruapp.G
 
 func genesisStateWithValSet(
 	cdc codec.Codec,
-	genesisState nibiruapp.GenesisState,
+	genesisState app.GenesisState,
 	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
-) (nibiruapp.GenesisState, error) {
+) (app.GenesisState, error) {
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = cdc.MustMarshalJSON(authGenesis)

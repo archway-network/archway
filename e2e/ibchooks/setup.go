@@ -10,6 +10,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/archway-network/archway/app"
+	"github.com/archway-network/archway/app/appconst"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -108,7 +109,7 @@ func SetupWithGenesisValSet(
 // initSetup initializes a new SimApp. A Nop logger is set in SimApp.
 func setup(t *testing.T, chainID string, withGenesis bool, invCheckPeriod uint) (*app.ArchwayApp, map[string]json.RawMessage) {
 	appOptions := make(simtestutil.AppOptionsMap)
-	appOptions[flags.FlagHome] = app.DefaultNodeHome
+	appOptions[flags.FlagHome] = appconst.DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
 
 	archApp := app.NewArchwayApp(
@@ -116,7 +117,7 @@ func setup(t *testing.T, chainID string, withGenesis bool, invCheckPeriod uint) 
 		dbm.NewMemDB(),
 		nil,
 		true, map[int64]bool{},
-		app.DefaultNodeHome,
+		appconst.DefaultNodeHome,
 		1,
 		app.MakeEncodingConfig(),
 		app.EmptyBaseAppOptions{},

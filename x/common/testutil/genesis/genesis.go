@@ -8,6 +8,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/archway-network/archway/app"
+	archwayappparams "github.com/archway-network/archway/app/params"
 	"github.com/archway-network/archway/x/common/denoms"
 	"github.com/archway-network/archway/x/common/testutil/testapp"
 )
@@ -18,8 +19,8 @@ import (
 genesis as input. The blockchain genesis state is represented as a map from module
 identifier strings to raw json messages.
 */
-func NewTestGenesisState(encodingConfig app.EncodingConfig) app.GenesisState {
-	codec := encodingConfig.Codec
+func NewTestGenesisState(encodingConfig archwayappparams.EncodingConfig) app.GenesisState {
+	codec := encodingConfig.Marshaler
 	genState := app.NewDefaultGenesisState(codec)
 
 	// Set short voting period to allow fast gov proposals in tests

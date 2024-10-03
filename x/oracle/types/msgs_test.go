@@ -45,12 +45,12 @@ func TestMsgAggregateExchangeRatePrevote(t *testing.T) {
 		sdk.AccAddress([]byte("addr1_______________")),
 	}
 
-	exchangeRates := math.LegacyDecCoins{sdk.NewDecCoinFromDec(denoms.USDC, math.LegacyOneDec()), sdk.NewDecCoinFromDec(denoms.NUSD, math.LegacyNewDecWithPrec(32121, 1))}
+	exchangeRates := sdk.DecCoins{sdk.NewDecCoinFromDec(denoms.USDC, math.LegacyOneDec()), sdk.NewDecCoinFromDec(denoms.NUSD, math.LegacyNewDecWithPrec(32121, 1))}
 	bz := types.GetAggregateVoteHash("1", exchangeRates.String(), sdk.ValAddress(addrs[0]))
 
 	tests := []struct {
 		hash          types.AggregateVoteHash
-		exchangeRates math.LegacyDecCoins
+		exchangeRates sdk.DecCoins
 		voter         sdk.AccAddress
 		expectPass    bool
 	}{

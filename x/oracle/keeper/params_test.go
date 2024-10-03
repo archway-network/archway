@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
@@ -6,17 +6,20 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/denoms"
 	"github.com/archway-network/archway/x/oracle/types"
 )
 
 func TestParams(t *testing.T) {
-	input := CreateTestFixture(t)
+	chain := e2eTesting.NewTestChain(t, 1)
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
 
 	// Test default params setting
-	input.OracleKeeper.Params.Set(input.Ctx, types.DefaultParams())
-	params, err := input.OracleKeeper.Params.Get(input.Ctx)
+	keepers.OracleKeeper.Params.Set(ctx, types.DefaultParams())
+	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	require.NotNil(t, params)
 
@@ -46,9 +49,9 @@ func TestParams(t *testing.T) {
 		MinValidPerWindow: minValidPerWindow,
 		ValidatorFeeRatio: minFeeRatio,
 	}
-	input.OracleKeeper.Params.Set(input.Ctx, newParams)
+	keepers.OracleKeeper.Params.Set(ctx, newParams)
 
-	storedParams, err := input.OracleKeeper.Params.Get(input.Ctx)
+	storedParams, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	require.NotNil(t, storedParams)
 	require.Equal(t, storedParams, newParams)

@@ -7,64 +7,87 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/oracle"
-	"github.com/archway-network/archway/x/oracle/keeper"
 	"github.com/archway-network/archway/x/oracle/types"
 )
 
 func TestExportInitGenesis(t *testing.T) {
-	input := keeper.CreateTestFixture(t)
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(2))
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
 
-	input.OracleKeeper.Params.Set(input.Ctx, types.DefaultParams())
-	input.OracleKeeper.FeederDelegations.Insert(input.Ctx, keeper.ValAddrs[0], keeper.Addrs[1])
-	input.OracleKeeper.ExchangeRates.Insert(input.Ctx, "pair1:pair2", types.DatedPrice{ExchangeRate: math.LegacyNewDec(123), CreatedBlock: 0})
-	input.OracleKeeper.Prevotes.Insert(input.Ctx, keeper.ValAddrs[0], types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{123}, keeper.ValAddrs[0], uint64(2)))
-	input.OracleKeeper.Votes.Insert(input.Ctx, keeper.ValAddrs[0], types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "foo", ExchangeRate: math.LegacyNewDec(123)}}, keeper.ValAddrs[0]))
-	input.OracleKeeper.WhitelistedPairs.Insert(input.Ctx, "pair1:pair1")
-	input.OracleKeeper.WhitelistedPairs.Insert(input.Ctx, "pair2:pair2")
-	input.OracleKeeper.MissCounters.Insert(input.Ctx, keeper.ValAddrs[0], 10)
-	input.OracleKeeper.Rewards.Insert(input.Ctx, 0, types.Rewards{
+	vals := chain.GetCurrentValSet().Validators
+	AccAddrs := make([]sdk.AccAddress, len(vals))
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		AccAddrs[i] = sdk.AccAddress(vals[i].Address)
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
+
+	keepers.OracleKeeper.Params.Set(ctx, types.DefaultParams())
+	keepers.OracleKeeper.FeederDelegations.Insert(ctx, ValAddrs[0], AccAddrs[1])
+	keepers.OracleKeeper.ExchangeRates.Insert(ctx, "pair1:pair2", types.DatedPrice{ExchangeRate: math.LegacyNewDec(123), CreatedBlock: 0})
+	keepers.OracleKeeper.Prevotes.Insert(ctx, ValAddrs[0], types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{123}, ValAddrs[0], uint64(2)))
+	keepers.OracleKeeper.Votes.Insert(ctx, ValAddrs[0], types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "foo", ExchangeRate: math.LegacyNewDec(123)}}, ValAddrs[0]))
+	keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, "pair1:pair1")
+	keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, "pair2:pair2")
+	keepers.OracleKeeper.MissCounters.Insert(ctx, ValAddrs[0], 10)
+	keepers.OracleKeeper.Rewards.Insert(ctx, 0, types.Rewards{
 		Id:          0,
 		VotePeriods: 100,
 		Coins:       sdk.NewCoins(sdk.NewInt64Coin("test", 1000)),
 	})
-	genesis := oracle.ExportGenesis(input.Ctx, input.OracleKeeper)
+	genesis := oracle.ExportGenesis(ctx, keepers.OracleKeeper)
 
-	newInput := keeper.CreateTestFixture(t)
-	oracle.InitGenesis(newInput.Ctx, newInput.OracleKeeper, genesis)
-	newGenesis := oracle.ExportGenesis(newInput.Ctx, newInput.OracleKeeper)
+	chain = e2eTesting.NewTestChain(t, 2)
+	keepers = chain.GetApp().Keepers
+	ctx = chain.GetContext()
+	oracle.InitGenesis(ctx, keepers.OracleKeeper, genesis)
+	newGenesis := oracle.ExportGenesis(ctx, keepers.OracleKeeper)
 
 	require.Equal(t, genesis, newGenesis)
 }
 
 func TestInitGenesis(t *testing.T) {
-	input := keeper.CreateTestFixture(t)
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(1))
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+
+	vals := chain.GetCurrentValSet().Validators
+	AccAddrs := make([]sdk.AccAddress, len(vals))
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		AccAddrs[i] = sdk.AccAddress(vals[i].Address)
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
+
 	genesis := types.DefaultGenesisState()
 	require.NotPanics(t, func() {
-		oracle.InitGenesis(input.Ctx, input.OracleKeeper, genesis)
+		oracle.InitGenesis(ctx, keepers.OracleKeeper, genesis)
 	})
 
 	genesis.FeederDelegations = []types.FeederDelegation{{
-		FeederAddress:    keeper.Addrs[0].String(),
+		FeederAddress:    AccAddrs[0].String(),
 		ValidatorAddress: "invalid",
 	}}
 
 	require.Panics(t, func() {
-		oracle.InitGenesis(input.Ctx, input.OracleKeeper, genesis)
+		oracle.InitGenesis(ctx, keepers.OracleKeeper, genesis)
 	})
 
 	genesis.FeederDelegations = []types.FeederDelegation{{
 		FeederAddress:    "invalid",
-		ValidatorAddress: keeper.ValAddrs[0].String(),
+		ValidatorAddress: ValAddrs[0].String(),
 	}}
 
 	require.Panics(t, func() {
-		oracle.InitGenesis(input.Ctx, input.OracleKeeper, genesis)
+		oracle.InitGenesis(ctx, keepers.OracleKeeper, genesis)
 	})
 
 	genesis.FeederDelegations = []types.FeederDelegation{{
-		FeederAddress:    keeper.Addrs[0].String(),
-		ValidatorAddress: keeper.ValAddrs[0].String(),
+		FeederAddress:    AccAddrs[0].String(),
+		ValidatorAddress: ValAddrs[0].String(),
 	}}
 
 	genesis.MissCounters = []types.MissCounter{
@@ -75,12 +98,12 @@ func TestInitGenesis(t *testing.T) {
 	}
 
 	require.Panics(t, func() {
-		oracle.InitGenesis(input.Ctx, input.OracleKeeper, genesis)
+		oracle.InitGenesis(ctx, keepers.OracleKeeper, genesis)
 	})
 
 	genesis.MissCounters = []types.MissCounter{
 		{
-			ValidatorAddress: keeper.ValAddrs[0].String(),
+			ValidatorAddress: ValAddrs[0].String(),
 			MissCounter:      10,
 		},
 	}
@@ -94,13 +117,13 @@ func TestInitGenesis(t *testing.T) {
 	}
 
 	require.Panics(t, func() {
-		oracle.InitGenesis(input.Ctx, input.OracleKeeper, genesis)
+		oracle.InitGenesis(ctx, keepers.OracleKeeper, genesis)
 	})
 
 	genesis.AggregateExchangeRatePrevotes = []types.AggregateExchangeRatePrevote{
 		{
 			Hash:        "hash",
-			Voter:       keeper.ValAddrs[0].String(),
+			Voter:       ValAddrs[0].String(),
 			SubmitBlock: 100,
 		},
 	}
@@ -118,7 +141,7 @@ func TestInitGenesis(t *testing.T) {
 	}
 
 	require.Panics(t, func() {
-		oracle.InitGenesis(input.Ctx, input.OracleKeeper, genesis)
+		oracle.InitGenesis(ctx, keepers.OracleKeeper, genesis)
 	})
 
 	genesis.AggregateExchangeRateVotes = []types.AggregateExchangeRateVote{
@@ -129,11 +152,11 @@ func TestInitGenesis(t *testing.T) {
 					ExchangeRate: math.LegacyNewDec(10),
 				},
 			},
-			Voter: keeper.ValAddrs[0].String(),
+			Voter: ValAddrs[0].String(),
 		},
 	}
 
 	require.NotPanics(t, func() {
-		oracle.InitGenesis(input.Ctx, input.OracleKeeper, genesis)
+		oracle.InitGenesis(ctx, keepers.OracleKeeper, genesis)
 	})
 }

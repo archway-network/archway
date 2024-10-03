@@ -1,55 +1,64 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
 
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestValidateFeeder(t *testing.T) {
 	// initial setup
-	input := CreateTestFixture(t)
-	addr, val := ValAddrs[0], ValPubKeys[0]
-	addr1, val1 := ValAddrs[1], ValPubKeys[1]
+	chain := e2eTesting.NewTestChain(t, 1,
+		// e2eTesting.WithCallbackParams(123),
+		e2eTesting.WithValidatorsNum(2),
+	)
+	keepers := chain.GetApp().Keepers
 	amt := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
-	sh := stakingkeeper.NewMsgServerImpl(&input.StakingKeeper)
-	ctx := input.Ctx
+	ctx := chain.GetContext()
 
-	// Create 2 validators.
-	_, err := sh.CreateValidator(ctx, NewTestMsgCreateValidator(addr, val, amt))
+	vals := chain.GetCurrentValSet().Validators
+	AccAddrs := make([]sdk.AccAddress, len(vals))
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		AccAddrs[i] = sdk.AccAddress(vals[i].Address)
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
+
+	InitTokens := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
+
+	keepers.StakingKeeper.EndBlocker(ctx)
+
+	stakingparams, err := keepers.StakingKeeper.GetParams(ctx)
 	require.NoError(t, err)
-	_, err = sh.CreateValidator(ctx, NewTestMsgCreateValidator(addr1, val1, amt))
+	require.Equal(
+		t,
+		sdk.NewCoins(sdk.NewCoin(stakingparams.BondDenom, InitTokens.Sub(amt))),
+		keepers.BankKeeper.GetAllBalances(ctx, AccAddrs[0]),
+	)
+	validator, err := keepers.StakingKeeper.GetValidator(ctx, ValAddrs[0])
 	require.NoError(t, err)
-	staking.EndBlocker(ctx, &input.StakingKeeper)
-
+	require.Equal(t, amt, validator.GetBondedTokens())
 	require.Equal(
-		t, input.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(input.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
+		t,
+		sdk.NewCoins(sdk.NewCoin(stakingparams.BondDenom, InitTokens.Sub(amt))),
+		keepers.BankKeeper.GetAllBalances(ctx, AccAddrs[1]),
 	)
-	require.Equal(t, amt, input.StakingKeeper.Validator(ctx, addr).GetBondedTokens())
-	require.Equal(
-		t, input.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr1)),
-		sdk.NewCoins(sdk.NewCoin(input.StakingKeeper.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
-	)
-	require.Equal(t, amt, input.StakingKeeper.Validator(ctx, addr1).GetBondedTokens())
+	validator1, err := keepers.StakingKeeper.GetValidator(ctx, ValAddrs[1])
+	require.Equal(t, amt, validator1.GetBondedTokens())
 
-	require.NoError(t, input.OracleKeeper.ValidateFeeder(input.Ctx, sdk.AccAddress(addr), sdk.ValAddress(addr)))
-	require.NoError(t, input.OracleKeeper.ValidateFeeder(input.Ctx, sdk.AccAddress(addr1), sdk.ValAddress(addr1)))
+	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[0], ValAddrs[0]))
+	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[1], ValAddrs[1]))
 
 	// delegate works
-	input.OracleKeeper.FeederDelegations.Insert(input.Ctx, addr, sdk.AccAddress(addr1))
-	require.NoError(t, input.OracleKeeper.ValidateFeeder(input.Ctx, sdk.AccAddress(addr1), addr))
-	require.Error(t, input.OracleKeeper.ValidateFeeder(input.Ctx, Addrs[2], addr))
+	keepers.OracleKeeper.FeederDelegations.Insert(ctx, ValAddrs[0], AccAddrs[1])
+	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[1], ValAddrs[0]))
+	require.Error(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[2], ValAddrs[0]))
 
 	// only active validators can do oracle votes
-	validator, found := input.StakingKeeper.GetValidator(input.Ctx, addr)
-	require.True(t, found)
 	validator.Status = stakingtypes.Unbonded
-	input.StakingKeeper.SetValidator(input.Ctx, validator)
-	require.Error(t, input.OracleKeeper.ValidateFeeder(input.Ctx, sdk.AccAddress(addr1), addr))
+	keepers.StakingKeeper.SetValidator(ctx, validator)
+	require.Error(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[1], ValAddrs[0]))
 }

@@ -11,9 +11,9 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/denoms"
-	"github.com/archway-network/archway/x/oracle/keeper"
 	sim "github.com/archway-network/archway/x/oracle/simulation"
 	"github.com/archway-network/archway/x/oracle/types"
 )
@@ -25,7 +25,8 @@ var (
 )
 
 func TestDecodeDistributionStore(t *testing.T) {
-	cdc := keeper.MakeTestCodec(t)
+	chain := e2eTesting.NewTestChain(t, 1)
+	cdc := chain.GetAppCodec()
 	dec := sim.NewDecodeStore(cdc)
 
 	exchangeRate := math.LegacyNewDecWithPrec(1234, 1)

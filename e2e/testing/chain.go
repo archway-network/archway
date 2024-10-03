@@ -38,6 +38,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/archway-network/archway/app"
+	"github.com/archway-network/archway/app/appconst"
 )
 
 var TestAccountAddr = sdk.AccAddress("test")
@@ -99,8 +100,9 @@ func NewTestChain(t *testing.T, chainIdx int, opts ...interface{}) *TestChain {
 		logger,
 		dbm.NewMemDB(),
 		nil,
-		true, map[int64]bool{},
-		app.DefaultNodeHome,
+		true,
+		map[int64]bool{},
+		appconst.DefaultNodeHome,
 		1,
 		encCfg,
 		app.EmptyBaseAppOptions{},

@@ -16,25 +16,18 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/archway-network/archway/app"
-	"github.com/archway-network/archway/x/common/testutil"
+	"github.com/archway-network/archway/app/appconst"
 	// epochstypes "github.com/archway-network/archway/x/epochs/types"
 	// inflationtypes "github.com/archway-network/archway/x/inflation/types"
 	// sudotypes "github.com/archway-network/archway/x/sudo/types"
 )
 
-func init() {
-	EnsureNibiruPrefix()
-}
-
 // NewNibiruTestAppAndContext creates an 'app.ArchwayApp' instance with an
 // in-memory 'tmdb.MemDB' and fresh 'sdk.Context'.
 func NewNibiruTestAppAndContext() (*app.ArchwayApp, sdk.Context) {
-	// Prevent "invalid Bech32 prefix; expected nibi, got ...." error
-	EnsureNibiruPrefix()
-
 	// Set up base app
 	encoding := app.MakeEncodingConfig()
-	var appGenesis app.GenesisState = app.NewDefaultGenesisState(encoding.Codec)
+	var appGenesis app.GenesisState = app.NewDefaultGenesisState(encoding.Marshaler)
 	// genModEpochs := epochstypes.DefaultGenesisFromTime(time.Now().UTC())
 
 	// // Set happy genesis: epochs
@@ -72,10 +65,6 @@ func NewContext(nibiru *app.ArchwayApp) sdk.Context {
 // 	}
 // }
 
-func DefaultSudoRoot() sdk.AccAddress {
-	return sdk.MustAccAddressFromBech32(testutil.ADDR_SUDO_ROOT)
-}
-
 // SetDefaultSudoGenesis: Sets the sudo module genesis state to a valid
 // default. See "DefaultSudoers".
 func SetDefaultSudoGenesis(gen app.GenesisState) {
@@ -111,12 +100,16 @@ func NewNibiruTestApp(gen app.GenesisState, baseAppOptions ...func(*baseapp.Base
 		db,
 		/*traceStore=*/ nil,
 		/*loadLatest=*/ true,
+		/*skipUpgradeHeights=*/ map[int64]bool{},
+		/*homePath=*/ appconst.DefaultNodeHome,
+		/*invCheckPeriod=*/ 0,
 		encoding,
 		/*appOpts=*/ sims.EmptyAppOptions{},
+		/*wasmOpts=*/ nil,
 		baseAppOptions...,
 	)
 
-	gen, err := GenesisStateWithSingleValidator(encoding.Codec, gen)
+	gen, err := GenesisStateWithSingleValidator(encoding.Marshaler, gen)
 	if err != nil {
 		panic(err)
 	}
@@ -161,15 +154,4 @@ func FundModuleAccount(
 
 	// return bankKeeper.SendCoinsFromModuleToModule(ctx, inflationtypes.ModuleName, recipientMod, amounts)
 	return nil
-}
-
-// EnsureNibiruPrefix sets the account address prefix to Nibiru's rather than
-// the default from the Cosmos-SDK, guaranteeing that tests will work with nibi
-// addresses rather than cosmos ones (for Gaia).
-func EnsureNibiruPrefix() {
-	csdkConfig := sdk.GetConfig()
-	archwayPrefix := app.Bech32PrefixAccAddr
-	if csdkConfig.GetBech32AccountAddrPrefix() != archwayPrefix {
-		app.SetPrefixes()
-	}
 }

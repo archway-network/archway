@@ -19,7 +19,7 @@ func (k Keeper) UpdateExchangeRates(ctx sdk.Context) types.ValidatorPerformances
 
 	pairVotes := k.getPairVotes(ctx, validatorPerformances, whitelistedPairs)
 
-	k.clearExchangeRates(ctx, pairVotes)
+	k.ClearExchangeRates(ctx, pairVotes)
 	k.tallyVotesAndUpdatePrices(ctx, pairVotes, validatorPerformances)
 
 	k.incrementMissCounters(ctx, whitelistedPairs, validatorPerformances)
@@ -28,8 +28,8 @@ func (k Keeper) UpdateExchangeRates(ctx sdk.Context) types.ValidatorPerformances
 	k.rewardWinners(ctx, validatorPerformances)
 
 	params, _ := k.Params.Get(ctx)
-	k.clearVotesAndPrevotes(ctx, params.VotePeriod)
-	k.refreshWhitelist(ctx, params.Whitelist, whitelistedPairs)
+	k.ClearVotesAndPrevotes(ctx, params.VotePeriod)
+	k.RefreshWhitelist(ctx, params.Whitelist, whitelistedPairs)
 
 	for _, validatorPerformance := range validatorPerformances {
 		_ = ctx.EventManager().EmitTypedEvent(&types.EventValidatorPerformance{
@@ -99,16 +99,16 @@ func (k Keeper) getPairVotes(
 	validatorPerformances types.ValidatorPerformances,
 	whitelistedPairs set.Set[asset.Pair],
 ) (pairVotes map[asset.Pair]types.ExchangeRateVotes) {
-	pairVotes = k.groupVotesByPair(ctx, validatorPerformances)
+	pairVotes = k.GroupVotesByPair(ctx, validatorPerformances)
 
-	k.removeInvalidVotes(ctx, pairVotes, whitelistedPairs)
+	k.RemoveInvalidVotes(ctx, pairVotes, whitelistedPairs)
 
 	return pairVotes
 }
 
-// clearExchangeRates removes all exchange rates from the state
+// ClearExchangeRates removes all exchange rates from the state
 // We remove the price for pair with expired prices or valid votes
-func (k Keeper) clearExchangeRates(ctx sdk.Context, pairVotes map[asset.Pair]types.ExchangeRateVotes) {
+func (k Keeper) ClearExchangeRates(ctx sdk.Context, pairVotes map[asset.Pair]types.ExchangeRateVotes) {
 	params, _ := k.Params.Get(ctx)
 
 	for _, key := range k.ExchangeRates.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {

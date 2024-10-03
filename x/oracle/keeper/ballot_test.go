@@ -1,42 +1,42 @@
-package keeper
+package keeper_test
 
 import (
 	"sort"
 	"testing"
 
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-
 	"cosmossdk.io/math"
 	"github.com/NibiruChain/collections"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	fuzz "github.com/google/gofuzz"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/denoms"
 	"github.com/archway-network/archway/x/common/set"
 	"github.com/archway-network/archway/x/common/testutil"
+	"github.com/archway-network/archway/x/oracle/keeper"
 	"github.com/archway-network/archway/x/oracle/types"
 )
 
 func TestGroupVotesByPair(t *testing.T) {
-	fixture := CreateTestFixture(t)
-
 	power := int64(100)
-	amt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
-	sh := stakingkeeper.NewMsgServerImpl(&fixture.StakingKeeper)
 
-	// Validator created
-	_, err := sh.CreateValidator(fixture.Ctx, NewTestMsgCreateValidator(ValAddrs[0], ValPubKeys[0], amt))
-	require.NoError(t, err)
-	_, err = sh.CreateValidator(fixture.Ctx, NewTestMsgCreateValidator(ValAddrs[1], ValPubKeys[1], amt))
-	require.NoError(t, err)
-	_, err = sh.CreateValidator(fixture.Ctx, NewTestMsgCreateValidator(ValAddrs[2], ValPubKeys[2], amt))
-	require.NoError(t, err)
-	staking.EndBlocker(fixture.Ctx, &fixture.StakingKeeper)
+	chain := e2eTesting.NewTestChain(t, 1,
+		e2eTesting.WithValidatorsNum(3),
+	)
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+
+	vals := chain.GetCurrentValSet().Validators
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
+
+	keepers.StakingKeeper.EndBlocker(ctx)
 
 	pairBtc := asset.Registry.Pair(denoms.BTC, denoms.NUSD)
 	pairEth := asset.Registry.Pair(denoms.ETH, denoms.NUSD)
@@ -52,8 +52,8 @@ func TestGroupVotesByPair(t *testing.T) {
 	}
 
 	for i, v := range btcVotes {
-		fixture.OracleKeeper.Votes.Insert(
-			fixture.Ctx,
+		keepers.OracleKeeper.Votes.Insert(
+			ctx,
 			ValAddrs[i],
 			types.NewAggregateExchangeRateVote(
 				types.ExchangeRateTuples{
@@ -66,7 +66,7 @@ func TestGroupVotesByPair(t *testing.T) {
 	}
 
 	// organize votes by pair
-	pairVotes := fixture.OracleKeeper.groupVotesByPair(fixture.Ctx, types.ValidatorPerformances{
+	pairVotes := keepers.OracleKeeper.GroupVotesByPair(ctx, types.ValidatorPerformances{
 		ValAddrs[0].String(): {
 			Power:      power,
 			WinCount:   0,
@@ -95,20 +95,19 @@ func TestGroupVotesByPair(t *testing.T) {
 }
 
 func TestClearVotesAndPrevotes(t *testing.T) {
-	fixture := CreateTestFixture(t)
-
 	power := int64(100)
-	amt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
-	sh := stakingkeeper.NewMsgServerImpl(&fixture.StakingKeeper)
 
-	// Validator created
-	_, err := sh.CreateValidator(fixture.Ctx, NewTestMsgCreateValidator(ValAddrs[0], ValPubKeys[0], amt))
-	require.NoError(t, err)
-	_, err = sh.CreateValidator(fixture.Ctx, NewTestMsgCreateValidator(ValAddrs[1], ValPubKeys[1], amt))
-	require.NoError(t, err)
-	_, err = sh.CreateValidator(fixture.Ctx, NewTestMsgCreateValidator(ValAddrs[2], ValPubKeys[2], amt))
-	require.NoError(t, err)
-	staking.EndBlocker(fixture.Ctx, &fixture.StakingKeeper)
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(3))
+	keepers := chain.GetApp().Keepers
+	ctx := chain.GetContext()
+
+	vals := chain.GetCurrentValSet().Validators
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
+
+	keepers.StakingKeeper.EndBlocker(ctx)
 
 	btcVotes := types.ExchangeRateVotes{
 		types.NewExchangeRateVote(math.LegacyNewDec(17), asset.Registry.Pair(denoms.BTC, denoms.NUSD), ValAddrs[0], power),
@@ -122,30 +121,30 @@ func TestClearVotesAndPrevotes(t *testing.T) {
 	}
 
 	for i := range btcVotes {
-		fixture.OracleKeeper.Prevotes.Insert(fixture.Ctx, ValAddrs[i], types.AggregateExchangeRatePrevote{
+		keepers.OracleKeeper.Prevotes.Insert(ctx, ValAddrs[i], types.AggregateExchangeRatePrevote{
 			Hash:        "",
 			Voter:       ValAddrs[i].String(),
-			SubmitBlock: uint64(fixture.Ctx.BlockHeight()),
+			SubmitBlock: uint64(ctx.BlockHeight()),
 		})
 
-		fixture.OracleKeeper.Votes.Insert(fixture.Ctx, ValAddrs[i],
+		keepers.OracleKeeper.Votes.Insert(ctx, ValAddrs[i],
 			types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{
 				{Pair: btcVotes[i].Pair, ExchangeRate: btcVotes[i].ExchangeRate},
 				{Pair: ethVotes[i].Pair, ExchangeRate: ethVotes[i].ExchangeRate},
 			}, ValAddrs[i]))
 	}
 
-	fixture.OracleKeeper.clearVotesAndPrevotes(fixture.Ctx, 10)
+	keepers.OracleKeeper.ClearVotesAndPrevotes(ctx, 10)
 
-	prevoteCounter := len(fixture.OracleKeeper.Prevotes.Iterate(fixture.Ctx, collections.Range[sdk.ValAddress]{}).Keys())
-	voteCounter := len(fixture.OracleKeeper.Votes.Iterate(fixture.Ctx, collections.Range[sdk.ValAddress]{}).Keys())
+	prevoteCounter := len(keepers.OracleKeeper.Prevotes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).Keys())
+	voteCounter := len(keepers.OracleKeeper.Votes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).Keys())
 
 	require.Equal(t, prevoteCounter, 3)
 	require.Equal(t, voteCounter, 0)
 
 	// vote period starts at b=10, clear the votes at b=0 and below.
-	fixture.OracleKeeper.clearVotesAndPrevotes(fixture.Ctx.WithBlockHeight(fixture.Ctx.BlockHeight()+10), 10)
-	prevoteCounter = len(fixture.OracleKeeper.Prevotes.Iterate(fixture.Ctx, collections.Range[sdk.ValAddress]{}).Keys())
+	keepers.OracleKeeper.ClearVotesAndPrevotes(ctx.WithBlockHeight(ctx.BlockHeight()+10), 10)
+	prevoteCounter = len(keepers.OracleKeeper.Prevotes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).Keys())
 	require.Equal(t, prevoteCounter, 0)
 }
 
@@ -198,7 +197,7 @@ func TestFuzzTally(t *testing.T) {
 	f.Fuzz(&rewardBand)
 
 	require.NotPanics(t, func() {
-		Tally(votes, rewardBand, claimMap)
+		keeper.Tally(votes, rewardBand, claimMap)
 	})
 }
 
@@ -249,24 +248,25 @@ func TestRemoveInvalidBallots(t *testing.T) {
 			name: "nonempty key, nonempty votes, whitelisted",
 			voteMap: VoteMap{
 				"x": types.ExchangeRateVotes{
-					{Pair: "x", ExchangeRate: math.LegacyDec{}, Voter: sdk.ValAddress{123}, Power: 5},
+					{Pair: "x", ExchangeRate: math.LegacyZeroDec(), Voter: sdk.ValAddress{123}, Power: 5},
 				},
 				asset.Registry.Pair(denoms.BTC, denoms.NUSD): types.ExchangeRateVotes{
-					{Pair: asset.Registry.Pair(denoms.BTC, denoms.NUSD), ExchangeRate: math.LegacyDec{}, Voter: sdk.ValAddress{123}, Power: 5},
+					{Pair: asset.Registry.Pair(denoms.BTC, denoms.NUSD), ExchangeRate: math.LegacyZeroDec(), Voter: sdk.ValAddress{123}, Power: 5},
 				},
 				asset.Registry.Pair(denoms.ETH, denoms.NUSD): types.ExchangeRateVotes{
-					{Pair: asset.Registry.Pair(denoms.BTC, denoms.NUSD), ExchangeRate: math.LegacyDec{}, Voter: sdk.ValAddress{123}, Power: 5},
+					{Pair: asset.Registry.Pair(denoms.BTC, denoms.NUSD), ExchangeRate: math.LegacyZeroDec(), Voter: sdk.ValAddress{123}, Power: 5},
 				},
 			},
 		},
 	}
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.name, func(t *testing.T) {
-			fixture, _ := Setup(t)
+			chain := e2eTesting.NewTestChain(t, i)
+			keepers := chain.GetApp().Keepers
 			assert.NotPanics(t, func() {
-				fixture.OracleKeeper.removeInvalidVotes(fixture.Ctx, tc.voteMap, set.New[asset.Pair](
+				keepers.OracleKeeper.RemoveInvalidVotes(chain.GetContext(), tc.voteMap, set.New[asset.Pair](
 					asset.NewPair(denoms.BTC, denoms.NUSD),
 					asset.NewPair(denoms.ETH, denoms.NUSD),
 				))
@@ -329,7 +329,7 @@ func TestFuzzPickReferencePair(t *testing.T) {
 	// set random pairs
 	f.Fuzz(&pairs)
 
-	input, _ := Setup(t)
+	chain := e2eTesting.NewTestChain(t, 1)
 
 	// test OracleKeeper.Pairs.Insert
 	voteTargets := set.Set[asset.Pair]{}
@@ -345,16 +345,24 @@ func TestFuzzPickReferencePair(t *testing.T) {
 	f.Fuzz(&voteMap)
 
 	assert.NotPanics(t, func() {
-		input.OracleKeeper.removeInvalidVotes(input.Ctx, voteMap, whitelistedPairs)
+		chain.GetApp().Keepers.OracleKeeper.RemoveInvalidVotes(chain.GetContext(), voteMap, whitelistedPairs)
 	}, "voteMap: %v", voteMap)
 }
 
 func TestZeroBallotPower(t *testing.T) {
+	chain := e2eTesting.NewTestChain(t, 1, e2eTesting.WithValidatorsNum(3))
+
+	vals := chain.GetCurrentValSet().Validators
+	ValAddrs := make([]sdk.ValAddress, len(vals))
+	for i := range vals {
+		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
+	}
+
 	btcVotess := types.ExchangeRateVotes{
 		types.NewExchangeRateVote(math.LegacyNewDec(17), asset.Registry.Pair(denoms.BTC, denoms.NUSD), ValAddrs[0], 0),
 		types.NewExchangeRateVote(math.LegacyNewDec(10), asset.Registry.Pair(denoms.BTC, denoms.NUSD), ValAddrs[1], 0),
 		types.NewExchangeRateVote(math.LegacyNewDec(6), asset.Registry.Pair(denoms.BTC, denoms.NUSD), ValAddrs[2], 0),
 	}
 
-	assert.False(t, isPassingVoteThreshold(btcVotess, math.ZeroInt(), 0))
+	assert.False(t, keeper.IsPassingVoteThreshold(btcVotess, math.ZeroInt(), 0))
 }

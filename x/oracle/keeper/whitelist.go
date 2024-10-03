@@ -19,9 +19,9 @@ func (k Keeper) GetWhitelistedPairs(ctx sdk.Context) []asset.Pair {
 	return k.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys()
 }
 
-// refreshWhitelist updates the whitelist by detecting possible changes between
+// RefreshWhitelist updates the whitelist by detecting possible changes between
 // the current vote targets and the current updated whitelist.
-func (k Keeper) refreshWhitelist(ctx sdk.Context, nextWhitelist []asset.Pair, currentWhitelist set.Set[asset.Pair]) {
+func (k Keeper) RefreshWhitelist(ctx sdk.Context, nextWhitelist []asset.Pair, currentWhitelist set.Set[asset.Pair]) {
 	updateRequired := false
 
 	if len(currentWhitelist) != len(nextWhitelist) {
