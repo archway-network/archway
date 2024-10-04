@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/NibiruChain/collections"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/common"
@@ -288,10 +287,10 @@ func TestOracleRewardBand(t *testing.T) {
 	keepers.OracleKeeper.Params.Set(ctx, params)
 
 	// clear pairs to reset vote targets
-	for _, p := range keepers.OracleKeeper.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
-		keepers.OracleKeeper.WhitelistedPairs.Delete(ctx, p)
-	}
-	keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, asset.Registry.Pair(denoms.ATOM, denoms.USD))
+	err = keepers.OracleKeeper.WhitelistedPairs.Clear(ctx, nil)
+	require.NoError(t, err)
+	err = keepers.OracleKeeper.WhitelistedPairs.Set(ctx, asset.Registry.Pair(denoms.ATOM, denoms.USD))
+	require.NoError(t, err)
 
 	rewardSpread := testExchangeRate.Mul(keepers.OracleKeeper.RewardBand(ctx).QuoInt64(2))
 
@@ -317,10 +316,26 @@ func TestOracleRewardBand(t *testing.T) {
 
 	keepers.OracleKeeper.UpdateExchangeRates(ctx)
 
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[0], 0))
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[1], 0))
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[2], 0))
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[3], 0))
+	counter, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[0])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[2])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[3])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
 
 	// Account 1 will miss the vote due to raward band condition
 	// Account 1, atom:usd
@@ -345,10 +360,26 @@ func TestOracleRewardBand(t *testing.T) {
 
 	keepers.OracleKeeper.UpdateExchangeRates(ctx)
 
-	assert.Equal(t, uint64(1), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[0], 0))
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[1], 0))
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[2], 0))
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[3], 0))
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[0])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(1), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[2])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[3])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
 }
 
 /* TODO(Mercilex): not appliable right now: https://github.com/archway-network/archway/issues/805
@@ -511,10 +542,10 @@ func TestWhitelistedPairs(t *testing.T) {
 	keepers.OracleKeeper.Params.Set(ctx, params)
 
 	t.Log("whitelist ONLY atom:usd")
-	for _, p := range keepers.OracleKeeper.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
-		keepers.OracleKeeper.WhitelistedPairs.Delete(ctx, p)
-	}
-	keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, asset.Registry.Pair(denoms.ATOM, denoms.USD))
+	err = keepers.OracleKeeper.WhitelistedPairs.Clear(ctx, nil)
+	require.NoError(t, err)
+	err = keepers.OracleKeeper.WhitelistedPairs.Set(ctx, asset.Registry.Pair(denoms.ATOM, denoms.USD))
+	require.NoError(t, err)
 
 	t.Log("vote and prevote from all vals on atom:usd")
 	priceVoteFromVal := func(valIdx int, block int64) {
@@ -532,18 +563,37 @@ func TestWhitelistedPairs(t *testing.T) {
 	keepers.OracleKeeper.UpdateExchangeRates(ctx)
 
 	t.Log("assert: no miss counts for all vals")
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[0], 0))
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[1], 0))
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[2], 0))
-	assert.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[3], 0))
+	counter, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[0])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[2])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[3])
+	if err == nil {
+		counter = 0
+	}
+	assert.Equal(t, uint64(0), counter)
 
 	t.Log("whitelisted pairs are {atom:usd, btc:usd}")
+	pairs, err := keepers.OracleKeeper.GetWhitelistedPairs(ctx)
+	require.NoError(t, err)
 	assert.Equal(t,
 		[]asset.Pair{
 			asset.Registry.Pair(denoms.ATOM, denoms.USD),
 			asset.Registry.Pair(denoms.BTC, denoms.USD),
 		},
-		keepers.OracleKeeper.GetWhitelistedPairs(ctx))
+		pairs,
+	)
 
 	t.Log("vote from vals 0-3 on atom:usd (but not btc:usd)")
 	priceVoteFromVal(0, block)
@@ -570,10 +620,15 @@ func TestWhitelistedPairs(t *testing.T) {
 	assert.EqualValues(t, 0, perf.MissCount)
 
 	t.Log("btc:usd must be deleted")
-	assert.Equal(t, []asset.Pair{asset.Registry.Pair(denoms.ATOM, denoms.USD)},
-		keepers.OracleKeeper.GetWhitelistedPairs(ctx))
-	require.False(t, keepers.OracleKeeper.WhitelistedPairs.Has(
-		ctx, asset.Registry.Pair(denoms.BTC, denoms.USD)))
+	pairs, err = keepers.OracleKeeper.GetWhitelistedPairs(ctx)
+	require.NoError(t, err)
+	assert.Equal(t,
+		[]asset.Pair{asset.Registry.Pair(denoms.ATOM, denoms.USD)},
+		pairs,
+	)
+	has, err := keepers.OracleKeeper.WhitelistedPairs.Has(ctx, asset.Registry.Pair(denoms.BTC, denoms.USD))
+	require.NoError(t, err)
+	require.False(t, has)
 
 	t.Log("vote from vals 0-3 on atom:usd")
 	priceVoteFromVal(0, block)

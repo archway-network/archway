@@ -5,8 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/NibiruChain/collections"
-
 	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/oracle/keeper"
 	"github.com/archway-network/archway/x/oracle/types"
@@ -26,7 +24,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 			panic(err)
 		}
 
-		keeper.FeederDelegations.Insert(ctx, voter, feeder)
+		keeper.FeederDelegations.Set(ctx, voter, feeder)
 	}
 
 	for _, ex := range data.ExchangeRates {
@@ -39,7 +37,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 			panic(err)
 		}
 
-		keeper.MissCounters.Insert(ctx, operator, missCounter.MissCounter)
+		keeper.MissCounters.Set(ctx, operator, missCounter.MissCounter)
 	}
 
 	for _, aggregatePrevote := range data.AggregateExchangeRatePrevotes {
@@ -48,7 +46,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 			panic(err)
 		}
 
-		keeper.Prevotes.Insert(ctx, valAddr, aggregatePrevote)
+		keeper.Prevotes.Set(ctx, valAddr, aggregatePrevote)
 	}
 
 	for _, aggregateVote := range data.AggregateExchangeRateVotes {
@@ -57,21 +55,21 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 			panic(err)
 		}
 
-		keeper.Votes.Insert(ctx, valAddr, aggregateVote)
+		keeper.Votes.Set(ctx, valAddr, aggregateVote)
 	}
 
 	if len(data.Pairs) > 0 {
 		for _, tt := range data.Pairs {
-			keeper.WhitelistedPairs.Insert(ctx, tt)
+			keeper.WhitelistedPairs.Set(ctx, tt)
 		}
 	} else {
 		for _, item := range data.Params.Whitelist {
-			keeper.WhitelistedPairs.Insert(ctx, item)
+			keeper.WhitelistedPairs.Set(ctx, item)
 		}
 	}
 
 	for _, pr := range data.Rewards {
-		keeper.Rewards.Insert(ctx, pr.Id, pr)
+		keeper.Rewards.Set(ctx, pr.Id, pr)
 	}
 
 	// set last ID based on the last pair reward
@@ -97,37 +95,78 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	}
 
 	feederDelegations := []types.FeederDelegation{}
-	for _, kv := range keeper.FeederDelegations.Iterate(ctx, collections.Range[sdk.ValAddress]{}).KeyValues() {
+	keeper.FeederDelegations.Walk(ctx, nil, func(valBytes []byte, accBytes []byte) (bool, error) {
 		feederDelegations = append(feederDelegations, types.FeederDelegation{
-			FeederAddress:    kv.Value.String(),
-			ValidatorAddress: kv.Key.String(),
+			FeederAddress:    sdk.ValAddress(valBytes).String(),
+			ValidatorAddress: sdk.AccAddress(accBytes).String(),
 		})
-	}
+		return false, nil
+	})
 
 	exchangeRates := []types.ExchangeRateTuple{}
-	for _, er := range keeper.ExchangeRates.Iterate(ctx, collections.Range[asset.Pair]{}).KeyValues() {
-		exchangeRates = append(exchangeRates, types.ExchangeRateTuple{Pair: er.Key, ExchangeRate: er.Value.ExchangeRate})
-	}
+	keeper.ExchangeRates.Walk(ctx, nil, func(pair asset.Pair, price types.DatedPrice) (bool, error) {
+		exchangeRates = append(exchangeRates, types.ExchangeRateTuple{
+			Pair:         pair,
+			ExchangeRate: price.ExchangeRate,
+		})
+		return false, nil
+	})
 
 	missCounters := []types.MissCounter{}
-	for _, mc := range keeper.MissCounters.Iterate(ctx, collections.Range[sdk.ValAddress]{}).KeyValues() {
+	keeper.MissCounters.Walk(ctx, nil, func(valAddrBytes []byte, counter uint64) (bool, error) {
 		missCounters = append(missCounters, types.MissCounter{
-			ValidatorAddress: mc.Key.String(),
-			MissCounter:      mc.Value,
+			ValidatorAddress: sdk.ValAddress(valAddrBytes).String(),
+			MissCounter:      counter,
 		})
-	}
+		return false, nil
+	})
 
 	var pairs []asset.Pair
-	pairs = append(pairs, keeper.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys()...)
+	iter, err := keeper.WhitelistedPairs.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	keys, err := iter.Keys()
+	if err != nil {
+		panic(err)
+	}
+	pairs = append(pairs, keys...)
+
+	prevotesIter, err := keeper.Prevotes.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	prevotes, err := prevotesIter.Values()
+	if err != nil {
+		panic(err)
+	}
+
+	votesIter, err := keeper.Votes.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	votes, err := votesIter.Values()
+	if err != nil {
+		panic(err)
+	}
+
+	rewardsIter, err := keeper.Rewards.Iterate(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	rewards, err := rewardsIter.Values()
+	if err != nil {
+		panic(err)
+	}
 
 	return types.NewGenesisState(
 		params,
 		exchangeRates,
 		feederDelegations,
 		missCounters,
-		keeper.Prevotes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).Values(),
-		keeper.Votes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).Values(),
+		prevotes,
+		votes,
 		pairs,
-		keeper.Rewards.Iterate(ctx, collections.Range[uint64]{}).Values(),
+		rewards,
 	)
 }

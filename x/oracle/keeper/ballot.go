@@ -5,8 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/NibiruChain/collections"
-
 	"cosmossdk.io/math"
 
 	"github.com/archway-network/archway/x/common/asset"
@@ -28,13 +26,12 @@ func (k Keeper) GroupVotesByPair(
 ) (pairVotes map[asset.Pair]types.ExchangeRateVotes) {
 	pairVotes = map[asset.Pair]types.ExchangeRateVotes{}
 
-	for _, value := range k.Votes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).KeyValues() {
-		voterAddr, aggregateVote := value.Key, value.Value
-
+	err := k.Votes.Walk(ctx, nil, func(voterAddrBytes []byte, aggregateVote types.AggregateExchangeRateVote) (bool, error) {
+		voterAddr := sdk.ValAddress(voterAddrBytes)
 		// skip votes from inactive validators
 		validatorPerformance, exists := validatorPerformances[aggregateVote.Voter]
 		if !exists {
-			continue
+			return false, nil
 		}
 
 		for _, tuple := range aggregateVote.ExchangeRateTuples {
@@ -54,6 +51,11 @@ func (k Keeper) GroupVotesByPair(
 				),
 			)
 		}
+
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
 	}
 
 	return
@@ -62,19 +64,30 @@ func (k Keeper) GroupVotesByPair(
 // ClearVotesAndPrevotes clears all tallied prevotes and votes from the store
 func (k Keeper) ClearVotesAndPrevotes(ctx sdk.Context, votePeriod uint64) {
 	// Clear all aggregate prevotes
-	for _, prevote := range k.Prevotes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).KeyValues() {
-		valAddr, aggregatePrevote := prevote.Key, prevote.Value
+	k.Prevotes.Walk(ctx, nil, func(valAddrBytes []byte, aggregatePrevote types.AggregateExchangeRatePrevote) (bool, error) {
+		valAddr := sdk.ValAddress(valAddrBytes)
 		if ctx.BlockHeight() >= int64(aggregatePrevote.SubmitBlock+votePeriod) {
-			err := k.Prevotes.Delete(ctx, valAddr)
+			err := k.Prevotes.Remove(ctx, valAddr)
 			if err != nil {
 				k.Logger(ctx).Error("failed to delete prevote", "error", err)
 			}
 		}
-	}
+		return false, nil
+	})
 
 	// Clear all aggregate votes
-	for _, valAddr := range k.Votes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).Keys() {
-		err := k.Votes.Delete(ctx, valAddr)
+	iter, err := k.Votes.Iterate(ctx, nil)
+	if err != nil {
+		k.Logger(ctx).Error("failed to get votes iterator", "error", err)
+		return
+	}
+	keys, err := iter.Keys()
+	if err != nil {
+		k.Logger(ctx).Error("failed to get keys for votes iterator", "error", err)
+		return
+	}
+	for _, valAddr := range keys {
+		err := k.Votes.Remove(ctx, valAddr)
 		if err != nil {
 			k.Logger(ctx).Error("failed to delete vote", "error", err)
 		}

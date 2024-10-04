@@ -3,8 +3,6 @@ package keeper
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/NibiruChain/collections"
 )
 
 // SlashAndResetMissCounters do slash any operator who over criteria & clear all operators miss counter to zero
@@ -22,9 +20,9 @@ func (k Keeper) SlashAndResetMissCounters(ctx sdk.Context) {
 	slashFraction := k.SlashFraction(ctx)
 	powerReduction := k.StakingKeeper.PowerReduction(ctx)
 
-	for _, mc := range k.MissCounters.Iterate(ctx, collections.Range[sdk.ValAddress]{}).KeyValues() {
-		operator := mc.Key
-		missCounter := mc.Value
+	k.MissCounters.Walk(ctx, nil, func(operatorBytes []byte, missCounter uint64) (bool, error) {
+		operator := sdk.ValAddress(operatorBytes)
+
 		// Calculate valid vote rate; (SlashWindow - MissCounter)/SlashWindow
 		validVoteRate := math.LegacyNewDecFromInt(
 			math.NewInt(int64(votePeriodsPerWindow - missCounter))).
@@ -40,7 +38,7 @@ func (k Keeper) SlashAndResetMissCounters(ctx sdk.Context) {
 				consAddr, err := validator.GetConsAddr()
 				if err != nil {
 					k.Logger(ctx).Error("fail to get consensus address", "validator", validator.GetOperator())
-					continue
+					return false, nil
 				}
 
 				k.slashingKeeper.Slash(
@@ -51,9 +49,10 @@ func (k Keeper) SlashAndResetMissCounters(ctx sdk.Context) {
 			}
 		}
 
-		err := k.MissCounters.Delete(ctx, operator)
+		err := k.MissCounters.Remove(ctx, operator)
 		if err != nil {
 			k.Logger(ctx).Error("fail to delete miss counter", "operator", operator.String(), "error", err)
 		}
-	}
+		return false, nil
+	})
 }

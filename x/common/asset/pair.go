@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	sdkerrors "cosmossdk.io/errors"
-	"github.com/NibiruChain/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -138,18 +139,48 @@ func (pair Pair) Size() int {
 	return len(pair)
 }
 
-var PairKeyEncoder collections.KeyEncoder[Pair] = pairKeyEncoder{}
+var PairKeyEncoder collcodec.KeyCodec[Pair] = pairKeyEncoder{}
 
 type pairKeyEncoder struct{}
 
-func (pairKeyEncoder) Stringify(a Pair) string { return a.String() }
-func (pairKeyEncoder) Encode(a Pair) []byte {
-	return collections.StringKeyEncoder.Encode(a.String())
+func (pairKeyEncoder) Size(key Pair) int {
+	return key.Size()
 }
 
-func (pairKeyEncoder) Decode(b []byte) (int, Pair) {
-	i, s := collections.StringKeyEncoder.Decode(b)
-	return i, MustNewPair(s)
+func (pairKeyEncoder) KeyType() string {
+	return "archway.pairKeyEncoder"
+}
+
+func (pairKeyEncoder) Stringify(a Pair) string {
+	return a.String()
+}
+
+func (pairKeyEncoder) Encode(buf []byte, pair Pair) (int, error) {
+	i, err := collections.StringKey.Encode(buf, pair.String())
+	return i, err
+}
+
+func (pairKeyEncoder) Decode(b []byte) (int, Pair, error) {
+	i, s, err := collections.StringKey.Decode(b)
+	return i, MustNewPair(s), err
+}
+func (pairKeyEncoder) EncodeJSON(value Pair) ([]byte, error) {
+	return value.MarshalJSON()
+}
+func (pairKeyEncoder) DecodeJSON(b []byte) (Pair, error) {
+	newPair := new(Pair)
+	err := newPair.UnmarshalJSON(b)
+	return *newPair, err
+}
+func (pke pairKeyEncoder) EncodeNonTerminal(buffer []byte, key Pair) (int, error) {
+	return pke.Encode(buffer, key)
+}
+func (pke pairKeyEncoder) DecodeNonTerminal(buffer []byte) (int, Pair, error) {
+	return pke.Decode(buffer)
+
+}
+func (pairKeyEncoder) SizeNonTerminal(key Pair) int {
+	return key.Size()
 }
 
 // MustNewPairs constructs a new asset pair set. A panic will occur if one of

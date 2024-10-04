@@ -9,8 +9,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/NibiruChain/collections"
-
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/denoms"
@@ -72,7 +70,7 @@ func TestSlashAndResetMissCounters(t *testing.T) {
 	slashFraction := keepers.OracleKeeper.SlashFraction(ctx)
 	minValidVotes := keepers.OracleKeeper.MinValidPerWindow(ctx).MulInt64(votePeriodsPerWindow).Ceil().TruncateInt64()
 	// Case 1, no slash
-	keepers.OracleKeeper.MissCounters.Insert(ctx, ValAddrs[0], uint64(votePeriodsPerWindow-minValidVotes))
+	keepers.OracleKeeper.MissCounters.Set(ctx, ValAddrs[0], uint64(votePeriodsPerWindow-minValidVotes))
 	keepers.OracleKeeper.SlashAndResetMissCounters(ctx)
 	keepers.StakingKeeper.EndBlocker(ctx)
 
@@ -81,7 +79,7 @@ func TestSlashAndResetMissCounters(t *testing.T) {
 	require.Equal(t, amt, validator.GetBondedTokens())
 
 	// Case 2, slash
-	keepers.OracleKeeper.MissCounters.Insert(ctx, ValAddrs[0], uint64(votePeriodsPerWindow-minValidVotes+1))
+	keepers.OracleKeeper.MissCounters.Set(ctx, ValAddrs[0], uint64(votePeriodsPerWindow-minValidVotes+1))
 	keepers.OracleKeeper.SlashAndResetMissCounters(ctx)
 	validator, _ = keepers.StakingKeeper.GetValidator(ctx, ValAddrs[0])
 	require.Equal(t, amt.Sub(slashFraction.MulInt(amt).TruncateInt()), validator.GetBondedTokens())
@@ -94,7 +92,7 @@ func TestSlashAndResetMissCounters(t *testing.T) {
 	validator.Tokens = amt
 	keepers.StakingKeeper.SetValidator(ctx, validator)
 
-	keepers.OracleKeeper.MissCounters.Insert(ctx, ValAddrs[0], uint64(votePeriodsPerWindow-minValidVotes+1))
+	keepers.OracleKeeper.MissCounters.Set(ctx, ValAddrs[0], uint64(votePeriodsPerWindow-minValidVotes+1))
 	keepers.OracleKeeper.SlashAndResetMissCounters(ctx)
 	validator, _ = keepers.StakingKeeper.GetValidator(ctx, ValAddrs[0])
 	require.Equal(t, amt, validator.Tokens)
@@ -107,7 +105,7 @@ func TestSlashAndResetMissCounters(t *testing.T) {
 	validator.Tokens = amt
 	keepers.StakingKeeper.SetValidator(ctx, validator)
 
-	keepers.OracleKeeper.MissCounters.Insert(ctx, ValAddrs[0], uint64(votePeriodsPerWindow-minValidVotes+1))
+	keepers.OracleKeeper.MissCounters.Set(ctx, ValAddrs[0], uint64(votePeriodsPerWindow-minValidVotes+1))
 	keepers.OracleKeeper.SlashAndResetMissCounters(ctx)
 	validator, _ = keepers.StakingKeeper.GetValidator(ctx, ValAddrs[0])
 	require.Equal(t, amt, validator.Tokens)
@@ -133,7 +131,7 @@ func TestInvalidVotesSlashing(t *testing.T) {
 	params.VotePeriod = 1
 	params.Whitelist = []asset.Pair{asset.Registry.Pair(denoms.ATOM, denoms.USD)}
 	keepers.OracleKeeper.Params.Set(ctx, params)
-	keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, asset.Registry.Pair(denoms.ATOM, denoms.USD))
+	keepers.OracleKeeper.WhitelistedPairs.Set(ctx, asset.Registry.Pair(denoms.ATOM, denoms.USD))
 
 	votePeriodsPerWindow := math.LegacyNewDec(int64(keepers.OracleKeeper.SlashWindow(ctx))).QuoInt64(int64(keepers.OracleKeeper.VotePeriod(ctx))).TruncateInt64()
 	slashFraction := keepers.OracleKeeper.SlashFraction(ctx)
@@ -166,7 +164,11 @@ func TestInvalidVotesSlashing(t *testing.T) {
 		// keepers.OracleKeeper.SlashAndResetMissCounters(ctx)
 		// keepers.OracleKeeper.UpdateExchangeRates(ctx)
 
-		require.Equal(t, i+1, keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[1], 0))
+		counter, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
+		if err == nil {
+			counter = 0
+		}
+		require.Equal(t, i+1, counter)
 	}
 
 	validator, err := keepers.StakingKeeper.GetValidator(ctx, ValAddrs[1])
@@ -234,7 +236,8 @@ func TestWhitelistSlashing(t *testing.T) {
 			types.ExchangeRateTuples{{Pair: pair, ExchangeRate: erate}},
 			vals[valIdx])
 	}
-	keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, pair)
+	err = keepers.OracleKeeper.WhitelistedPairs.Set(ctx, pair)
+	require.NoError(t, err)
 	perfs := keepers.OracleKeeper.UpdateExchangeRates(ctx)
 	require.EqualValues(t, 0, perfs.TotalRewardWeight())
 
@@ -251,7 +254,10 @@ func TestWhitelistSlashing(t *testing.T) {
 		priceVoteFromVal(valIdx+2, block, testExchangeRate)
 
 		perfs := keepers.OracleKeeper.UpdateExchangeRates(ctx)
-		missCount := keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[0], 0)
+		missCount, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[0])
+		if err == nil {
+			missCount = 0
+		}
 		require.EqualValues(t, 0, missCount, perfs.String())
 	}
 
@@ -280,10 +286,10 @@ func TestNotPassedBallotSlashing(t *testing.T) {
 	keepers.OracleKeeper.Params.Set(ctx, params)
 
 	// clear tobin tax to reset vote targets
-	for _, p := range keepers.OracleKeeper.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
-		keepers.OracleKeeper.WhitelistedPairs.Delete(ctx, p)
-	}
-	keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, asset.Registry.Pair(denoms.ATOM, denoms.USD))
+	err = keepers.OracleKeeper.WhitelistedPairs.Clear(ctx, nil)
+	require.NoError(t, err)
+	err = keepers.OracleKeeper.WhitelistedPairs.Set(ctx, asset.Registry.Pair(denoms.ATOM, denoms.USD))
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
@@ -293,9 +299,21 @@ func TestNotPassedBallotSlashing(t *testing.T) {
 	keepers.OracleKeeper.UpdateExchangeRates(ctx)
 	keepers.OracleKeeper.SlashAndResetMissCounters(ctx)
 	// keepers.OracleKeeper.UpdateExchangeRates(ctx)
-	require.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[0], 0))
-	require.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[1], 0))
-	require.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[2], 0))
+	counter, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[0])
+	if err == nil {
+		counter = 0
+	}
+	require.Equal(t, uint64(0), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
+	if err == nil {
+		counter = 0
+	}
+	require.Equal(t, uint64(0), counter)
+	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[2])
+	if err == nil {
+		counter = 0
+	}
+	require.Equal(t, uint64(0), counter)
 }
 
 func TestAbstainSlashing(t *testing.T) {
@@ -320,10 +338,10 @@ func TestAbstainSlashing(t *testing.T) {
 	params.Whitelist = []asset.Pair{asset.Registry.Pair(denoms.ATOM, denoms.USD)}
 	keepers.OracleKeeper.Params.Set(ctx, params)
 
-	for _, p := range keepers.OracleKeeper.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
-		keepers.OracleKeeper.WhitelistedPairs.Delete(ctx, p)
-	}
-	keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, asset.Registry.Pair(denoms.ATOM, denoms.USD))
+	err = keepers.OracleKeeper.WhitelistedPairs.Clear(ctx, nil)
+	require.NoError(t, err)
+	err = keepers.OracleKeeper.WhitelistedPairs.Set(ctx, asset.Registry.Pair(denoms.ATOM, denoms.USD))
+	require.NoError(t, err)
 
 	votePeriodsPerWindow := math.LegacyNewDec(int64(keepers.OracleKeeper.SlashWindow(ctx))).QuoInt64(int64(keepers.OracleKeeper.VotePeriod(ctx))).TruncateInt64()
 	minValidPerWindow := keepers.OracleKeeper.MinValidPerWindow(ctx)
@@ -343,7 +361,11 @@ func TestAbstainSlashing(t *testing.T) {
 		keepers.OracleKeeper.UpdateExchangeRates(ctx)
 		keepers.OracleKeeper.SlashAndResetMissCounters(ctx)
 		// keepers.OracleKeeper.UpdateExchangeRates(ctx)
-		require.Equal(t, uint64(0), keepers.OracleKeeper.MissCounters.GetOr(ctx, ValAddrs[1], 0))
+		counter, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
+		if err == nil {
+			counter = 0
+		}
+		require.Equal(t, uint64(0), counter)
 	}
 
 	validator, err := keepers.StakingKeeper.Validator(ctx, ValAddrs[1])

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/NibiruChain/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -81,5 +80,9 @@ func TestKeeperRewardsDistributionMultiVotePeriods(t *testing.T) {
 	require.True(t, keepers.OracleKeeper.GatherRewardsForVotePeriod(ctx).IsZero())
 
 	// assert that there are no rewards instances
-	require.Empty(t, keepers.OracleKeeper.Rewards.Iterate(ctx, collections.Range[uint64]{}).Keys())
+	iter, err := keepers.OracleKeeper.Rewards.Iterate(ctx, nil)
+	require.NoError(t, err)
+	keys, err := iter.Keys()
+	require.NoError(t, err)
+	require.Empty(t, keys)
 }

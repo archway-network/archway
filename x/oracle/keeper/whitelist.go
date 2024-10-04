@@ -3,20 +3,26 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/NibiruChain/collections"
-
 	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/set"
 )
 
 // IsWhitelistedPair returns existence of a pair in the voting target list
-func (k Keeper) IsWhitelistedPair(ctx sdk.Context, pair asset.Pair) bool {
+func (k Keeper) IsWhitelistedPair(ctx sdk.Context, pair asset.Pair) (bool, error) {
 	return k.WhitelistedPairs.Has(ctx, pair)
 }
 
 // GetWhitelistedPairs returns the whitelisted pairs list on current vote period
-func (k Keeper) GetWhitelistedPairs(ctx sdk.Context) []asset.Pair {
-	return k.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys()
+func (k Keeper) GetWhitelistedPairs(ctx sdk.Context) ([]asset.Pair, error) {
+	iter, err := k.WhitelistedPairs.Iterate(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	keys, err := iter.Keys()
+	if err != nil {
+		return nil, err
+	}
+	return keys, nil
 }
 
 // RefreshWhitelist updates the whitelist by detecting possible changes between
@@ -37,11 +43,12 @@ func (k Keeper) RefreshWhitelist(ctx sdk.Context, nextWhitelist []asset.Pair, cu
 	}
 
 	if updateRequired {
-		for _, p := range k.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
-			k.WhitelistedPairs.Delete(ctx, p)
+		err := k.WhitelistedPairs.Clear(ctx, nil)
+		if err != nil {
+			panic(err)
 		}
 		for _, pair := range nextWhitelist {
-			k.WhitelistedPairs.Insert(ctx, pair)
+			k.WhitelistedPairs.Set(ctx, pair)
 		}
 	}
 }

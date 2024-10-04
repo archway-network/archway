@@ -13,8 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/NibiruChain/collections"
+	"cosmossdk.io/collections"
 
+	"github.com/archway-network/archway/internal/collcompat"
+	"github.com/archway-network/archway/x/common"
 	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/oracle/types"
 )
@@ -35,10 +37,10 @@ type Keeper struct {
 	// Module parameters
 	Params            collections.Item[types.Params]
 	ExchangeRates     collections.Map[asset.Pair, types.DatedPrice]
-	FeederDelegations collections.Map[sdk.ValAddress, sdk.AccAddress]
-	MissCounters      collections.Map[sdk.ValAddress, uint64]
-	Prevotes          collections.Map[sdk.ValAddress, types.AggregateExchangeRatePrevote]
-	Votes             collections.Map[sdk.ValAddress, types.AggregateExchangeRateVote]
+	FeederDelegations collections.Map[[]byte, []byte]
+	MissCounters      collections.Map[[]byte, uint64]
+	Prevotes          collections.Map[[]byte, types.AggregateExchangeRatePrevote]
+	Votes             collections.Map[[]byte, types.AggregateExchangeRateVote]
 
 	// PriceSnapshots maps types.PriceSnapshot to the asset.Pair of the snapshot and the creation timestamp as keys.Uint64Key.
 	PriceSnapshots collections.Map[
@@ -67,6 +69,8 @@ func NewKeeper(
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
+	sb := collections.NewSchemaBuilder(collcompat.NewKVStoreService(storeKey))
+
 	k := Keeper{
 		cdc:               cdc,
 		storeKey:          storeKey,
@@ -76,18 +80,16 @@ func NewKeeper(
 		StakingKeeper:     stakingKeeper,
 		slashingKeeper:    slashingKeeper,
 		distrModuleName:   distrName,
-		Params:            collections.NewItem(storeKey, 11, collections.ProtoValueEncoder[types.Params](cdc)),
-		ExchangeRates:     collections.NewMap(storeKey, 1, asset.PairKeyEncoder, collections.ProtoValueEncoder[types.DatedPrice](cdc)),
-		PriceSnapshots:    collections.NewMap(storeKey, 10, collections.PairKeyEncoder(asset.PairKeyEncoder, collections.TimeKeyEncoder), collections.ProtoValueEncoder[types.PriceSnapshot](cdc)),
-		FeederDelegations: collections.NewMap(storeKey, 2, collections.ValAddressKeyEncoder, collections.AccAddressValueEncoder),
-		MissCounters:      collections.NewMap(storeKey, 3, collections.ValAddressKeyEncoder, collections.Uint64ValueEncoder),
-		Prevotes:          collections.NewMap(storeKey, 4, collections.ValAddressKeyEncoder, collections.ProtoValueEncoder[types.AggregateExchangeRatePrevote](cdc)),
-		Votes:             collections.NewMap(storeKey, 5, collections.ValAddressKeyEncoder, collections.ProtoValueEncoder[types.AggregateExchangeRateVote](cdc)),
-		WhitelistedPairs:  collections.NewKeySet(storeKey, 6, asset.PairKeyEncoder),
-		Rewards: collections.NewMap(
-			storeKey, 7,
-			collections.Uint64KeyEncoder, collections.ProtoValueEncoder[types.Rewards](cdc)),
-		RewardsID: collections.NewSequence(storeKey, 9),
+		Params:            collections.NewItem(sb, collections.NewPrefix(11), "Params", collcompat.ProtoValue[types.Params](cdc)),
+		ExchangeRates:     collections.NewMap(sb, collections.NewPrefix(1), "ExchangeRates", asset.PairKeyEncoder, collcompat.ProtoValue[types.DatedPrice](cdc)),
+		PriceSnapshots:    collections.NewMap(sb, collections.NewPrefix(10), "PriceSnapshots", collections.PairKeyCodec(asset.PairKeyEncoder, common.TimeKeyEncoder), collcompat.ProtoValue[types.PriceSnapshot](cdc)),
+		FeederDelegations: collections.NewMap(sb, collections.NewPrefix(2), "FeederDelegations", collections.BytesKey, collections.BytesValue),
+		MissCounters:      collections.NewMap(sb, collections.NewPrefix(3), "MissCounters", collections.BytesKey, collections.Uint64Value),
+		Prevotes:          collections.NewMap(sb, collections.NewPrefix(4), "Prevotes", collections.BytesKey, collcompat.ProtoValue[types.AggregateExchangeRatePrevote](cdc)),
+		Votes:             collections.NewMap(sb, collections.NewPrefix(5), "Votes", collections.BytesKey, collcompat.ProtoValue[types.AggregateExchangeRateVote](cdc)),
+		WhitelistedPairs:  collections.NewKeySet(sb, collections.NewPrefix(6), "WhitelistedPairs", asset.PairKeyEncoder),
+		Rewards:           collections.NewMap(sb, collections.NewPrefix(7), "Rewards", collections.Uint64Key, collcompat.ProtoValue[types.Rewards](cdc)),
+		RewardsID:         collections.NewSequence(sb, collections.NewPrefix(9), "RewardsID"),
 	}
 	return k
 }
@@ -105,11 +107,16 @@ func (k Keeper) ValidateFeeder(
 	// Thus, we only need to verify consent for price feeder addresses that don't
 	// match the validator address.
 	if !feederAddr.Equals(validatorAddr) {
-		delegate := k.FeederDelegations.GetOr(
+		delegateStr, err := k.FeederDelegations.Get(
 			sdk.UnwrapSDKContext(ctx),
 			validatorAddr,
-			sdk.AccAddress(validatorAddr),
 		)
+		var delegate sdk.Address
+		if err == nil {
+			delegate = sdk.AccAddress(validatorAddr)
+		} else {
+			delegate = sdk.ValAddress(delegateStr)
+		}
 		if !delegate.Equals(feederAddr) {
 			return sdkerrors.Wrapf(
 				types.ErrNoVotingPermission,
@@ -143,15 +150,15 @@ func (k Keeper) GetExchangeRateTwap(ctx sdk.Context, pair asset.Pair) (price mat
 		return math.LegacyOneDec().Neg(), err
 	}
 
-	snapshots := k.PriceSnapshots.Iterate(
+	snapshotsIter, err := k.PriceSnapshots.Iterate(
 		ctx,
-		collections.PairRange[asset.Pair, time.Time]{}.
-			Prefix(pair).
+		collections.NewPrefixedPairRange[asset.Pair, time.Time](pair).
 			StartInclusive(
 				ctx.BlockTime().Add(-1*params.TwapLookbackWindow)).
 			EndInclusive(
 				ctx.BlockTime()),
-	).Values()
+	)
+	snapshots, err := snapshotsIter.Values()
 
 	if len(snapshots) == 0 {
 		// if there are no snapshots, return -1 for the price
@@ -199,11 +206,11 @@ func (k Keeper) GetExchangeRate(ctx sdk.Context, pair asset.Pair) (price math.Le
 
 // SetPrice sets the price for a pair as well as the price snapshot.
 func (k Keeper) SetPrice(ctx sdk.Context, pair asset.Pair, price math.LegacyDec) {
-	k.ExchangeRates.Insert(ctx, pair, types.DatedPrice{ExchangeRate: price, CreatedBlock: uint64(ctx.BlockHeight())})
+	k.ExchangeRates.Set(ctx, pair, types.DatedPrice{ExchangeRate: price, CreatedBlock: uint64(ctx.BlockHeight())})
 
 	key := collections.Join(pair, ctx.BlockTime())
 	timestampMs := ctx.BlockTime().UnixMilli()
-	k.PriceSnapshots.Insert(ctx, key, types.PriceSnapshot{
+	k.PriceSnapshots.Set(ctx, key, types.PriceSnapshot{
 		Pair:        pair,
 		Price:       price,
 		TimestampMs: timestampMs,

@@ -47,7 +47,7 @@ func (ms msgServer) AggregateExchangeRatePrevote(
 		return nil, sdkerrors.Wrap(types.ErrInvalidHash, err.Error())
 	}
 
-	ms.Keeper.Prevotes.Insert(ctx, valAddr, types.NewAggregateExchangeRatePrevote(voteHash, valAddr, uint64(ctx.BlockHeight())))
+	ms.Keeper.Prevotes.Set(ctx, valAddr, types.NewAggregateExchangeRatePrevote(voteHash, valAddr, uint64(ctx.BlockHeight())))
 
 	err = ctx.EventManager().EmitTypedEvent(&types.EventAggregatePrevote{
 		Validator: msg.Validator,
@@ -103,7 +103,11 @@ func (ms msgServer) AggregateExchangeRateVote(
 
 	// Check all pairs are in the vote target
 	for _, tuple := range exchangeRateTuples {
-		if !ms.IsWhitelistedPair(ctx, tuple.Pair) {
+		flag, err := ms.IsWhitelistedPair(ctx, tuple.Pair)
+		if err != nil {
+			return nil, err
+		}
+		if !flag {
 			return nil, sdkerrors.Wrap(types.ErrUnknownPair, tuple.Pair.String())
 		}
 	}
@@ -117,10 +121,10 @@ func (ms msgServer) AggregateExchangeRateVote(
 	}
 
 	// Move aggregate prevote to aggregate vote with given exchange rates
-	ms.Keeper.Votes.Insert(
+	ms.Keeper.Votes.Set(
 		ctx, valAddr, types.NewAggregateExchangeRateVote(exchangeRateTuples, valAddr),
 	)
-	_ = ms.Keeper.Prevotes.Delete(ctx, valAddr)
+	_ = ms.Keeper.Prevotes.Remove(ctx, valAddr)
 
 	priceTuples, err := types.NewExchangeRateTuplesFromString(msg.ExchangeRates)
 	if err != nil {
@@ -157,7 +161,7 @@ func (ms msgServer) DelegateFeedConsent(
 	}
 
 	// Set the delegation
-	ms.Keeper.FeederDelegations.Insert(ctx, operatorAddr, delegateAddr)
+	ms.Keeper.FeederDelegations.Set(ctx, operatorAddr, delegateAddr)
 
 	err = ctx.EventManager().EmitTypedEvent(&types.EventDelegateFeederConsent{
 		Feeder:    msg.Delegate,

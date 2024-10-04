@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	"github.com/NibiruChain/collections"
+	"cosmossdk.io/collections"
 
 	"github.com/archway-network/archway/x/oracle/types"
 )
@@ -19,7 +19,17 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch kvA.Key[0] {
 		case 1:
-			return fmt.Sprintf("%v\n%v", collections.DecValueEncoder.Decode(kvA.Value), collections.DecValueEncoder.Decode(kvB.Value))
+			// TODO (spekalsg3): or StringKey?
+			// TODO (spekalsg3): or decode json?
+			a, err := collections.StringValue.Decode(kvA.Value)
+			if err != nil {
+				panic(err)
+			}
+			b, err := collections.StringValue.Decode(kvB.Value)
+			if err != nil {
+				panic(err)
+			}
+			return fmt.Sprintf("%v\n%v", a, b)
 		case 2:
 			return fmt.Sprintf("%v\n%v", sdk.AccAddress(kvA.Value), sdk.AccAddress(kvB.Value))
 		case 3:
@@ -38,8 +48,14 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &voteB)
 			return fmt.Sprintf("%v\n%v", voteA, voteB)
 		case 6:
-			_, a := collections.StringKeyEncoder.Decode(kvA.Key[1:])
-			_, b := collections.StringKeyEncoder.Decode(kvB.Key[1:])
+			_, a, err := collections.StringKey.Decode(kvA.Key[1:]) // TODO (spekalsg3): or decode json?
+			if err != nil {
+				panic(err)
+			}
+			_, b, err := collections.StringKey.Decode(kvB.Key[1:])
+			if err != nil {
+				panic(err)
+			}
 			return fmt.Sprintf("%s\n%s", a, b)
 		default:
 			panic(fmt.Sprintf("invalid oracle key prefix %X", kvA.Key[:1]))

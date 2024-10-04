@@ -60,7 +60,7 @@ func TestValidateFeeder(t *testing.T) {
 	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, sdk.AccAddress(ValAddrs[1]), ValAddrs[1]))
 
 	// delegate works
-	keepers.OracleKeeper.FeederDelegations.Insert(ctx, ValAddrs[0], AccAddrs[1])
+	keepers.OracleKeeper.FeederDelegations.Set(ctx, ValAddrs[0], AccAddrs[1])
 	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[1], ValAddrs[0]))
 	require.Error(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[2], ValAddrs[0]))
 

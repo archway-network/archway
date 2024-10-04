@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/NibiruChain/collections"
-
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/denoms"
@@ -38,13 +36,12 @@ func TestKeeper_GetVoteTargets(t *testing.T) {
 			keepers := chain.GetApp().Keepers
 			ctx := chain.GetContext()
 
-			for _, p := range keepers.OracleKeeper.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
-				keepers.OracleKeeper.WhitelistedPairs.Delete(ctx, p)
-			}
+			err := keepers.OracleKeeper.WhitelistedPairs.Clear(ctx, nil)
+			require.NoError(t, err)
 
 			expectedTargets := tc.in
 			for _, target := range expectedTargets {
-				keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, target)
+				keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target)
 			}
 
 			var panicAssertFn func(t assert.TestingT, f assert.PanicTestFunc, msgAndArgs ...interface{}) bool
@@ -55,7 +52,8 @@ func TestKeeper_GetVoteTargets(t *testing.T) {
 				panicAssertFn = assert.NotPanics
 			}
 			panicAssertFn(t, func() {
-				targets := keepers.OracleKeeper.GetWhitelistedPairs(ctx)
+				targets, err := keepers.OracleKeeper.GetWhitelistedPairs(ctx)
+				require.NoError(t, err)
 				assert.Equal(t, expectedTargets, targets)
 			})
 		})
@@ -65,16 +63,16 @@ func TestKeeper_GetVoteTargets(t *testing.T) {
 	keepers := chain.GetApp().Keepers
 	ctx := chain.GetContext()
 
-	for _, p := range keepers.OracleKeeper.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
-		keepers.OracleKeeper.WhitelistedPairs.Delete(ctx, p)
-	}
+	err := keepers.OracleKeeper.WhitelistedPairs.Clear(ctx, nil)
+	require.NoError(t, err)
 
 	expectedTargets := []asset.Pair{"foo:bar", "whoo:whoo"}
 	for _, target := range expectedTargets {
-		keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, target)
+		keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target)
 	}
 
-	targets := keepers.OracleKeeper.GetWhitelistedPairs(ctx)
+	targets, err := keepers.OracleKeeper.GetWhitelistedPairs(ctx)
+	require.NoError(t, err)
 	require.Equal(t, expectedTargets, targets)
 }
 
@@ -83,14 +81,15 @@ func TestIsWhitelistedPair(t *testing.T) {
 	keepers := chain.GetApp().Keepers
 	ctx := chain.GetContext()
 
-	for _, p := range keepers.OracleKeeper.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
-		keepers.OracleKeeper.WhitelistedPairs.Delete(ctx, p)
-	}
+	err := keepers.OracleKeeper.WhitelistedPairs.Clear(ctx, nil)
+	require.NoError(t, err)
 
 	validPairs := []asset.Pair{"foo:bar", "xxx:yyy", "whoo:whoo"}
 	for _, target := range validPairs {
-		keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, target)
-		require.True(t, keepers.OracleKeeper.IsWhitelistedPair(ctx, target))
+		keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target)
+		flag, err := keepers.OracleKeeper.IsWhitelistedPair(ctx, target)
+		require.NoError(t, err)
+		require.True(t, flag)
 	}
 }
 
@@ -100,13 +99,12 @@ func TestUpdateWhitelist(t *testing.T) {
 	ctx := chain.GetContext()
 
 	// prepare test by resetting the genesis pairs
-	for _, p := range keepers.OracleKeeper.WhitelistedPairs.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
-		keepers.OracleKeeper.WhitelistedPairs.Delete(ctx, p)
-	}
+	err := keepers.OracleKeeper.WhitelistedPairs.Clear(ctx, nil)
+	require.NoError(t, err)
 
 	currentWhitelist := set.New(asset.NewPair(denoms.NIBI, denoms.USD), asset.NewPair(denoms.BTC, denoms.USD))
 	for p := range currentWhitelist {
-		keepers.OracleKeeper.WhitelistedPairs.Insert(ctx, p)
+		keepers.OracleKeeper.WhitelistedPairs.Set(ctx, p)
 	}
 
 	nextWhitelist := set.New(asset.NewPair(denoms.NIBI, denoms.USD), asset.NewPair(denoms.BTC, denoms.USD))
@@ -117,7 +115,9 @@ func TestUpdateWhitelist(t *testing.T) {
 		return whitelistSlice[i].String() < whitelistSlice[j].String()
 	})
 	keepers.OracleKeeper.RefreshWhitelist(ctx, whitelistSlice, currentWhitelist)
-	assert.Equal(t, whitelistSlice, keepers.OracleKeeper.GetWhitelistedPairs(ctx))
+	pairs, err := keepers.OracleKeeper.GetWhitelistedPairs(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, whitelistSlice, pairs)
 
 	// len update (fast path)
 	nextWhitelist.Add(asset.NewPair(denoms.NIBI, denoms.ETH))
@@ -126,7 +126,9 @@ func TestUpdateWhitelist(t *testing.T) {
 		return whitelistSlice[i].String() < whitelistSlice[j].String()
 	})
 	keepers.OracleKeeper.RefreshWhitelist(ctx, whitelistSlice, currentWhitelist)
-	assert.Equal(t, whitelistSlice, keepers.OracleKeeper.GetWhitelistedPairs(ctx))
+	pairs, err = keepers.OracleKeeper.GetWhitelistedPairs(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, whitelistSlice, pairs)
 
 	// diff update (slow path)
 	currentWhitelist.Add(asset.NewPair(denoms.NIBI, denoms.ATOM))
@@ -135,5 +137,7 @@ func TestUpdateWhitelist(t *testing.T) {
 		return whitelistSlice[i].String() < whitelistSlice[j].String()
 	})
 	keepers.OracleKeeper.RefreshWhitelist(ctx, whitelistSlice, currentWhitelist)
-	assert.Equal(t, whitelistSlice, keepers.OracleKeeper.GetWhitelistedPairs(ctx))
+	pairs, err = keepers.OracleKeeper.GetWhitelistedPairs(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, whitelistSlice, pairs)
 }

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/NibiruChain/collections"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	fuzz "github.com/google/gofuzz"
@@ -52,7 +51,7 @@ func TestGroupVotesByPair(t *testing.T) {
 	}
 
 	for i, v := range btcVotes {
-		keepers.OracleKeeper.Votes.Insert(
+		keepers.OracleKeeper.Votes.Set(
 			ctx,
 			ValAddrs[i],
 			types.NewAggregateExchangeRateVote(
@@ -121,13 +120,13 @@ func TestClearVotesAndPrevotes(t *testing.T) {
 	}
 
 	for i := range btcVotes {
-		keepers.OracleKeeper.Prevotes.Insert(ctx, ValAddrs[i], types.AggregateExchangeRatePrevote{
+		keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[i], types.AggregateExchangeRatePrevote{
 			Hash:        "",
 			Voter:       ValAddrs[i].String(),
 			SubmitBlock: uint64(ctx.BlockHeight()),
 		})
 
-		keepers.OracleKeeper.Votes.Insert(ctx, ValAddrs[i],
+		keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[i],
 			types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{
 				{Pair: btcVotes[i].Pair, ExchangeRate: btcVotes[i].ExchangeRate},
 				{Pair: ethVotes[i].Pair, ExchangeRate: ethVotes[i].ExchangeRate},
@@ -136,15 +135,28 @@ func TestClearVotesAndPrevotes(t *testing.T) {
 
 	keepers.OracleKeeper.ClearVotesAndPrevotes(ctx, 10)
 
-	prevoteCounter := len(keepers.OracleKeeper.Prevotes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).Keys())
-	voteCounter := len(keepers.OracleKeeper.Votes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).Keys())
+	prevoteCounterIter, err := keepers.OracleKeeper.Prevotes.Iterate(ctx, nil)
+	require.NoError(t, err)
+	prevoteCounterKeys, err := prevoteCounterIter.Keys()
+	require.NoError(t, err)
+	prevoteCounter := len(prevoteCounterKeys)
+
+	voteCounterIter, err := keepers.OracleKeeper.Votes.Iterate(ctx, nil)
+	require.NoError(t, err)
+	voteCounterKeys, err := voteCounterIter.Keys()
+	require.NoError(t, err)
+	voteCounter := len(voteCounterKeys)
 
 	require.Equal(t, prevoteCounter, 3)
 	require.Equal(t, voteCounter, 0)
 
 	// vote period starts at b=10, clear the votes at b=0 and below.
 	keepers.OracleKeeper.ClearVotesAndPrevotes(ctx.WithBlockHeight(ctx.BlockHeight()+10), 10)
-	prevoteCounter = len(keepers.OracleKeeper.Prevotes.Iterate(ctx, collections.Range[sdk.ValAddress]{}).Keys())
+	prevoteCounterIter, err = keepers.OracleKeeper.Prevotes.Iterate(ctx, nil)
+	require.NoError(t, err)
+	prevoteCounterKeys, err = prevoteCounterIter.Keys()
+	require.NoError(t, err)
+	prevoteCounter = len(prevoteCounterKeys)
 	require.Equal(t, prevoteCounter, 0)
 }
 

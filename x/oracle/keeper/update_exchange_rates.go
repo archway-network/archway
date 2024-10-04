@@ -3,8 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/NibiruChain/collections"
-
 	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/omap"
 	"github.com/archway-network/archway/x/common/set"
@@ -15,7 +13,11 @@ import (
 func (k Keeper) UpdateExchangeRates(ctx sdk.Context) types.ValidatorPerformances {
 	k.Logger(ctx).Info("processing validator price votes")
 	validatorPerformances := k.newValidatorPerformances(ctx)
-	whitelistedPairs := set.New[asset.Pair](k.GetWhitelistedPairs(ctx)...)
+	pairs, err := k.GetWhitelistedPairs(ctx)
+	if err != nil {
+		panic(err)
+	}
+	whitelistedPairs := set.New[asset.Pair](pairs...)
 
 	pairVotes := k.getPairVotes(ctx, validatorPerformances, whitelistedPairs)
 
@@ -54,9 +56,13 @@ func (k Keeper) incrementMissCounters(
 ) {
 	for _, validatorPerformance := range validatorPerformances {
 		if int(validatorPerformance.MissCount) > 0 {
-			k.MissCounters.Insert(
+			counter, err := k.MissCounters.Get(ctx, validatorPerformance.ValAddress)
+			if err == nil {
+				counter = 0
+			}
+			k.MissCounters.Set(
 				ctx, validatorPerformance.ValAddress,
-				k.MissCounters.GetOr(ctx, validatorPerformance.ValAddress, 0)+uint64(validatorPerformance.MissCount),
+				counter+uint64(validatorPerformance.MissCount),
 			)
 
 			k.Logger(ctx).Info("vote miss", "validator", validatorPerformance.ValAddress.String())
@@ -111,18 +117,19 @@ func (k Keeper) getPairVotes(
 func (k Keeper) ClearExchangeRates(ctx sdk.Context, pairVotes map[asset.Pair]types.ExchangeRateVotes) {
 	params, _ := k.Params.Get(ctx)
 
-	for _, key := range k.ExchangeRates.Iterate(ctx, collections.Range[asset.Pair]{}).Keys() {
+	k.ExchangeRates.Walk(ctx, nil, func(key asset.Pair, _ types.DatedPrice) (bool, error) {
 		_, isValid := pairVotes[key]
 		previousExchangeRate, _ := k.ExchangeRates.Get(ctx, key)
 		isExpired := previousExchangeRate.CreatedBlock+params.ExpirationBlocks <= uint64(ctx.BlockHeight())
 
 		if isValid || isExpired {
-			err := k.ExchangeRates.Delete(ctx, key)
+			err := k.ExchangeRates.Remove(ctx, key)
 			if err != nil {
 				k.Logger(ctx).Error("failed to delete exchange rate", "pair", key.String(), "error", err)
 			}
 		}
-	}
+		return false, nil
+	})
 }
 
 // newValidatorPerformances creates a new map of validators and their performance, excluding validators that are

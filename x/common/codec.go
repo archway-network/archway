@@ -1,151 +1,53 @@
 package common
 
 import (
-	sdkmath "cosmossdk.io/math"
+	"time"
 
-	coll "cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
-	// LegacyDecValue represents a collections.ValueCodec to work with LegacyDec.
-	LegacyDecValue  collcodec.ValueCodec[sdkmath.LegacyDec] = legacyDecValueCodec{}
-	SdkIntKey       collcodec.KeyCodec[sdkmath.Int]         = mathIntKeyCodec{}
-	AccAddressValue collcodec.ValueCodec[sdk.AccAddress]    = accAddressValueCodec{}
+	TimeKeyEncoder collcodec.KeyCodec[time.Time] = timeKeyEncoder{}
 )
 
 // Collection Codecs
 
-// math.LegacyDec Value Codec
+type timeKeyEncoder struct{}
 
-type legacyDecValueCodec struct{}
-
-func (cdc legacyDecValueCodec) Encode(value sdkmath.LegacyDec) ([]byte, error) {
-	return value.Marshal()
+func (timeKeyEncoder) Stringify(t time.Time) string {
+	return t.String()
 }
-
-func (cdc legacyDecValueCodec) Decode(buffer []byte) (sdkmath.LegacyDec, error) {
-	v := sdkmath.LegacyZeroDec()
-	err := v.Unmarshal(buffer)
-	return v, err
+func (timeKeyEncoder) Encode(buffer []byte, t time.Time) (int, error) {
+	buf := sdk.FormatTimeBytes(t)
+	copy(buffer, buf)
+	return len(buf), nil
 }
-
-func (cdc legacyDecValueCodec) EncodeJSON(value sdkmath.LegacyDec) ([]byte, error) {
+func (timeKeyEncoder) Decode(b []byte) (int, time.Time, error) {
+	t, err := sdk.ParseTimeBytes(b)
+	return len(b), t, err
+}
+func (timeKeyEncoder) EncodeJSON(value time.Time) ([]byte, error) {
 	return value.MarshalJSON()
 }
-
-func (cdc legacyDecValueCodec) DecodeJSON(buffer []byte) (sdkmath.LegacyDec, error) {
-	v := sdkmath.LegacyDec{}
-	err := v.UnmarshalJSON(buffer)
-	if err != nil {
-		return sdkmath.LegacyDec{}, err
-	}
-	return v, nil
+func (tke timeKeyEncoder) DecodeJSON(b []byte) (time.Time, error) {
+	t := new(time.Time)
+	err := t.UnmarshalJSON(b)
+	return *t, err
 }
-
-func (cdc legacyDecValueCodec) Stringify(value sdkmath.LegacyDec) string {
-	return value.String()
+func (tke timeKeyEncoder) EncodeNonTerminal(buffer []byte, key time.Time) (int, error) {
+	return tke.Encode(buffer, key)
 }
-
-func (cdc legacyDecValueCodec) ValueType() string {
-	return "math.LegacyDec"
+func (tke timeKeyEncoder) DecodeNonTerminal(buffer []byte) (int, time.Time, error) {
+	return tke.Decode(buffer)
 }
-
-// AccAddress Value Codec
-
-type accAddressValueCodec struct{}
-
-func (cdc accAddressValueCodec) Encode(value sdk.AccAddress) ([]byte, error) {
-	return value.Marshal()
+func (timeKeyEncoder) Size(key time.Time) int {
+	return len(sdk.FormatTimeString(key))
 }
-
-func (cdc accAddressValueCodec) Decode(buffer []byte) (sdk.AccAddress, error) {
-	v := sdk.AccAddress{}
-	err := v.Unmarshal(buffer)
-	return v, err
+func (timeKeyEncoder) KeyType() string {
+	return "archway.timeKeyEncoder"
 }
-
-func (cdc accAddressValueCodec) EncodeJSON(value sdk.AccAddress) ([]byte, error) {
-	return value.MarshalJSON()
-}
-
-func (cdc accAddressValueCodec) DecodeJSON(buffer []byte) (sdk.AccAddress, error) {
-	v := sdk.AccAddress{}
-	err := v.UnmarshalJSON(buffer)
-	if err != nil {
-		return nil, err
-	}
-	return v, nil
-}
-
-func (cdc accAddressValueCodec) Stringify(value sdk.AccAddress) string {
-	return value.String()
-}
-
-func (cdc accAddressValueCodec) ValueType() string {
-	return "sdk.AccAddress"
-}
-
-// math.Int Key Codec
-
-type mathIntKeyCodec struct {
-	stringDecoder func(string) (sdkmath.Int, error)
-	keyType       string
-}
-
-func (cdc mathIntKeyCodec) Encode(buffer []byte, key sdkmath.Int) (int, error) {
-	bytes, err := key.Marshal()
-	if err != nil {
-		return 0, err
-	}
-	copy(bytes, buffer)
-	return key.Size(), nil
-}
-
-func (cdc mathIntKeyCodec) Decode(buffer []byte) (int, sdkmath.Int, error) {
-	v := sdkmath.ZeroInt()
-	err := v.Unmarshal(buffer)
-	if err != nil {
-		return 0, v, err
-	}
-	return v.Size(), v, nil
-}
-
-func (cdc mathIntKeyCodec) Size(key sdkmath.Int) int {
-	return key.Size()
-}
-
-func (cdc mathIntKeyCodec) EncodeJSON(value sdkmath.Int) ([]byte, error) {
-	return coll.StringKey.EncodeJSON(value.String())
-}
-
-func (cdc mathIntKeyCodec) DecodeJSON(b []byte) (v sdkmath.Int, err error) {
-	s, err := coll.StringKey.DecodeJSON(b)
-	if err != nil {
-		return
-	}
-	v, err = cdc.stringDecoder(s)
-	return
-}
-
-func (cdc mathIntKeyCodec) Stringify(key sdkmath.Int) string {
-	return key.String()
-}
-
-func (cdc mathIntKeyCodec) KeyType() string {
-	return cdc.keyType
-}
-
-func (cdc mathIntKeyCodec) EncodeNonTerminal(buffer []byte, key sdkmath.Int) (int, error) {
-	return cdc.Encode(buffer, key)
-}
-
-func (cdc mathIntKeyCodec) DecodeNonTerminal(buffer []byte) (int, sdkmath.Int, error) {
-	return cdc.Decode(buffer)
-}
-
-func (cdc mathIntKeyCodec) SizeNonTerminal(key sdkmath.Int) int {
-	return key.Size()
+func (tke timeKeyEncoder) SizeNonTerminal(key time.Time) int {
+	return tke.Size(key)
 }
