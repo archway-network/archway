@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/archway-network/archway/app/upgrades/constantineupgrades"
 
 	"github.com/archway-network/archway/app/upgrades"
 	upgrade_0_6 "github.com/archway-network/archway/app/upgrades/06"
@@ -16,6 +15,7 @@ import (
 	upgrade6_0_0 "github.com/archway-network/archway/app/upgrades/6_0_0"
 	upgrade7_0_0 "github.com/archway-network/archway/app/upgrades/7_0_0"
 	upgrade9_0_0 "github.com/archway-network/archway/app/upgrades/9_0_0"
+	"github.com/archway-network/archway/app/upgrades/constantineupgrades"
 )
 
 // UPGRADES

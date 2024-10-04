@@ -5,9 +5,10 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 var WASMD_50_Amino_Patch = upgrades.Upgrade{

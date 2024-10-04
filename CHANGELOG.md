@@ -32,18 +32,21 @@ Contains all the PRs that improved the code without changing the behaviors.
 
 ### Added
 - [#577](https://github.com/archway-network/archway/pull/577) - Adding a cute ascii art of Archway for the cli
-- [#588](https://github.com/archway-network/archway/pull/588) - Add IBC hooks, bump IBC, allows contracts to query callback fee estimations. 
+- [#588](https://github.com/archway-network/archway/pull/588) - Add IBC hooks, bump IBC, allows contracts to query callback fee estimations.
+- [#594](https://github.com/archway-network/archway/pull/594) - Add Constantine upgrade handler
 
 ### Changed
 - [#573](https://github.com/archway-network/archway/pull/573) - Bump cosmos-sdk to v0.50.6 and ibc to v8.2.1
 - [#580](https://github.com/archway-network/archway/pull/580) - Bump cosmos-sdk to v0.50.7 and ibc to v8.3.2
 - [#583](https://github.com/archway-network/archway/pull/583) - Bump cometbft to v0.38.10
+- [#594](https://github.com/archway-network/archway/pull/594) - Bump core packages to latest / relevant versions
 
 ### Fixed
 - [#569](https://github.com/archway-network/archway/pull/569) - Audit remidiations for x/cwerrors and x/cwica 
 - [#566](https://github.com/archway-network/archway/pull/566) - Fixing the localnet script to correctly set gov params post sdk v47
 - [#586](https://github.com/archway-network/archway/pull/586) - Applied patches for CWAs CWA-2024-003 and CWA-2024-004
 - [#589](https://github.com/archway-network/archway/pull/589) - Patch CWSA-2024-005
+- [#594](https://github.com/archway-network/archway/pull/594) - Upgraded wasmd fork with amino jason rendering fix
 
 ### Improvements
 
