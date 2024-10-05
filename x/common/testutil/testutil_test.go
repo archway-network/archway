@@ -11,7 +11,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/archway-network/archway/x/common/set"
+	"github.com/archway-network/archway/types/set"
 	"github.com/archway-network/archway/x/common/testutil"
 )
 

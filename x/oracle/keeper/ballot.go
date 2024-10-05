@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/archway-network/archway/x/common/set"
+	"github.com/archway-network/archway/types/set"
 	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/types"
 )
@@ -146,7 +146,7 @@ func (k Keeper) RemoveInvalidVotes(
 			k.VoteThreshold(ctx).MulInt64(totalBondedPower).RoundInt(),
 			k.MinVoters(ctx),
 		) {
-			delete(whitelistedPairs, pair)
+			whitelistedPairs.Remove(pair)
 			delete(pairVotes, pair)
 			continue
 		}

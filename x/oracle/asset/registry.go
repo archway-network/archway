@@ -1,7 +1,7 @@
 package asset
 
 import (
-	"github.com/archway-network/archway/x/common/set"
+	"github.com/archway-network/archway/types/set"
 	"github.com/archway-network/archway/x/oracle/denoms"
 )
 

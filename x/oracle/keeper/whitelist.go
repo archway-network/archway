@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/archway-network/archway/x/common/set"
+	"github.com/archway-network/archway/types/set"
 	"github.com/archway-network/archway/x/oracle/asset"
 )
 
@@ -30,7 +30,7 @@ func (k Keeper) GetWhitelistedPairs(ctx sdk.Context) ([]asset.Pair, error) {
 func (k Keeper) RefreshWhitelist(ctx sdk.Context, nextWhitelist []asset.Pair, currentWhitelist set.Set[asset.Pair]) {
 	updateRequired := false
 
-	if len(currentWhitelist) != len(nextWhitelist) {
+	if currentWhitelist.Len() != len(nextWhitelist) {
 		updateRequired = true
 	} else {
 		for _, pair := range nextWhitelist {

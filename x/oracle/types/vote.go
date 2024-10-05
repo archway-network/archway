@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/archway-network/archway/x/common/set"
+	"github.com/archway-network/archway/types/set"
 	"github.com/archway-network/archway/x/oracle/asset"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -119,10 +119,11 @@ func NewExchangeRateTuplesFromString(s string) (ExchangeRateTuples, error) {
 		}
 
 		// check duplicates
-		if _, ok := duplicates[exchangeRate.Pair]; ok {
+		if duplicates.Has(exchangeRate.Pair) {
+			// TODO (spekalsg3): why not just ignore a duplicate instead of rejecting the whole msg?
 			return []ExchangeRateTuple{}, fmt.Errorf("found duplicate at index %d: %s", i, exchangeRate.Pair)
 		} else {
-			duplicates[exchangeRate.Pair] = struct{}{}
+			duplicates.Add(exchangeRate.Pair)
 		}
 
 		// insert exchange rate into the tuple
