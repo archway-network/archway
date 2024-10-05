@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/archway-network/archway/x/common/omap"
 	"github.com/archway-network/archway/x/common/set"
 	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/types"
@@ -133,9 +132,7 @@ func (k Keeper) RemoveInvalidVotes(
 		k.StakingKeeper.PowerReduction(ctx),
 	)
 
-	// Iterate through sorted keys for deterministic ordering.
-	orderedPairVotes := omap.OrderedMap_Pair[types.ExchangeRateVotes](pairVotes)
-	for pair := range orderedPairVotes.Range() {
+	for pair, votes := range pairVotes {
 		// If pair is not whitelisted, or the votes for it has failed, then skip
 		// and remove it from pairBallotsMap for iteration efficiency
 		if !whitelistedPairs.Has(pair) {
@@ -145,7 +142,7 @@ func (k Keeper) RemoveInvalidVotes(
 		// If the votes is not passed, remove it from the whitelistedPairs set
 		// to prevent slashing validators who did valid vote.
 		if !IsPassingVoteThreshold(
-			pairVotes[pair],
+			votes,
 			k.VoteThreshold(ctx).MulInt64(totalBondedPower).RoundInt(),
 			k.MinVoters(ctx),
 		) {

@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/archway-network/archway/x/common/omap"
 	"github.com/archway-network/archway/x/common/set"
 	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/types"
@@ -91,10 +90,8 @@ func (k Keeper) tallyVotesAndUpdatePrices(
 	validatorPerformances types.ValidatorPerformances,
 ) {
 	rewardBand := k.RewardBand(ctx)
-	// Iterate through sorted keys for deterministic ordering.
-	orderedPairVotes := omap.OrderedMap_Pair[types.ExchangeRateVotes](pairVotes)
-	for pair := range orderedPairVotes.Range() {
-		exchangeRate := Tally(pairVotes[pair], rewardBand, validatorPerformances)
+	for pair, votes := range pairVotes {
+		exchangeRate := Tally(votes, rewardBand, validatorPerformances)
 		k.SetPrice(ctx, pair, exchangeRate)
 	}
 }
