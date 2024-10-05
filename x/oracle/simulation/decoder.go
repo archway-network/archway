@@ -10,7 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 
-	"github.com/archway-network/archway/x/common"
+	archcodec "github.com/archway-network/archway/types/codec"
 	"github.com/archway-network/archway/x/oracle/types"
 )
 
@@ -20,11 +20,11 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch kvA.Key[0] {
 		case 1:
-			_, a, err := common.DecValueEncoder.Decode(kvA.Value)
+			_, a, err := archcodec.DecValueEncoder.Decode(kvA.Value)
 			if err != nil {
 				panic(err)
 			}
-			_, b, err := common.DecValueEncoder.Decode(kvB.Value)
+			_, b, err := archcodec.DecValueEncoder.Decode(kvB.Value)
 			if err != nil {
 				panic(err)
 			}
@@ -47,7 +47,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvB.Value, &voteB)
 			return fmt.Sprintf("%v\n%v", voteA, voteB)
 		case 6:
-			_, a, err := collections.StringKey.Decode(kvA.Key[1:]) // TODO (spekalsg3): or decode json?
+			_, a, err := collections.StringKey.Decode(kvA.Key[1:])
 			if err != nil {
 				panic(err)
 			}

@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/x/common"
 	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/denoms"
 	"github.com/archway-network/archway/x/oracle/keeper"
@@ -39,7 +38,7 @@ func TestKeeperRewardsDistributionMultiVotePeriods(t *testing.T) {
 
 	vals := chain.GetCurrentValSet().Validators
 
-	rewards := sdk.NewInt64Coin("reward", 1*common.TO_MICRO)
+	rewards := sdk.NewInt64Coin("reward", 1000000)
 	valPeriodicRewards := sdk.NewDecCoinsFromCoins(rewards).
 		QuoDec(math.LegacyNewDec(int64(periods))).
 		QuoDec(math.LegacyNewDec(int64(validators)))

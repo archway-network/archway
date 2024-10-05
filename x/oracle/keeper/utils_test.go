@@ -2,15 +2,19 @@
 package keeper_test
 
 import (
+	"math/rand"
+	"reflect"
 	"testing"
 
 	"cosmossdk.io/math"
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	oracletypes "github.com/archway-network/archway/x/oracle/types"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmTypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,4 +60,37 @@ func MakeAggregatePrevoteAndVote(
 	voteMsg := oracletypes.NewMsgAggregateExchangeRateVote(salt, ratesStr, accAddr, valAddr)
 	_, err = msgServer.AggregateExchangeRateVote(ctx.WithBlockHeight(height+1), voteMsg)
 	require.NoError(t, err)
+}
+
+var alphabet = "abcdefghijklmnopqrstuvwxyz"
+
+func RandLetters(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = alphabet[rand.Intn(len(alphabet))]
+	}
+	return string(b)
+}
+
+func RequireContainsTypedEvent(t require.TestingT, ctx sdk.Context, event proto.Message) {
+	foundEvents := []proto.Message{}
+	for _, abciEvent := range ctx.EventManager().Events() {
+		eventType := proto.MessageName(event)
+		if abciEvent.Type != eventType {
+			continue
+		}
+		typedEvent, err := sdk.ParseTypedEvent(abci.Event{
+			Type:       abciEvent.Type,
+			Attributes: abciEvent.Attributes,
+		})
+		require.NoError(t, err)
+
+		if reflect.DeepEqual(typedEvent, event) {
+			return
+		} else {
+			foundEvents = append(foundEvents, typedEvent)
+		}
+	}
+
+	t.Errorf("event not found, event: %+v, found events: %+v", event, foundEvents)
 }

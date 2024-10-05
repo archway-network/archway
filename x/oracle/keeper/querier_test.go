@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	testutilevents "github.com/archway-network/archway/x/common/testutil"
 
 	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/denoms"
@@ -107,7 +106,7 @@ func TestQueryExchangeRateTwap(t *testing.T) {
 
 	rate := math.LegacyNewDec(1700)
 	keepers.OracleKeeper.SetPrice(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), rate)
-	testutilevents.RequireContainsTypedEvent(
+	RequireContainsTypedEvent(
 		t,
 		ctx,
 		&types.EventPriceUpdate{

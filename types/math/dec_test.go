@@ -1,4 +1,4 @@
-package common_test
+package math
 
 import (
 	"fmt"
@@ -7,9 +7,8 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/archway-network/archway/types/errors"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/archway-network/archway/x/common"
 )
 
 func TestSqrtBigInt(t *testing.T) {
@@ -22,19 +21,19 @@ func TestSqrtBigInt(t *testing.T) {
 		{bigInt: big.NewInt(250_000), sqrtBigInt: big.NewInt(500)},
 		{bigInt: big.NewInt(4_819_136_400), sqrtBigInt: big.NewInt(69_420)},
 		{
-			bigInt:     new(big.Int).Mul(big.NewInt(4_819_136_400), common.BigIntPow10(32)),
-			sqrtBigInt: new(big.Int).Mul(big.NewInt(69_420), common.BigIntPow10(16)),
+			bigInt:     new(big.Int).Mul(big.NewInt(4_819_136_400), BigIntPow10(32)),
+			sqrtBigInt: new(big.Int).Mul(big.NewInt(69_420), BigIntPow10(16)),
 		},
 		{
-			bigInt:     new(big.Int).Mul(big.NewInt(9), common.BigIntPow10(100)),
-			sqrtBigInt: new(big.Int).Mul(big.NewInt(3), common.BigIntPow10(50)),
+			bigInt:     new(big.Int).Mul(big.NewInt(9), BigIntPow10(100)),
+			sqrtBigInt: new(big.Int).Mul(big.NewInt(3), BigIntPow10(50)),
 		},
 	}
 
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(fmt.Sprintf(`bigInt: %s, sqrtBigInt: %s`, tc.bigInt, tc.sqrtBigInt), func(t *testing.T) {
-			sqrtInt, err := common.SqrtBigInt(tc.bigInt)
+			sqrtInt, err := SqrtBigInt(tc.bigInt)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.sqrtBigInt.String(), sqrtInt.String())
 		})
@@ -65,8 +64,8 @@ func TestSqrtDec(t *testing.T) {
 	}
 
 	t.Run("negative sqrt should panic", func(t *testing.T) {
-		panicString := common.TryCatch(func() {
-			common.MustSqrtDec(math.LegacyNewDec(-9))
+		panicString := errors.TryCatch(func() {
+			MustSqrtDec(math.LegacyNewDec(-9))
 		})().Error()
 
 		assert.Contains(t, panicString, "square root of negative number")
@@ -75,7 +74,7 @@ func TestSqrtDec(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(fmt.Sprintf(`dec: %s, sqrtDec: %s`, tc.dec, tc.sqrtDec), func(t *testing.T) {
-			sqrtDec, err := common.SqrtDec(tc.dec)
+			sqrtDec, err := SqrtDec(tc.dec)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.sqrtDec.String(), sqrtDec.String())
 		})
@@ -125,7 +124,7 @@ func TestBankersRound(t *testing.T) {
 		if tc.quo != nil {
 			tcQuo = tc.quo
 		}
-		rounded := common.BankersRound(tcQuo, tc.rem, halfPrecision)
+		rounded := BankersRound(tcQuo, tc.rem, halfPrecision)
 		assert.EqualValues(t, tc.rounded, rounded)
 	}
 }
@@ -159,7 +158,7 @@ func TestClamp(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
-			result := common.Clamp(tt.value, tt.clampValue)
+			result := Clamp(tt.value, tt.clampValue)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

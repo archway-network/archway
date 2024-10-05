@@ -16,7 +16,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/x/common"
 	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/denoms"
 	"github.com/archway-network/archway/x/oracle/keeper"
@@ -467,8 +466,8 @@ func TestOracleExchangeRate(t *testing.T) {
 		{Pair: asset.Registry.Pair(denoms.BTC, denoms.USD), ExchangeRate: sdkmath.LegacyZeroDec()},
 	}, vals[3])
 
-	ethUsdRewards := sdk.NewInt64Coin("ETHREWARD", 1*common.TO_MICRO)
-	atomUsdRewards := sdk.NewInt64Coin("ATOMREWARD", 1*common.TO_MICRO)
+	ethUsdRewards := sdk.NewInt64Coin("ETHREWARD", 2000000)
+	atomUsdRewards := sdk.NewInt64Coin("ATOMREWARD", 3000000)
 
 	require.NoError(t, keepers.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(ethUsdRewards)))
 	require.NoError(t, keepers.OracleKeeper.AllocateRewards(ctx, minttypes.ModuleName, sdk.NewCoins(ethUsdRewards), 1))

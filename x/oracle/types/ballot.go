@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/archway-network/archway/x/common"
+	archmath "github.com/archway-network/archway/types/math"
 	"github.com/archway-network/archway/x/oracle/asset"
 )
 
@@ -148,7 +148,7 @@ func (pb ExchangeRateVotes) StandardDeviation(median math.LegacyDec) (standardDe
 
 	variance := sum.QuoInt64(int64(n))
 
-	standardDeviation, err := common.SqrtDec(variance)
+	standardDeviation, err := archmath.SqrtDec(variance)
 	if err != nil {
 		return math.LegacyZeroDec()
 	}

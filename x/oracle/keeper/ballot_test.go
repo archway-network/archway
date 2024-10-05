@@ -13,7 +13,6 @@ import (
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/types/set"
-	"github.com/archway-network/archway/x/common/testutil"
 	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/denoms"
 	"github.com/archway-network/archway/x/oracle/keeper"
@@ -292,13 +291,13 @@ func TestFuzzPickReferencePair(t *testing.T) {
 
 	f := fuzz.New().NilChance(0).Funcs(
 		func(e *asset.Pair, c fuzz.Continue) {
-			*e = asset.NewPair(testutil.RandLetters(5), testutil.RandLetters(5))
+			*e = asset.NewPair(RandLetters(5), RandLetters(5))
 		},
 		func(e *[]asset.Pair, c fuzz.Continue) {
 			numPairs := c.Intn(100) + 5
 
 			for i := 0; i < numPairs; i++ {
-				*e = append(*e, asset.NewPair(testutil.RandLetters(5), testutil.RandLetters(5)))
+				*e = append(*e, asset.NewPair(RandLetters(5), RandLetters(5)))
 			}
 		},
 		func(e *math.LegacyDec, c fuzz.Continue) {

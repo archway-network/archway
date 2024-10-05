@@ -1,4 +1,4 @@
-package common
+package math
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
+	"github.com/archway-network/archway/types/errors"
 )
 
 const (
@@ -54,7 +55,7 @@ func MustSqrtDec(dec math.LegacyDec) math.LegacyDec {
 // large as 10**99.
 func SqrtDec(dec math.LegacyDec) (math.LegacyDec, error) {
 	var sqrtDec math.LegacyDec
-	var panicErr error = TryCatch(func() {
+	var panicErr error = errors.TryCatch(func() {
 		sqrtDec = MustSqrtDec(dec)
 	})()
 	return sqrtDec, panicErr
@@ -71,7 +72,7 @@ func MustSqrtBigInt(i *big.Int) *big.Int {
 // SqrtInt is the panic-safe version of MustSqrtBigInt
 func SqrtBigInt(i *big.Int) (*big.Int, error) {
 	sqrtInt := new(big.Int)
-	var panicErr error = TryCatch(func() {
+	var panicErr error = errors.TryCatch(func() {
 		*sqrtInt = *MustSqrtBigInt(i)
 	})()
 	return sqrtInt, panicErr

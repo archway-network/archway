@@ -1,4 +1,4 @@
-package common_test
+package errors
 
 import (
 	"errors"
@@ -8,8 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/archway-network/archway/x/common"
-	"github.com/archway-network/archway/x/common/testutil"
 	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/denoms"
 )
@@ -46,7 +44,7 @@ func TestCombineErrors(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.name, func(t *testing.T) {
-			errOut := common.CombineErrors(tc.errs...)
+			errOut := CombineErrors(tc.errs...)
 			assert.EqualValuesf(t, tc.errOut, errOut,
 				"tc.errOut: %s\nerrOut: %s", tc.errOut, errOut)
 		})
@@ -102,7 +100,7 @@ func TestCombineErrorsGeneric(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.name, func(t *testing.T) {
-			out, ok := common.CombineErrorsGeneric(tc.in)
+			out, ok := CombineErrorsGeneric(tc.in)
 			if tc.fail {
 				assert.Falsef(t, ok, "out: %v", out)
 			} else {
@@ -115,12 +113,15 @@ func TestCombineErrorsGeneric(t *testing.T) {
 }
 
 func TestToError(t *testing.T) {
-	testCases := []testutil.FunctionTestCase{
+	testCases := []struct {
+		Name string
+		Test func()
+	}{
 		{
 			Name: "string nonempty",
 			Test: func() {
 				description := "an error description"
-				out, ok := common.ToError(description)
+				out, ok := ToError(description)
 				assert.True(t, ok)
 				assert.EqualValues(t, out.Error(), description)
 			},
@@ -129,7 +130,7 @@ func TestToError(t *testing.T) {
 			Name: "error nonempty",
 			Test: func() {
 				description := "an error description"
-				out, ok := common.ToError(errors.New(description))
+				out, ok := ToError(errors.New(description))
 				assert.True(t, ok)
 				assert.EqualValues(t, out.Error(), description)
 			},
@@ -138,7 +139,7 @@ func TestToError(t *testing.T) {
 			Name: "empty string creates blank error",
 			Test: func() {
 				description := ""
-				out, ok := common.ToError("")
+				out, ok := ToError("")
 				assert.True(t, ok)
 				assert.EqualValues(t, out.Error(), description)
 			},
@@ -147,14 +148,14 @@ func TestToError(t *testing.T) {
 			Name: "fail - bad type",
 			Test: func() {
 				descriptionOfBadType := int64(2200)
-				_, ok := common.ToError(descriptionOfBadType)
+				_, ok := ToError(descriptionOfBadType)
 				assert.False(t, ok)
 			},
 		},
 		{
 			Name: "nil input returns nil",
 			Test: func() {
-				err, ok := common.ToError(nil)
+				err, ok := ToError(nil)
 				assert.True(t, ok)
 				assert.Equal(t, nil, err)
 			},
@@ -162,7 +163,7 @@ func TestToError(t *testing.T) {
 		{
 			Name: "slice of strings",
 			Test: func() {
-				err, ok := common.ToError([]string{"abc", "123"})
+				err, ok := ToError([]string{"abc", "123"})
 				assert.True(t, ok)
 				assert.Equal(t, errors.New("abc: 123"), err)
 			},
@@ -170,12 +171,16 @@ func TestToError(t *testing.T) {
 		{
 			Name: "slice of error",
 			Test: func() {
-				err, ok := common.ToError(newErrors("abc", "123"))
+				err, ok := ToError(newErrors("abc", "123"))
 				assert.True(t, ok)
 				assert.Equal(t, errors.New("abc: 123"), err)
 			},
 		},
 	}
 
-	testutil.RunFunctionTests(t, testCases)
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			tc.Test()
+		})
+	}
 }

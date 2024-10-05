@@ -16,7 +16,7 @@ import (
 	"cosmossdk.io/collections"
 
 	"github.com/archway-network/archway/internal/collcompat"
-	"github.com/archway-network/archway/x/common"
+	archcodec "github.com/archway-network/archway/types/codec"
 	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/types"
 )
@@ -82,7 +82,7 @@ func NewKeeper(
 		distrModuleName:   distrName,
 		Params:            collections.NewItem(sb, collections.NewPrefix(11), "Params", collcompat.ProtoValue[types.Params](cdc)),
 		ExchangeRates:     collections.NewMap(sb, collections.NewPrefix(1), "ExchangeRates", asset.PairKeyEncoder, collcompat.ProtoValue[types.DatedPrice](cdc)),
-		PriceSnapshots:    collections.NewMap(sb, collections.NewPrefix(10), "PriceSnapshots", collections.PairKeyCodec(asset.PairKeyEncoder, common.TimeKeyEncoder), collcompat.ProtoValue[types.PriceSnapshot](cdc)),
+		PriceSnapshots:    collections.NewMap(sb, collections.NewPrefix(10), "PriceSnapshots", collections.PairKeyCodec(asset.PairKeyEncoder, archcodec.TimeKeyEncoder), collcompat.ProtoValue[types.PriceSnapshot](cdc)),
 		FeederDelegations: collections.NewMap(sb, collections.NewPrefix(2), "FeederDelegations", collections.BytesKey, collections.BytesValue),
 		MissCounters:      collections.NewMap(sb, collections.NewPrefix(3), "MissCounters", collections.BytesKey, collections.Uint64Value),
 		Prevotes:          collections.NewMap(sb, collections.NewPrefix(4), "Prevotes", collections.BytesKey, collcompat.ProtoValue[types.AggregateExchangeRatePrevote](cdc)),
