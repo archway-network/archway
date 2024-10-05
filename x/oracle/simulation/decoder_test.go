@@ -50,7 +50,7 @@ func TestDecodeDistributionStore(t *testing.T) {
 			{Key: []byte{0x3, 0x4, 0x5, 0x6, 0x7}, Value: cdc.MustMarshal(&gogotypes.UInt64Value{Value: missCounter})},
 			{Key: []byte{0x4, 0x3, 0x5, 0x7, 0x8}, Value: cdc.MustMarshal(&aggregatePrevote)},
 			{Key: []byte{0x5, 0x6, 0x7, 0x8, 0x9}, Value: cdc.MustMarshal(&aggregateVote)},
-			{Key: append([]byte{0x6}, append([]byte(pair), 0x0)...), Value: []byte{}},
+			{Key: append([]byte{0x6}, []byte(pair)...), Value: []byte{}},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}

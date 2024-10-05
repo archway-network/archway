@@ -97,8 +97,8 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	feederDelegations := []types.FeederDelegation{}
 	keeper.FeederDelegations.Walk(ctx, nil, func(valBytes []byte, accBytes []byte) (bool, error) {
 		feederDelegations = append(feederDelegations, types.FeederDelegation{
-			FeederAddress:    sdk.ValAddress(valBytes).String(),
-			ValidatorAddress: sdk.AccAddress(accBytes).String(),
+			FeederAddress:    sdk.AccAddress(accBytes).String(),
+			ValidatorAddress: sdk.ValAddress(valBytes).String(),
 		})
 		return false, nil
 	})

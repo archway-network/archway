@@ -1,18 +1,70 @@
 package common
 
 import (
+	"fmt"
 	"time"
 
 	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
-	TimeKeyEncoder collcodec.KeyCodec[time.Time] = timeKeyEncoder{}
+	DecValueEncoder collcodec.KeyCodec[math.LegacyDec] = decValueEncoder{}
+	TimeKeyEncoder  collcodec.KeyCodec[time.Time]      = timeKeyEncoder{}
 )
 
+func HumanizeBytes(bz []byte) string {
+	return fmt.Sprintf("\nbytesAsHex: %x", bz)
+}
+
 // Collection Codecs
+
+// math.LegacyDec
+
+type decValueEncoder struct{}
+
+func (decValueEncoder) Stringify(value math.LegacyDec) string {
+	return value.String()
+}
+func (decValueEncoder) Encode(buffer []byte, value math.LegacyDec) (int, error) {
+	b, err := value.Marshal()
+	copy(buffer, b)
+	return len(b), err
+}
+func (decValueEncoder) Decode(b []byte) (int, math.LegacyDec, error) {
+	dec := new(math.LegacyDec)
+	err := dec.Unmarshal(b)
+	return len(b), *dec, err
+}
+func (decValueEncoder) EncodeJSON(value math.LegacyDec) ([]byte, error) {
+	b, err := value.MarshalJSON()
+	return b, err
+}
+func (decValueEncoder) DecodeJSON(b []byte) (math.LegacyDec, error) {
+	dec := new(math.LegacyDec)
+	err := dec.UnmarshalJSON(b)
+	return *dec, err
+}
+func (dve decValueEncoder) EncodeNonTerminal(buffer []byte, key math.LegacyDec) (int, error) {
+	return dve.Encode(buffer, key)
+}
+func (dve decValueEncoder) DecodeNonTerminal(buffer []byte) (int, math.LegacyDec, error) {
+	return dve.Decode(buffer)
+}
+func (decValueEncoder) Size(key math.LegacyDec) int {
+	b, _ := key.Marshal()
+	return len(b)
+}
+func (tke decValueEncoder) SizeNonTerminal(key math.LegacyDec) int {
+	return tke.Size(key)
+}
+func (d decValueEncoder) KeyType() string {
+	return "math.LegacyDec"
+}
+
+// std.time.Time
 
 type timeKeyEncoder struct{}
 

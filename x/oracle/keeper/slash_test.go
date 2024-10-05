@@ -165,7 +165,7 @@ func TestInvalidVotesSlashing(t *testing.T) {
 		// keepers.OracleKeeper.UpdateExchangeRates(ctx)
 
 		counter, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
-		if err == nil {
+		if err != nil {
 			counter = 0
 		}
 		require.Equal(t, i+1, counter)
@@ -255,7 +255,7 @@ func TestWhitelistSlashing(t *testing.T) {
 
 		perfs := keepers.OracleKeeper.UpdateExchangeRates(ctx)
 		missCount, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[0])
-		if err == nil {
+		if err != nil {
 			missCount = 0
 		}
 		require.EqualValues(t, 0, missCount, perfs.String())
@@ -300,17 +300,17 @@ func TestNotPassedBallotSlashing(t *testing.T) {
 	keepers.OracleKeeper.SlashAndResetMissCounters(ctx)
 	// keepers.OracleKeeper.UpdateExchangeRates(ctx)
 	counter, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[0])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	require.Equal(t, uint64(0), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	require.Equal(t, uint64(0), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[2])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	require.Equal(t, uint64(0), counter)
@@ -362,7 +362,7 @@ func TestAbstainSlashing(t *testing.T) {
 		keepers.OracleKeeper.SlashAndResetMissCounters(ctx)
 		// keepers.OracleKeeper.UpdateExchangeRates(ctx)
 		counter, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
-		if err == nil {
+		if err != nil {
 			counter = 0
 		}
 		require.Equal(t, uint64(0), counter)

@@ -131,14 +131,14 @@ func (q querier) FeederDelegation(ctx context.Context, req *types.QueryFeederDel
 	}
 
 	valueBytes, err := q.Keeper.FeederDelegations.Get(ctx, valAddr)
-	var value string
+	var value sdk.Address
 	if err == nil {
-		value = sdk.AccAddress(valueBytes).String()
+		value = sdk.AccAddress(valueBytes)
 	} else {
-		value = sdk.AccAddress(valAddr).String()
+		value = sdk.AccAddress(valAddr)
 	}
 	return &types.QueryFeederDelegationResponse{
-		FeederAddr: value,
+		FeederAddr: value.String(),
 	}, nil
 }
 

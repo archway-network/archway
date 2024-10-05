@@ -113,7 +113,7 @@ func SimulateMsgAggregateExchangeRatePrevote(ak types.AccountKeeper, bk types.Ba
 		feederAddrBytes, err := k.FeederDelegations.Get(ctx, address)
 		var feederAddr sdk.AccAddress
 		if err == nil {
-			feederAddr = sdk.AccAddress(sdk.ValAddress(feederAddrBytes))
+			feederAddr = sdk.AccAddress(feederAddrBytes)
 		} else {
 			feederAddr = sdk.AccAddress(address)
 		}
@@ -191,7 +191,7 @@ func SimulateMsgAggregateExchangeRateVote(ak types.AccountKeeper, bk types.BankK
 		feederAddrBytes, err := k.FeederDelegations.Get(ctx, address)
 		var feederAddr sdk.AccAddress
 		if err == nil {
-			feederAddr = sdk.AccAddress(sdk.ValAddress(feederAddrBytes))
+			feederAddr = sdk.AccAddress(feederAddrBytes)
 		} else {
 			feederAddr = sdk.AccAddress(address)
 		}

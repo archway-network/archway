@@ -317,22 +317,22 @@ func TestOracleRewardBand(t *testing.T) {
 	keepers.OracleKeeper.UpdateExchangeRates(ctx)
 
 	counter, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[0])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[2])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[3])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)
@@ -361,22 +361,22 @@ func TestOracleRewardBand(t *testing.T) {
 	keepers.OracleKeeper.UpdateExchangeRates(ctx)
 
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[0])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(1), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[2])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[3])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)
@@ -564,22 +564,22 @@ func TestWhitelistedPairs(t *testing.T) {
 
 	t.Log("assert: no miss counts for all vals")
 	counter, err := keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[0])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[1])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[2])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)
 	counter, err = keepers.OracleKeeper.MissCounters.Get(ctx, ValAddrs[3])
-	if err == nil {
+	if err != nil {
 		counter = 0
 	}
 	assert.Equal(t, uint64(0), counter)

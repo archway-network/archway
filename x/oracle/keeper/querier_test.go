@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"sort"
 	"testing"
 	"time"
 
@@ -321,9 +320,9 @@ func TestQueryAggregatePrevotes(t *testing.T) {
 	keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[2], prevote3)
 
 	expectedPrevotes := []types.AggregateExchangeRatePrevote{prevote1, prevote2, prevote3}
-	sort.SliceStable(expectedPrevotes, func(i, j int) bool {
-		return expectedPrevotes[i].Voter <= expectedPrevotes[j].Voter
-	})
+	// sort.SliceStable(expectedPrevotes, func(i, j int) bool {
+	// 	return expectedPrevotes[i].Voter <= expectedPrevotes[j].Voter
+	// })
 
 	res, err := querier.AggregatePrevotes(ctx, &types.QueryAggregatePrevotesRequest{})
 	require.NoError(t, err)
@@ -386,9 +385,9 @@ func TestQueryAggregateVotes(t *testing.T) {
 	keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[2], vote3)
 
 	expectedVotes := []types.AggregateExchangeRateVote{vote1, vote2, vote3}
-	sort.SliceStable(expectedVotes, func(i, j int) bool {
-		return expectedVotes[i].Voter <= expectedVotes[j].Voter
-	})
+	// sort.SliceStable(expectedVotes, func(i, j int) bool {
+	// 	return expectedVotes[i].Voter <= expectedVotes[j].Voter
+	// })
 
 	res, err := querier.AggregateVotes(ctx, &types.QueryAggregateVotesRequest{})
 	require.NoError(t, err)

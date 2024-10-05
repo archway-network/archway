@@ -57,7 +57,7 @@ func (k Keeper) incrementMissCounters(
 	for _, validatorPerformance := range validatorPerformances {
 		if int(validatorPerformance.MissCount) > 0 {
 			counter, err := k.MissCounters.Get(ctx, validatorPerformance.ValAddress)
-			if err == nil {
+			if err != nil {
 				counter = 0
 			}
 			k.MissCounters.Set(

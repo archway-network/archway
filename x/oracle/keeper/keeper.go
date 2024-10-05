@@ -113,9 +113,9 @@ func (k Keeper) ValidateFeeder(
 		)
 		var delegate sdk.Address
 		if err == nil {
-			delegate = sdk.AccAddress(validatorAddr)
+			delegate = sdk.AccAddress(delegateStr)
 		} else {
-			delegate = sdk.ValAddress(delegateStr)
+			delegate = sdk.AccAddress(validatorAddr)
 		}
 		if !delegate.Equals(feederAddr) {
 			return sdkerrors.Wrapf(
