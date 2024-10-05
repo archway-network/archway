@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/archway-network/archway/x/common/asset"
-	"github.com/archway-network/archway/x/common/denoms"
+	"github.com/archway-network/archway/x/oracle/asset"
+	"github.com/archway-network/archway/x/oracle/denoms"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/module"

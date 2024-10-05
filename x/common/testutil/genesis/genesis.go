@@ -9,8 +9,8 @@ import (
 
 	"github.com/archway-network/archway/app"
 	archwayappparams "github.com/archway-network/archway/app/params"
-	"github.com/archway-network/archway/x/common/denoms"
 	"github.com/archway-network/archway/x/common/testutil/testapp"
+	"github.com/archway-network/archway/x/oracle/denoms"
 )
 
 /*

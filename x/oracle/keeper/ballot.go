@@ -1,15 +1,13 @@
 package keeper
 
 import (
-	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/math"
 
-	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/omap"
 	"github.com/archway-network/archway/x/common/set"
+	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/types"
 )
 
@@ -96,7 +94,7 @@ func (k Keeper) ClearVotesAndPrevotes(ctx sdk.Context, votePeriod uint64) {
 
 // IsPassingVoteThreshold votes is passing the threshold amount of voting power
 func IsPassingVoteThreshold(
-	votes types.ExchangeRateVotes, thresholdVotingPower sdkmath.Int, minVoters uint64,
+	votes types.ExchangeRateVotes, thresholdVotingPower math.Int, minVoters uint64,
 ) bool {
 	totalPower := math.NewInt(votes.Power())
 	if totalPower.IsZero() {

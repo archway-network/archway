@@ -1,7 +1,7 @@
 package omap
 
 import (
-	"github.com/archway-network/archway/x/common/asset"
+	"github.com/archway-network/archway/x/oracle/asset"
 )
 
 func stringIsLess(a, b string) bool {

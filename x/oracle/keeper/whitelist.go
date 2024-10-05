@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/set"
+	"github.com/archway-network/archway/x/oracle/asset"
 )
 
 // IsWhitelistedPair returns existence of a pair in the voting target list

@@ -9,8 +9,8 @@ import (
 	"cosmossdk.io/math"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/x/common/asset"
-	"github.com/archway-network/archway/x/common/denoms"
+	"github.com/archway-network/archway/x/oracle/asset"
+	"github.com/archway-network/archway/x/oracle/denoms"
 	"github.com/archway-network/archway/x/oracle/keeper"
 	"github.com/archway-network/archway/x/oracle/types"
 )

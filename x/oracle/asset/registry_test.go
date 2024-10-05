@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/archway-network/archway/x/common/denoms"
+	"github.com/archway-network/archway/x/oracle/denoms"
 )
 
 func TestIsSupportedPair(t *testing.T) {

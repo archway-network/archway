@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/set"
+	"github.com/archway-network/archway/x/oracle/asset"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

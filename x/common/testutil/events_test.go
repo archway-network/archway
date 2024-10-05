@@ -3,9 +3,9 @@ package testutil_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/archway-network/archway/x/common/denoms"
 	"github.com/archway-network/archway/x/common/testutil"
 	"github.com/archway-network/archway/x/common/testutil/testapp"
+	"github.com/archway-network/archway/x/oracle/denoms"
 )
 
 func (s *TestSuite) TestEventsUtils() {

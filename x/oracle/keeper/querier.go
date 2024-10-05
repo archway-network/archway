@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/archway-network/archway/x/common/asset"
+	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/types"
 )
 

@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
-	"github.com/archway-network/archway/x/common/asset"
-	"github.com/archway-network/archway/x/common/denoms"
+	"github.com/archway-network/archway/x/oracle/asset"
+	"github.com/archway-network/archway/x/oracle/denoms"
 	sim "github.com/archway-network/archway/x/oracle/simulation"
 	"github.com/archway-network/archway/x/oracle/types"
 )

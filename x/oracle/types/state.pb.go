@@ -6,7 +6,7 @@ package types
 import (
 	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
-	github_com_archway_network_archway_x_common_asset "github.com/archway-network/archway/x/common/asset"
+	github_com_archway_network_archway_x_common_asset "github.com/archway-network/archway/x/oracle/asset"
 	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -29,7 +29,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // a snapshot of the prices at a given point in time
 type PriceSnapshot struct {
-	Pair  github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,1,opt,name=pair,proto3,customtype=github.com/archway-network/archway/x/common/asset.Pair" json:"pair" yaml:"pair"`
+	Pair  github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,1,opt,name=pair,proto3,customtype=github.com/archway-network/archway/x/oracle/asset.Pair" json:"pair" yaml:"pair"`
 	Price cosmossdk_io_math.LegacyDec                            `protobuf:"bytes,2,opt,name=price,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"price"`
 	// milliseconds since unix epoch
 	TimestampMs int64 `protobuf:"varint,3,opt,name=timestamp_ms,json=timestampMs,proto3" json:"timestamp_ms,omitempty"`

@@ -1,8 +1,8 @@
 package asset
 
 import (
-	"github.com/archway-network/archway/x/common/denoms"
 	"github.com/archway-network/archway/x/common/set"
+	"github.com/archway-network/archway/x/oracle/denoms"
 )
 
 type registry map[string]set.Set[string]

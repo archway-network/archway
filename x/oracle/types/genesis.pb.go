@@ -5,7 +5,7 @@ package types
 
 import (
 	fmt "fmt"
-	github_com_archway_network_archway_x_common_asset "github.com/archway-network/archway/x/common/asset"
+	github_com_archway_network_archway_x_common_asset "github.com/archway-network/archway/x/oracle/asset"
 	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -33,7 +33,7 @@ type GenesisState struct {
 	MissCounters                  []MissCounter                                            `protobuf:"bytes,4,rep,name=miss_counters,json=missCounters,proto3" json:"miss_counters"`
 	AggregateExchangeRatePrevotes []AggregateExchangeRatePrevote                           `protobuf:"bytes,5,rep,name=aggregate_exchange_rate_prevotes,json=aggregateExchangeRatePrevotes,proto3" json:"aggregate_exchange_rate_prevotes"`
 	AggregateExchangeRateVotes    []AggregateExchangeRateVote                              `protobuf:"bytes,6,rep,name=aggregate_exchange_rate_votes,json=aggregateExchangeRateVotes,proto3" json:"aggregate_exchange_rate_votes"`
-	Pairs                         []github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,7,rep,name=pairs,proto3,customtype=github.com/archway-network/archway/x/common/asset.Pair" json:"pairs"`
+	Pairs                         []github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,7,rep,name=pairs,proto3,customtype=github.com/archway-network/archway/x/oracle/asset.Pair" json:"pairs"`
 	Rewards                       []Rewards                                                `protobuf:"bytes,8,rep,name=rewards,proto3" json:"rewards"`
 }
 

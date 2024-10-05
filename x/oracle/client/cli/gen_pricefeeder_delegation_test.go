@@ -19,7 +19,7 @@ func TestAddGenesisPricefeederDelegation(t *testing.T) {
 
 		expectErr bool
 	}{
-		// TODO:
+		// TODO (spekalsg3)
 		// {
 		// 	name:        "valid",
 		// 	validator:   "nibivaloper1zaavvzxez0elundtn32qnk9lkm8kmcszuwx9jz",

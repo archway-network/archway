@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/archway-network/archway/x/common"
-	"github.com/archway-network/archway/x/common/asset"
-	"github.com/archway-network/archway/x/common/denoms"
 	"github.com/archway-network/archway/x/common/testutil"
+	"github.com/archway-network/archway/x/oracle/asset"
+	"github.com/archway-network/archway/x/oracle/denoms"
 )
 
 func newErrors(strs ...string) []error {

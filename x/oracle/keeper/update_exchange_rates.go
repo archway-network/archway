@@ -3,9 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/omap"
 	"github.com/archway-network/archway/x/common/set"
+	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/types"
 )
 
@@ -51,7 +51,7 @@ func (k Keeper) UpdateExchangeRates(ctx sdk.Context) types.ValidatorPerformances
 // missed vote of those that did not vote.
 func (k Keeper) incrementMissCounters(
 	ctx sdk.Context,
-	whitelistedPairs set.Set[asset.Pair],
+	_ set.Set[asset.Pair],
 	validatorPerformances types.ValidatorPerformances,
 ) {
 	for _, validatorPerformance := range validatorPerformances {
@@ -71,7 +71,7 @@ func (k Keeper) incrementMissCounters(
 }
 
 func (k Keeper) incrementAbstainsByOmission(
-	ctx sdk.Context,
+	_ sdk.Context,
 	numPairs int,
 	validatorPerformances types.ValidatorPerformances,
 ) {

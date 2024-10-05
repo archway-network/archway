@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/archway-network/archway/x/common/denoms"
+	"github.com/archway-network/archway/x/oracle/denoms"
 	"github.com/archway-network/archway/x/oracle/types"
 
 	"github.com/stretchr/testify/require"

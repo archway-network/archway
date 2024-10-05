@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/archway-network/archway/x/common/asset"
-	"github.com/archway-network/archway/x/common/denoms"
+	"github.com/archway-network/archway/x/oracle/asset"
+	"github.com/archway-network/archway/x/oracle/denoms"
 )
 
 // Parameter keys

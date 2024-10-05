@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/x/common"
-	"github.com/archway-network/archway/x/common/asset"
+	"github.com/archway-network/archway/x/oracle/asset"
 )
 
 // NOTE: we don't need to implement proto interface on this file

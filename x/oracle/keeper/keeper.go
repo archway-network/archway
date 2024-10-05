@@ -17,7 +17,7 @@ import (
 
 	"github.com/archway-network/archway/internal/collcompat"
 	"github.com/archway-network/archway/x/common"
-	"github.com/archway-network/archway/x/common/asset"
+	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/types"
 )
 

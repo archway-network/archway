@@ -7,7 +7,7 @@ import (
 	context "context"
 	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
-	github_com_archway_network_archway_x_common_asset "github.com/archway-network/archway/x/common/asset"
+	github_com_archway_network_archway_x_common_asset "github.com/archway-network/archway/x/oracle/asset"
 	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
@@ -36,7 +36,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // method.
 type QueryExchangeRateRequest struct {
 	// pair defines the pair to query for.
-	Pair github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,1,opt,name=pair,proto3,customtype=github.com/archway-network/archway/x/common/asset.Pair" json:"pair"`
+	Pair github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,1,opt,name=pair,proto3,customtype=github.com/archway-network/archway/x/oracle/asset.Pair" json:"pair"`
 }
 
 func (m *QueryExchangeRateRequest) Reset()         { *m = QueryExchangeRateRequest{} }
@@ -239,7 +239,7 @@ var xxx_messageInfo_QueryActivesRequest proto.InternalMessageInfo
 // Query/Actives RPC method.
 type QueryActivesResponse struct {
 	// actives defines a list of the pair which oracle prices agreed upon.
-	Actives []github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,1,rep,name=actives,proto3,customtype=github.com/archway-network/archway/x/common/asset.Pair" json:"actives"`
+	Actives []github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,1,rep,name=actives,proto3,customtype=github.com/archway-network/archway/x/oracle/asset.Pair" json:"actives"`
 }
 
 func (m *QueryActivesResponse) Reset()         { *m = QueryActivesResponse{} }
@@ -318,7 +318,7 @@ var xxx_messageInfo_QueryVoteTargetsRequest proto.InternalMessageInfo
 type QueryVoteTargetsResponse struct {
 	// vote_targets defines a list of the pairs in which everyone
 	// should vote in the current vote period.
-	VoteTargets []github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,1,rep,name=vote_targets,json=voteTargets,proto3,customtype=github.com/archway-network/archway/x/common/asset.Pair" json:"vote_targets"`
+	VoteTargets []github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,1,rep,name=vote_targets,json=voteTargets,proto3,customtype=github.com/archway-network/archway/x/oracle/asset.Pair" json:"vote_targets"`
 }
 
 func (m *QueryVoteTargetsResponse) Reset()         { *m = QueryVoteTargetsResponse{} }

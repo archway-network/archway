@@ -6,7 +6,7 @@ package types
 import (
 	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
-	github_com_archway_network_archway_x_common_asset "github.com/archway-network/archway/x/common/asset"
+	github_com_archway_network_archway_x_common_asset "github.com/archway-network/archway/x/oracle/asset"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -48,7 +48,7 @@ type Params struct {
 	RewardBand cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=reward_band,json=rewardBand,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"reward_band" yaml:"reward_band"`
 	// The set of whitelisted markets, or asset pairs, for the module.
 	// Ex. '["unibi:uusd","ubtc:uusd"]'
-	Whitelist []github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,4,rep,name=whitelist,proto3,customtype=github.com/archway-network/archway/x/common/asset.Pair" json:"whitelist,omitempty" yaml:"whitelist"`
+	Whitelist []github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,4,rep,name=whitelist,proto3,customtype=github.com/archway-network/archway/x/oracle/asset.Pair" json:"whitelist,omitempty" yaml:"whitelist"`
 	// SlashFraction returns the proportion of an oracle's stake that gets
 	// slashed in the event of slashing. `SlashFraction` specifies the exact
 	// penalty for failing a voting period.
@@ -223,7 +223,7 @@ var xxx_messageInfo_AggregateExchangeRateVote proto.InternalMessageInfo
 
 // ExchangeRateTuple - struct to store interpreted exchange rates data to store
 type ExchangeRateTuple struct {
-	Pair         github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,1,opt,name=pair,proto3,customtype=github.com/archway-network/archway/x/common/asset.Pair" json:"pair" yaml:"pair"`
+	Pair         github_com_archway_network_archway_x_common_asset.Pair `protobuf:"bytes,1,opt,name=pair,proto3,customtype=github.com/archway-network/archway/x/oracle/asset.Pair" json:"pair" yaml:"pair"`
 	ExchangeRate cosmossdk_io_math.LegacyDec                            `protobuf:"bytes,2,opt,name=exchange_rate,json=exchangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"exchange_rate" yaml:"exchange_rate"`
 }
 

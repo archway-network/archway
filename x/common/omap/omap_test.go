@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/archway-network/archway/x/common/asset"
 	"github.com/archway-network/archway/x/common/omap"
+	"github.com/archway-network/archway/x/oracle/asset"
 )
 
 // TestLenHasKeys checks the length of the ordered map and verifies if the map

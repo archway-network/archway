@@ -10,8 +10,8 @@ import (
 	"github.com/CosmWasm/wasmd/app/params"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 
-	"github.com/archway-network/archway/x/common/asset"
-	"github.com/archway-network/archway/x/common/denoms"
+	"github.com/archway-network/archway/x/oracle/asset"
+	"github.com/archway-network/archway/x/oracle/denoms"
 
 	helpers "github.com/cosmos/cosmos-sdk/testutil/sims"
 
