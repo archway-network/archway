@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/archway-network/archway/app/appconst"
 	tmdb "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -87,7 +88,7 @@ var emptyWasmOpts []wasmkeeper.Option = nil
 // ensure that blocked addresses are properly set in bank keeper
 func TestBlockedAddrs(t *testing.T) {
 	db := tmdb.NewMemDB()
-	gapp := NewArchwayApp(log.NewTestLogger(t), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), EmptyBaseAppOptions{}, emptyWasmOpts)
+	gapp := NewArchwayApp(log.NewTestLogger(t), db, nil, true, map[int64]bool{}, appconst.DefaultNodeHome, 0, MakeEncodingConfig(), EmptyBaseAppOptions{}, emptyWasmOpts)
 
 	for acc := range BlockedAddresses() {
 		var addr sdk.AccAddress

@@ -10,7 +10,7 @@ import (
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	"github.com/archway-network/archway/app"
+	"github.com/archway-network/archway/app/appconst"
 )
 
 const ArchwayASCII = `
@@ -29,7 +29,7 @@ func main() {
 
 	rootCmd.AddCommand(ensureLibWasmVM())
 
-	if err := svrcmd.Execute(rootCmd, "ARCHWAY", app.DefaultNodeHome); err != nil {
+	if err := svrcmd.Execute(rootCmd, "ARCHWAY", appconst.DefaultNodeHome); err != nil {
 		_, _ = fmt.Fprintln(rootCmd.OutOrStderr(), err)
 		os.Exit(1)
 	}
