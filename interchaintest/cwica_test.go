@@ -34,7 +34,7 @@ func TestCWICA(t *testing.T) {
 	junoChainSpec := &interchaintest.ChainSpec{
 		Name:          "juno",
 		ChainName:     "juno",
-		Version:       "v20.0.0",
+		Version:       "v25.0.0",
 		NumValidators: &numOfVals,
 		ChainConfig: ibc.ChainConfig{
 			GasAdjustment: 2,
@@ -62,20 +62,28 @@ func TestCWICA(t *testing.T) {
 		ibc.CosmosRly,
 		zaptest.NewLogger(t),
 		relayer.StartupFlags("-b", "100", "-p", "events"),
+		// relayer.ImagePull(false),
+		// relayer.DockerImage(&ibc.DockerImage{
+		// 	Repository: "ghcr.io/cosmos/relayer",
+		// 	Version:    "justin-CoC", // sha256:a7f03cc955c1bd8d1436bee29eaf5c1e44298e17d1dfb3fecb1be912f206819b
+		// }),
 	)
 	client, network := interchaintest.DockerSetup(t)
 	relayer := relayerFactory.Build(t, client, network)
 
 	// Create the IBC network with the chains and relayer
+	ibcChannelOpts := ibc.DefaultChannelOpts()
+	ibcChannelOpts.Order = ibc.Ordered
 	ic := interchaintest.NewInterchain().
 		AddChain(archwayChain).
 		AddChain(counterpartyChain).
 		AddRelayer(relayer, relayerName).
 		AddLink(interchaintest.InterchainLink{
-			Chain1:  archwayChain,
-			Chain2:  counterpartyChain,
-			Relayer: relayer,
-			Path:    path,
+			Chain1:            archwayChain,
+			Chain2:            counterpartyChain,
+			Relayer:           relayer,
+			Path:              path,
+			CreateChannelOpts: ibcChannelOpts,
 		})
 	ir := cosmos.DefaultEncoding().InterfaceRegistry
 	rep := testreporter.NewNopReporter()
@@ -257,6 +265,7 @@ func TestCWICA(t *testing.T) {
 	require.NoError(t, err)
 	for _, channel := range channels {
 		if channel.Counterparty.PortID == "icahost" {
+			// TODO: ORDER_UNORDERED channels are not closed on msg timeout
 			require.Equal(t, "STATE_CLOSED", channel.State)
 		}
 	}

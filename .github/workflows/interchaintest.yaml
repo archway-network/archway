@@ -90,20 +90,6 @@ jobs:
             - name: Load current image
               run: docker load --input archway_local
 
-            - name: Get last release tag
-              id: lastrelease
-              uses: WyriHaximus/github-action-get-previous-tag@v1
-              with:
-                prefix: 'v'
-
-            - name: Download ${{ steps.lastrelease.outputs.tag }} image
-              uses: actions/download-artifact@v3
-              with:
-                name: action_image_artifact_archway_${{ steps.lastrelease.outputs.tag }}
-
-            - name: Load ${{ steps.lastrelease.outputs.tag }} image
-              run: docker load --input archway_${{ steps.lastrelease.outputs.tag }}
-
             - name: Run chain upgrade test
               run: |
                 cd interchaintest
@@ -140,7 +126,7 @@ jobs:
           - name: Run chain conformance test
             run: |
               cd interchaintest
-              go test -v -race -run  TestGaiaConformance
+              go test -v -race -run TestGaiaConformance
 
     cwica_tests:
       name: Interchain transactions test
@@ -173,4 +159,4 @@ jobs:
         - name: Run interchain transactions test
           run: |
             cd interchaintest
-            go test -v -race -run  TestCWICA
+            go test -v -race -run TestCWICA

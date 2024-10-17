@@ -95,7 +95,7 @@ message QueryExchangeRateRequest {
   // pair defines the pair to query for.
   string pair = 1 [
     (gogoproto.customtype) =
-        "github.com/archway-network/archway/x/common/asset.Pair",
+        "github.com/archway-network/archway/x/oracle/asset.Pair",
     (gogoproto.nullable) = false
   ];
 }
@@ -134,7 +134,7 @@ message QueryActivesResponse {
   // actives defines a list of the pair which oracle prices agreed upon.
   repeated string actives = 1 [
     (gogoproto.customtype) =
-        "github.com/archway-network/archway/x/common/asset.Pair",
+        "github.com/archway-network/archway/x/oracle/asset.Pair",
     (gogoproto.nullable) = false
   ];
 }
@@ -150,7 +150,7 @@ message QueryVoteTargetsResponse {
   // should vote in the current vote period.
   repeated string vote_targets = 1 [
     (gogoproto.customtype) =
-        "github.com/archway-network/archway/x/common/asset.Pair",
+        "github.com/archway-network/archway/x/oracle/asset.Pair",
     (gogoproto.nullable) = false
   ];
 }
