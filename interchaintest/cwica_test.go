@@ -63,10 +63,10 @@ func TestCWICA(t *testing.T) {
 		zaptest.NewLogger(t),
 		relayer.StartupFlags("-b", "100", "-p", "events"),
 		// relayer.ImagePull(false),
-		// relayer.DockerImage(&ibc.DockerImage{
-		// 	Repository: "ghcr.io/cosmos/relayer",
-		// 	Version:    "justin-CoC", // sha256:a7f03cc955c1bd8d1436bee29eaf5c1e44298e17d1dfb3fecb1be912f206819b
-		// }),
+		relayer.DockerImage(&ibc.DockerImage{
+			Repository: "ghcr.io/cosmos/relayer",
+			Version:    "justin-CoC", // sha256:a7f03cc955c1bd8d1436bee29eaf5c1e44298e17d1dfb3fecb1be912f206819b
+		}),
 	)
 	client, network := interchaintest.DockerSetup(t)
 	relayer := relayerFactory.Build(t, client, network)
@@ -157,7 +157,7 @@ func TestCWICA(t *testing.T) {
 	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
 
 	// Ensure an IBC channel is opened between the two chains
-	channels, err := relayer.GetChannels(ctx, eRep, archwayChain.Config().ChainID)
+	channels, err = relayer.GetChannels(ctx, eRep, archwayChain.Config().ChainID)
 	require.NoError(t, err)
 	for _, channel := range channels {
 		if channel.Counterparty.PortID == "icahost" && channel.PortID == "icacontroller-"+contractAddress {
