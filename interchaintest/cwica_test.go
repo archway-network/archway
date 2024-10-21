@@ -157,7 +157,7 @@ func TestCWICA(t *testing.T) {
 	require.Equal(t, icaCounterpartyAddress, contractRes.Data.ICAAddress)
 
 	// Ensure an IBC channel is opened between the two chains
-	channels, err = relayer.GetChannels(ctx, eRep, archwayChain.Config().ChainID)
+	channels, err := relayer.GetChannels(ctx, eRep, archwayChain.Config().ChainID)
 	require.NoError(t, err)
 	for _, channel := range channels {
 		if channel.Counterparty.PortID == "icahost" && channel.PortID == "icacontroller-"+contractAddress {
