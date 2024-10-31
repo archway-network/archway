@@ -162,6 +162,7 @@ import (
 	extendedGov "github.com/archway-network/archway/x/gov"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	archwayappparams "github.com/archway-network/archway/app/params"
 	archway "github.com/archway-network/archway/types"
@@ -232,6 +233,15 @@ var (
 	_ runtime.AppI            = (*ArchwayApp)(nil)
 	_ servertypes.Application = (*ArchwayApp)(nil)
 )
+
+func SetPrefixes() {
+	cfg := sdk.GetConfig()
+	cfg.SetBech32PrefixForAccount(appconst.Bech32PrefixAccAddr, appconst.Bech32PrefixAccPub)
+	cfg.SetBech32PrefixForValidator(appconst.Bech32PrefixValAddr, appconst.Bech32PrefixValPub)
+	cfg.SetBech32PrefixForConsensusNode(appconst.Bech32PrefixConsAddr, appconst.Bech32PrefixConsPub)
+	cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
+	cfg.Seal()
+}
 
 func init() {
 	// sets the default power reduction in order to ensure that on high precision numbers, which is a default for archway
