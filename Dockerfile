@@ -33,17 +33,16 @@ RUN go mod download
 COPY . .
 # wasm keeper is not implemented for builds without CGO - https://github.com/CosmWasm/wasmd/blob/88cba83a664ead2e99074cc841422809df85a3b4/x/wasm/keeper/keeper_no_cgo.go#L35
 # thus we use cgo implementation and have to build with cgo enabled
-# + don't use LINK_STATICALLY because using cgo linkage is dynamic
 
 RUN \
   # --mount=type=cache,target=/root/.cache/go-build \
   # --mount=type=cache,target=/go/pkg \
-  CGO_ENABLED=1 LEDGER_ENABLED=false BUILD_TAGS=muslc make build
+  CGO_ENABLED=1 LEDGER_ENABLED=false BUILD_TAGS=muslc LINK_STATICALLY=true make build
 
 # --------------------------------------------------------
 FROM alpine:3.17
 
-COPY --from=builder /code/cmd/archwayd /usr/bin/archwayd
+COPY --from=builder /code/build/archwayd /usr/bin/archwayd
 
 # rest server
 EXPOSE 1317
