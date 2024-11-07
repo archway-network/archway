@@ -11,13 +11,14 @@ import (
 )
 
 // EndBlocker is called at the end of every block
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	params, err := k.Params.Get(ctx)
 	if err != nil {
-		return
+		return err
 	}
+
 	if types.IsPeriodLastBlock(ctx, params.VotePeriod) {
 		k.UpdateExchangeRates(ctx)
 	}
@@ -27,4 +28,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	if types.IsPeriodLastBlock(ctx, params.SlashWindow) {
 		k.SlashAndResetMissCounters(ctx)
 	}
+
+	return nil
 }

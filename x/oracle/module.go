@@ -28,6 +28,13 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasABCIEndBlock     = AppModule{}
+	_ module.HasABCIGenesis      = AppModule{}
+	_ module.HasConsensusVersion = AppModule{}
+	_ module.HasGenesisBasics    = AppModule{}
+	_ module.HasInvariants       = AppModule{}
+	_ module.HasName             = AppModule{}
+	_ module.HasServices         = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the oracle module.
@@ -153,9 +160,9 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (AppModule) BeginBlock(_ sdk.Context) {}
 
 // EndBlock returns the end blocker for the oracle module.
-func (am AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	EndBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	return []abci.ValidatorUpdate{}, nil
 }
 
 //____________________________________________________________________________
