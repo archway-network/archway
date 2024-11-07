@@ -1,8 +1,6 @@
-FROM alpine:3.18
+FROM alpine:3.17
 
-COPY ./archwayd /usr/bin/archwayd
-
-WORKDIR /root/.archway
+COPY ./build/archwayd /usr/bin/archwayd
 
 # Install dev packages
 RUN apk add --no-cache bash jq

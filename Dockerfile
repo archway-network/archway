@@ -24,11 +24,17 @@ RUN if ! grep -q "${libwasmvm_sha} " /lib/libwasmvm_checksum ; then \
   echo "Actual   libwasmvm signature: $(cat /lib/libwasmvm_checksum)" && \
   exit 1; fi
 
+ARG GOPROXY=""
+ENV GOPROXY=${GOPROXY}
+
 COPY \
   go.sum \
   go.mod \
   ./
-RUN go mod download
+RUN \
+  # --mount=type=cache,target=/root/.cache/go \
+  GOPROXY=${GOPROXY} \
+  go mod download
 
 COPY . .
 # wasm keeper is not implemented for builds without CGO - https://github.com/CosmWasm/wasmd/blob/88cba83a664ead2e99074cc841422809df85a3b4/x/wasm/keeper/keeper_no_cgo.go#L35
