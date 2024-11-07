@@ -100,8 +100,8 @@ func (k Keeper) getPairVotes(
 	ctx sdk.Context,
 	validatorPerformances types.ValidatorPerformances,
 	whitelistedPairs set.Set[asset.Pair],
-) (pairVotes map[asset.Pair]types.ExchangeRateVotes) {
-	pairVotes = k.GroupVotesByPair(ctx, validatorPerformances)
+) map[asset.Pair]types.ExchangeRateVotes {
+	pairVotes := k.GroupVotesByPair(ctx, validatorPerformances)
 
 	k.RemoveInvalidVotes(ctx, pairVotes, whitelistedPairs)
 

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+ 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/math"
@@ -20,8 +22,8 @@ import (
 func (k Keeper) GroupVotesByPair(
 	ctx sdk.Context,
 	validatorPerformances types.ValidatorPerformances,
-) (pairVotes map[asset.Pair]types.ExchangeRateVotes) {
-	pairVotes = map[asset.Pair]types.ExchangeRateVotes{}
+) map[asset.Pair]types.ExchangeRateVotes {
+	pairVotes := map[asset.Pair]types.ExchangeRateVotes{}
 
 	err := k.Votes.Walk(ctx, nil, func(voterAddrBytes []byte, aggregateVote types.AggregateExchangeRateVote) (bool, error) {
 		voterAddr := sdk.ValAddress(voterAddrBytes)
@@ -55,7 +57,7 @@ func (k Keeper) GroupVotesByPair(
 		panic(err)
 	}
 
-	return
+	return pairVotes
 }
 
 // ClearVotesAndPrevotes clears all tallied prevotes and votes from the store
@@ -73,42 +75,30 @@ func (k Keeper) ClearVotesAndPrevotes(ctx sdk.Context, votePeriod uint64) {
 	})
 
 	// Clear all aggregate votes
-	iter, err := k.Votes.Iterate(ctx, nil)
+	err := k.Votes.Clear(ctx, nil)
 	if err != nil {
-		k.Logger(ctx).Error("failed to get votes iterator", "error", err)
-		return
-	}
-	keys, err := iter.Keys()
-	if err != nil {
-		k.Logger(ctx).Error("failed to get keys for votes iterator", "error", err)
-		return
-	}
-	for _, valAddr := range keys {
-		err := k.Votes.Remove(ctx, valAddr)
-		if err != nil {
-			k.Logger(ctx).Error("failed to delete vote", "error", err)
-		}
+		k.Logger(ctx).Error("failed to clear votes", "error", err)
 	}
 }
 
 // IsPassingVoteThreshold votes is passing the threshold amount of voting power
 func IsPassingVoteThreshold(
 	votes types.ExchangeRateVotes, thresholdVotingPower math.Int, minVoters uint64,
-) bool {
+) error {
 	totalPower := math.NewInt(votes.Power())
 	if totalPower.IsZero() {
-		return false
+		return fmt.Errorf("total voting power is 0")
 	}
 
 	if totalPower.LT(thresholdVotingPower) {
-		return false
+		return fmt.Errorf("total voting power is less then thresholdVotingPower (%g)", thresholdVotingPower)
 	}
 
 	if votes.NumValidVoters() < minVoters {
-		return false
+		return fmt.Errorf("number of validators (%d) is less then minVoters (%d)", votes.NumValidVoters(), minVoters)
 	}
 
-	return true
+	return nil
 }
 
 // RemoveInvalidVotes removes the votes which have not reached the vote
@@ -141,11 +131,11 @@ func (k Keeper) RemoveInvalidVotes(
 
 		// If the votes is not passed, remove it from the whitelistedPairs set
 		// to prevent slashing validators who did valid vote.
-		if !IsPassingVoteThreshold(
+		if err := IsPassingVoteThreshold(
 			votes,
 			k.VoteThreshold(ctx).MulInt64(totalBondedPower).RoundInt(),
 			k.MinVoters(ctx),
-		) {
+		); err != nil {
 			whitelistedPairs.Remove(pair)
 			delete(pairVotes, pair)
 			continue
