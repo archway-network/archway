@@ -78,6 +78,8 @@ setup_chain () {
   # reduce deposit period to 20seconds
   contents="$(jq '.app_state.gov.params.max_deposit_period = "20s"' $genesis)" && echo "${contents}" >  $genesis
   echo_info "Set x/gov proposal max deposit period to 20 seconds"
+  contents="$(jq '.app_state.oracle.params.min_voters = "1"' $genesis)" && echo "${contents}" >  $genesis
+  echo_info "Set x/oracle min_voters to 1"
 
   $BINARY config set client keyring-backend test --home $CHAIN_DIR/$CHAIN_ID
   $BINARY config set client chain-id $CHAIN_ID --home $CHAIN_DIR/$CHAIN_ID
@@ -124,4 +126,4 @@ fi
 
 # Starting chain
 echo_info "Starting chain..."
-$BINARY --home $CHAIN_DIR/$CHAIN_ID start --minimum-gas-prices 0stake --log_level debug
+$BINARY --home $CHAIN_DIR/$CHAIN_ID start --minimum-gas-prices 0stake
