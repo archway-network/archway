@@ -14,7 +14,7 @@ func (k Keeper) UpdateExchangeRates(ctx sdk.Context) types.ValidatorPerformances
 	validatorPerformances := k.newValidatorPerformances(ctx)
 	pairs, err := k.GetWhitelistedPairs(ctx)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	whitelistedPairs := set.New[asset.Pair](pairs...)
 
