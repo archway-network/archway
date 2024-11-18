@@ -3,7 +3,6 @@ package archway.oracle.v1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
-import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/archway-network/archway/x/oracle/types";
@@ -139,14 +138,13 @@ message DatedPrice {
     (gogoproto.nullable) = false
   ];
 
+  /// creation_height defines the block height when price record was created
   int64 creation_height = 2
-      [ (gogoproto.moretags) = "yaml:\"creation_height\"" ];
-
-  google.protobuf.Timestamp creation_time = 3 [
-    (gogoproto.moretags) = "yaml:\"creation_time\"",
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true
-  ];
+  [ (gogoproto.moretags) = "yaml:\"creation_height\"" ];
+  
+  /// creation_time defines the block time when price record was created
+  uint64 creation_time = 3
+  [ (gogoproto.moretags) = "yaml:\"creation_time\"" ];
 }
 
 // Rewards defines a credit object towards validators

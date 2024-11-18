@@ -209,7 +209,7 @@ func (k Keeper) SetPrice(ctx sdk.Context, pair asset.Pair, price math.LegacyDec)
 	k.ExchangeRates.Set(ctx, pair, types.DatedPrice{
 		ExchangeRate:   price,
 		CreationHeight: ctx.BlockHeight(),
-		CreationTime:   ctx.BlockTime(),
+		CreationTime:   uint64(ctx.BlockTime().UnixMilli()),
 	})
 
 	key := collections.Join(pair, ctx.BlockTime())

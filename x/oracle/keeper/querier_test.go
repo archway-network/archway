@@ -41,7 +41,7 @@ func TestQueryExchangeRate(t *testing.T) {
 	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{
 		ExchangeRate:   rate,
 		CreationHeight: ctx.BlockHeight(),
-		CreationTime:   ctx.BlockTime(),
+		CreationTime:   uint64(ctx.BlockTime().UnixMilli()),
 	})
 
 	// empty request
@@ -93,12 +93,12 @@ func TestQueryExchangeRates(t *testing.T) {
 	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), types.DatedPrice{
 		ExchangeRate:   rate,
 		CreationHeight: ctx.BlockHeight(),
-		CreationTime:   ctx.BlockTime(),
+		CreationTime:   uint64(ctx.BlockTime().UnixMilli()),
 	})
 	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{
 		ExchangeRate:   rate,
 		CreationHeight: ctx.BlockHeight(),
-		CreationTime:   ctx.BlockTime(),
+		CreationTime:   uint64(ctx.BlockTime().UnixMilli()),
 	})
 
 	res, err := querier.ExchangeRates(ctx, &types.QueryExchangeRatesRequest{})
@@ -234,17 +234,17 @@ func TestQueryActives(t *testing.T) {
 	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), types.DatedPrice{
 		ExchangeRate:   rate,
 		CreationHeight: ctx.BlockHeight(),
-		CreationTime:   ctx.BlockTime(),
+		CreationTime:   uint64(ctx.BlockTime().UnixMilli()),
 	})
 	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.NIBI, denoms.NUSD), types.DatedPrice{
 		ExchangeRate:   rate,
 		CreationHeight: ctx.BlockHeight(),
-		CreationTime:   ctx.BlockTime(),
+		CreationTime:   uint64(ctx.BlockTime().UnixMilli()),
 	})
 	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{
 		ExchangeRate:   rate,
 		CreationHeight: ctx.BlockHeight(),
-		CreationTime:   ctx.BlockTime(),
+		CreationTime:   uint64(ctx.BlockTime().UnixMilli()),
 	})
 
 	res, err := queryClient.Actives(ctx, &types.QueryActivesRequest{})
