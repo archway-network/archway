@@ -50,9 +50,7 @@ message MsgWithdrawRewards {
   option (cosmos.msg.v1.signer) = "rewards_address";
   message RecordsLimit { uint64 limit = 1; }
 
-  message RecordIDs {
-    repeated uint64 ids = 1;
-  }
+  message RecordIDs { repeated uint64 ids = 1; }
 
   // rewards_address is the address to distribute rewards to (bech32 encoded).
   string rewards_address = 1;
@@ -89,20 +87,23 @@ message MsgSetFlatFee {
 // MsgSetFlatFeeResponse is the response for Msg.SetFlatFee.
 message MsgSetFlatFeeResponse {}
 
-
 // MsgUpdateParams is the Msg/UpdateParams request type.
 //
 // Since: archway v5 && cosmos-sdk 0.47
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  // authority is the address that controls the module (defaults to x/gov unless
+  // overwritten).
   string authority = 1;
 
   // params defines the x/rewards parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  Params params = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "params,omitempty"];
+  Params params = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag) = "params,omitempty"
+  ];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

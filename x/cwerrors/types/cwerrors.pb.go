@@ -29,7 +29,8 @@ type ModuleErrors int32
 const (
 	// ERR_UNKNOWN is the default error code
 	ModuleErrors_ERR_UNKNOWN ModuleErrors = 0
-	// ERR_CALLBACK_EXECUTION_FAILED is the error code for when the error callback fails
+	// ERR_CALLBACK_EXECUTION_FAILED is the error code for when the error callback
+	// fails
 	ModuleErrors_ERR_CALLBACK_EXECUTION_FAILED ModuleErrors = 1
 )
 
