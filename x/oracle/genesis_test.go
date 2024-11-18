@@ -2,6 +2,7 @@ package oracle_test
 
 import (
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +28,7 @@ func TestExportInitGenesis(t *testing.T) {
 
 	keepers.OracleKeeper.Params.Set(ctx, types.DefaultParams())
 	keepers.OracleKeeper.FeederDelegations.Set(ctx, ValAddrs[0], AccAddrs[1])
-	keepers.OracleKeeper.ExchangeRates.Set(ctx, "pair1:pair2", types.DatedPrice{ExchangeRate: math.LegacyNewDec(123), CreationHeight: 0, CreationTime: 0})
+	keepers.OracleKeeper.ExchangeRates.Set(ctx, "pair1:pair2", types.DatedPrice{ExchangeRate: math.LegacyNewDec(123), CreationHeight: 0, CreationTime: time.Time{}})
 	keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[0], types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{123}, ValAddrs[0], uint64(2)))
 	keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[0], types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "foo", ExchangeRate: math.LegacyNewDec(123)}}, ValAddrs[0]))
 	keepers.OracleKeeper.WhitelistedPairs.Set(ctx, "pair1:pair1")
