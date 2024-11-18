@@ -25,12 +25,12 @@ var (
 )
 
 // Default parameter values
-// Assumes block times are 2s
+// Assumes block times are 6s
 const (
-	DefaultVotePeriod       = 5    // vote every 1 minute
-	DefaultSlashWindow      = 3600 // 2 hours
+	DefaultVotePeriod       = 10   // vote every 1 minute
+	DefaultSlashWindow      = 1200 // 2 hours
 	DefaultMinVoters        = 4    // minimum of 4 voters for a pair to become valid
-	DefaultExpirationBlocks = 900  // 30 minutes
+	DefaultExpirationBlocks = 300  // 30 minutes
 )
 
 // Default parameter values
