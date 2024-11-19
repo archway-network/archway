@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/archway-network/archway/app"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -28,6 +27,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v8/testing/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/archway-network/archway/app"
+	"github.com/archway-network/archway/app/appconst"
 )
 
 type App = app.ArchwayApp
@@ -108,7 +110,7 @@ func SetupWithGenesisValSet(
 // initSetup initializes a new SimApp. A Nop logger is set in SimApp.
 func setup(t *testing.T, chainID string, withGenesis bool, invCheckPeriod uint) (*app.ArchwayApp, map[string]json.RawMessage) {
 	appOptions := make(simtestutil.AppOptionsMap)
-	appOptions[flags.FlagHome] = app.DefaultNodeHome
+	appOptions[flags.FlagHome] = appconst.DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
 
 	archApp := app.NewArchwayApp(
@@ -116,7 +118,7 @@ func setup(t *testing.T, chainID string, withGenesis bool, invCheckPeriod uint) 
 		dbm.NewMemDB(),
 		nil,
 		true, map[int64]bool{},
-		app.DefaultNodeHome,
+		appconst.DefaultNodeHome,
 		1,
 		app.MakeEncodingConfig(),
 		app.EmptyBaseAppOptions{},
@@ -173,7 +175,6 @@ func GenesisStateWithValSet(
 		}
 		validators = append(validators, validator)
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), sdkmath.LegacyOneDec()))
-
 	}
 
 	// set validators and delegations
