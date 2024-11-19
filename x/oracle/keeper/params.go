@@ -11,7 +11,7 @@ import (
 
 // UpdateParams updates the oracle parameters
 func (k Keeper) UpdateParams(ctx sdk.Context, params types.Params) {
-	k.Params.Set(ctx, params)
+	_ = k.Params.Set(ctx, params)
 }
 
 // VotePeriod returns the number of blocks during which voting takes place.

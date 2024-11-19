@@ -80,7 +80,7 @@ func (q querier) ExchangeRateTwap(c context.Context, req *types.QueryExchangeRat
 // ExchangeRates queries exchange rates of all pairs
 func (q querier) ExchangeRates(ctx context.Context, _ *types.QueryExchangeRatesRequest) (*types.QueryExchangeRatesResponse, error) {
 	var exchangeRates types.ExchangeRateTuples
-	q.Keeper.ExchangeRates.Walk(ctx, nil, func(key asset.Pair, value types.DatedPrice) (bool, error) {
+	_ = q.Keeper.ExchangeRates.Walk(ctx, nil, func(key asset.Pair, value types.DatedPrice) (bool, error) {
 		exchangeRates = append(exchangeRates, types.ExchangeRateTuple{
 			Pair:         key,
 			ExchangeRate: value.ExchangeRate,

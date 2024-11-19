@@ -18,11 +18,14 @@ func (k Keeper) AllocateRewards(ctx sdk.Context, funderModule string, totalCoins
 	if err != nil {
 		return err
 	}
-	k.Rewards.Set(ctx, id, types.Rewards{
+	err = k.Rewards.Set(ctx, id, types.Rewards{
 		Id:          id,
 		VotePeriods: votePeriods,
 		Coins:       votePeriodCoins,
 	})
+	if err != nil {
+		return err
+	}
 
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, funderModule, types.ModuleName, totalCoins)
 }
@@ -50,14 +53,18 @@ func (k Keeper) rewardWinners(
 		}
 
 		rewardPortion, _ := totalRewards.MulDec(math.LegacyNewDec(validatorPerformance.RewardWeight).QuoInt64(totalRewardWeight)).TruncateDecimal()
-		k.distrKeeper.AllocateTokensToValidator(ctx, validator, sdk.NewDecCoinsFromCoins(rewardPortion...))
+		err = k.distrKeeper.AllocateTokensToValidator(ctx, validator, sdk.NewDecCoinsFromCoins(rewardPortion...))
+		if err != nil {
+			continue
+		}
+
 		distributedRewards = distributedRewards.Add(rewardPortion...)
 	}
 
 	// Move distributed reward to distribution module
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.distrModuleName, distributedRewards)
 	if err != nil {
-		k.Logger(ctx).Error("Failed to send coins to distribution module", "err", err)
+		k.Logger(ctx).Error("failed to send coins to distribution module", "err", err)
 	}
 }
 
@@ -76,7 +83,7 @@ func (k Keeper) GatherRewardsForVotePeriod(ctx sdk.Context) sdk.Coins {
 	for _, rewardId := range keys {
 		pairReward, err := k.Rewards.Get(ctx, rewardId)
 		if err != nil {
-			k.Logger(ctx).Error("Failed to get reward", "err", err)
+			k.Logger(ctx).Error("failed to get reward", "err", err)
 			continue
 		}
 		coins = coins.Add(pairReward.Coins...)
@@ -87,10 +94,13 @@ func (k Keeper) GatherRewardsForVotePeriod(ctx sdk.Context) sdk.Coins {
 			// If the distribution period count drops to 0: the reward instance is removed.
 			err := k.Rewards.Remove(ctx, rewardId)
 			if err != nil {
-				k.Logger(ctx).Error("Failed to delete pair reward", "err", err)
+				k.Logger(ctx).Error("failed to delete pair reward", "err", err)
 			}
 		} else {
-			k.Rewards.Set(ctx, rewardId, pairReward)
+			err := k.Rewards.Set(ctx, rewardId, pairReward)
+			if err != nil {
+				k.Logger(ctx).Error("failed to set pair reward", "err", err)
+			}
 		}
 	}
 

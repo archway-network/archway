@@ -20,7 +20,7 @@ func (k Keeper) SlashAndResetMissCounters(ctx sdk.Context) {
 	slashFraction := k.SlashFraction(ctx)
 	powerReduction := k.StakingKeeper.PowerReduction(ctx)
 
-	k.MissCounters.Walk(ctx, nil, func(operatorBytes []byte, missCounter uint64) (bool, error) {
+	_ = k.MissCounters.Walk(ctx, nil, func(operatorBytes []byte, missCounter uint64) (bool, error) {
 		operator := sdk.ValAddress(operatorBytes)
 
 		// Calculate valid vote rate; (SlashWindow - MissCounter)/SlashWindow
@@ -32,26 +32,34 @@ func (k Keeper) SlashAndResetMissCounters(ctx sdk.Context) {
 		if validVoteRate.LT(minValidPerWindow) {
 			validator, err := k.StakingKeeper.Validator(ctx, operator)
 			if err != nil {
-				k.Logger(ctx).Error("fail to get validator", "operator", operator)
+				k.Logger(ctx).Error("failed to get validator", "operator", operator)
 			}
 			if validator.IsBonded() && !validator.IsJailed() {
 				consAddr, err := validator.GetConsAddr()
 				if err != nil {
-					k.Logger(ctx).Error("fail to get consensus address", "validator", validator.GetOperator())
+					k.Logger(ctx).Error("failed to get consensus address", "validator", validator.GetOperator())
 					return false, nil
 				}
 
-				k.slashingKeeper.Slash(
+				err = k.slashingKeeper.Slash(
 					ctx, consAddr, slashFraction, validator.GetConsensusPower(powerReduction), distributionHeight,
 				)
+				if err != nil {
+					k.Logger(ctx).Error("failed to slash validator", "validator", validator.GetOperator())
+					return false, nil
+				}
 				k.Logger(ctx).Info("oracle slash", "validator", string(consAddr), "fraction", slashFraction.String())
-				k.slashingKeeper.Jail(ctx, consAddr)
+				err = k.slashingKeeper.Jail(ctx, consAddr)
+				if err != nil {
+					k.Logger(ctx).Error("failed to jail validator", "validator", validator.GetOperator())
+					return false, nil
+				}
 			}
 		}
 
 		err := k.MissCounters.Remove(ctx, operator)
 		if err != nil {
-			k.Logger(ctx).Error("fail to delete miss counter", "operator", operator.String(), "error", err)
+			k.Logger(ctx).Error("failed to delete miss counter", "operator", operator.String(), "error", err)
 		}
 		return false, nil
 	})
