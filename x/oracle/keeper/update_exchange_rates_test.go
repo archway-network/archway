@@ -52,7 +52,7 @@ func TestOracleThreshold(t *testing.T) {
 	require.NoError(t, err)
 	params.VotePeriod = 1
 	params.ExpirationBlocks = 0
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	// Case 1.
 	// Less than the threshold signs, exchange rate consensus fails
@@ -141,7 +141,7 @@ func TestResetExchangeRates(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.ExpirationBlocks = 10
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	// Post a price at block 1
 	keepers.OracleKeeper.SetPrice(ctx.WithBlockHeight(1), pair, testExchangeRate)
@@ -181,7 +181,7 @@ func TestOracleTally(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	for i, rate := range rates {
 		decExchangeRate := sdkmath.LegacyNewDecWithPrec(int64(rate*math.Pow10(OracleDecPrecision)), int64(OracleDecPrecision))
@@ -283,7 +283,7 @@ func TestOracleRewardBand(t *testing.T) {
 	require.NoError(t, err)
 	params.VotePeriod = 1
 	params.Whitelist = []asset.Pair{asset.Registry.Pair(denoms.ATOM, denoms.USD)}
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	// clear pairs to reset vote targets
 	err = keepers.OracleKeeper.WhitelistedPairs.Clear(ctx, nil)
@@ -433,7 +433,7 @@ func TestOracleExchangeRate(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	atomUsdExchangeRate := sdkmath.LegacyNewDec(1000000)
 	ethUsdExchangeRate := sdkmath.LegacyNewDec(1000000)
@@ -507,7 +507,7 @@ func TestOracleRandomPrices(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	for i := 0; i < 100; i++ {
 		for _, val := range vals {
@@ -538,7 +538,7 @@ func TestWhitelistedPairs(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	t.Log("whitelist ONLY atom:usd")
 	err = keepers.OracleKeeper.WhitelistedPairs.Clear(ctx, nil)
@@ -558,7 +558,7 @@ func TestWhitelistedPairs(t *testing.T) {
 
 	t.Log("whitelist btc:usd for next vote period")
 	params.Whitelist = []asset.Pair{asset.Registry.Pair(denoms.ATOM, denoms.USD), asset.Registry.Pair(denoms.BTC, denoms.USD)}
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 	keepers.OracleKeeper.UpdateExchangeRates(ctx)
 
 	t.Log("assert: no miss counts for all vals")
@@ -602,7 +602,7 @@ func TestWhitelistedPairs(t *testing.T) {
 
 	t.Log("delete btc:usd for next vote period")
 	params.Whitelist = []asset.Pair{asset.Registry.Pair(denoms.ATOM, denoms.USD)}
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 	perfs := keepers.OracleKeeper.UpdateExchangeRates(ctx)
 
 	t.Log("validators 0-3 all voted -> expect win")

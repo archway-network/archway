@@ -38,7 +38,10 @@ func TestQueryExchangeRate(t *testing.T) {
 	querier := keeper.NewQuerier(keepers.OracleKeeper)
 
 	rate := math.LegacyNewDec(1700)
-	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
+	require.NoError(t, keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{
+		ExchangeRate: rate,
+		CreatedBlock: uint64(ctx.BlockHeight()),
+	}))
 
 	// empty request
 	_, err := querier.ExchangeRate(ctx, nil)
@@ -65,7 +68,7 @@ func TestQueryMissCounter(t *testing.T) {
 	}
 
 	missCounter := uint64(1)
-	keepers.OracleKeeper.MissCounters.Set(ctx, ValAddrs[0], missCounter)
+	require.NoError(t, keepers.OracleKeeper.MissCounters.Set(ctx, ValAddrs[0], missCounter))
 
 	// empty request
 	_, err := querier.MissCounter(ctx, nil)
@@ -86,8 +89,14 @@ func TestQueryExchangeRates(t *testing.T) {
 	querier := keeper.NewQuerier(keepers.OracleKeeper)
 
 	rate := math.LegacyNewDec(1700)
-	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
-	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
+	require.NoError(t, keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), types.DatedPrice{
+		ExchangeRate: rate,
+		CreatedBlock: uint64(ctx.BlockHeight()),
+	}))
+	require.NoError(t, keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{
+		ExchangeRate: rate,
+		CreatedBlock: uint64(ctx.BlockHeight()),
+	}))
 
 	res, err := querier.ExchangeRates(ctx, &types.QueryExchangeRatesRequest{})
 	require.NoError(t, err)
@@ -194,7 +203,7 @@ func TestCalcTwap(t *testing.T) {
 				ValidatorFeeRatio:  types.DefaultValidatorFeeRatio,
 			}
 
-			keepers.OracleKeeper.Params.Set(ctx, newParams)
+			require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, newParams))
 			ctx = ctx.WithBlockTime(time.UnixMilli(0))
 			for _, reserve := range tc.priceSnapshots {
 				ctx = ctx.WithBlockTime(time.UnixMilli(reserve.TimestampMs))
@@ -203,7 +212,7 @@ func TestCalcTwap(t *testing.T) {
 
 			ctx = ctx.WithBlockTime(tc.currentBlockTime).WithBlockHeight(tc.currentBlockHeight)
 
-			price, err := querier.ExchangeRateTwap(sdk.WrapSDKContext(ctx), &types.QueryExchangeRateRequest{Pair: asset.Registry.Pair(denoms.BTC, denoms.NUSD)})
+			price, err := querier.ExchangeRateTwap(ctx, &types.QueryExchangeRateRequest{Pair: asset.Registry.Pair(denoms.BTC, denoms.NUSD)})
 			require.NoError(t, err)
 
 			require.EqualValuesf(t, tc.expectedPrice, price.ExchangeRate,
@@ -219,9 +228,18 @@ func TestQueryActives(t *testing.T) {
 	queryClient := keeper.NewQuerier(keepers.OracleKeeper)
 
 	rate := math.LegacyNewDec(1700)
-	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
-	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.NIBI, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
-	keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{ExchangeRate: rate, CreatedBlock: uint64(ctx.BlockHeight())})
+	require.NoError(t, keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.BTC, denoms.NUSD), types.DatedPrice{
+		ExchangeRate: rate,
+		CreatedBlock: uint64(ctx.BlockHeight()),
+	}))
+	require.NoError(t, keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.NIBI, denoms.NUSD), types.DatedPrice{
+		ExchangeRate: rate,
+		CreatedBlock: uint64(ctx.BlockHeight()),
+	}))
+	require.NoError(t, keepers.OracleKeeper.ExchangeRates.Set(ctx, asset.Registry.Pair(denoms.ETH, denoms.NUSD), types.DatedPrice{
+		ExchangeRate: rate,
+		CreatedBlock: uint64(ctx.BlockHeight()),
+	}))
 
 	res, err := queryClient.Actives(ctx, &types.QueryActivesRequest{})
 	require.NoError(t, err)
@@ -249,7 +267,7 @@ func TestQueryFeederDelegation(t *testing.T) {
 		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
 	}
 
-	keepers.OracleKeeper.FeederDelegations.Set(ctx, ValAddrs[0], AccAddrs[1])
+	require.NoError(t, keepers.OracleKeeper.FeederDelegations.Set(ctx, ValAddrs[0], AccAddrs[1]))
 
 	// empty request
 	_, err := querier.FeederDelegation(ctx, nil)
@@ -276,9 +294,9 @@ func TestQueryAggregatePrevote(t *testing.T) {
 	}
 
 	prevote1 := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{}, ValAddrs[0], 0)
-	keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[0], prevote1)
+	require.NoError(t, keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[0], prevote1))
 	prevote2 := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{}, ValAddrs[1], 0)
-	keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[1], prevote2)
+	require.NoError(t, keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[1], prevote2))
 
 	// validator 0 address params
 	res, err := querier.AggregatePrevote(ctx, &types.QueryAggregatePrevoteRequest{
@@ -312,11 +330,11 @@ func TestQueryAggregatePrevotes(t *testing.T) {
 	}
 
 	prevote1 := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{}, ValAddrs[0], 0)
-	keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[0], prevote1)
+	require.NoError(t, keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[0], prevote1))
 	prevote2 := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{}, ValAddrs[1], 0)
-	keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[1], prevote2)
+	require.NoError(t, keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[1], prevote2))
 	prevote3 := types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{}, ValAddrs[2], 0)
-	keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[2], prevote3)
+	require.NoError(t, keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[2], prevote3))
 
 	expectedPrevotes := []types.AggregateExchangeRatePrevote{prevote1, prevote2, prevote3}
 	// sort.SliceStable(expectedPrevotes, func(i, j int) bool {
@@ -341,9 +359,9 @@ func TestQueryAggregateVote(t *testing.T) {
 	}
 
 	vote1 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "", ExchangeRate: math.LegacyOneDec()}}, ValAddrs[0])
-	keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[0], vote1)
+	require.NoError(t, keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[0], vote1))
 	vote2 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "", ExchangeRate: math.LegacyOneDec()}}, ValAddrs[1])
-	keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[1], vote2)
+	require.NoError(t, keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[1], vote2))
 
 	// empty request
 	_, err := querier.AggregateVote(ctx, nil)
@@ -377,11 +395,11 @@ func TestQueryAggregateVotes(t *testing.T) {
 	}
 
 	vote1 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "", ExchangeRate: math.LegacyOneDec()}}, ValAddrs[0])
-	keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[0], vote1)
+	require.NoError(t, keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[0], vote1))
 	vote2 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "", ExchangeRate: math.LegacyOneDec()}}, ValAddrs[1])
-	keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[1], vote2)
+	require.NoError(t, keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[1], vote2))
 	vote3 := types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "", ExchangeRate: math.LegacyOneDec()}}, ValAddrs[2])
-	keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[2], vote3)
+	require.NoError(t, keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[2], vote3))
 
 	expectedVotes := []types.AggregateExchangeRateVote{vote1, vote2, vote3}
 	// sort.SliceStable(expectedVotes, func(i, j int) bool {
@@ -404,7 +422,7 @@ func TestQueryVoteTargets(t *testing.T) {
 
 	voteTargets := []asset.Pair{"denom1:denom2", "denom3:denom4", "denom5:denom6"}
 	for _, target := range voteTargets {
-		keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target)
+		require.NoError(t, keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target))
 	}
 
 	res, err := querier.VoteTargets(ctx, &types.QueryVoteTargetsRequest{})

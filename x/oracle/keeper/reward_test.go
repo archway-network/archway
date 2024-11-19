@@ -33,7 +33,7 @@ func TestKeeperRewardsDistributionMultiVotePeriods(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	msgServer := keeper.NewMsgServerImpl(keepers.OracleKeeper)
 
