@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
+
 	"github.com/archway-network/archway/types/errors"
 )
 

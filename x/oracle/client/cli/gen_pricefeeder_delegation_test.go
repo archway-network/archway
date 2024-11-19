@@ -6,9 +6,10 @@ import (
 
 	"github.com/archway-network/archway/x/oracle/client/cli"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/stretchr/testify/require"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 func TestAddGenesisPricefeederDelegation(t *testing.T) {

@@ -8,12 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/oracle/asset"
 	"github.com/archway-network/archway/x/oracle/denoms"
 	"github.com/archway-network/archway/x/oracle/keeper"
 	"github.com/archway-network/archway/x/oracle/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func TestKeeperRewardsDistributionMultiVotePeriods(t *testing.T) {

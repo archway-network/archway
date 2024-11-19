@@ -161,7 +161,10 @@ func (AppModule) BeginBlock(_ sdk.Context) {}
 
 // EndBlock returns the end blocker for the oracle module.
 func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
-	EndBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	err := EndBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	if err != nil {
+		return nil, err
+	}
 	return []abci.ValidatorUpdate{}, nil
 }
 

@@ -7,8 +7,9 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/archway-network/archway/types/errors"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/archway-network/archway/types/errors"
 )
 
 func TestSqrtBigInt(t *testing.T) {

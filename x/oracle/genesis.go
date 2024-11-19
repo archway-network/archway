@@ -24,7 +24,10 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 			panic(err)
 		}
 
-		keeper.FeederDelegations.Set(ctx, voter, feeder)
+		err = keeper.FeederDelegations.Set(ctx, voter, feeder)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	for _, ex := range data.ExchangeRates {
@@ -37,7 +40,10 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 			panic(err)
 		}
 
-		keeper.MissCounters.Set(ctx, operator, missCounter.MissCounter)
+		err = keeper.MissCounters.Set(ctx, operator, missCounter.MissCounter)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	for _, aggregatePrevote := range data.AggregateExchangeRatePrevotes {
@@ -46,7 +52,10 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 			panic(err)
 		}
 
-		keeper.Prevotes.Set(ctx, valAddr, aggregatePrevote)
+		err = keeper.Prevotes.Set(ctx, valAddr, aggregatePrevote)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	for _, aggregateVote := range data.AggregateExchangeRateVotes {
@@ -55,28 +64,46 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 			panic(err)
 		}
 
-		keeper.Votes.Set(ctx, valAddr, aggregateVote)
+		err = keeper.Votes.Set(ctx, valAddr, aggregateVote)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	if len(data.Pairs) > 0 {
 		for _, tt := range data.Pairs {
-			keeper.WhitelistedPairs.Set(ctx, tt)
+			err := keeper.WhitelistedPairs.Set(ctx, tt)
+			if err != nil {
+				panic(err)
+			}
 		}
 	} else {
 		for _, item := range data.Params.Whitelist {
-			keeper.WhitelistedPairs.Set(ctx, item)
+			err := keeper.WhitelistedPairs.Set(ctx, item)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 
 	for _, pr := range data.Rewards {
-		keeper.Rewards.Set(ctx, pr.Id, pr)
+		err := keeper.Rewards.Set(ctx, pr.Id, pr)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// set last ID based on the last pair reward
 	if len(data.Rewards) != 0 {
-		keeper.RewardsID.Set(ctx, data.Rewards[len(data.Rewards)-1].Id)
+		err := keeper.RewardsID.Set(ctx, data.Rewards[len(data.Rewards)-1].Id)
+		if err != nil {
+			panic(err)
+		}
 	}
-	keeper.Params.Set(ctx, data.Params)
+	err := keeper.Params.Set(ctx, data.Params)
+	if err != nil {
+		panic(err)
+	}
 
 	// check if the module account exists
 	moduleAcc := keeper.AccountKeeper.GetModuleAccount(ctx, types.ModuleName)
@@ -95,31 +122,40 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	}
 
 	feederDelegations := []types.FeederDelegation{}
-	keeper.FeederDelegations.Walk(ctx, nil, func(valBytes []byte, accBytes []byte) (bool, error) {
+	err = keeper.FeederDelegations.Walk(ctx, nil, func(valBytes []byte, accBytes []byte) (bool, error) {
 		feederDelegations = append(feederDelegations, types.FeederDelegation{
 			FeederAddress:    sdk.AccAddress(accBytes).String(),
 			ValidatorAddress: sdk.ValAddress(valBytes).String(),
 		})
 		return false, nil
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	exchangeRates := []types.ExchangeRateTuple{}
-	keeper.ExchangeRates.Walk(ctx, nil, func(pair asset.Pair, price types.DatedPrice) (bool, error) {
+	err = keeper.ExchangeRates.Walk(ctx, nil, func(pair asset.Pair, price types.DatedPrice) (bool, error) {
 		exchangeRates = append(exchangeRates, types.ExchangeRateTuple{
 			Pair:         pair,
 			ExchangeRate: price.ExchangeRate,
 		})
 		return false, nil
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	missCounters := []types.MissCounter{}
-	keeper.MissCounters.Walk(ctx, nil, func(valAddrBytes []byte, counter uint64) (bool, error) {
+	err = keeper.MissCounters.Walk(ctx, nil, func(valAddrBytes []byte, counter uint64) (bool, error) {
 		missCounters = append(missCounters, types.MissCounter{
 			ValidatorAddress: sdk.ValAddress(valAddrBytes).String(),
 			MissCounter:      counter,
 		})
 		return false, nil
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	var pairs []asset.Pair
 	iter, err := keeper.WhitelistedPairs.Iterate(ctx, nil)

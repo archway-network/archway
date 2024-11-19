@@ -3,10 +3,11 @@ package keeper_test
 import (
 	"testing"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 func TestValidateFeeder(t *testing.T) {

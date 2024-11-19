@@ -7,11 +7,12 @@ import (
 	"testing"
 
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/archway-network/archway/app"
 	ibc_hooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8"
 	ibchookskeeper "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8/keeper"
 	"github.com/cosmos/ibc-apps/modules/ibc-hooks/v8/tests/unit/mocks"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/archway-network/archway/app"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
