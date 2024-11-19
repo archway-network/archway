@@ -6,10 +6,11 @@ import (
 
 	"cosmossdk.io/log"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/archway-network/archway/app/appconst"
 	tmdb "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/archway-network/archway/app/appconst"
 )
 
 // import (

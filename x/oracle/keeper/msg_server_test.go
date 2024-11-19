@@ -34,7 +34,7 @@ func TestFeederDelegation(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	exchangeRates := types.ExchangeRateTuples{
 		{
@@ -116,7 +116,7 @@ func TestAggregatePrevoteVote(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	salt := "1"
 	exchangeRates := types.ExchangeRateTuples{

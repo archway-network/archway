@@ -58,12 +58,16 @@ func (k Keeper) incrementMissCounters(
 			if err != nil {
 				counter = 0
 			}
-			k.MissCounters.Set(
+			counter = counter + uint64(validatorPerformance.MissCount)
+			err = k.MissCounters.Set(
 				ctx, validatorPerformance.ValAddress,
-				counter+uint64(validatorPerformance.MissCount),
+				counter,
 			)
-
-			k.Logger(ctx).Info("vote miss", "validator", validatorPerformance.ValAddress.String())
+			if err == nil {
+				k.Logger(ctx).Info("vote miss", "validator", validatorPerformance.ValAddress.String())
+			} else {
+				k.Logger(ctx).Error("failed to set MissCounter", "validator", validatorPerformance.ValAddress.String(), "counter", counter, "error", err)
+			}
 		}
 	}
 }
@@ -113,7 +117,7 @@ func (k Keeper) getPairVotes(
 func (k Keeper) ClearExchangeRates(ctx sdk.Context, pairVotes map[asset.Pair]types.ExchangeRateVotes) {
 	params, _ := k.Params.Get(ctx)
 
-	k.ExchangeRates.Walk(ctx, nil, func(key asset.Pair, _ types.DatedPrice) (bool, error) {
+	_ = k.ExchangeRates.Walk(ctx, nil, func(key asset.Pair, _ types.DatedPrice) (bool, error) {
 		_, isValid := pairVotes[key]
 		previousExchangeRate, _ := k.ExchangeRates.Get(ctx, key)
 		isExpired := previousExchangeRate.CreatedBlock+params.ExpirationBlocks <= uint64(ctx.BlockHeight())

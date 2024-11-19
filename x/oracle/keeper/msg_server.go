@@ -47,7 +47,9 @@ func (ms msgServer) AggregateExchangeRatePrevote(
 		return nil, sdkerrors.Wrap(types.ErrInvalidHash, err.Error())
 	}
 
-	ms.Keeper.Prevotes.Set(ctx, valAddr, types.NewAggregateExchangeRatePrevote(voteHash, valAddr, uint64(ctx.BlockHeight())))
+	if err := ms.Keeper.Prevotes.Set(ctx, valAddr, types.NewAggregateExchangeRatePrevote(voteHash, valAddr, uint64(ctx.BlockHeight()))); err != nil {
+		return nil, err
+	}
 
 	err = ctx.EventManager().EmitTypedEvent(&types.EventAggregatePrevote{
 		Validator: msg.Validator,
@@ -121,10 +123,17 @@ func (ms msgServer) AggregateExchangeRateVote(
 	}
 
 	// Move aggregate prevote to aggregate vote with given exchange rates
-	ms.Keeper.Votes.Set(
+	err = ms.Keeper.Votes.Set(
 		ctx, valAddr, types.NewAggregateExchangeRateVote(exchangeRateTuples, valAddr),
 	)
-	_ = ms.Keeper.Prevotes.Remove(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	err = ms.Keeper.Prevotes.Remove(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
 
 	priceTuples, err := types.NewExchangeRateTuplesFromString(msg.ExchangeRates)
 	if err != nil {
@@ -161,7 +170,10 @@ func (ms msgServer) DelegateFeedConsent(
 	}
 
 	// Set the delegation
-	ms.Keeper.FeederDelegations.Set(ctx, operatorAddr, delegateAddr)
+	err = ms.Keeper.FeederDelegations.Set(ctx, operatorAddr, delegateAddr)
+	if err != nil {
+		return nil, err
+	}
 
 	err = ctx.EventManager().EmitTypedEvent(&types.EventDelegateFeederConsent{
 		Feeder:    msg.Delegate,

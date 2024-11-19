@@ -158,7 +158,14 @@ func (k Keeper) GetExchangeRateTwap(ctx sdk.Context, pair asset.Pair) (price mat
 			EndInclusive(
 				ctx.BlockTime()),
 	)
+	if err != nil {
+		return math.LegacyOneDec().Neg(), err
+	}
+
 	snapshots, err := snapshotsIter.Values()
+	if err != nil {
+		return math.LegacyOneDec().Neg(), err
+	}
 
 	if len(snapshots) == 0 {
 		// if there are no snapshots, return -1 for the price
@@ -206,15 +213,22 @@ func (k Keeper) GetExchangeRate(ctx sdk.Context, pair asset.Pair) (price math.Le
 
 // SetPrice sets the price for a pair as well as the price snapshot.
 func (k Keeper) SetPrice(ctx sdk.Context, pair asset.Pair, price math.LegacyDec) {
-	k.ExchangeRates.Set(ctx, pair, types.DatedPrice{ExchangeRate: price, CreatedBlock: uint64(ctx.BlockHeight())})
+	if err := k.ExchangeRates.Set(ctx, pair, types.DatedPrice{
+		ExchangeRate: price,
+		CreatedBlock: uint64(ctx.BlockHeight()),
+	}); err != nil {
+		ctx.Logger().Error("failed to set DatedPrice", "pair", pair, "error", err)
+	}
 
 	key := collections.Join(pair, ctx.BlockTime())
 	timestampMs := ctx.BlockTime().UnixMilli()
-	k.PriceSnapshots.Set(ctx, key, types.PriceSnapshot{
+	if err := k.PriceSnapshots.Set(ctx, key, types.PriceSnapshot{
 		Pair:        pair,
 		Price:       price,
 		TimestampMs: timestampMs,
-	})
+	}); err != nil {
+		ctx.Logger().Error("failed to set PriceSnapshot", "pair", pair, "error", err)
+	}
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventPriceUpdate{
 		Pair:        pair.String(),
 		Price:       price,

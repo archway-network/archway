@@ -40,7 +40,7 @@ func (c grpcClient) Invoke(ctx context.Context, method string, args, reply inter
 	}
 
 	if resp.Code != abci.CodeTypeOK {
-		return fmt.Errorf(resp.Log)
+		return fmt.Errorf("%s", resp.Log)
 	}
 
 	c.app.AppCodec().MustUnmarshal(resp.Value, reply.(proto.Message))

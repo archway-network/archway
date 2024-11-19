@@ -3,10 +3,11 @@ package keeper_test
 import (
 	"testing"
 
-	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
+
+	e2eTesting "github.com/archway-network/archway/e2e/testing"
 )
 
 func TestValidateFeeder(t *testing.T) {
@@ -34,7 +35,8 @@ func TestValidateFeeder(t *testing.T) {
 		ValAddrs[i] = sdk.ValAddress(val.Address)
 	}
 
-	keepers.StakingKeeper.EndBlocker(ctx)
+	_, err := keepers.StakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
 
 	stakingparams, err := keepers.StakingKeeper.GetParams(ctx)
 	require.NoError(t, err)
@@ -60,12 +62,12 @@ func TestValidateFeeder(t *testing.T) {
 	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, sdk.AccAddress(ValAddrs[1]), ValAddrs[1]))
 
 	// delegate works
-	keepers.OracleKeeper.FeederDelegations.Set(ctx, ValAddrs[0], AccAddrs[1])
+	require.NoError(t, keepers.OracleKeeper.FeederDelegations.Set(ctx, ValAddrs[0], AccAddrs[1]))
 	require.NoError(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[1], ValAddrs[0]))
 	require.Error(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[2], ValAddrs[0]))
 
 	// only active validators can do oracle votes
 	validator.Status = stakingtypes.Unbonded
-	keepers.StakingKeeper.SetValidator(ctx, validator)
+	require.NoError(t, keepers.StakingKeeper.SetValidator(ctx, validator))
 	require.Error(t, keepers.OracleKeeper.ValidateFeeder(ctx, AccAddrs[1], ValAddrs[0]))
 }

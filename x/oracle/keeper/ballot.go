@@ -1,7 +1,7 @@
 package keeper
 
 import (
- 	"fmt"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -63,7 +63,7 @@ func (k Keeper) GroupVotesByPair(
 // ClearVotesAndPrevotes clears all tallied prevotes and votes from the store
 func (k Keeper) ClearVotesAndPrevotes(ctx sdk.Context, votePeriod uint64) {
 	// Clear all aggregate prevotes
-	k.Prevotes.Walk(ctx, nil, func(valAddrBytes []byte, aggregatePrevote types.AggregateExchangeRatePrevote) (bool, error) {
+	_ = k.Prevotes.Walk(ctx, nil, func(valAddrBytes []byte, aggregatePrevote types.AggregateExchangeRatePrevote) (bool, error) {
 		valAddr := sdk.ValAddress(valAddrBytes)
 		if ctx.BlockHeight() >= int64(aggregatePrevote.SubmitBlock+votePeriod) {
 			err := k.Prevotes.Remove(ctx, valAddr)

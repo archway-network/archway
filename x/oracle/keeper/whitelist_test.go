@@ -41,7 +41,7 @@ func TestKeeper_GetVoteTargets(t *testing.T) {
 
 			expectedTargets := tc.in
 			for _, target := range expectedTargets {
-				keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target)
+				require.NoError(t, keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target))
 			}
 
 			var panicAssertFn func(t assert.TestingT, f assert.PanicTestFunc, msgAndArgs ...interface{}) bool
@@ -68,7 +68,7 @@ func TestKeeper_GetVoteTargets(t *testing.T) {
 
 	expectedTargets := []asset.Pair{"foo:bar", "whoo:whoo"}
 	for _, target := range expectedTargets {
-		keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target)
+		require.NoError(t, keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target))
 	}
 
 	targets, err := keepers.OracleKeeper.GetWhitelistedPairs(ctx)
@@ -86,7 +86,7 @@ func TestIsWhitelistedPair(t *testing.T) {
 
 	validPairs := []asset.Pair{"foo:bar", "xxx:yyy", "whoo:whoo"}
 	for _, target := range validPairs {
-		keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target)
+		require.NoError(t, keepers.OracleKeeper.WhitelistedPairs.Set(ctx, target))
 		flag, err := keepers.OracleKeeper.IsWhitelistedPair(ctx, target)
 		require.NoError(t, err)
 		require.True(t, flag)
@@ -104,7 +104,7 @@ func TestUpdateWhitelist(t *testing.T) {
 
 	currentWhitelist := set.New(asset.NewPair(denoms.NIBI, denoms.USD), asset.NewPair(denoms.BTC, denoms.USD))
 	for p := range currentWhitelist {
-		keepers.OracleKeeper.WhitelistedPairs.Set(ctx, p)
+		require.NoError(t, keepers.OracleKeeper.WhitelistedPairs.Set(ctx, p))
 	}
 
 	nextWhitelist := set.New(asset.NewPair(denoms.NIBI, denoms.USD), asset.NewPair(denoms.BTC, denoms.USD))

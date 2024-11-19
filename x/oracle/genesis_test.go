@@ -25,19 +25,19 @@ func TestExportInitGenesis(t *testing.T) {
 		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
 	}
 
-	keepers.OracleKeeper.Params.Set(ctx, types.DefaultParams())
-	keepers.OracleKeeper.FeederDelegations.Set(ctx, ValAddrs[0], AccAddrs[1])
-	keepers.OracleKeeper.ExchangeRates.Set(ctx, "pair1:pair2", types.DatedPrice{ExchangeRate: math.LegacyNewDec(123), CreatedBlock: 0})
-	keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[0], types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{123}, ValAddrs[0], uint64(2)))
-	keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[0], types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "foo", ExchangeRate: math.LegacyNewDec(123)}}, ValAddrs[0]))
-	keepers.OracleKeeper.WhitelistedPairs.Set(ctx, "pair1:pair1")
-	keepers.OracleKeeper.WhitelistedPairs.Set(ctx, "pair2:pair2")
-	keepers.OracleKeeper.MissCounters.Set(ctx, ValAddrs[0], 10)
-	keepers.OracleKeeper.Rewards.Set(ctx, 0, types.Rewards{
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, types.DefaultParams()))
+	require.NoError(t, keepers.OracleKeeper.FeederDelegations.Set(ctx, ValAddrs[0], AccAddrs[1]))
+	require.NoError(t, keepers.OracleKeeper.ExchangeRates.Set(ctx, "pair1:pair2", types.DatedPrice{ExchangeRate: math.LegacyNewDec(123), CreatedBlock: 0}))
+	require.NoError(t, keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[0], types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{123}, ValAddrs[0], uint64(2))))
+	require.NoError(t, keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[0], types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "foo", ExchangeRate: math.LegacyNewDec(123)}}, ValAddrs[0])))
+	require.NoError(t, keepers.OracleKeeper.WhitelistedPairs.Set(ctx, "pair1:pair1"))
+	require.NoError(t, keepers.OracleKeeper.WhitelistedPairs.Set(ctx, "pair2:pair2"))
+	require.NoError(t, keepers.OracleKeeper.MissCounters.Set(ctx, ValAddrs[0], 10))
+	require.NoError(t, keepers.OracleKeeper.Rewards.Set(ctx, 0, types.Rewards{
 		Id:          0,
 		VotePeriods: 100,
 		Coins:       sdk.NewCoins(sdk.NewInt64Coin("test", 1000)),
-	})
+	}))
 	genesis := oracle.ExportGenesis(ctx, keepers.OracleKeeper)
 
 	chain = e2eTesting.NewTestChain(t, 2)

@@ -173,14 +173,14 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc sdk.Acc
 	rebateRatio := dfd.rewardsKeeper.TxFeeRebateRatio(ctx)
 	if rebateRatio.IsZero() || !hasWasmMsgs {
 		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authTypes.FeeCollectorName, fees); err != nil {
-			return errorsmod.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkErrors.ErrInsufficientFunds, "%s", err.Error())
 		}
 		return nil
 	}
 
 	if !flatFees.Empty() {
 		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), rewardsTypes.ContractRewardCollector, flatFees); err != nil {
-			return errorsmod.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkErrors.ErrInsufficientFunds, "%s", err.Error())
 		}
 		fees = fees.Sub(flatFees...) // reduce flatfees from the sent fees amount
 	}
@@ -190,17 +190,17 @@ func (dfd DeductFeeDecorator) deductFees(ctx sdk.Context, tx sdk.Tx, acc sdk.Acc
 
 	if !authFees.Empty() {
 		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authTypes.FeeCollectorName, authFees); err != nil {
-			return errorsmod.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkErrors.ErrInsufficientFunds, "%s", err.Error())
 		}
 		// burn the auth fees.
 		if err := dfd.bankKeeper.BurnCoins(ctx, authTypes.FeeCollectorName, authFees); err != nil {
-			return errorsmod.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkErrors.ErrInsufficientFunds, "%s", err.Error())
 		}
 	}
 
 	if !rewardsFees.Empty() {
 		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), rewardsTypes.ContractRewardCollector, rewardsFees); err != nil {
-			return errorsmod.Wrapf(sdkErrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrapf(sdkErrors.ErrInsufficientFunds, "%s", err.Error())
 		}
 	}
 
