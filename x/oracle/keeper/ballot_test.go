@@ -375,5 +375,5 @@ func TestZeroBallotPower(t *testing.T) {
 		types.NewExchangeRateVote(math.LegacyNewDec(6), asset.Registry.Pair(denoms.BTC, denoms.NUSD), ValAddrs[2], 0),
 	}
 
-	assert.NoError(t, keeper.IsPassingVoteThreshold(btcVotess, math.ZeroInt(), 0))
+	assert.Error(t, keeper.IsPassingVoteThreshold(btcVotess, math.ZeroInt(), 0))
 }

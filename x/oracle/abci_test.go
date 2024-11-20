@@ -73,9 +73,9 @@ func TestOracleTallyTiming(t *testing.T) {
 	_, err = keepers.OracleKeeper.ExchangeRates.Get(ctx, asset.Registry.Pair(denoms.BTC, denoms.USD))
 	require.Error(t, err)
 
-	ctx = ctx.WithBlockHeight(int64(params.VotePeriod - 1))
-
+	ctx = ctx.WithBlockHeight(int64(params.VotePeriod))
 	oracle.EndBlocker(ctx, keepers.OracleKeeper)
+
 	_, err = keepers.OracleKeeper.ExchangeRates.Get(ctx, asset.Registry.Pair(denoms.BTC, denoms.USD))
 	require.NoError(t, err)
 }
@@ -110,7 +110,7 @@ func TestOraclePriceExpiration(t *testing.T) {
 	keepers.OracleKeeper.Params.Set(ctx, params)
 
 	// Wait for prices to set
-	ctx = ctx.WithBlockHeight(int64(params.VotePeriod - 1))
+	ctx = ctx.WithBlockHeight(int64(params.VotePeriod))
 	oracle.EndBlocker(ctx, keepers.OracleKeeper)
 
 	// Check if both prices are set
@@ -120,19 +120,20 @@ func TestOraclePriceExpiration(t *testing.T) {
 	require.NoError(t, err)
 
 	// Set prices for pair 1
+	voteHeight := int64(params.VotePeriod+params.ExpirationBlocks) - 1
 	for _, val := range chain.GetCurrentValSet().Validators {
-		MakeAggregatePrevoteAndVote(t, ctx, msgServer, 19, types.ExchangeRateTuples{
+		MakeAggregatePrevoteAndVote(t, ctx, msgServer, voteHeight, types.ExchangeRateTuples{
 			{Pair: pair1, ExchangeRate: math.LegacyNewDec(2)},
 		}, val)
 	}
 
 	// Set price
-	ctx = ctx.WithBlockHeight(19)
+	ctx = ctx.WithBlockHeight(voteHeight)
 	oracle.EndBlocker(ctx, keepers.OracleKeeper)
 
-	// Set the block height to 1 block after the expiration
+	// Set the block height to the expiration height
 	// End blocker should delete the price of pair2
-	ctx = ctx.WithBlockHeight(int64(params.ExpirationBlocks+params.VotePeriod) + 1)
+	ctx = ctx.WithBlockHeight(int64(params.ExpirationBlocks + params.VotePeriod))
 	oracle.EndBlocker(ctx, keepers.OracleKeeper)
 
 	_, err = keepers.OracleKeeper.ExchangeRates.Get(ctx, pair1)
