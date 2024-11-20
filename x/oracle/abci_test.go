@@ -6,6 +6,9 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	cmTypes "github.com/cometbft/cometbft/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	e2eTesting "github.com/archway-network/archway/e2e/testing"
 	"github.com/archway-network/archway/x/oracle"
 	"github.com/archway-network/archway/x/oracle/asset"
@@ -13,8 +16,6 @@ import (
 	"github.com/archway-network/archway/x/oracle/keeper"
 	"github.com/archway-network/archway/x/oracle/types"
 	oracletypes "github.com/archway-network/archway/x/oracle/types"
-	cmTypes "github.com/cometbft/cometbft/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO (spekalsg3): duplicated from `package keeper_test`
@@ -55,7 +56,7 @@ func TestOracleTallyTiming(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	// all the Addrs vote for the block ... not last period block yet, so tally fails
 	for _, val := range chain.GetCurrentValSet().Validators {
@@ -66,15 +67,15 @@ func TestOracleTallyTiming(t *testing.T) {
 
 	params.VotePeriod = 10 // set vote period to 10 for now, for convenience
 	params.ExpirationBlocks = 100
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 	require.Equal(t, 1, int(ctx.BlockHeight()))
 
-	oracle.EndBlocker(ctx, keepers.OracleKeeper)
+	require.NoError(t, oracle.EndBlocker(ctx, keepers.OracleKeeper))
 	_, err = keepers.OracleKeeper.ExchangeRates.Get(ctx, asset.Registry.Pair(denoms.BTC, denoms.USD))
 	require.Error(t, err)
 
 	ctx = ctx.WithBlockHeight(int64(params.VotePeriod))
-	oracle.EndBlocker(ctx, keepers.OracleKeeper)
+	require.NoError(t, oracle.EndBlocker(ctx, keepers.OracleKeeper))
 
 	_, err = keepers.OracleKeeper.ExchangeRates.Get(ctx, asset.Registry.Pair(denoms.BTC, denoms.USD))
 	require.NoError(t, err)
@@ -95,7 +96,7 @@ func TestOraclePriceExpiration(t *testing.T) {
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	params.VotePeriod = 1
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	// Set prices for both pairs
 	for _, val := range chain.GetCurrentValSet().Validators {
@@ -107,11 +108,11 @@ func TestOraclePriceExpiration(t *testing.T) {
 
 	params.VotePeriod = 10
 	params.ExpirationBlocks = 10
-	keepers.OracleKeeper.Params.Set(ctx, params)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, params))
 
 	// Wait for prices to set
 	ctx = ctx.WithBlockHeight(int64(params.VotePeriod))
-	oracle.EndBlocker(ctx, keepers.OracleKeeper)
+	require.NoError(t, oracle.EndBlocker(ctx, keepers.OracleKeeper))
 
 	// Check if both prices are set
 	_, err = keepers.OracleKeeper.ExchangeRates.Get(ctx, pair1)
@@ -129,12 +130,12 @@ func TestOraclePriceExpiration(t *testing.T) {
 
 	// Set price
 	ctx = ctx.WithBlockHeight(voteHeight)
-	oracle.EndBlocker(ctx, keepers.OracleKeeper)
+	require.NoError(t, oracle.EndBlocker(ctx, keepers.OracleKeeper))
 
 	// Set the block height to the expiration height
 	// End blocker should delete the price of pair2
 	ctx = ctx.WithBlockHeight(int64(params.ExpirationBlocks + params.VotePeriod))
-	oracle.EndBlocker(ctx, keepers.OracleKeeper)
+	require.NoError(t, oracle.EndBlocker(ctx, keepers.OracleKeeper))
 
 	_, err = keepers.OracleKeeper.ExchangeRates.Get(ctx, pair1)
 	require.NoError(t, err)

@@ -158,7 +158,14 @@ func (k Keeper) GetExchangeRateTwap(ctx sdk.Context, pair asset.Pair) (price mat
 			EndInclusive(
 				ctx.BlockTime()),
 	)
+	if err != nil {
+		return math.LegacyOneDec().Neg(), err
+	}
+
 	snapshots, err := snapshotsIter.Values()
+	if err != nil {
+		return math.LegacyOneDec().Neg(), err
+	}
 
 	if len(snapshots) == 0 {
 		// if there are no snapshots, return -1 for the price

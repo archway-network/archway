@@ -34,7 +34,8 @@ func TestGroupVotesByPair(t *testing.T) {
 		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
 	}
 
-	keepers.StakingKeeper.EndBlocker(ctx)
+	_, err := keepers.StakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
 
 	pairBtc := asset.Registry.Pair(denoms.BTC, denoms.NUSD)
 	pairEth := asset.Registry.Pair(denoms.ETH, denoms.NUSD)
@@ -50,7 +51,7 @@ func TestGroupVotesByPair(t *testing.T) {
 	}
 
 	for i, v := range btcVotes {
-		keepers.OracleKeeper.Votes.Set(
+		require.NoError(t, keepers.OracleKeeper.Votes.Set(
 			ctx,
 			ValAddrs[i],
 			types.NewAggregateExchangeRateVote(
@@ -60,7 +61,7 @@ func TestGroupVotesByPair(t *testing.T) {
 				},
 				ValAddrs[i],
 			),
-		)
+		))
 	}
 
 	// organize votes by pair
@@ -105,7 +106,8 @@ func TestClearVotesAndPrevotes(t *testing.T) {
 		ValAddrs[i] = sdk.ValAddress(vals[i].Address)
 	}
 
-	keepers.StakingKeeper.EndBlocker(ctx)
+	_, err := keepers.StakingKeeper.EndBlocker(ctx)
+	require.NoError(t, err)
 
 	btcVotes := types.ExchangeRateVotes{
 		types.NewExchangeRateVote(math.LegacyNewDec(17), asset.Registry.Pair(denoms.BTC, denoms.NUSD), ValAddrs[0], power),
@@ -119,17 +121,17 @@ func TestClearVotesAndPrevotes(t *testing.T) {
 	}
 
 	for i := range btcVotes {
-		keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[i], types.AggregateExchangeRatePrevote{
+		require.NoError(t, keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[i], types.AggregateExchangeRatePrevote{
 			Hash:        "",
 			Voter:       ValAddrs[i].String(),
 			SubmitBlock: uint64(ctx.BlockHeight()),
-		})
+		}))
 
-		keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[i],
+		require.NoError(t, keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[i],
 			types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{
 				{Pair: btcVotes[i].Pair, ExchangeRate: btcVotes[i].ExchangeRate},
 				{Pair: ethVotes[i].Pair, ExchangeRate: ethVotes[i].ExchangeRate},
-			}, ValAddrs[i]))
+			}, ValAddrs[i])))
 	}
 
 	keepers.OracleKeeper.ClearVotesAndPrevotes(ctx, 10)

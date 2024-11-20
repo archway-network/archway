@@ -177,7 +177,6 @@ func (pke pairKeyEncoder) EncodeNonTerminal(buffer []byte, key Pair) (int, error
 }
 func (pke pairKeyEncoder) DecodeNonTerminal(buffer []byte) (int, Pair, error) {
 	return pke.Decode(buffer)
-
 }
 func (pairKeyEncoder) SizeNonTerminal(key Pair) int {
 	return key.Size()

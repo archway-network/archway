@@ -48,7 +48,10 @@ func (k Keeper) RefreshWhitelist(ctx sdk.Context, nextWhitelist []asset.Pair, cu
 			panic(err)
 		}
 		for _, pair := range nextWhitelist {
-			k.WhitelistedPairs.Set(ctx, pair)
+			err = k.WhitelistedPairs.Set(ctx, pair)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }

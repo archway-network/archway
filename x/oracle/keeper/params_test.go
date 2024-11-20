@@ -18,7 +18,7 @@ func TestParams(t *testing.T) {
 	ctx := chain.GetContext()
 
 	// Test default params setting
-	keepers.OracleKeeper.Params.Set(ctx, types.DefaultParams())
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, types.DefaultParams()))
 	params, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
 	require.NotNil(t, params)
@@ -49,7 +49,7 @@ func TestParams(t *testing.T) {
 		MinValidPerWindow: minValidPerWindow,
 		ValidatorFeeRatio: minFeeRatio,
 	}
-	keepers.OracleKeeper.Params.Set(ctx, newParams)
+	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, newParams))
 
 	storedParams, err := keepers.OracleKeeper.Params.Get(ctx)
 	require.NoError(t, err)
