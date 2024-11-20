@@ -28,9 +28,9 @@ func TestExportInitGenesis(t *testing.T) {
 	require.NoError(t, keepers.OracleKeeper.Params.Set(ctx, types.DefaultParams()))
 	require.NoError(t, keepers.OracleKeeper.FeederDelegations.Set(ctx, ValAddrs[0], AccAddrs[1]))
 	require.NoError(t, keepers.OracleKeeper.ExchangeRates.Set(ctx, "pair1:pair2", types.DatedPrice{
-		ExchangeRate:   math.LegacyNewDec(123),
-		CreationHeight: 0,
-		CreationTime:   0,
+		ExchangeRate:       math.LegacyNewDec(123),
+		CreationHeight:     0,
+		CreationTimeUnixMs: 0,
 	}))
 	require.NoError(t, keepers.OracleKeeper.Prevotes.Set(ctx, ValAddrs[0], types.NewAggregateExchangeRatePrevote(types.AggregateVoteHash{123}, ValAddrs[0], uint64(2))))
 	require.NoError(t, keepers.OracleKeeper.Votes.Set(ctx, ValAddrs[0], types.NewAggregateExchangeRateVote(types.ExchangeRateTuples{{Pair: "foo", ExchangeRate: math.LegacyNewDec(123)}}, ValAddrs[0])))
