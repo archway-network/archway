@@ -2,9 +2,6 @@ package upgrade8_0_0
 
 import (
 	"context"
-	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
-	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
@@ -34,8 +31,5 @@ var Upgrade = upgrades.Upgrade{
 			sdk.UnwrapSDKContext(ctx).Logger().Info(upgrades.ArchwayLogo + NameAsciiArt)
 			return migrations, nil
 		}
-	},
-	StoreUpgrades: storetypes.StoreUpgrades{
-		Added: []string{wasmdTypes.StoreKey},
 	},
 }
