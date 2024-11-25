@@ -29,17 +29,21 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Callback defines the callback structure.
 type Callback struct {
-	// contract_address is the address of the contract which is requesting the callback (bech32 encoded).
+	// contract_address is the address of the contract which is requesting the
+	// callback (bech32 encoded).
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	// job_id is an identifier the callback requestor can pass in to identify the callback when it happens.
+	// job_id is an identifier the callback requestor can pass in to identify the
+	// callback when it happens.
 	JobId uint64 `protobuf:"varint,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	// callback_height is the height at which the callback is executed.
 	CallbackHeight int64 `protobuf:"varint,3,opt,name=callback_height,json=callbackHeight,proto3" json:"callback_height,omitempty"`
-	// fee_split is the breakdown of the fees paid by the contract to reserve the callback
+	// fee_split is the breakdown of the fees paid by the contract to reserve the
+	// callback
 	FeeSplit *CallbackFeesFeeSplit `protobuf:"bytes,4,opt,name=fee_split,json=feeSplit,proto3" json:"fee_split,omitempty"`
 	// reserved_by is the address which reserved the callback (bech32 encoded).
 	ReservedBy string `protobuf:"bytes,5,opt,name=reserved_by,json=reservedBy,proto3" json:"reserved_by,omitempty"`
-	// callback_gas_limit is the maximum gas that can be consumed by this callback.
+	// callback_gas_limit is the maximum gas that can be consumed by this
+	// callback.
 	MaxGasLimit uint64 `protobuf:"varint,6,opt,name=max_gas_limit,json=maxGasLimit,proto3" json:"max_gas_limit,omitempty"`
 }
 
@@ -118,15 +122,20 @@ func (m *Callback) GetMaxGasLimit() uint64 {
 	return 0
 }
 
-// CallbackFeesFeeSplit is the breakdown of all the fees that need to be paid by the contract to reserve a callback
+// CallbackFeesFeeSplit is the breakdown of all the fees that need to be paid by
+// the contract to reserve a callback
 type CallbackFeesFeeSplit struct {
-	// transaction_fees is the transaction fees for the callback based on its gas consumption
+	// transaction_fees is the transaction fees for the callback based on its gas
+	// consumption
 	TransactionFees *types.Coin `protobuf:"bytes,1,opt,name=transaction_fees,json=transactionFees,proto3" json:"transaction_fees,omitempty"`
-	// block_reservation_fees is the block reservation fees portion of the callback reservation fees
+	// block_reservation_fees is the block reservation fees portion of the
+	// callback reservation fees
 	BlockReservationFees *types.Coin `protobuf:"bytes,2,opt,name=block_reservation_fees,json=blockReservationFees,proto3" json:"block_reservation_fees,omitempty"`
-	// future_reservation_fees is the future reservation fees portion of the callback reservation fees
+	// future_reservation_fees is the future reservation fees portion of the
+	// callback reservation fees
 	FutureReservationFees *types.Coin `protobuf:"bytes,3,opt,name=future_reservation_fees,json=futureReservationFees,proto3" json:"future_reservation_fees,omitempty"`
-	// surplus_fees is any extra fees passed in for the registration of the callback
+	// surplus_fees is any extra fees passed in for the registration of the
+	// callback
 	SurplusFees *types.Coin `protobuf:"bytes,4,opt,name=surplus_fees,json=surplusFees,proto3" json:"surplus_fees,omitempty"`
 }
 
@@ -195,13 +204,17 @@ func (m *CallbackFeesFeeSplit) GetSurplusFees() *types.Coin {
 type Params struct {
 	// callback_gas_limit is the maximum gas that can be consumed by a callback.
 	CallbackGasLimit uint64 `protobuf:"varint,1,opt,name=callback_gas_limit,json=callbackGasLimit,proto3" json:"callback_gas_limit,omitempty"`
-	// max_block_reservation_limit is the maximum number of callbacks which can be registered in a given block.
+	// max_block_reservation_limit is the maximum number of callbacks which can be
+	// registered in a given block.
 	MaxBlockReservationLimit uint64 `protobuf:"varint,2,opt,name=max_block_reservation_limit,json=maxBlockReservationLimit,proto3" json:"max_block_reservation_limit,omitempty"`
-	// max_future_reservation_limit is the maximum number of blocks in the future that a contract can request a callback in.
+	// max_future_reservation_limit is the maximum number of blocks in the future
+	// that a contract can request a callback in.
 	MaxFutureReservationLimit uint64 `protobuf:"varint,3,opt,name=max_future_reservation_limit,json=maxFutureReservationLimit,proto3" json:"max_future_reservation_limit,omitempty"`
-	// block_reservation_fee_multiplier is used to calculate a part of the reservation fees which will need to be paid when requesting the callback.
+	// block_reservation_fee_multiplier is used to calculate a part of the
+	// reservation fees which will need to be paid when requesting the callback.
 	BlockReservationFeeMultiplier cosmossdk_io_math.LegacyDec `protobuf:"bytes,4,opt,name=block_reservation_fee_multiplier,json=blockReservationFeeMultiplier,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"block_reservation_fee_multiplier"`
-	// future_reservation_fee_multiplier is used to calculate a part of the reservation fees which will need to be paid while requesting the callback.
+	// future_reservation_fee_multiplier is used to calculate a part of the
+	// reservation fees which will need to be paid while requesting the callback.
 	FutureReservationFeeMultiplier cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=future_reservation_fee_multiplier,json=futureReservationFeeMultiplier,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"future_reservation_fee_multiplier"`
 }
 

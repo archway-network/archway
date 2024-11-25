@@ -113,7 +113,8 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-// QueryEstimateCallbackFeesRequest is the request for Query.EstimateCallbackFees.
+// QueryEstimateCallbackFeesRequest is the request for
+// Query.EstimateCallbackFees.
 type QueryEstimateCallbackFeesRequest struct {
 	// block_height is the height at which to estimate the callback fees
 	BlockHeight int64 `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
@@ -159,9 +160,11 @@ func (m *QueryEstimateCallbackFeesRequest) GetBlockHeight() int64 {
 	return 0
 }
 
-// QueryEstimateCallbackFeesResponse is the response for Query.EstimateCallbackFees.
+// QueryEstimateCallbackFeesResponse is the response for
+// Query.EstimateCallbackFees.
 type QueryEstimateCallbackFeesResponse struct {
-	// total_fees is the total fees that needs to be paid by the contract to reserve a callback
+	// total_fees is the total fees that needs to be paid by the contract to
+	// reserve a callback
 	TotalFees *types.Coin `protobuf:"bytes,1,opt,name=total_fees,json=totalFees,proto3" json:"total_fees,omitempty"`
 	// fee_split is the breakdown of the total_fees
 	FeeSplit *CallbackFeesFeeSplit `protobuf:"bytes,2,opt,name=fee_split,json=feeSplit,proto3" json:"fee_split,omitempty"`
@@ -369,7 +372,8 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params returns module parameters
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// EstimateCallbackFees returns the total amount of callback fees a contract needs to pay to register the callback
+	// EstimateCallbackFees returns the total amount of callback fees a contract
+	// needs to pay to register the callback
 	EstimateCallbackFees(ctx context.Context, in *QueryEstimateCallbackFeesRequest, opts ...grpc.CallOption) (*QueryEstimateCallbackFeesResponse, error)
 	// Callbacks returns all the callbacks registered at a given height
 	Callbacks(ctx context.Context, in *QueryCallbacksRequest, opts ...grpc.CallOption) (*QueryCallbacksResponse, error)
@@ -414,7 +418,8 @@ func (c *queryClient) Callbacks(ctx context.Context, in *QueryCallbacksRequest, 
 type QueryServer interface {
 	// Params returns module parameters
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// EstimateCallbackFees returns the total amount of callback fees a contract needs to pay to register the callback
+	// EstimateCallbackFees returns the total amount of callback fees a contract
+	// needs to pay to register the callback
 	EstimateCallbackFees(context.Context, *QueryEstimateCallbackFeesRequest) (*QueryEstimateCallbackFeesResponse, error)
 	// Callbacks returns all the callbacks registered at a given height
 	Callbacks(context.Context, *QueryCallbacksRequest) (*QueryCallbacksResponse, error)

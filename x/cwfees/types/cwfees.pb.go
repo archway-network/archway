@@ -111,7 +111,8 @@ func (m *MsgRegisterAsGranterResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterAsGranterResponse proto.InternalMessageInfo
 
-// MsgUnregisterAsGranter can be used by a cosmwasm contract to unregister itself as a fee granter.
+// MsgUnregisterAsGranter can be used by a cosmwasm contract to unregister
+// itself as a fee granter.
 type MsgUnregisterAsGranter struct {
 	GrantingContract string `protobuf:"bytes,1,opt,name=granting_contract,json=grantingContract,proto3" json:"granting_contract,omitempty"`
 }
@@ -387,9 +388,11 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// RegisterAsGranter allows a cosmwasm contract to register itself as a fee granter.
+	// RegisterAsGranter allows a cosmwasm contract to register itself as a fee
+	// granter.
 	RegisterAsGranter(ctx context.Context, in *MsgRegisterAsGranter, opts ...grpc.CallOption) (*MsgRegisterAsGranterResponse, error)
-	// UnregisterAsGranter allows a cosmwasm contract to unregister itself as a fee granter.
+	// UnregisterAsGranter allows a cosmwasm contract to unregister itself as a
+	// fee granter.
 	UnregisterAsGranter(ctx context.Context, in *MsgUnregisterAsGranter, opts ...grpc.CallOption) (*MsgUnregisterAsGranterResponse, error)
 }
 
@@ -421,9 +424,11 @@ func (c *msgClient) UnregisterAsGranter(ctx context.Context, in *MsgUnregisterAs
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// RegisterAsGranter allows a cosmwasm contract to register itself as a fee granter.
+	// RegisterAsGranter allows a cosmwasm contract to register itself as a fee
+	// granter.
 	RegisterAsGranter(context.Context, *MsgRegisterAsGranter) (*MsgRegisterAsGranterResponse, error)
-	// UnregisterAsGranter allows a cosmwasm contract to unregister itself as a fee granter.
+	// UnregisterAsGranter allows a cosmwasm contract to unregister itself as a
+	// fee granter.
 	UnregisterAsGranter(context.Context, *MsgUnregisterAsGranter) (*MsgUnregisterAsGranterResponse, error)
 }
 
@@ -499,7 +504,8 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// IsGrantingContract can be used to check if a contract is a granting contract.
+	// IsGrantingContract can be used to check if a contract is a granting
+	// contract.
 	IsGrantingContract(ctx context.Context, in *IsGrantingContractRequest, opts ...grpc.CallOption) (*IsGrantingContractResponse, error)
 }
 
@@ -522,7 +528,8 @@ func (c *queryClient) IsGrantingContract(ctx context.Context, in *IsGrantingCont
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// IsGrantingContract can be used to check if a contract is a granting contract.
+	// IsGrantingContract can be used to check if a contract is a granting
+	// contract.
 	IsGrantingContract(context.Context, *IsGrantingContractRequest) (*IsGrantingContractResponse, error)
 }
 

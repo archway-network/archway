@@ -120,7 +120,7 @@ func (k Keeper) ClearExchangeRates(ctx sdk.Context, pairVotes map[asset.Pair]typ
 	_ = k.ExchangeRates.Walk(ctx, nil, func(key asset.Pair, _ types.DatedPrice) (bool, error) {
 		_, isValid := pairVotes[key]
 		previousExchangeRate, _ := k.ExchangeRates.Get(ctx, key)
-		isExpired := previousExchangeRate.CreatedBlock+params.ExpirationBlocks <= uint64(ctx.BlockHeight())
+		isExpired := uint64(previousExchangeRate.CreationHeight)+params.ExpirationBlocks <= uint64(ctx.BlockHeight())
 
 		if isValid || isExpired {
 			err := k.ExchangeRates.Remove(ctx, key)

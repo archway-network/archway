@@ -27,13 +27,15 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // CallbackRegisteredEvent is emitted when a callback is registered.
 type CallbackRegisteredEvent struct {
-	// contract_address is the address of the contract for which callback is being registered (bech32 encoded).
+	// contract_address is the address of the contract for which callback is being
+	// registered (bech32 encoded).
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
 	// job_id is an identifier of the callback.
 	JobId uint64 `protobuf:"varint,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	// callback_height is the height at which the callback is executed.
 	CallbackHeight int64 `protobuf:"varint,3,opt,name=callback_height,json=callbackHeight,proto3" json:"callback_height,omitempty"`
-	// fee_split is the breakdown of the fees paid by the contract to reserve the callback
+	// fee_split is the breakdown of the fees paid by the contract to reserve the
+	// callback
 	FeeSplit *CallbackFeesFeeSplit `protobuf:"bytes,4,opt,name=fee_split,json=feeSplit,proto3" json:"fee_split,omitempty"`
 	// reserved_by is the address which reserved the callback (bech32 encoded).
 	ReservedBy string `protobuf:"bytes,5,opt,name=reserved_by,json=reservedBy,proto3" json:"reserved_by,omitempty"`
@@ -109,13 +111,16 @@ func (m *CallbackRegisteredEvent) GetReservedBy() string {
 
 // CallbackCancelledEvent is emitted when a callback is cancelled.
 type CallbackCancelledEvent struct {
-	// cancelled_by is the address of the contract whose callback is being cancelled (bech32 encoded)
+	// cancelled_by is the address of the contract whose callback is being
+	// cancelled (bech32 encoded)
 	CancelledBy string `protobuf:"bytes,1,opt,name=cancelled_by,json=cancelledBy,proto3" json:"cancelled_by,omitempty"`
 	// contract_address is the address of the contract (bech32 encoded)
 	ContractAddress string `protobuf:"bytes,2,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	// job_id is an identifier the callback requestor had passed during registration of the callback
+	// job_id is an identifier the callback requestor had passed during
+	// registration of the callback
 	JobId uint64 `protobuf:"varint,3,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
-	// callback_height is the height at which the callback requestor had registered the callback
+	// callback_height is the height at which the callback requestor had
+	// registered the callback
 	CallbackHeight int64 `protobuf:"varint,4,opt,name=callback_height,json=callbackHeight,proto3" json:"callback_height,omitempty"`
 	// refund_amount is the amount of fees which was refunded on cancellation
 	RefundAmount types.Coin `protobuf:"bytes,5,opt,name=refund_amount,json=refundAmount,proto3" json:"refund_amount"`
@@ -189,9 +194,11 @@ func (m *CallbackCancelledEvent) GetRefundAmount() types.Coin {
 	return types.Coin{}
 }
 
-// CallbackExecutedSuccessEvent is emitted when a callback is executed successfully.
+// CallbackExecutedSuccessEvent is emitted when a callback is executed
+// successfully.
 type CallbackExecutedSuccessEvent struct {
-	// contract_address is the address of the contract for which callback is being executed (bech32 encoded).
+	// contract_address is the address of the contract for which callback is being
+	// executed (bech32 encoded).
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
 	// job_id is an identifier of the callback.
 	JobId uint64 `protobuf:"varint,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
@@ -264,7 +271,8 @@ func (m *CallbackExecutedSuccessEvent) GetGasUsed() uint64 {
 
 // CallbackExecutedFailedEvent is emitted when a callback execution fails.
 type CallbackExecutedFailedEvent struct {
-	// contract_address is the address of the contract for which callback is being executed (bech32 encoded).
+	// contract_address is the address of the contract for which callback is being
+	// executed (bech32 encoded).
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
 	// job_id is an identifier of the callback.
 	JobId uint64 `protobuf:"varint,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`

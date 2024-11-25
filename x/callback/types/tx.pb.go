@@ -32,7 +32,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 type MsgUpdateParams struct {
-	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	// authority is the address that controls the module (defaults to x/gov unless
+	// overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// params defines the x/callback parameters to update.
 	//
@@ -87,7 +88,8 @@ func (m *MsgUpdateParams) GetParams() Params {
 	return Params{}
 }
 
-// MsgUpdateParamsResponse defines the response structure for executing a MsgUpdateParams message.
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
 type MsgUpdateParamsResponse struct {
 }
 
@@ -128,9 +130,11 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 type MsgRequestCallback struct {
 	// sender is the address who is requesting the callback (bech32 encoded)
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-	// contract_address is the address of the contract which is requesting the callback (bech32 encoded)
+	// contract_address is the address of the contract which is requesting the
+	// callback (bech32 encoded)
 	ContractAddress string `protobuf:"bytes,2,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	// job_id is an identifier the callback requestor can pass in to identify the callback when it happens
+	// job_id is an identifier the callback requestor can pass in to identify the
+	// callback when it happens
 	JobId uint64 `protobuf:"varint,3,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	// callback_height is the height at which the callback is executed.
 	CallbackHeight int64 `protobuf:"varint,4,opt,name=callback_height,json=callbackHeight,proto3" json:"callback_height,omitempty"`
@@ -206,7 +210,8 @@ func (m *MsgRequestCallback) GetFees() types.Coin {
 	return types.Coin{}
 }
 
-// MsgRequestCallbackResponse defines the response structure for executing a MsgRequestCallback message.
+// MsgRequestCallbackResponse defines the response structure for executing a
+// MsgRequestCallback message.
 type MsgRequestCallbackResponse struct {
 }
 
@@ -245,13 +250,16 @@ var xxx_messageInfo_MsgRequestCallbackResponse proto.InternalMessageInfo
 
 // MsgCancelCallback is the Msg/CancelCallback request type.
 type MsgCancelCallback struct {
-	// sender is the address of the contract which is cancelling the callback (bech32 encoded)
+	// sender is the address of the contract which is cancelling the callback
+	// (bech32 encoded)
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	// contract_address is the address of the contract (bech32 encoded)
 	ContractAddress string `protobuf:"bytes,2,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
-	// job_id is an identifier the callback requestor had passed during registration of the callback
+	// job_id is an identifier the callback requestor had passed during
+	// registration of the callback
 	JobId uint64 `protobuf:"varint,3,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
-	// callback_height is the height at which the callback requestor had registered the callback
+	// callback_height is the height at which the callback requestor had
+	// registered the callback
 	CallbackHeight int64 `protobuf:"varint,4,opt,name=callback_height,json=callbackHeight,proto3" json:"callback_height,omitempty"`
 }
 
@@ -316,9 +324,11 @@ func (m *MsgCancelCallback) GetCallbackHeight() int64 {
 	return 0
 }
 
-// MsgCancelCallbackResponse defines the response structure for executing a MsgCancelCallback message.
+// MsgCancelCallbackResponse defines the response structure for executing a
+// MsgCancelCallback message.
 type MsgCancelCallbackResponse struct {
-	// refund is the amount of fees being refunded due to the cancellation of the callback
+	// refund is the amount of fees being refunded due to the cancellation of the
+	// callback
 	Refund types.Coin `protobuf:"bytes,1,opt,name=refund,proto3" json:"refund"`
 }
 
@@ -427,7 +437,8 @@ type MsgClient interface {
 	// UpdateParams defines a governance operation for updating the x/callback
 	// module parameters. The authority is defined in the keeper.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	// RequestCallback defines a message for registering a callback at a specific height by a given contract
+	// RequestCallback defines a message for registering a callback at a specific
+	// height by a given contract
 	RequestCallback(ctx context.Context, in *MsgRequestCallback, opts ...grpc.CallOption) (*MsgRequestCallbackResponse, error)
 	// CancelCallback defines a message for cancelling an existing callback
 	CancelCallback(ctx context.Context, in *MsgCancelCallback, opts ...grpc.CallOption) (*MsgCancelCallbackResponse, error)
@@ -473,7 +484,8 @@ type MsgServer interface {
 	// UpdateParams defines a governance operation for updating the x/callback
 	// module parameters. The authority is defined in the keeper.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
-	// RequestCallback defines a message for registering a callback at a specific height by a given contract
+	// RequestCallback defines a message for registering a callback at a specific
+	// height by a given contract
 	RequestCallback(context.Context, *MsgRequestCallback) (*MsgRequestCallbackResponse, error)
 	// CancelCallback defines a message for cancelling an existing callback
 	CancelCallback(context.Context, *MsgCancelCallback) (*MsgCancelCallbackResponse, error)

@@ -27,9 +27,11 @@ type ModuleErrors int32
 const (
 	// ERR_UNKNOWN is the default error code
 	ModuleErrors_ERR_UNKNOWN ModuleErrors = 0
-	// ERR_OUT_OF_GAS is the error code when the contract callback exceeds the gas limit allowed by the module
+	// ERR_OUT_OF_GAS is the error code when the contract callback exceeds the gas
+	// limit allowed by the module
 	ModuleErrors_ERR_OUT_OF_GAS ModuleErrors = 1
-	// ERR_CONTRACT_EXECUTION_FAILED is the error code when the contract callback execution fails
+	// ERR_CONTRACT_EXECUTION_FAILED is the error code when the contract callback
+	// execution fails
 	ModuleErrors_ERR_CONTRACT_EXECUTION_FAILED ModuleErrors = 2
 )
 
