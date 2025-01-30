@@ -673,7 +673,7 @@ func NewArchwayApp(
 	)
 
 	app.Keepers.IBCHooksKeeper = ibchookskeeper.NewKeeper(keys[ibchookstypes.StoreKey])
-	ics20WasmHooks := ibchooks.NewWasmHooks(&app.Keepers.IBCHooksKeeper, nil, Bech32Prefix)
+	ics20WasmHooks := ibchooks.NewWasmHooks(&app.Keepers.IBCHooksKeeper, &app.Keepers.WASMKeeper, Bech32Prefix)
 	hooksIcs4Wrapper := ibchooks.NewICS4Middleware(app.Keepers.IBCKeeper.ChannelKeeper, ics20WasmHooks)
 
 	var transferStack porttypes.IBCModule
