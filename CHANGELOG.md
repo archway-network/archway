@@ -27,6 +27,10 @@ Contains bug fixes.
 
 Contains all the PRs that improved the code without changing the behaviors.
 -->
+## [Unreleased]
+
+### Fixed
+- [#599](https://github.com/archway-network/archway/pull/599) - Passing in wasmkeeper to ibc wasm hooks
 
 ## [v9.0.0](https://github.com/archway-network/archway/releases/tag/v9.0.0)
 
