@@ -32,7 +32,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 
 ### Fixed
 - [#599](https://github.com/archway-network/archway/pull/599) - Passing in wasmkeeper to ibc wasm hooks
-- [#600](https://github.com/archway-network/archway/pull/600) - Bump cometbft and prep for v10 release
+- [#601](https://github.com/archway-network/archway/pull/601) - Bump cometbft and prep for v10 release
 
 ## [v9.0.0](https://github.com/archway-network/archway/releases/tag/v9.0.0)
 
