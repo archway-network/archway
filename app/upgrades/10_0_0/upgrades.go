@@ -2,6 +2,7 @@ package upgrade8_0_0
 
 import (
 	"context"
+
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"
@@ -11,11 +12,11 @@ import (
 
 const Name = "v10.0.0"
 const NameAsciiArt = `
-              #      ###     ###
-     # #     ##      # #     # #
-     # #      #      # #     # #
-      #       #      # #     # #
-             ###  #  ###  #  ###
+              #  ###    ###     ###
+     # #     ##  # #    # #     # #
+     # #      #  # #    # #     # #
+      #       #  # #    # #     # #
+             ### ### #  ###  #  ###
 
 `
 
