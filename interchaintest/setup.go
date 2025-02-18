@@ -5,14 +5,14 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types"
-	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
+	"github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 )
 
 const (
 	initialVersion = "v7.0.1" // The last release of the chain. The one the mainnet is running on
-	upgradeName    = "v8.0.0" // The next upgrade name. Should match the upgrade handler.
+	upgradeName    = "v9.0.0" // The next upgrade name. Should match the upgrade handler.
 	chainName      = "archway"
 )
 

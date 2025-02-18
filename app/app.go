@@ -98,6 +98,9 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
+	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8"
+	ibchookskeeper "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8/keeper"
+	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8/types"
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
@@ -211,6 +214,7 @@ var (
 		ibc.AppModuleBasic{},
 		ibccm.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
+		ibchooks.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
@@ -327,6 +331,7 @@ func NewArchwayApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
+		ibchookstypes.StoreKey,
 		icacontrollertypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey, cwicatypes.StoreKey,
 
 		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName, cwerrorsTypes.StoreKey,
@@ -667,16 +672,21 @@ func NewArchwayApp(
 		logger,
 	)
 
+	app.Keepers.IBCHooksKeeper = ibchookskeeper.NewKeeper(keys[ibchookstypes.StoreKey])
+	ics20WasmHooks := ibchooks.NewWasmHooks(&app.Keepers.IBCHooksKeeper, &app.Keepers.WASMKeeper, Bech32Prefix)
+	hooksIcs4Wrapper := ibchooks.NewICS4Middleware(app.Keepers.IBCKeeper.ChannelKeeper, ics20WasmHooks)
+
 	var transferStack porttypes.IBCModule
 	transferStack = transfer.NewIBCModule(app.Keepers.TransferKeeper)
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.Keepers.IBCFeeKeeper)
+	transferStack = ibchooks.NewIBCMiddleware(transferStack, &hooksIcs4Wrapper)
 
 	// Create Interchain Accounts Stack
 
 	var icaControllerStack porttypes.IBCModule
 	icaControllerStack = cwica.NewIBCModule(app.Keepers.CWICAKeeper)
 	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.Keepers.ICAControllerKeeper)
-	//icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.Keepers.IBCFeeKeeper)
+	// icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.Keepers.IBCFeeKeeper)
 
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
 	// channel.RecvPacket -> fee.OnRecvPacket -> icaHost.OnRecvPacket
@@ -797,6 +807,7 @@ func NewArchwayApp(
 		ibcfeetypes.ModuleName,
 		icatypes.ModuleName,
 		// wasm
+		ibchookstypes.ModuleName,
 		wasmdTypes.ModuleName,
 	)
 
@@ -826,6 +837,7 @@ func NewArchwayApp(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		// wasm
+		ibchookstypes.ModuleName,
 		wasmdTypes.ModuleName,
 		// wasm gas tracking
 		trackingTypes.ModuleName,
@@ -870,6 +882,7 @@ func NewArchwayApp(
 		ibcfeetypes.ModuleName,
 		icatypes.ModuleName,
 		// wasm after ibc transfer
+		ibchookstypes.ModuleName,
 		wasmdTypes.ModuleName,
 		// wasm gas tracking
 		cwfees.ModuleName, // depends on wasmd.
@@ -1203,6 +1216,9 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 
 func getAcceptedStargateQueries() wasmdKeeper.AcceptedStargateQueries {
 	return wasmdKeeper.AcceptedStargateQueries{
-		"/archway.cwerrors.v1.Query/Errors": &cwerrorsTypes.QueryErrorsRequest{},
+		"/archway.cwerrors.v1.Query/Errors":               &cwerrorsTypes.QueryErrorsRequest{},
+		"/archway.callback.v1.Query/EstimateCallbackFees": &callbackTypes.QueryEstimateCallbackFeesRequest{},
+		"/archway.callback.v1.Query/Params":               &callbackTypes.QueryParamsRequest{},
+		"/ibc.core.client.v1.Query/VerifyMembership":      &ibcclienttypes.QueryVerifyMembershipResponse{},
 	}
 }
