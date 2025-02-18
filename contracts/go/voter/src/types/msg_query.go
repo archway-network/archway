@@ -40,7 +40,7 @@ type MsgQuery struct {
 	CustomMetadata *CustomMetadataRequest `json:",omitempty"`
 	// CustomRewardsRecords calls WASM bindings RewardsRecords query (using contractAddress as the rewardsAddress).
 	CustomRewardsRecords *CustomRewardsRecordsRequest `json:",omitempty"`
-	// CustomGovVote calls WASM bindings GovVote.
+	// CustomGovVoteRequest calls WASM bindings GovVote.
 	CustomGovVoteRequest *CustomGovVoteRequest `json:",omitempty"`
 }
 
