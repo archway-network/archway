@@ -27,10 +27,12 @@ Contains bug fixes.
 
 Contains all the PRs that improved the code without changing the behaviors.
 -->
-## [Unreleased]
+
+## [v10.0.0](https://github.com/archway-network/archway/releases/tag/v10.0.0)
 
 ### Fixed
 - [#599](https://github.com/archway-network/archway/pull/599) - Passing in wasmkeeper to ibc wasm hooks
+- [#601](https://github.com/archway-network/archway/pull/601) - Bump cometbft and prep for v10 release
 
 ## [v9.0.0](https://github.com/archway-network/archway/releases/tag/v9.0.0)
 
