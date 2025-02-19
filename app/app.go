@@ -1219,6 +1219,5 @@ func getAcceptedStargateQueries() wasmdKeeper.AcceptedStargateQueries {
 		"/archway.cwerrors.v1.Query/Errors":               &cwerrorsTypes.QueryErrorsRequest{},
 		"/archway.callback.v1.Query/EstimateCallbackFees": &callbackTypes.QueryEstimateCallbackFeesRequest{},
 		"/archway.callback.v1.Query/Params":               &callbackTypes.QueryParamsRequest{},
-		"/ibc.core.client.v1.Query/VerifyMembership":      &ibcclienttypes.QueryVerifyMembershipResponse{},
 	}
 }
