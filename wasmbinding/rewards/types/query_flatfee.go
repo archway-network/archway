@@ -9,7 +9,7 @@ import (
 	"github.com/archway-network/archway/wasmbinding/pkg"
 )
 
-// ContracFlatFeeRequest is the Query.FlatFee request.
+// ContractFlatFeeRequest is the Query.FlatFee request.
 type ContractFlatFeeRequest struct {
 	// ContractAddress is the bech32 encoded contract address.
 	ContractAddress string `json:"contract_address"`
