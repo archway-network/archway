@@ -16,6 +16,7 @@ import (
 	upgrade6_0_0 "github.com/archway-network/archway/app/upgrades/6_0_0"
 	upgrade7_0_0 "github.com/archway-network/archway/app/upgrades/7_0_0"
 	upgrade9_0_0 "github.com/archway-network/archway/app/upgrades/9_0_0"
+	upgradelatest "github.com/archway-network/archway/app/upgrades/latest"
 	"github.com/archway-network/archway/app/upgrades/constantineupgrades"
 )
 
@@ -33,6 +34,7 @@ var Upgrades = []upgrades.Upgrade{
 	// upgrade8_0_0.Upgrade,  // v8.0.0: was reserved for a consensus breaking wasmd upgrade
 	upgrade9_0_0.Upgrade,  // v9.0.0
 	upgrade10_0_0.Upgrade, // v10.0.0
+	upgradelatest.Upgrade,
 
 	// constantine only
 	constantineupgrades.WASMD_50_Amino_Patch,

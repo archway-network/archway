@@ -47,7 +47,7 @@ jobs:
                 heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ github.head_ref }} --chain archway --tag local
 
             - name: Upload current image
-              uses: ishworkh/container-image-artifact-upload@v1.0.0
+              uses: ishworkh/container-image-artifact-upload@v2.0.0
               with:
                 image: archway:local
                 retention_days: 3
@@ -57,7 +57,7 @@ jobs:
                 heighliner build --org archway-network --repo archway --dockerfile cosmos --build-target "make build" --build-env "BUILD_TAGS=muslc" --binaries "build/archwayd" --git-ref ${{ steps.lastrelease.outputs.tag }} --chain archway --tag ${{ steps.lastrelease.outputs.tag }}
             
             - name: Upload ${{ steps.lastrelease.outputs.tag }} image
-              uses: ishworkh/container-image-artifact-upload@v1.0.0
+              uses: ishworkh/container-image-artifact-upload@v2.0.0
               with:
                 image: archway:${{ steps.lastrelease.outputs.tag }}
                 retention_days: 3
@@ -69,7 +69,7 @@ jobs:
 
         steps:
             - name: Checkout archway-network/archway/interchaintest
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
               with:
                 fetch-depth: 0
                 sparse-checkout: interchaintest
@@ -83,7 +83,7 @@ jobs:
               uses: docker/setup-buildx-action@v2
 
             - name: Download current image
-              uses: actions/download-artifact@v3
+              uses: actions/download-artifact@v4
               with:
                 name: action_image_artifact_archway_local
 
@@ -97,7 +97,7 @@ jobs:
                 prefix: 'v'
 
             - name: Download ${{ steps.lastrelease.outputs.tag }} image
-              uses: actions/download-artifact@v3
+              uses: actions/download-artifact@v4
               with:
                 name: action_image_artifact_archway_${{ steps.lastrelease.outputs.tag }}
 
@@ -116,7 +116,7 @@ jobs:
         
         steps:
           - name: Checkout archway-network/archway/interchaintest
-            uses: actions/checkout@v3
+            uses: actions/checkout@v4
             with:
               fetch-depth: 0
               sparse-checkout: interchaintest
@@ -130,7 +130,7 @@ jobs:
             uses: docker/setup-buildx-action@v2
 
           - name: Download current image
-            uses: actions/download-artifact@v3
+            uses: actions/download-artifact@v4
             with:
               name: action_image_artifact_archway_local
 
@@ -149,7 +149,7 @@ jobs:
 
       steps:
         - name: Checkout archway-network/archway/interchaintest
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
           with:
             fetch-depth: 0
             sparse-checkout: interchaintest
@@ -163,7 +163,7 @@ jobs:
           uses: docker/setup-buildx-action@v2
 
         - name: Download current image
-          uses: actions/download-artifact@v3
+          uses: actions/download-artifact@v4
           with:
             name: action_image_artifact_archway_local
 

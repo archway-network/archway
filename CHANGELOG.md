@@ -33,6 +33,11 @@ Contains all the PRs that improved the code without changing the behaviors.
 ### Added
 - [#604](https://github.com/archway-network/archway/pull/604) - Move Dockerfile.deprecated -> Dockerfile.legacy and update wasmvm versions. Dockerfile.legacy will be maintained due to existing demain
 
+## [v10.1.0](https://github.com/archway-network/archway/releases/tag/v10.1.0)
+
+### Changed
+- [#603](https://github.com/archway-network/archway/pull/603) - Bumping ibc-go to v8.7.0
+
 ## [v10.0.0](https://github.com/archway-network/archway/releases/tag/v10.0.0)
 
 ### Fixed
