@@ -28,6 +28,11 @@ Contains bug fixes.
 Contains all the PRs that improved the code without changing the behaviors.
 -->
 
+## Un-Released
+
+### Added
+- [#604](https://github.com/archway-network/archway/pull/604) - Move Dockerfile.deprecated -> Dockerfile.legacy and update wasmvm versions. Dockerfile.legacy will be maintained due to existing demain
+
 ## [v10.0.0](https://github.com/archway-network/archway/releases/tag/v10.0.0)
 
 ### Fixed
