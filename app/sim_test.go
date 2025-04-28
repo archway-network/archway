@@ -30,8 +30,8 @@ package app
 // 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 // 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 // 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-// 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-// 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+// 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+// 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 // 	"github.com/stretchr/testify/require"
 
 // 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"

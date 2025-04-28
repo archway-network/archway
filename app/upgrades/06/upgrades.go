@@ -6,7 +6,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
 
 	"github.com/archway-network/archway/app/keepers"
 	"github.com/archway-network/archway/app/upgrades"

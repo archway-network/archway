@@ -5,11 +5,9 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
-	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
+	connectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 
 	cwerrortypes "github.com/archway-network/archway/x/cwerrors/types"
 )
@@ -30,15 +28,15 @@ type WasmKeeper interface {
 type ICAControllerKeeper interface {
 	GetActiveChannelID(ctx sdk.Context, connectionID, portID string) (string, bool)
 	GetInterchainAccountAddress(ctx sdk.Context, connectionID, portID string) (string, bool)
-	RegisterInterchainAccount(ctx sdk.Context, connectionID, owner, version string) error
-	SendTx(ctx sdk.Context, chanCap *capabilitytypes.Capability, connectionID, portID string, icaPacketData icatypes.InterchainAccountPacketData, timeoutTimestamp uint64) (uint64, error)
+	RegisterInterchainAccount(ctx sdk.Context, connectionID, owner, version string, ordering channeltypes.Order) error
+	SendTx(ctx sdk.Context, connectionID, portID string, icaPacketData icatypes.InterchainAccountPacketData, timeoutTimestamp uint64) (uint64, error)
 }
 
 // ChannelKeeper defines the expected IBC channel keeper
 type ChannelKeeper interface {
 	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channeltypes.Channel, found bool)
 	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
-	GetConnection(ctx sdk.Context, connectionID string) (ibcexported.ConnectionI, error)
+	GetConnection(ctx sdk.Context, connectionID string) (connectiontypes.ConnectionEnd, error)
 }
 
 // ConnectionKeeper defines the expected IBC connection keeper

@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	types0 "github.com/cosmos/cosmos-sdk/types"
-	types2 "github.com/cosmos/ibc-go/modules/capability/types"
-	types3 "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	types3 "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 )
 
 // MockICAControllerKeeper is a mock of ICAControllerKeeper interface.
@@ -43,7 +43,7 @@ func (m *MockICAControllerKeeper) GetInterchainAccountAddress(ctx types0.Context
 }
 
 // RegisterInterchainAccount mocks base method.
-func (m *MockICAControllerKeeper) RegisterInterchainAccount(ctx types0.Context, connectionID, owner, version string) error {
+func (m *MockICAControllerKeeper) RegisterInterchainAccount(ctx types0.Context, connectionID, owner, version string, ordering channeltypes.Order) error {
 	if m.returnErrForRegisterInterchainAccount {
 		return errors.New("failed to create RegisterInterchainAccount")
 	}
@@ -51,7 +51,7 @@ func (m *MockICAControllerKeeper) RegisterInterchainAccount(ctx types0.Context, 
 }
 
 // SendTx mocks base method.
-func (m *MockICAControllerKeeper) SendTx(ctx types0.Context, chanCap *types2.Capability, connectionID, portID string, icaPacketData types3.InterchainAccountPacketData, timeoutTimestamp uint64) (uint64, error) {
+func (m *MockICAControllerKeeper) SendTx(ctx types0.Context, connectionID, portID string, icaPacketData types3.InterchainAccountPacketData, timeoutTimestamp uint64) (uint64, error) {
 	if m.packetSequence != 0 {
 		return m.packetSequence, nil
 	}

@@ -11,8 +11,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 
 	"github.com/archway-network/archway/x/cwica/types"
 )
@@ -60,7 +60,7 @@ func (k Keeper) RegisterInterchainAccount(goCtx context.Context, msg *types.MsgR
 	}
 	version := string(icaMetadataBytes)
 
-	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.ContractAddress, version); err != nil {
+	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.ContractAddress, version, channeltypes.NONE); err != nil {
 		return nil, errors.Wrap(err, "failed to RegisterInterchainAccount")
 	}
 

@@ -101,30 +101,24 @@ import (
 	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8"
 	ibchookskeeper "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8/keeper"
 	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8/types"
-	"github.com/cosmos/ibc-go/modules/capability"
-	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
-	icacontroller "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
-	icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host"
-	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
-	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
-	ibcfee "github.com/cosmos/ibc-go/v8/modules/apps/29-fee"
-	ibcfeekeeper "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/keeper"
-	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
-	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	ibccm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ica "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts"
+	icacontroller "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/types"
+	icahost "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
+	"github.com/cosmos/ibc-go/v10/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core"
+	ibcclienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
+	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
+	ibccm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 	"github.com/spf13/cast"
 
 	"github.com/archway-network/archway/app/keepers"
@@ -199,7 +193,6 @@ var (
 		auth.AppModuleBasic{},
 		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		bank.AppModuleBasic{},
-		capability.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
@@ -213,7 +206,6 @@ var (
 		consensus.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ibccm.AppModuleBasic{},
-		ibcfee.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
@@ -242,7 +234,6 @@ var (
 		govtypes.ModuleName:                  {authtypes.Burner},
 		nft.ModuleName:                       nil,
 		ibctransfertypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
-		ibcfeetypes.ModuleName:               nil,
 		icatypes.ModuleName:                  nil,
 		wasmdTypes.ModuleName:                {authtypes.Burner},
 		rewardsTypes.TreasuryCollector:       {authtypes.Burner},
@@ -272,18 +263,11 @@ type ArchwayApp struct {
 	invCheckPeriod uint
 
 	// keys to access the substores
-	keys    map[string]*storetypes.KVStoreKey
-	tkeys   map[string]*storetypes.TransientStoreKey
-	memKeys map[string]*storetypes.MemoryStoreKey
+	keys  map[string]*storetypes.KVStoreKey
+	tkeys map[string]*storetypes.TransientStoreKey
 
 	// Keepers
 	Keepers keepers.ArchwayKeepers
-
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-	ScopedIBCFeeKeeper   capabilitykeeper.ScopedKeeper
-	ScopedWASMKeeper     capabilitykeeper.ScopedKeeper
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -329,15 +313,14 @@ func NewArchwayApp(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey,
 		feegrant.StoreKey, authzkeeper.StoreKey, wasmdTypes.StoreKey, consensusparamtypes.StoreKey,
 		ibchookstypes.StoreKey,
-		icacontrollertypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey, cwicatypes.StoreKey,
+		icacontrollertypes.StoreKey, icahosttypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey, cwicatypes.StoreKey,
 
 		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName, cwerrorsTypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey, cwerrorsTypes.TStoreKey)
-	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	// register streaming services
 	if err := bApp.RegisterStreamingServices(appOpts, keys); err != nil {
@@ -353,7 +336,6 @@ func NewArchwayApp(
 		invCheckPeriod:    invCheckPeriod,
 		keys:              keys,
 		tkeys:             tkeys,
-		memKeys:           memKeys,
 		Keepers:           keepers.ArchwayKeepers{},
 	}
 
@@ -372,20 +354,6 @@ func NewArchwayApp(
 		runtime.EventService{},
 	)
 	app.SetParamStore(app.Keepers.ConsensusParamsKeeper.ParamsStore)
-
-	// add capability keeper and ScopeToModule for ibc module
-	app.Keepers.CapabilityKeeper = capabilitykeeper.NewKeeper(
-		appCodec,
-		keys[capabilitytypes.StoreKey],
-		memKeys[capabilitytypes.MemStoreKey],
-	)
-
-	scopedIBCKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	scopedICAControllerKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
-	scopedICAHostKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	scopedTransferKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	scopedWasmKeeper := app.Keepers.CapabilityKeeper.ScopeToModule(wasmdTypes.ModuleName)
-	app.Keepers.CapabilityKeeper.Seal()
 
 	// add keepers
 	app.Keepers.AccountKeeper = authkeeper.NewAccountKeeper(
@@ -477,11 +445,9 @@ func NewArchwayApp(
 
 	app.Keepers.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
-		keys[ibcexported.StoreKey],
+		runtime.NewKVStoreService(keys[ibcexported.StoreKey]),
 		app.getSubspace(ibcexported.ModuleName),
-		app.Keepers.StakingKeeper,
 		app.Keepers.UpgradeKeeper,
-		scopedIBCKeeper,
 		govModuleAddr,
 	)
 
@@ -491,25 +457,16 @@ func NewArchwayApp(
 		AddRoute(govtypes.RouterKey, govV1Beta1types.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.Keepers.ParamsKeeper))
 
-	// IBC Fee Module keeper
-	app.Keepers.IBCFeeKeeper = ibcfeekeeper.NewKeeper(
-		appCodec, keys[ibcfeetypes.StoreKey],
-		app.Keepers.IBCKeeper.ChannelKeeper, // may be replaced with IBC middleware
-		app.Keepers.IBCKeeper.ChannelKeeper,
-		app.Keepers.IBCKeeper.PortKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper,
-	)
-
 	// Create Transfer Keepers
 	app.Keepers.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
-		keys[ibctransfertypes.StoreKey],
+		runtime.NewKVStoreService(keys[ibctransfertypes.StoreKey]),
 		app.getSubspace(ibctransfertypes.ModuleName),
-		app.Keepers.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
 		app.Keepers.IBCKeeper.ChannelKeeper,
-		app.Keepers.IBCKeeper.PortKeeper,
+		app.Keepers.IBCKeeper.ChannelKeeper,
+		app.MsgServiceRouter(),
 		app.Keepers.AccountKeeper,
 		app.Keepers.BankKeeper,
-		scopedTransferKeeper,
 		govModuleAddr,
 	)
 
@@ -517,29 +474,25 @@ func NewArchwayApp(
 
 	app.Keepers.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
 		appCodec,
-		keys[icacontrollertypes.StoreKey],
+		runtime.NewKVStoreService(keys[icacontrollertypes.StoreKey]),
 		app.getSubspace(icacontrollertypes.SubModuleName),
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		app.Keepers.IBCKeeper.ChannelKeeper,
-		app.Keepers.IBCKeeper.PortKeeper,
-		scopedICAControllerKeeper,
 		app.MsgServiceRouter(),
 		govModuleAddr,
 	)
 
 	app.Keepers.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec,
-		keys[icahosttypes.StoreKey],
+		runtime.NewKVStoreService(keys[icahosttypes.StoreKey]),
 		app.getSubspace(icahosttypes.SubModuleName),
-		app.Keepers.IBCFeeKeeper,
 		app.Keepers.IBCKeeper.ChannelKeeper,
-		app.Keepers.IBCKeeper.PortKeeper,
+		app.Keepers.IBCKeeper.ChannelKeeper,
 		app.Keepers.AccountKeeper,
-		scopedICAHostKeeper,
 		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(), // set grpc router for ica host
 		govModuleAddr,
 	)
-	app.Keepers.ICAHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -564,16 +517,12 @@ func NewArchwayApp(
 	extendedGovKeeper := extendedGov.NewKeeper(app.Keepers.GovKeeper)
 
 	wasmDir := filepath.Join(homePath, "wasm")
-	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	nodeConfig, err := wasm.ReadNodeConfig(appOpts)
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
 
-	// The last arguments can contain custom message handlers, and custom query handlers,
-	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_3,cosmwasm_1_4"
-
-	wasmer, err := cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
+	wasmer, err := cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), wasmdKeeper.BuiltInCapabilities(), 32, nodeConfig.ContractDebugMode, nodeConfig.MemoryCacheSize)
 	if err != nil {
 		panic(err)
 	}
@@ -595,16 +544,15 @@ func NewArchwayApp(
 		app.Keepers.BankKeeper,
 		app.Keepers.StakingKeeper,
 		distrkeeper.NewQuerier(app.Keepers.DistrKeeper),
-		app.Keepers.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
 		app.Keepers.IBCKeeper.ChannelKeeper,
-		app.Keepers.IBCKeeper.PortKeeper,
-		scopedWasmKeeper,
+		app.Keepers.IBCKeeper.ChannelKeeper,
 		app.Keepers.TransferKeeper,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		wasmDir,
-		wasmConfig,
-		supportedFeatures,
+		nodeConfig,
+		wasmdTypes.VMConfig{},
+		wasmdKeeper.BuiltInCapabilities(),
 		govModuleAddr,
 		wasmOpts...,
 	)
@@ -678,25 +626,21 @@ func NewArchwayApp(
 
 	var transferStack porttypes.IBCModule
 	transferStack = transfer.NewIBCModule(app.Keepers.TransferKeeper)
-	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.Keepers.IBCFeeKeeper)
 	transferStack = ibchooks.NewIBCMiddleware(transferStack, &hooksIcs4Wrapper)
 
 	// Create Interchain Accounts Stack
 
 	var icaControllerStack porttypes.IBCModule
 	icaControllerStack = cwica.NewIBCModule(app.Keepers.CWICAKeeper)
-	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.Keepers.ICAControllerKeeper)
-	// icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.Keepers.IBCFeeKeeper)
+	icaControllerStack = icacontroller.NewIBCMiddlewareWithAuth(icaControllerStack, app.Keepers.ICAControllerKeeper)
 
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
 	// channel.RecvPacket -> fee.OnRecvPacket -> icaHost.OnRecvPacket
 	var icaHostStack porttypes.IBCModule
 	icaHostStack = icahost.NewIBCModule(app.Keepers.ICAHostKeeper)
-	icaHostStack = ibcfee.NewIBCMiddleware(icaHostStack, app.Keepers.IBCFeeKeeper)
 
 	var wasmStack porttypes.IBCModule
-	wasmStack = wasm.NewIBCHandler(app.Keepers.WASMKeeper, app.Keepers.IBCKeeper.ChannelKeeper, app.Keepers.IBCFeeKeeper)
-	wasmStack = ibcfee.NewIBCMiddleware(wasmStack, app.Keepers.IBCFeeKeeper)
+	wasmStack = wasm.NewIBCHandler(app.Keepers.WASMKeeper, app.Keepers.IBCKeeper.ChannelKeeper, app.Keepers.IBCKeeper.ChannelKeeper)
 
 	// create static IBC router, add transfer route, add wasm route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
@@ -732,7 +676,6 @@ func NewArchwayApp(
 		auth.NewAppModule(appCodec, app.Keepers.AccountKeeper, nil, app.getSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(app.Keepers.AccountKeeper, app.Keepers.BankKeeper),
 		bank.NewAppModule(appCodec, app.Keepers.BankKeeper, app.Keepers.AccountKeeper, app.getSubspace(banktypes.ModuleName)),
-		capability.NewAppModule(appCodec, *app.Keepers.CapabilityKeeper, false),
 		gov.NewAppModule(appCodec, &app.Keepers.GovKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(govtypes.ModuleName)),
 		groupmodule.NewAppModule(appCodec, app.Keepers.GroupKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.interfaceRegistry),
 		nftmodule.NewAppModule(appCodec, app.Keepers.NFTKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.interfaceRegistry),
@@ -748,7 +691,6 @@ func NewArchwayApp(
 		ibc.NewAppModule(app.Keepers.IBCKeeper),
 		params.NewAppModule(app.Keepers.ParamsKeeper),
 		transferModule,
-		ibcfee.NewAppModule(app.Keepers.IBCFeeKeeper),
 		ica.NewAppModule(&app.Keepers.ICAControllerKeeper, &app.Keepers.ICAHostKeeper),
 		consensus.NewAppModule(appCodec, app.Keepers.ConsensusParamsKeeper),
 		tracking.NewAppModule(app.appCodec, app.Keepers.TrackingKeeper),
@@ -782,7 +724,6 @@ func NewArchwayApp(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.ModuleManager.SetOrderBeginBlockers(
-		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -804,7 +745,6 @@ func NewArchwayApp(
 		// additional non simd modules
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		icatypes.ModuleName,
 		// wasm
 		ibchookstypes.ModuleName,
@@ -816,12 +756,10 @@ func NewArchwayApp(
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		ibcexported.ModuleName,
 		icatypes.ModuleName,
 		feegrant.ModuleName,
 		authz.ModuleName,
-		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
@@ -857,7 +795,6 @@ func NewArchwayApp(
 	// NOTE: wasm module should be at the end as it can call other module functionality direct or via message dispatching during
 	// genesis phase. For example bank transfer, auth account check, staking, ...
 	app.ModuleManager.SetOrderInitGenesis(
-		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
@@ -879,7 +816,6 @@ func NewArchwayApp(
 		// additional non simd modules
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		icatypes.ModuleName,
 		// wasm after ibc transfer
 		ibchookstypes.ModuleName,
@@ -914,7 +850,6 @@ func NewArchwayApp(
 	app.sm = module.NewSimulationManager(
 		auth.NewAppModule(appCodec, app.Keepers.AccountKeeper, authsims.RandomGenesisAccounts, app.getSubspace(authtypes.ModuleName)),
 		bank.NewAppModule(appCodec, app.Keepers.BankKeeper, app.Keepers.AccountKeeper, app.getSubspace(banktypes.ModuleName)),
-		capability.NewAppModule(appCodec, *app.Keepers.CapabilityKeeper, false),
 		feegrantmodule.NewAppModule(appCodec, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.Keepers.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, app.Keepers.AuthzKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, &app.Keepers.GovKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper, app.getSubspace(govtypes.ModuleName)),
@@ -934,7 +869,6 @@ func NewArchwayApp(
 	// initialize stores
 	app.MountKVStores(keys)
 	app.MountTransientStores(tkeys)
-	app.MountMemoryStores(memKeys)
 
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
@@ -946,7 +880,7 @@ func NewArchwayApp(
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			},
 			IBCKeeper:             app.Keepers.IBCKeeper,
-			WasmConfig:            &wasmConfig,
+			NodeConfig:            &nodeConfig,
 			RewardsAnteBankKeeper: app.Keepers.BankKeeper,
 			TXCounterStoreService: runtime.NewKVStoreService(keys[wasmdTypes.StoreKey]),
 			TrackingKeeper:        app.Keepers.TrackingKeeper,
@@ -1013,11 +947,6 @@ func NewArchwayApp(
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 	}
-
-	app.ScopedIBCKeeper = scopedIBCKeeper
-	app.ScopedTransferKeeper = scopedTransferKeeper
-	app.ScopedWASMKeeper = scopedWasmKeeper
-	app.ScopedICAHostKeeper = scopedICAHostKeeper
 	return app
 }
 
@@ -1214,8 +1143,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	return paramsKeeper
 }
 
-func getAcceptedStargateQueries() wasmdKeeper.AcceptedStargateQueries {
-	return wasmdKeeper.AcceptedStargateQueries{
+func getAcceptedStargateQueries() wasmdKeeper.AcceptedQueries {
+	return wasmdKeeper.AcceptedQueries{
 		"/archway.cwerrors.v1.Query/Errors":               &cwerrorsTypes.QueryErrorsRequest{},
 		"/archway.callback.v1.Query/EstimateCallbackFees": &callbackTypes.QueryEstimateCallbackFeesRequest{},
 		"/archway.callback.v1.Query/Params":               &callbackTypes.QueryParamsRequest{},

@@ -16,12 +16,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	ibcmock "github.com/cosmos/ibc-go/v8/testing/mock"
+	ibctransfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
+	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibcclienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	ibcmock "github.com/cosmos/ibc-go/v10/testing/mock"
 )
 
 //go:embed testdata/counter.wasm
@@ -277,7 +276,6 @@ func (suite *HooksTestSuite) TestOnAcknowledgementPacketCounterContract() {
 	// call the hook
 	seq, err := ibcmiddleware.SendPacket(
 		suite.Ctx,
-		&capabilitytypes.Capability{Index: 1},
 		callbackPacket.SourcePort,
 		callbackPacket.SourceChannel,
 		ibcclienttypes.Height{
@@ -376,7 +374,6 @@ func (suite *HooksTestSuite) TestOnTimeoutPacketOverrideCounterContract() {
 	// call the hook
 	seq, err := ibcmiddleware.SendPacket(
 		suite.Ctx,
-		&capabilitytypes.Capability{Index: 1},
 		callbackPacket.SourcePort,
 		callbackPacket.SourceChannel,
 		ibcclienttypes.Height{

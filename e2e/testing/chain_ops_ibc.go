@@ -9,12 +9,11 @@ import (
 	cmProtoVersion "github.com/cometbft/cometbft/proto/tendermint/version"
 	cmTypes "github.com/cometbft/cometbft/types"
 	cmVersion "github.com/cometbft/cometbft/version"
-	clientTypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channelTypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	commitmentTypes "github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
-	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
-	"github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibcTmTypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	clientTypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channelTypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	commitmentTypes "github.com/cosmos/ibc-go/v10/modules/core/23-commitment/types"
+	"github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibcTmTypes "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 	"github.com/stretchr/testify/require"
 )
 
@@ -95,15 +94,11 @@ func (chain *TestChain) SendIBCPacket(packet exported.PacketI) {
 
 	require.NotNil(t, packet)
 
-	capPath := host.ChannelCapabilityPath(packet.GetSourcePort(), packet.GetSourceChannel())
-	cap, ok := chain.app.ScopedIBCKeeper.GetCapability(chain.GetContext(), capPath)
-	require.True(t, ok)
-
 	timeout := clientTypes.Height{
 		RevisionNumber: packet.GetTimeoutHeight().GetRevisionNumber(),
 		RevisionHeight: packet.GetTimeoutHeight().GetRevisionHeight(),
 	}
-	_, err := chain.app.Keepers.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), cap, packet.GetSourcePort(), packet.GetSourceChannel(), timeout, packet.GetTimeoutTimestamp(), packet.GetData())
+	_, err := chain.app.Keepers.IBCKeeper.ChannelKeeper.SendPacket(chain.GetContext(), packet.GetSourcePort(), packet.GetSourceChannel(), timeout, packet.GetTimeoutTimestamp(), packet.GetData())
 	require.NoError(t, err)
 
 	chain.NextBlock(0)
