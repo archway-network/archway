@@ -8,6 +8,7 @@ import (
 
 	rewardsMsgTypes "github.com/archway-network/archway/wasmbinding/rewards/types"
 	rewardsTypes "github.com/archway-network/archway/x/rewards/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // KeeperWriterExpected defines the x/rewards keeper expected write operations.
@@ -31,9 +32,9 @@ func NewRewardsMsgHandler(rk KeeperWriterExpected) MsgHandler {
 }
 
 // UpdateContractMetadata updates the contract metadata.
-func (h MsgHandler) UpdateContractMetadata(ctx sdk.Context, senderAddr sdk.AccAddress, req rewardsMsgTypes.UpdateContractMetadataRequest) ([]sdk.Event, [][]byte, error) {
+func (h MsgHandler) UpdateContractMetadata(ctx sdk.Context, senderAddr sdk.AccAddress, req rewardsMsgTypes.UpdateContractMetadataRequest) ([]sdk.Event, [][]byte, [][]*codectypes.Any, error) {
 	if err := req.Validate(); err != nil {
-		return nil, nil, fmt.Errorf("updateContractMetadata: %w", err)
+		return nil, nil, nil, fmt.Errorf("updateContractMetadata: %w", err)
 	}
 
 	var contractAddr sdk.AccAddress
@@ -44,16 +45,16 @@ func (h MsgHandler) UpdateContractMetadata(ctx sdk.Context, senderAddr sdk.AccAd
 	}
 
 	if err := h.rewardsKeeper.SetContractMetadata(ctx, senderAddr, contractAddr, req.ToSDK()); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return nil, nil, nil
+	return nil, nil, nil, nil
 }
 
 // WithdrawContractRewards withdraws the rewards for the contract address.
-func (h MsgHandler) WithdrawContractRewards(ctx sdk.Context, contractAddr sdk.AccAddress, req rewardsMsgTypes.WithdrawRewardsRequest) ([]sdk.Event, [][]byte, error) {
+func (h MsgHandler) WithdrawContractRewards(ctx sdk.Context, contractAddr sdk.AccAddress, req rewardsMsgTypes.WithdrawRewardsRequest) ([]sdk.Event, [][]byte, [][]*codectypes.Any, error) {
 	if err := req.Validate(); err != nil {
-		return nil, nil, fmt.Errorf("withdrawRewards: %w", err)
+		return nil, nil, nil, fmt.Errorf("withdrawRewards: %w", err)
 	}
 
 	var totalRewards sdk.Coins
@@ -67,26 +68,26 @@ func (h MsgHandler) WithdrawContractRewards(ctx sdk.Context, contractAddr sdk.Ac
 		totalRewards, recordsUsed, err = h.rewardsKeeper.WithdrawRewardsByRecordIDs(ctx, contractAddr, req.RecordIDs)
 	}
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	resBz, err := json.Marshal(rewardsMsgTypes.NewWithdrawRewardsResponse(totalRewards, recordsUsed))
 	if err != nil {
-		return nil, nil, fmt.Errorf("result JSON marshal: %w", err)
+		return nil, nil, nil, fmt.Errorf("result JSON marshal: %w", err)
 	}
 
-	return nil, [][]byte{resBz}, nil
+	return nil, [][]byte{resBz}, nil, nil
 }
 
 // SetFlatFee sets the flat fee for the contract address.
-func (h MsgHandler) SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, req rewardsMsgTypes.SetFlatFeeRequest) ([]sdk.Event, [][]byte, error) {
+func (h MsgHandler) SetFlatFee(ctx sdk.Context, senderAddr sdk.AccAddress, req rewardsMsgTypes.SetFlatFeeRequest) ([]sdk.Event, [][]byte, [][]*codectypes.Any, error) {
 	if err := req.Validate(); err != nil {
-		return nil, nil, fmt.Errorf("setFlatFee: %w", err)
+		return nil, nil, nil, fmt.Errorf("setFlatFee: %w", err)
 	}
 
 	if err := h.rewardsKeeper.SetFlatFee(ctx, senderAddr, req.ToSDK()); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return nil, nil, nil
+	return nil, nil, nil, nil
 }

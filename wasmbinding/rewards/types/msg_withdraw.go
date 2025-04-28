@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+	wasmVmTypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,7 +25,7 @@ type WithdrawRewardsResponse struct {
 	// RecordsNum is the number of RewardsRecord objects processed by the request.
 	RecordsNum uint64 `json:"records_num"`
 	// TotalRewards are the total rewards distributed.
-	TotalRewards wasmVmTypes.Coins `json:"total_rewards"`
+	TotalRewards []wasmVmTypes.Coin `json:"total_rewards"`
 }
 
 // Validate performs request fields validation.

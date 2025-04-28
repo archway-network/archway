@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+	wasmVmTypes "github.com/CosmWasm/wasmvm/v2/types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/archway-network/archway/pkg"

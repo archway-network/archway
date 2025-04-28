@@ -5,7 +5,7 @@ import (
 	"os"
 	"runtime/debug"
 
-	cosmwasm "github.com/CosmWasm/wasmvm"
+	cosmwasm "github.com/CosmWasm/wasmvm/v2"
 	"github.com/spf13/cobra"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
@@ -68,7 +68,7 @@ func getExpectedLibwasmVersion() (string, error) {
 		return "", fmt.Errorf("can't read build info")
 	}
 	for _, d := range buildInfo.Deps {
-		if d.Path != "github.com/CosmWasm/wasmvm" {
+		if d.Path != "github.com/CosmWasm/wasmvm/v2" {
 			continue
 		}
 		if d.Replace != nil {

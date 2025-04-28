@@ -2,10 +2,9 @@ package cwica
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 
 	"github.com/archway-network/archway/x/cwica/keeper"
 )
@@ -23,7 +22,7 @@ func NewIBCModule(k keeper.Keeper) IBCModule {
 }
 
 // OnChanOpenInit implements the IBCModule interface. We don't need to implement this handler.
-func (im IBCModule) OnChanOpenInit(_ sdk.Context, _ channeltypes.Order, _ []string, _ string, _ string, _ *capabilitytypes.Capability, _ channeltypes.Counterparty, version string) (string, error) {
+func (im IBCModule) OnChanOpenInit(_ sdk.Context, _ channeltypes.Order, _ []string, _ string, _ string, _ channeltypes.Counterparty, version string) (string, error) {
 	return version, nil
 }
 
@@ -39,17 +38,17 @@ func (im IBCModule) OnChanCloseConfirm(ctx sdk.Context, portID string, channelID
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface.
-func (im IBCModule) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, _ sdk.AccAddress) error {
+func (im IBCModule) OnAcknowledgementPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, acknowledgement []byte, _ sdk.AccAddress) error {
 	return im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement)
 }
 
 // OnTimeoutPacket implements the IBCModule interface.
-func (im IBCModule) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, _ sdk.AccAddress) error {
+func (im IBCModule) OnTimeoutPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, _ sdk.AccAddress) error {
 	return im.keeper.HandleTimeout(ctx, packet)
 }
 
 // OnChanOpenTry implements the IBCModule interface. We don't need to implement this handler.
-func (im IBCModule) OnChanOpenTry(_ sdk.Context, _ channeltypes.Order, _ []string, _, _ string, _ *capabilitytypes.Capability, _ channeltypes.Counterparty, _ string) (string, error) {
+func (im IBCModule) OnChanOpenTry(_ sdk.Context, _ channeltypes.Order, _ []string, _, _ string, _ channeltypes.Counterparty, _ string) (string, error) {
 	panic("NOT NEEDED FOR CONTROLLER MODULE")
 }
 
@@ -64,6 +63,6 @@ func (im IBCModule) OnChanCloseInit(_ sdk.Context, _, _ string) error {
 }
 
 // OnRecvPacket implements the IBCModule interface
-func (im IBCModule) OnRecvPacket(_ sdk.Context, _ channeltypes.Packet, _ sdk.AccAddress) ibcexported.Acknowledgement {
+func (im IBCModule) OnRecvPacket(_ sdk.Context, _ string, _ channeltypes.Packet, _ sdk.AccAddress) ibcexported.Acknowledgement {
 	panic("NOT NEEDED FOR CONTROLLER MODULE")
 }

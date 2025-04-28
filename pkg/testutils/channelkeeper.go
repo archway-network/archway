@@ -2,8 +2,8 @@ package testutils
 
 import (
 	types0 "github.com/cosmos/cosmos-sdk/types"
-	types4 "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	exported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	connectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
+	types4 "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 )
 
 // MockChannelKeeper is a mock of ChannelKeeper interface.
@@ -24,8 +24,8 @@ func (m *MockChannelKeeper) GetChannel(ctx types0.Context, srcPort, srcChan stri
 }
 
 // GetConnection mocks base method.
-func (m *MockChannelKeeper) GetConnection(ctx types0.Context, connectionID string) (exported.ConnectionI, error) {
-	return nil, nil
+func (m *MockChannelKeeper) GetConnection(ctx types0.Context, connectionID string) (connectiontypes.ConnectionEnd, error) {
+	return connectiontypes.ConnectionEnd{}, nil
 }
 
 // GetNextSequenceSend mocks base method.
