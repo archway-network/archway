@@ -37,6 +37,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 
 ### Changed
 - [#603](https://github.com/archway-network/archway/pull/603) - Bumping ibc-go to v8.7.0
+- [#605](https://github.com/archway-network/archway/pull/605) - Bumping wasmd to v0.55.0
 
 ## [v10.0.0](https://github.com/archway-network/archway/releases/tag/v10.0.0)
 
