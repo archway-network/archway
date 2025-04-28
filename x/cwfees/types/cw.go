@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+	wasmVmTypes "github.com/CosmWasm/wasmvm/v2/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -19,7 +19,7 @@ type SudoMsg struct {
 // CWGrant defines the CWGrant variant of the SudoMsg.
 type CWGrant struct {
 	// FeeRequested defines the amount of fees needed to cover TX expenses.
-	FeeRequested wasmVmTypes.Coins `json:"fee_requested"`
+	FeeRequested []wasmVmTypes.Coin `json:"fee_requested"`
 	// Msgs defines the list of messages which we're trying to execute.
 	Msgs []CWGrantMessage `json:"msgs"`
 }

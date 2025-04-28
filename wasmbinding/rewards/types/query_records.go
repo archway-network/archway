@@ -5,7 +5,7 @@ import (
 	"time"
 
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+	wasmVmTypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -38,7 +38,7 @@ type (
 		// RewardsAddress is the address to distribute rewards to (bech32 encoded).
 		RewardsAddress string `json:"rewards_address"`
 		// Rewards are the rewards to be transferred later.
-		Rewards wasmVmTypes.Coins `json:"rewards"`
+		Rewards []wasmVmTypes.Coin `json:"rewards"`
 		// CalculatedHeight defines the block height of rewards calculation event.
 		CalculatedHeight int64 `json:"calculated_height"`
 		// CalculatedTime defines the block time of rewards calculation event.

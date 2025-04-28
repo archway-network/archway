@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	math "cosmossdk.io/math"
-	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+	wasmVmTypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,7 +22,7 @@ func WasmCoinToSDK(coin wasmVmTypes.Coin) (sdk.Coin, error) {
 }
 
 // WasmCoinsToSDK converts wasmVmTypes.Coins to sdk.Coins.
-func WasmCoinsToSDK(coins wasmVmTypes.Coins) (sdk.Coins, error) {
+func WasmCoinsToSDK(coins []wasmVmTypes.Coin) (sdk.Coins, error) {
 	result := make(sdk.Coins, 0, len(coins))
 	for _, coin := range coins {
 		coinSDK, err := WasmCoinToSDK(coin)

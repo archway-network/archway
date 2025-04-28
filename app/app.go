@@ -27,7 +27,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmdKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	cosmwasm "github.com/CosmWasm/wasmvm"
+	cosmwasm "github.com/CosmWasm/wasmvm/v2"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"

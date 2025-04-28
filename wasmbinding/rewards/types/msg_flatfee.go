@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+	wasmVmTypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/archway-network/archway/wasmbinding/pkg"

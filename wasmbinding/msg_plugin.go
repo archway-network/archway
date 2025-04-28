@@ -7,7 +7,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	wasmVmTypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -32,7 +33,7 @@ func NewMsgDispatcher(wrappedMessenger wasmKeeper.Messenger, rh rewards.MsgHandl
 }
 
 // DispatchMsg validates and executes a custom WASM msg.
-func (d MsgDispatcher) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmVmTypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
+func (d MsgDispatcher) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) (events []sdk.Event, data [][]byte, msgResponses [][]*codectypes.Any, err error) {
 	// Skip non-custom message
 	if msg.Custom == nil {
 		return d.wrappedMessenger.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
@@ -41,10 +42,10 @@ func (d MsgDispatcher) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress,
 	// Parse and validate the input
 	var customMsg types.Msg
 	if err := json.Unmarshal(msg.Custom, &customMsg); err != nil {
-		return nil, nil, errorsmod.Wrap(sdkErrors.ErrInvalidRequest, fmt.Sprintf("custom msg JSON unmarshal: %v", err))
+		return nil, nil, nil, errorsmod.Wrap(sdkErrors.ErrInvalidRequest, fmt.Sprintf("custom msg JSON unmarshal: %v", err))
 	}
 	if err := customMsg.Validate(); err != nil {
-		return nil, nil, errorsmod.Wrap(sdkErrors.ErrInvalidRequest, fmt.Sprintf("custom msg validation: %v", err))
+		return nil, nil, nil, errorsmod.Wrap(sdkErrors.ErrInvalidRequest, fmt.Sprintf("custom msg validation: %v", err))
 	}
 
 	// Execute custom sub-msg (one of)
@@ -57,6 +58,6 @@ func (d MsgDispatcher) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress,
 		return d.rewardsHandler.SetFlatFee(ctx, contractAddr, *customMsg.SetFlatFee)
 	default:
 		// That should never happen, since we validate the input above
-		return nil, nil, errorsmod.Wrap(wasmdTypes.ErrUnknownMsg, "no custom handler found")
+		return nil, nil, nil, errorsmod.Wrap(wasmdTypes.ErrUnknownMsg, "no custom handler found")
 	}
 }
