@@ -222,4 +222,4 @@ replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.2021
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.17.0
 
-replace github.com/cometbft/cometbft => github.com/archway-network/cometbft-sec-tachyon v0.38.x-tachyon-fix
+replace github.com/cometbft/cometbft => github.com/archway-network/cometbft-sec-tachyon-2 v0.38.x-tachyon-fix
