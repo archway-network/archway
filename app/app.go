@@ -156,6 +156,10 @@ import (
 
 	extendedGov "github.com/archway-network/archway/x/gov"
 
+	"github.com/disperze/usdc-migration/v8/x/usdcmigration"
+	usdcmigrationkeeper "github.com/disperze/usdc-migration/v8/x/usdcmigration/keeper"
+	usdcmigrationtypes "github.com/disperze/usdc-migration/v8/x/usdcmigration/types"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 
 	archwayappparams "github.com/archway-network/archway/app/params"
@@ -229,6 +233,7 @@ var (
 		cwfees.AppModule{},
 		cwica.AppModuleBasic{},
 		cwerrors.AppModuleBasic{},
+		usdcmigration.AppModule{},
 	)
 
 	// module account permissions
@@ -335,6 +340,7 @@ func NewArchwayApp(
 		icacontrollertypes.StoreKey, icahosttypes.StoreKey, ibcfeetypes.StoreKey, crisistypes.StoreKey, group.StoreKey, nftkeeper.StoreKey, cwicatypes.StoreKey,
 
 		trackingTypes.StoreKey, rewardsTypes.StoreKey, callbackTypes.StoreKey, cwfees.ModuleName, cwerrorsTypes.StoreKey,
+		usdcmigrationtypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey, cwerrorsTypes.TStoreKey)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -499,12 +505,23 @@ func NewArchwayApp(
 		app.Keepers.IBCKeeper.PortKeeper, app.Keepers.AccountKeeper, app.Keepers.BankKeeper,
 	)
 
+	// USDC migration keeper: wraps the fee keeper and is the transfer keeper's
+	// ICS4 Wrapper, so every ICS20 send passes through its Noble USDC send block.
+	// It must be created before the transfer keeper.
+	app.Keepers.UsdcMigrationKeeper = usdcmigrationkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[usdcmigrationtypes.StoreKey]),
+		app.Keepers.IBCFeeKeeper,
+		scopedTransferKeeper,
+		govModuleAddr,
+	)
+
 	// Create Transfer Keepers
 	app.Keepers.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibctransfertypes.StoreKey],
 		app.getSubspace(ibctransfertypes.ModuleName),
-		app.Keepers.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
+		app.Keepers.UsdcMigrationKeeper, // ISC4 Wrapper: usdcmigration -> fee IBC middleware
 		app.Keepers.IBCKeeper.ChannelKeeper,
 		app.Keepers.IBCKeeper.PortKeeper,
 		app.Keepers.AccountKeeper,
@@ -680,6 +697,8 @@ func NewArchwayApp(
 	transferStack = transfer.NewIBCModule(app.Keepers.TransferKeeper)
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.Keepers.IBCFeeKeeper)
 	transferStack = ibchooks.NewIBCMiddleware(transferStack, &hooksIcs4Wrapper)
+	// usdcmigration must be the outermost middleware of the transfer stack
+	transferStack = usdcmigration.NewIBCMiddleware(app.Keepers.UsdcMigrationKeeper, transferStack)
 
 	// Create Interchain Accounts Stack
 
@@ -758,6 +777,7 @@ func NewArchwayApp(
 		callback.NewAppModule(app.appCodec, app.Keepers.CallbackKeeper, app.Keepers.WASMKeeper, app.Keepers.CWErrorsKeeper),
 		cwica.NewAppModule(appCodec, app.Keepers.CWICAKeeper, app.Keepers.AccountKeeper),
 		cwerrors.NewAppModule(app.appCodec, app.Keepers.CWErrorsKeeper, app.Keepers.WASMKeeper),
+		usdcmigration.NewAppModule(app.Keepers.UsdcMigrationKeeper),
 		crisis.NewAppModule(&app.Keepers.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 	)
 
@@ -879,6 +899,7 @@ func NewArchwayApp(
 		// additional non simd modules
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
+		usdcmigrationtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 		icatypes.ModuleName,
 		// wasm after ibc transfer

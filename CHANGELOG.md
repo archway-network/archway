@@ -32,6 +32,7 @@ Contains all the PRs that improved the code without changing the behaviors.
 
 ### Added
 - [#604](https://github.com/archway-network/archway/pull/604) - Move Dockerfile.deprecated -> Dockerfile.legacy and update wasmvm versions. Dockerfile.legacy will be maintained due to existing demand
+- Add the [`x/usdcmigration`](https://github.com/disperze/usdc-migration) module (Noble USDC wind-down) and the `v11.0.0` upgrade handler, which enables it on the Noble channel `channel-29`
 
 ## [v10.1.0](https://github.com/archway-network/archway/releases/tag/v10.1.0)
 
