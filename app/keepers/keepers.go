@@ -34,6 +34,8 @@ import (
 	cwicaKeeper "github.com/archway-network/archway/x/cwica/keeper"
 	rewardsKeeper "github.com/archway-network/archway/x/rewards/keeper"
 	trackingKeeper "github.com/archway-network/archway/x/tracking/keeper"
+
+	usdcmigrationkeeper "github.com/disperze/usdc-migration/v8/x/usdcmigration/keeper"
 )
 
 type ArchwayKeepers struct {
@@ -69,4 +71,7 @@ type ArchwayKeepers struct {
 	CallbackKeeper callbackKeeper.Keeper
 	CWErrorsKeeper cwerrorsKeeper.Keeper
 	CWICAKeeper    cwicaKeeper.Keeper
+
+	// UsdcMigrationKeeper is a pointer: the transfer keeper holds it as its ICS4 wrapper.
+	UsdcMigrationKeeper *usdcmigrationkeeper.Keeper
 }
